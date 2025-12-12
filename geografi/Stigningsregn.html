@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stigningsregn & Føhn-effekt Simulator</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f4f9; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .container { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-width: 900px; width: 100%; }
+        h2 { text-align: center; color: #2c3e50; margin-top: 0; margin-bottom: 20px;}
+
+        /* DASHBOARD STYLING */
+        .dashboard {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;
+            margin-bottom: 15px; padding: 15px; background: #ecf0f1; border-radius: 8px; border: 1px solid #bdc3c7;
+        }
+        .instrument {
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+            height: 140px; position: relative;
+        }
+        .instrument-label { margin-top: 8px; font-weight: bold; font-size: 0.85em; color: #34495e; text-align: center; }
+        .instrument-value { font-family: monospace; font-size: 1.1em; color: #2980b9; margin-top: 2px; font-weight: bold;}
+
+        /* VISUALISERINGER I DASHBOARD */
+        .thermometer-tube { width: 15px; height: 80px; background: #ddd; border-radius: 10px; border: 1px solid #999; position: relative; overflow: hidden; }
+        .thermometer-liquid { width: 100%; background: #e74c3c; position: absolute; bottom: 0; height: 50%; transition: height 0.1s; }
+        
+        .gauge-box { width: 80px; height: 40px; position: relative; overflow: hidden; }
+        .gauge-arch { width: 80px; height: 40px; background: #ddd; border-top-left-radius: 50px; border-top-right-radius: 50px; border: 1px solid #999; border-bottom: 0; }
+        .gauge-needle { width: 2px; height: 35px; background: #c0392b; position: absolute; bottom: 0; left: 40px; transform-origin: bottom center; transform: rotate(-90deg); transition: transform 0.1s; }
+
+        .rain-tube { width: 30px; height: 80px; border: 2px solid #3498db; border-top: none; background: rgba(255,255,255,0.6); position: relative; display: flex; align-items: flex-end; }
+        .rain-water { width: 100%; background: rgba(52, 152, 219, 0.8); height: 0%; transition: height 0.1s; }
+
+        /* KANVAS & OVERLAY */
+        .canvas-wrapper { position: relative; cursor: ew-resize; margin-bottom: 20px; }
+        canvas { background: linear-gradient(to bottom, #87CEEB 0%, #E0F7FA 80%, #2980b9 100%); border: 1px solid #bdc3c7; border-radius: 4px; width: 100%; height: auto; display: block;}
+
+        .process-indicator {
+            position: absolute; top: 10px; right: 10px; 
+            background: rgba(255,255,255,0.9); padding: 8px 12px; 
+            border-radius: 4px; font-weight: bold; color: #333;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            font-size: 0.9em; pointer-events: none;
+        }
+
+        /* CONTROLS */
+        .controls { background: #fafafa; padding: 15px; border-radius: 8px; border: 1px solid #eee; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;}
+        .control-group { display: flex; flex-direction: column; }
+        label { font-weight: bold; font-size: 0.9em; display: flex; justify-content: space-between; margin-bottom: 5px; }
+        input[type=range] { width: 100%; }
+
+        button.reset-btn { margin-top: 5px; padding: 2px 8px; font-size: 0.75em; cursor: pointer; }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Stigningsregn: Føhn-effekten</h2>
+
+        <div class="dashboard">
+            <div class="instrument">
+                <div class="thermometer-tube"><div class="thermometer-liquid" id="anim-temp"></div></div>
+                <div class="instrument-label">Temperatur</div>
+                <div class="instrument-value" id="val-temp">20°C</div>
+            </div>
+            <div class="instrument">
+                <div class="gauge-box">
+                    <div class="gauge-arch"></div>
+                    <div class="gauge-needle" id="anim-rh"></div>
+                </div>
+                <div class="instrument-label">Relativ Luftfugtighed</div>
+                <div class="instrument-value" id="val-rh">50%</div>
+            </div>
+            <div class="instrument">
+                <div style="font-size: 24px;">⛰️</div>
+                <div class="instrument-label">Højde (m.o.h.)</div>
+                <div class="instrument-value" id="val-alt">0 m</div>
+            </div>
+            <div class="instrument">
+                <div class="rain-tube"><div class="rain-water" id="anim-rain"></div></div>
+                <button class="reset-btn" onclick="resetRain()">Nulstil</button>
+                <div class="instrument-label">Opsamlet Nedbør</div>
+                <div class="instrument-value" id="val-rain">0 mm</div>
+            </div>
+        </div>
+
+        <div class="canvas-wrapper">
+            <canvas id="simCanvas" width="800" height="400"></canvas>
+            <div id="process-label" class="process-indicator">Start ved havet</div>
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <label><span>Start Temperatur (ved havet)</span> <span id="lbl-start-temp">20°C</span></label>
+                <input type="range" id="inp-temp" min="5" max="30" step="1" value="20">
+            </div>
+            <div class="control-group">
+                <label><span>Start Vandindhold</span> <span id="lbl-start-water">10 g/m³</span></label>
+                <input type="range" id="inp-water" min="2" max="25" step="0.5" value="10">
+            </div>
+        </div>
+        <p style="text-align: center; font-size: 0.9em; color: #7f8c8d; margin-top: 10px;">
+            Træk den hvide luft-cirkel hen over bjerget med musen.
+        </p>
+    </div>
+
+    <script>
+        // --- KONFIGURATION & SETUP ---
+        const canvas = document.getElementById('simCanvas');
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+
+        // Fysik Konstanter
+        const DALR = 1.0; // Dry Adiabatic Lapse Rate (gr/100m)
+        const MALR = 0.5; // Moist Adiabatic Lapse Rate (gr/100m)
+        const MAX_HEIGHT_METERS = 2500; // Bjergets top + lidt luft
+
+        // UI Elements
+        const elTemp = document.getElementById('val-temp');
+        const elRH = document.getElementById('val-rh');
+        const elAlt = document.getElementById('val-alt');
+        const elRain = document.getElementById('val-rain');
+        const animTemp = document.getElementById('anim-temp');
+        const animRH = document.getElementById('anim-rh');
+        const animRain = document.getElementById('anim-rain');
+        const lblProcess = document.getElementById('process-label');
+        
+        // Inputs
+        const inpTemp = document.getElementById('inp-temp');
+        const inpWater = document.getElementById('inp-water');
+
+        // State
+        let dragX = 50; // Luftpakkens X position (pixels)
+        let isDragging = false;
+        let totalRainMm = 0;
+        
+        // --- TERRÆN MODEL ---
+        // Vi definerer terrænet som en funktion af x
+        function getTerrainHeight(x) {
+            // x er i pixels (0 til 800)
+            // Vi mapper det til meter
+            // 0-100px: Hav (0m)
+            // 100-400px: Stigning til bjergtop
+            // 400-700px: Fald til dal
+            // 700-800px: Dal
+            
+            if (x < 100) return 0;
+            if (x >= 100 && x < 400) {
+                // Sinus kurve op til 2000m
+                let pct = (x - 100) / 300; 
+                return 2000 * Math.sin(pct * Math.PI / 2);
+            }
+            if (x >= 400 && x < 700) {
+                // Ned fra 2000m til 200m
+                let pct = (x - 400) / 300;
+                return 2000 - (1800 * Math.sin(pct * Math.PI / 2)); 
+            }
+            return 200; // Dal bunden
+        }
+
+        // --- FYSIK ENGINE ---
+        function getMaxCapacity(temp) {
+            return 5 * Math.exp(0.06 * temp);
+        }
+
+        function calculateStateAtX(targetX) {
+            // For at simulere Føhn effekten korrekt, skal vi integrere fra start til nuværende position
+            // Hver gang vi flytter os, genberegner vi "historikken" for denne luftpakke fra x=0.
+            
+            let startTemp = parseFloat(inpTemp.value);
+            let currentWater = parseFloat(inpWater.value); // Absolut vandindhold (g/m3)
+            let currentTemp = startTemp;
+            
+            // Simulerings loop (stepsize 5px)
+            let step = 5;
+            let currentX = 0;
+            let currentAlt = 0;
+            
+            let state = {
+                temp: startTemp,
+                water: currentWater,
+                alt: 0,
+                rh: 0,
+                isRaining: false,
+                precipType: 'none',
+                process: 'Start'
+            };
+
+            // Vi "kører" luftpakken fra venstre mod højre indtil vi rammer musens position
+            for (let x = 0; x <= targetX; x += step) {
+                let newAlt = getTerrainHeight(x);
+                let deltaAlt = newAlt - currentAlt; // Ændring i højde (meter)
+                let altChangeHundreds = deltaAlt / 100;
+
+                // Beregn dugpunkt / mætning før temperaturændring
+                let maxCap = getMaxCapacity(currentTemp);
+                
+                // Er vi mættet?
+                let isSaturated = currentWater >= maxCap;
+
+                // --- Temperaturændring ---
+                if (deltaAlt > 0) {
+                    // VI STIGER (Afkøling)
+                    if (isSaturated) {
+                        // Fugtadiabatisk (0.5 grader pr 100m)
+                        currentTemp -= (MALR * altChangeHundreds);
+                        state.process = "Fugtadiabatisk Afkøling (Dannelse af skyer)";
+                        
+                        // Vandet presses ud (Regn!)
+                        // Ny max kapacitet ved den nye, lavere temperatur
+                        let newMax = getMaxCapacity(currentTemp);
+                        let waterLoss = currentWater - newMax;
+                        if (waterLoss > 0) {
+                            currentWater = newMax; // Vandet falder ud
+                            state.isRaining = true;
+                            // Opsamling sker kun i den globale event-loop, ikke her i "preview" loopet
+                        }
+                    } else {
+                        // Tøradiabatisk (1.0 grader pr 100m)
+                        currentTemp -= (DALR * altChangeHundreds);
+                        state.process = "Tøradiabatisk Afkøling (Ingen skyer)";
+                        state.isRaining = false;
+                    }
+                } else if (deltaAlt < 0) {
+                    // VI FALDER (Opvarmning)
+                    // Altid tøradiabatisk når luften falder og varmes op (skyen opløses straks)
+                    currentTemp -= (DALR * altChangeHundreds); // Minus minus er plus
+                    state.process = "Tøradiabatisk Opvarmning (Føhn-vind)";
+                    state.isRaining = false;
+                }
+
+                currentAlt = newAlt;
+                
+                // Opdater state objektet til slut
+                state.temp = currentTemp;
+                state.water = currentWater;
+                state.alt = currentAlt;
+            }
+
+            // Beregn endelig RH
+            let finalMax = getMaxCapacity(state.temp);
+            state.rh = (state.water / finalMax) * 100;
+            if(state.rh > 100) state.rh = 100;
+            
+            // Nedbørstype
+            if(state.isRaining) {
+                state.precipType = state.temp < 0 ? 'snow' : 'rain';
+            }
+
+            return state;
+        }
+
+
+        // --- GRAFIK & TEGNING ---
+        function draw() {
+            ctx.clearRect(0, 0, width, height);
+
+            // 1. Tegn Terræn
+            ctx.beginPath();
+            ctx.moveTo(0, height);
+            for (let x = 0; x <= width; x+=5) {
+                let m = getTerrainHeight(x);
+                // Konverter meter til Y pixels. Max højde 2500m = top af canvas (næsten)
+                let py = height - (m / MAX_HEIGHT_METERS) * height;
+                ctx.lineTo(x, py);
+            }
+            ctx.lineTo(width, height);
+            ctx.closePath();
+            
+            // Gradient fyld til bjerget
+            let grd = ctx.createLinearGradient(0, 0, 0, height);
+            grd.addColorStop(0, "#7f8c8d"); // Grå top
+            grd.addColorStop(0.5, "#2ecc71"); // Grøn midt
+            grd.addColorStop(1, "#27ae60"); // Mørkegrøn bund
+            ctx.fillStyle = grd;
+            ctx.fill();
+
+            // Tegn Havet
+            ctx.fillStyle = "rgba(41, 128, 185, 0.6)";
+            ctx.fillRect(0, height - 10, 100, 10); // Simpel vandlinje ved start
+
+            // 2. Beregn Nuværende Status
+            let state = calculateStateAtX(dragX);
+
+            // 3. Tegn Luftpakken
+            let py = height - (state.alt / MAX_HEIGHT_METERS) * height - 30; // 30px over terræn
+            
+            // Sky eller cirkel?
+            if (state.rh > 95) {
+                // Tegn Sky
+                drawCloud(ctx, dragX, py);
+            } else {
+                // Tegn Luft-cirkel
+                ctx.beginPath();
+                ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
+                ctx.arc(dragX, py, 25, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = "#fff";
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                // Label i boblen
+                ctx.fillStyle = "#333";
+                ctx.font = "12px Arial";
+                ctx.fillText("Luft", dragX - 10, py + 4);
+            }
+
+            // 4. Tegn Nedbør
+            if (state.isRaining) {
+                drawPrecipitation(ctx, dragX, py, state.precipType);
+                // Hvis vi "spiller" (dvs. brugeren bevæger musen), tæller vi op.
+                // For simpelthedens skyld tæller vi lidt op hver gang draw kaldes og det regner,
+                // men kun hvis vi ikke står stille (det ville fylde måleren uendeligt)
+                if (isDragging) {
+                     totalRainMm += 0.05; // Arbitrær værdi pr frame
+                }
+            }
+
+            // 5. Opdater UI Tekster
+            updateUI(state);
+        }
+
+        function drawCloud(ctx, x, y) {
+            ctx.fillStyle = "white";
+            ctx.beginPath();
+            ctx.arc(x, y, 30, 0, Math.PI * 2);
+            ctx.arc(x - 25, y + 10, 25, 0, Math.PI * 2);
+            ctx.arc(x + 25, y + 10, 25, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function drawPrecipitation(ctx, x, y, type) {
+            ctx.beginPath();
+            if (type === 'rain') {
+                ctx.strokeStyle = "#3498db";
+                ctx.lineWidth = 2;
+                // Tegn streger ned
+                for(let i=0; i<5; i++) {
+                    let rx = x - 20 + Math.random()*40;
+                    let ry = y + 20;
+                    ctx.moveTo(rx, ry);
+                    ctx.lineTo(rx, ry + 30);
+                }
+            } else {
+                ctx.fillStyle = "white";
+                // Tegn snefnug
+                for(let i=0; i<5; i++) {
+                    let rx = x - 20 + Math.random()*40;
+                    let ry = y + 20 + Math.random()*20;
+                    ctx.fillText("❄️", rx, ry);
+                }
+            }
+            ctx.stroke();
+        }
+
+        function updateUI(state) {
+            // Dashboard values
+            elTemp.innerText = state.temp.toFixed(1) + "°C";
+            elRH.innerText = Math.round(state.rh) + "%";
+            elAlt.innerText = Math.round(state.alt) + " m";
+            elRain.innerText = Math.floor(totalRainMm) + " mm";
+            
+            // Labels nede ved inputs
+            document.getElementById('lbl-start-temp').innerText = inpTemp.value + "°C";
+            document.getElementById('lbl-start-water').innerText = inpWater.value + " g/m³";
+
+            // Process indicator
+            lblProcess.innerText = state.process;
+            if(state.isRaining) lblProcess.innerText += (state.precipType === 'snow' ? " (SNE!)" : " (REGN!)");
+
+            // Animationer (CSS height/transform)
+            // Termometer (-10 til 30 grader range visuelt)
+            let tempPct = ((state.temp + 10) / 40) * 100; 
+            if(tempPct < 0) tempPct = 0; if(tempPct > 100) tempPct = 100;
+            animTemp.style.height = tempPct + "%";
+
+            // Hygrometer (-90 til 90 grader)
+            let rot = (state.rh * 1.8) - 90;
+            animRH.style.transform = `rotate(${rot}deg)`;
+
+            // Regnmåler (0 til 100 mm visuelt)
+            let rainH = totalRainMm;
+            if(rainH > 100) rainH = 100;
+            animRain.style.height = rainH + "%";
+        }
+
+        function resetRain() {
+            totalRainMm = 0;
+            draw();
+        }
+
+        // --- EVENTS ---
+        canvas.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            updateDragPosition(e);
+        });
+        window.addEventListener('mouseup', () => { isDragging = false; });
+        canvas.addEventListener('mousemove', (e) => {
+            if (isDragging) updateDragPosition(e);
+        });
+        // Touch support
+        canvas.addEventListener('touchstart', (e) => { isDragging = true; updateDragPosition(e.touches[0]); e.preventDefault(); });
+        canvas.addEventListener('touchmove', (e) => { if (isDragging) updateDragPosition(e.touches[0]); e.preventDefault(); });
+
+        function updateDragPosition(e) {
+            const rect = canvas.getBoundingClientRect();
+            let x = e.clientX - rect.left;
+            // Begræns til canvas bredde
+            if(x < 0) x = 0; if(x > width) x = width;
+            dragX = x;
+            draw();
+        }
+
+        // Input listeners
+        inpTemp.addEventListener('input', draw);
+        inpWater.addEventListener('input', draw);
+
+        // Start
+        draw();
+    </script>
+</body>
+</html>
