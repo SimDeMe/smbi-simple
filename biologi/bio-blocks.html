@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <title>Bio-Blocks: Byg med Former</title>
+    <style>
+        body { 
+            font-family: 'Verdana', sans-serif; 
+            background-color: #ecf0f1; 
+            display: flex; 
+            flex-direction: column; 
+            height: 100vh; 
+            margin: 0; 
+            overflow: hidden; 
+            user-select: none;
+        }
+
+        /* Top Bar */
+        header {
+            background: #fff;
+            padding: 10px 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .spawner, .btn-view {
+            border: none;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+        .spawner:active, .btn-view:active { transform: translateY(4px); box-shadow: 0 0 0; }
+
+        .btn-glu { background-color: #2ecc71; } /* Grøn */
+        .btn-fru { background-color: #e74c3c; } /* Rød */
+        .btn-gal { background-color: #f1c40f; } /* Gul */
+        .btn-view { background: #2980b9; padding: 10px 10px; }
+        .btn-reset { background-color: #34495e; margin-left: 30px; }
+
+        /* Game Area */
+        #game-area {
+            flex-grow: 1;
+            position: relative;
+            background-image: radial-gradient(#bdc3c7 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        /* Shapes */
+        .shape-group { 
+            cursor: grab; 
+            transition: transform 0.1s ease-out;
+        }
+        .shape-group:active { cursor: grabbing; scale: 1.05; }
+        
+        .shape-body { stroke: rgba(0,0,0,0.2); stroke-width: 2px; }
+        .shape-label { 
+            font-size: 12px; 
+            font-weight: bold; 
+            fill: white; 
+            text-anchor: middle; 
+            pointer-events: none; 
+            text-shadow: 0px 1px 2px rgba(0,0,0,0.3);
+        }
+
+        /* Bond Line */
+        .bond-line {
+            stroke: #7f8c8d;
+            stroke-width: 8;
+            stroke-linecap: round;
+        }
+
+        /* Product Label */
+        .product-label {
+            font-size: 16px;
+            font-weight: 900;
+            fill: #2c3e50;
+            text-anchor: middle;
+            text-transform: uppercase;
+            animation: popIn 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            background: white; /* Only works in HTML, for SVG we rely on fill */
+        }
+        .product-bg {
+            fill: white;
+            opacity: 0.8;
+            rx: 5;
+        }
+
+        /* 3D Viewer */
+        .btn-3d { background-color: #3498db; }
+        #viewer-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+        }
+        #viewer-modal.hidden { display: none; }
+        .viewer-box {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+            padding: 14px;
+            width: min(90vw, 780px);
+        }
+        .viewer-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 8px;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+        .viewer-container {
+            position: relative;
+            width: 100%;
+            height: 460px;
+            border: 1px solid #ecf0f1;
+            border-radius: 8px;
+            background: linear-gradient(180deg, #f8fbff 0%, #eef3f7 100%);
+            overflow: hidden;
+        }
+        .viewer-container canvas {
+            width: 100% !important;
+            height: 100% !important;
+            display: block;
+        }
+        .viewer-tip {
+            margin: 8px 0 0;
+            font-size: 13px;
+            color: #7f8c8d;
+            text-align: right;
+        }
+        .btn-close {
+            border: none;
+            background: #e74c3c;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0); }
+            100% { transform: scale(1); }
+        }
+
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="control-group">
+        <button class="spawner btn-glu" onclick="spawn('glucose')">⬢ Glukose</button>
+        <button class="btn-view" data-view="glucose">👁️ 3D</button>
+    </div>
+    <div class="control-group">
+        <button class="spawner btn-fru" onclick="spawn('fructose')">⬟ Fruktose</button>
+        <button class="btn-view" data-view="fructose">👁️ 3D</button>
+    </div>
+    <div class="control-group">
+        <button class="spawner btn-gal" onclick="spawn('galactose')">⬢ Galaktose</button>
+        <button class="btn-view" data-view="galactose">👁️ 3D</button>
+    </div>
+    <button class="spawner btn-reset" onclick="resetGame()">Ryd</button>
+</header>
+
+<div id="game-area">
+    <svg id="svg-space" width="100%" height="100%">
+        <defs>
+            <path id="shape-hex" d="M30 0 L90 0 L120 52 L90 104 L30 104 L0 52 Z" />
+            <path id="shape-pent" d="M60 0 L117 42 L95 110 L25 110 L3 42 Z" />
+        </defs>
+    </svg>
+</div>
+
+<div id="viewer-modal" class="hidden">
+    <div class="viewer-box">
+        <div class="viewer-bar">
+            <span id="viewer-title">Molekyle (SDF)</span>
+            <button class="btn-close" id="viewer-close">Luk</button>
+        </div>
+        <div id="viewer-container" class="viewer-container"></div>
+        <p class="viewer-tip">Viser ball-and-stick via 3Dmol.js (SDF).</p>
+    </div>
+</div>
+
+<script>
+    const svgSpace = document.getElementById('svg-space');
+    const svgNS = "http://www.w3.org/2000/svg";
+    
+    let elements = [];
+    let idCounter = 0;
+    
+    // Dragging logic vars
+    let draggedItem = null;
+    let offset = { x: 0, y: 0 };
+
+    const configs = {
+        glucose:   { type: 'hex', color: '#2ecc71', text: 'GLU', width: 120 },
+        fructose:  { type: 'pent', color: '#e74c3c', text: 'FRU', width: 120 },
+        galactose: { type: 'hex', color: '#f1c40f', text: 'GAL', width: 120 }
+    };
+
+    function spawn(name) {
+        idCounter++;
+        const cfg = configs[name];
+        
+        const g = document.createElementNS(svgNS, "g");
+        g.setAttribute("class", "shape-group");
+        g.dataset.id = idCounter;
+        g.dataset.name = name;
+        g.dataset.bonded = "false"; // Simple boolean for this version
+
+        // Random Pos
+        const x = 100 + Math.random() * 400;
+        const y = 100 + Math.random() * 300;
+        setPos(g, x, y);
+
+        // Draw Shape
+        const use = document.createElementNS(svgNS, "use");
+        use.setAttribute("href", cfg.type === 'hex' ? "#shape-hex" : "#shape-pent");
+        use.setAttribute("fill", cfg.color);
+        use.setAttribute("class", "shape-body");
+        g.appendChild(use);
+
+        // Draw Text
+        const text = document.createElementNS(svgNS, "text");
+        text.textContent = cfg.text;
+        text.setAttribute("x", 60);
+        text.setAttribute("y", 65); // Centered roughly
+        text.setAttribute("class", "shape-label");
+        g.appendChild(text);
+
+        // Add events
+        g.addEventListener("mousedown", startDrag);
+        
+        svgSpace.appendChild(g);
+        elements.push(g);
+    }
+
+    // --- Drag System ---
+    function startDrag(e) {
+        let target = e.target;
+        while (!target.classList.contains("shape-group")) {
+            target = target.parentNode;
+            if (target === svgSpace) return;
+        }
+        
+        // If already bonded, don't move individually (simple rule for this demo)
+        if (target.dataset.bonded === "true") return;
+
+        draggedItem = target;
+        // Bring to front
+        svgSpace.appendChild(draggedItem);
+
+        const pt = getMousePos(e);
+        const tf = getPos(draggedItem);
+        offset.x = pt.x - tf.x;
+        offset.y = pt.y - tf.y;
+
+        window.addEventListener("mousemove", doDrag);
+        window.addEventListener("mouseup", endDrag);
+    }
+
+    function doDrag(e) {
+        if (!draggedItem) return;
+        e.preventDefault();
+        const pt = getMousePos(e);
+        setPos(draggedItem, pt.x - offset.x, pt.y - offset.y);
+    }
+
+    function endDrag(e) {
+        if(draggedItem) {
+            checkProximity(draggedItem);
+        }
+        draggedItem = null;
+        window.removeEventListener("mousemove", doDrag);
+        window.removeEventListener("mouseup", endDrag);
+    }
+
+    // --- Game Logic ---
+    function checkProximity(activeEl) {
+        const activePos = getPos(activeEl);
+        const activeName = activeEl.dataset.name;
+
+        elements.forEach(target => {
+            if (target === activeEl) return;
+            if (target.dataset.bonded === "true") return;
+
+            const targetPos = getPos(target);
+            const dist = Math.hypot(activePos.x - targetPos.x, activePos.y - targetPos.y);
+
+            // Threshold for snapping
+            if (dist < 100) {
+                fuse(target, activeEl);
+            }
+        });
+    }
+
+    function fuse(el1, el2) {
+        // Mark as bonded
+        el1.dataset.bonded = "true";
+        el2.dataset.bonded = "true";
+
+        // 1. Position them nicely side-by-side
+        const p1 = getPos(el1);
+        const p2_new_x = p1.x + 140; // Fixed spacing
+        const p2_new_y = p1.y; 
+        
+        setPos(el2, p2_new_x, p2_new_y);
+
+        // 2. Determine Product Name
+        const n1 = el1.dataset.name;
+        const n2 = el2.dataset.name;
+        let product = "Polysakkarid";
+
+        // Logic table
+        if (n1 === 'glucose' && n2 === 'glucose') product = "MALTOSE";
+        
+        else if ((n1 === 'glucose' && n2 === 'fructose') || (n1 === 'fructose' && n2 === 'glucose')) product = "SAKKAROSE";
+        
+        else if ((n1 === 'galactose' && n2 === 'glucose') || (n1 === 'glucose' && n2 === 'galactose')) product = "LAKTOSE";
+        
+        else if (n1 === 'galactose' && n2 === 'galactose') product = "Gal-Gal?"; // Rare, but logic handles it
+
+        // 3. Draw Connection (The Bond)
+        drawBond(p1.x + 110, p1.y + 52, p2_new_x + 10, p2_new_y + 52, product);
+    }
+
+    function drawBond(x1, y1, x2, y2, labelText) {
+        const g = document.createElementNS(svgNS, "g");
+        
+        // Line
+        const line = document.createElementNS(svgNS, "line");
+        line.setAttribute("x1", x1);
+        line.setAttribute("y1", y1);
+        line.setAttribute("x2", x2);
+        line.setAttribute("y2", y2);
+        line.setAttribute("class", "bond-line");
+        g.appendChild(line);
+
+        // Background box for text
+        const rect = document.createElementNS(svgNS, "rect");
+        rect.setAttribute("class", "product-bg");
+        rect.setAttribute("width", 110);
+        rect.setAttribute("height", 24);
+        rect.setAttribute("x", (x1+x2)/2 - 55);
+        rect.setAttribute("y", y1 - 35);
+        g.appendChild(rect);
+
+        // Text
+        const text = document.createElementNS(svgNS, "text");
+        text.textContent = labelText;
+        text.setAttribute("class", "product-label");
+        text.setAttribute("x", (x1+x2)/2); // Center of bond
+        text.setAttribute("y", y1 - 18);
+        g.appendChild(text);
+
+        svgSpace.appendChild(g);
+    }
+
+    // --- Helpers ---
+    function getMousePos(evt) {
+        const pt = svgSpace.createSVGPoint();
+        pt.x = evt.clientX;
+        pt.y = evt.clientY;
+        return pt.matrixTransform(svgSpace.getScreenCTM().inverse());
+    }
+
+    function getPos(el) {
+        const tf = el.getAttribute("transform");
+        if(!tf) return {x:0, y:0};
+        const m = tf.match(/translate\(([^,]+),\s*([^)]+)\)/);
+        return { x: parseFloat(m[1]), y: parseFloat(m[2]) };
+    }
+
+    function setPos(el, x, y) {
+        el.setAttribute("transform", `translate(${x}, ${y})`);
+    }
+
+    function resetGame() {
+        svgSpace.innerHTML = '<defs>' + document.querySelector('defs').innerHTML + '</defs>';
+        elements = [];
+        idCounter = 0;
+    }
+
+    // --- 3Dmol viewer (ball-and-stick) ---
+    const modal = document.getElementById('viewer-modal');
+    const viewerContainer = document.getElementById('viewer-container');
+    const viewerTitle = document.getElementById('viewer-title');
+    const btnClose = document.getElementById('viewer-close');
+    const viewButtons = document.querySelectorAll('.btn-view');
+    const sdfFiles = {
+        glucose: '../Molecules/glucose.sdf',
+        fructose: '../Molecules/fructose.sdf',
+        galactose: '../Molecules/galactose.sdf'
+    };
+
+    viewButtons.forEach(btn => btn.addEventListener('click', () => openViewer(btn.dataset.view)));
+    btnClose.addEventListener('click', closeViewer);
+
+    function closeViewer() {
+        modal.classList.add('hidden');
+        viewerContainer.innerHTML = '';
+    }
+
+    async function openViewer(name) {
+        modal.classList.remove('hidden');
+        viewerTitle.textContent = name.charAt(0).toUpperCase() + name.slice(1) + ' (SDF)';
+
+        // Clear previous viewer
+        viewerContainer.innerHTML = '';
+        if (typeof $3Dmol === 'undefined') {
+            viewerContainer.innerHTML = '<p style="padding:12px; color:#e74c3c;">3Dmol.js kunne ikke indlæses (ingen net?).</p>';
+            return;
+        }
+
+        const path = sdfFiles[name];
+        if (!path) {
+            viewerContainer.innerHTML = '<p style="padding:12px;">Manglende SDF-sti for '+name+'.</p>';
+            return;
+        }
+
+        const viewer = $3Dmol.createViewer(viewerContainer, { backgroundColor: 'white' });
+        try {
+            const sdfTxt = await fetch(path).then(r => {
+                if (!r.ok) throw new Error('Fetch fejlede');
+                return r.text();
+            });
+            viewer.addModel(sdfTxt, 'sdf');
+            viewer.setStyle({}, { stick: { radius: 0.15 }, sphere: { scale: 0.35 } });
+            viewer.zoomTo();
+            viewer.spin(true);
+            viewer.render();
+            viewer.resize();
+        } catch (err) {
+            viewerContainer.innerHTML = '<p style="padding:12px; color:#e74c3c;">Kunne ikke hente '+path+'. Ligger filen der?</p>';
+        }
+    }
+</script>
+
+<script src="https://3Dmol.org/build/3Dmol-min.js"></script>
+<script src="https://3Dmol.org/build/3Dmol.ui-min.js"></script>
+
+</body>
+</html>
