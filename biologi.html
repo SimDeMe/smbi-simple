@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="da">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Biologi – oversigt</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><a href="index.html">← Forside</a></div>
+    <nav class="nav">
+      <a class="active" href="biologi.html">Biologi</a>
+      <a href="geografi.html">Geografi</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <h1>Biologi</h1>
+    <p class="muted">Her samler du dine biologi-animationer. Lige nu: tom skabelon + et eksempel.</p>
+
+    <section class="card">
+      <h2>Animationer / Simulationer</h2>
+
+      <ul class="list">
+        <li>
+          <a href="#" class="disabled" title="Tilføj link senere">Osmose (kommer snart)</a>
+          <span class="tag">C</span><span class="tag">celle</span>
+        </li>
+        <li>
+          <a href="#" class="disabled" title="Tilføj link senere">Enzymer og temperatur (kommer snart)</a>
+          <span class="tag">C</span><span class="tag">enzym</span>
+        </li>
+      </ul>
+
+      <p class="muted small">Tip: senere kan hver linje pege på en side eller en ekstern simulation.</p>
+    </section>
+
+    <section class="card subtle">
+      <h2>Emner (senere)</h2>
+      <p class="muted">Her kan du senere lave en emne-oversigt: Cellen, Genetik, Økologi…</p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span>© <span id="year"></span></span>
+  </footer>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>

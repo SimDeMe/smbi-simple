@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="da">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Geografi – oversigt</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><a href="index.html">← Forside</a></div>
+    <nav class="nav">
+      <a href="biologi.html">Biologi</a>
+      <a class="active" href="geografi.html">Geografi</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <h1>Geografi</h1>
+    <p class="muted">Her samler du dine geografi-animationer. Lige nu: tom skabelon + et eksempel.</p>
+
+    <section class="card">
+      <h2>Animationer / Simulationer</h2>
+
+      <ul class="list">
+        <li>
+          <a href="#" class="disabled" title="Tilføj link senere">Pladetektonik (kommer snart)</a>
+          <span class="tag">C</span><span class="tag">jord</span>
+        </li>
+        <li>
+          <a href="#" class="disabled" title="Tilføj link senere">Strålingsbalance (kommer snart)</a>
+          <span class="tag">C</span><span class="tag">klima</span>
+        </li>
+      </ul>
+    </section>
+
+    <section class="card subtle">
+      <h2>Emner (senere)</h2>
+      <p class="muted">Her kan du senere lave en emne-oversigt: Klima, Jord, Vand, Ressourcer…</p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span>© <span id="year"></span></span>
+  </footer>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>

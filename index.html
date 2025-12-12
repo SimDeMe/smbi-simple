@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="da">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Interaktive fag – Biologi & Geografi</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">smbi.dk (på GitHub)</div>
+    <nav class="nav">
+      <a href="biologi.html">Biologi</a>
+      <a href="geografi.html">Geografi</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <h1>Interaktive animationer og simulationer</h1>
+    <p class="muted">To fag. To oversigter. Flere emner kan komme på senere.</p>
+
+    <section class="grid">
+      <a class="card" href="biologi.html">
+        <h2>Biologi</h2>
+        <p>Klik ind og find animationer/simulationer til biologi.</p>
+      </a>
+
+      <a class="card" href="geografi.html">
+        <h2>Geografi</h2>
+        <p>Klik ind og find animationer/simulationer til geografi.</p>
+      </a>
+    </section>
+
+    <section class="card subtle">
+      <h3>Planen (senere)</h3>
+      <p class="muted">Når du får flere ting, kan vi tilføje “Emner” på hver fagside og linke til undersider.</p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span>© <span id="year"></span></span>
+  </footer>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
