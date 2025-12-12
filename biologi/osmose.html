@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <title>Osmose</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f0f4f8;
+            color: #333;
+        }
+        h2 { margin-bottom: 5px; color: #2c3e50; }
+        .subtitle { color: #666; font-size: 0.95em; margin-bottom: 20px; max-width: 600px; text-align: center; }
+        
+        .controls {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+            display: flex;
+            gap: 50px;
+            align-items: center;
+            border: 1px solid #e1e1e1;
+        }
+        .control-group { text-align: center; }
+        input[type=range] { cursor: pointer; width: 180px; }
+        .unit { font-size: 0.8em; color: #777; font-weight: normal;}
+        .value-display { font-weight: bold; color: #2c3e50; font-size: 1.1em; }
+        
+        #simulation-container {
+            position: relative;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            background: white;
+            overflow: hidden;
+            border: 1px solid #ccc;
+        }
+        canvas { display: block; background: radial-gradient(circle, #f9fdff 0%, #eef6fa 100%); }
+
+        .status-panel {
+            margin-top: 15px;
+            font-weight: bold;
+            font-size: 1.1em;
+            padding: 12px 25px;
+            border-radius: 50px;
+            background: #fff;
+            border: 2px solid #ddd;
+            text-align: center;
+            width: 550px;
+            transition: all 0.3s ease;
+        }
+        
+        .normal { background-color: #d4edda; color: #155724; border-color: #c3e6cb; }
+        .swell { background-color: #fff3cd; color: #856404; border-color: #ffeeba; }
+        .shrink { background-color: #f3e5f5; color: #4a148c; border-color: #d1c4e9; } /* Lilla nuance for skrumpning */
+
+        .legend {
+            margin-top: 15px;
+            display: flex;
+            gap: 20px;
+            font-size: 0.85em;
+            color: #555;
+        }
+        .legend-item { display: flex; align-items: center; }
+        .dot { width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
+        .blue { background-color: #3498db; }
+        .red { background-color: #e74c3c; }
+    </style>
+</head>
+<body>
+
+    <h2>Osmose i cellen</h2>
+    <div class="subtitle">Observer hvordan cellen langsomt tilpasser sig osmose.<br>Se membranen folde sammen (krenere), hvis cellen dehydrerer.</div>
+
+    <div class="controls">
+        <div class="control-group">
+            <label>Ekstracellulær væske (Udenfor)</label><br>
+            <input type="range" id="saltOut" min="0" max="600" step="10" value="300">
+            <div class="value-display"><span id="dispOut">300</span> <span class="unit">mOsm/L</span></div>
+        </div>
+        <div class="control-group">
+            <label>Intracellulær væske (Indeni)</label><br>
+            <input type="range" id="saltIn" min="0" max="600" step="10" value="300">
+            <div class="value-display"><span id="dispIn">300</span> <span class="unit">mOsm/L</span></div>
+        </div>
+    </div>
+
+    <div id="simulation-container">
+        <canvas id="simCanvas" width="600" height="500"></canvas>
+    </div>
+
+    <div id="statusText" class="status-panel normal">Isotonisk: Cellen er i balance</div>
+
+    <div class="legend">
+        <div class="legend-item"><div class="dot blue"></div> Vand</div>
+        <div class="legend-item"><div class="dot red"></div> Salt/Ion</div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('simCanvas');
+        const ctx = canvas.getContext('2d');
+        const sliderOut = document.getElementById('saltOut');
+        const sliderIn = document.getElementById('saltIn');
+        const dispOut = document.getElementById('dispOut');
+        const dispIn = document.getElementById('dispIn');
+        const statusText = document.getElementById('statusText');
+
+        const cx = canvas.width / 2;
+        const cy = canvas.height / 2;
+        
+        // --- KONFIGURATION ---
+        let currentRadius = 140; // Start størrelse
+        let targetRadius = 140;
+        const BASE_RADIUS = 140; // Radius ved 300 mOsm (Normal)
+        const MIN_RADIUS = 70;  
+        const MAX_RADIUS = 230; 
+        
+        // Hvor hurtigt reagerer cellen? (Lavere = langsommere/mere flydende)
+        const REACTION_SPEED = 0.008; 
+
+        // Partikel system
+        let particles = [];
+        const WATER_COUNT = 150; 
+
+        // --- SETUP AF ORGANELLER ---
+        // Vi genererer nogle tilfældige positioner til mitokondrier, som er relative til centrum
+        const mitochondria = [];
+        for(let i=0; i<5; i++) {
+            mitochondria.push({
+                angle: Math.random() * Math.PI * 2,
+                distFactor: 0.4 + Math.random() * 0.3, // Hvor langt ude i cytoplasma? (0-1)
+                rotation: Math.random() * Math.PI
+            });
+        }
+
+        class Particle {
+            constructor(type, location) {
+                this.type = type; 
+                this.location = location; 
+                this.radius = type === 'salt' ? 3.5 : 2;
+                this.color = type === 'salt' ? 'rgba(231, 76, 60, 0.8)' : 'rgba(52, 152, 219, 0.6)';
+                
+                let angle = Math.random() * Math.PI * 2;
+                let dist;
+
+                if (location === 'inside') {
+                    dist = Math.random() * (currentRadius - 10);
+                } else {
+                    dist = Math.random() * (120) + currentRadius + 15;
+                    if (dist > 290) dist = 290; 
+                }
+
+                this.x = cx + Math.cos(angle) * dist;
+                this.y = cy + Math.sin(angle) * dist;
+
+                const speed = type === 'salt' ? 0.4 : 1.2;
+                this.vx = (Math.random() - 0.5) * speed;
+                this.vy = (Math.random() - 0.5) * speed;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                const dx = this.x - cx;
+                const dy = this.y - cy;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                const nx = dx / dist; 
+                const ny = dy / dist;
+
+                // Bounce på vægge
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+
+                // Enkel kollisionsmodel: Bruger en "usynlig" perfekt cirkel til fysikken
+                // Selvom grafikken krøller, bruger fysikken gennemsnits-radius for stabilitet.
+                if (this.type === 'salt') {
+                    if (this.location === 'inside') {
+                        if (dist + this.radius > currentRadius) {
+                            this.x = cx + nx * (currentRadius - this.radius - 1);
+                            this.y = cy + ny * (currentRadius - this.radius - 1);
+                            this.vx *= -1; this.vy *= -1;
+                        }
+                    } else {
+                        if (dist - this.radius < currentRadius) {
+                            this.x = cx + nx * (currentRadius + this.radius + 1);
+                            this.y = cy + ny * (currentRadius + this.radius + 1);
+                            this.vx *= -1; this.vy *= -1;
+                        }
+                    }
+                }
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+            }
+        }
+
+        function initWater() {
+            particles = [];
+            for(let i=0; i<WATER_COUNT; i++) {
+                let loc = Math.random() > 0.5 ? 'inside' : 'outside';
+                particles.push(new Particle('water', loc));
+            }
+        }
+
+        function updateSimulation() {
+            particles = particles.filter(p => p.type === 'water');
+            
+            const mOsmOut = parseInt(sliderOut.value);
+            const mOsmIn = parseInt(sliderIn.value);
+            
+            dispOut.innerText = mOsmOut;
+            dispIn.innerText = mOsmIn;
+
+            // Visualiser salt (færre prikker for ydeevne og overblik)
+            const visualCountIn = Math.floor(mOsmIn / 8);
+            const visualCountOut = Math.floor(mOsmOut / 8);
+
+            for(let i=0; i<visualCountIn; i++) particles.push(new Particle('salt', 'inside'));
+            for(let i=0; i<visualCountOut; i++) particles.push(new Particle('salt', 'outside'));
+
+            // Beregn mål-radius
+            const diff = mOsmIn - mOsmOut;
+            // Divider med større tal for at gøre radius-ændringen mindre ekstrem ift osmolaritet
+            targetRadius = BASE_RADIUS + (diff * 0.35); 
+
+            if (targetRadius < MIN_RADIUS) targetRadius = MIN_RADIUS;
+            if (targetRadius > MAX_RADIUS) targetRadius = MAX_RADIUS;
+
+            // Opdater tekst
+            statusText.className = "status-panel";
+            if (Math.abs(diff) <= 15) {
+                statusText.innerText = "Isotonisk: Cellen er i balance";
+                statusText.classList.add("normal");
+            } else if (diff > 15) {
+                statusText.innerText = `Hypotonisk: Vand suges ind (${diff} mOsm forskel)`;
+                statusText.classList.add("swell");
+            } else {
+                statusText.innerText = `Hypertonisk: Vand trækkes ud -> Cellen skrumper!`;
+                statusText.classList.add("shrink");
+            }
+        }
+
+        function drawOrganelles(r) {
+            // 1. Nucleus (Kernen) - Følger centrum, men bliver lidt mindre når cellen skrumper
+            const nucleusSize = r * 0.25;
+            ctx.beginPath();
+            ctx.arc(cx, cy, nucleusSize, 0, Math.PI * 2);
+            ctx.fillStyle = "rgba(100, 50, 150, 0.3)"; // Mørk lilla kerne
+            ctx.fill();
+            
+            // Nucleolus (Indre kerne)
+            ctx.beginPath();
+            ctx.arc(cx - 5, cy - 5, nucleusSize * 0.3, 0, Math.PI * 2);
+            ctx.fillStyle = "rgba(80, 40, 120, 0.4)";
+            ctx.fill();
+
+            // 2. Mitokondrier
+            mitochondria.forEach(mito => {
+                // Position baseret på nuværende radius
+                const dist = r * mito.distFactor;
+                const mx = cx + Math.cos(mito.angle) * dist;
+                const my = cy + Math.sin(mito.angle) * dist;
+
+                ctx.save();
+                ctx.translate(mx, my);
+                ctx.rotate(mito.rotation);
+                
+                // Tegn oval (mitokondrie)
+                ctx.beginPath();
+                ctx.ellipse(0, 0, r * 0.08, r * 0.04, 0, 0, Math.PI * 2);
+                ctx.fillStyle = "rgba(46, 204, 113, 0.4)"; // Grønlig
+                ctx.fill();
+                ctx.strokeStyle = "rgba(39, 174, 96, 0.6)";
+                ctx.stroke();
+                
+                // Indre folder (cristae) - simpel streg
+                ctx.beginPath();
+                ctx.moveTo(-r*0.06, 0);
+                ctx.lineTo(r*0.06, 0);
+                ctx.stroke();
+
+                ctx.restore();
+            });
+        }
+
+        function drawCell() {
+            // Beregn hvor "krøllet" cellen skal være
+            // Hvis radius er under base_radius, begynder den at krølle
+            let wrinkleAmount = 0;
+            if (currentRadius < BASE_RADIUS) {
+                // Jo mindre den er, jo mere krøllet
+                const shrinkFactor = (BASE_RADIUS - currentRadius) / (BASE_RADIUS - MIN_RADIUS);
+                wrinkleAmount = shrinkFactor * 10; // Max amplitude af krøller
+            }
+
+            ctx.beginPath();
+            // Tegn en cirkel der er "moduleret" med sinus-bølger hvis den er skrumpet
+            for (let i = 0; i <= 360; i+=2) {
+                const angle = i * Math.PI / 180;
+                // Lav 12 "buler" rundt om cellen
+                const distortion = Math.sin(angle * 12) * wrinkleAmount; 
+                
+                // Radius ved denne vinkel
+                const r = currentRadius + distortion;
+                
+                const x = cx + Math.cos(angle) * r;
+                const y = cy + Math.sin(angle) * r;
+                
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.closePath();
+
+            // Farvelæg cytoplasma
+            const gradient = ctx.createRadialGradient(cx, cy, currentRadius * 0.1, cx, cy, currentRadius);
+            gradient.addColorStop(0, "rgba(255, 235, 235, 0.7)");
+            gradient.addColorStop(1, "rgba(255, 220, 220, 0.6)");
+            ctx.fillStyle = gradient;
+            ctx.fill();
+            
+            // Tegn Membran kant
+            ctx.lineWidth = 4 + (wrinkleAmount/2); // Membranen ser tykkere ud når den krøller
+            ctx.strokeStyle = "rgba(192, 57, 43, 0.8)";
+            ctx.stroke();
+
+            // Tegn organeller OVENPÅ cytoplasma, men under membrankant (teknisk set)
+            // Vi kalder den her for at tegne dem "inde" i formen
+            drawOrganelles(currentRadius);
+            
+            // Labels
+            ctx.fillStyle = "#333";
+            ctx.font = "bold 13px sans-serif";
+            ctx.fillText("Membran", cx + currentRadius + 15, cy);
+            
+            if (currentRadius > 80) {
+                ctx.fillStyle = "rgba(80, 40, 120, 0.8)";
+                ctx.fillText("Nucleus", cx - 20, cy + 5);
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // GLIDENDE OVERGANG (Lerp)
+            // Vi flytter os kun en lille smule (REACTION_SPEED) mod målet hver gang.
+            // Dette skaber den langsomme, organiske bevægelse.
+            currentRadius += (targetRadius - currentRadius) * REACTION_SPEED;
+
+            drawCell();
+
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        sliderOut.addEventListener('input', updateSimulation);
+        sliderIn.addEventListener('input', updateSimulation);
+
+        initWater();
+        updateSimulation();
+        animate();
+
+    </script>
+</body>
+</html>
