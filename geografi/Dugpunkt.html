@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avanceret Dugpunkts-simulator</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f4f9; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .container { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-width: 800px; width: 100%; }
+        
+        h2 { text-align: center; color: #2c3e50; margin-top: 0; }
+
+        /* INSTRUMENT PANEL */
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #ecf0f1;
+            border-radius: 8px;
+            border: 1px solid #bdc3c7;
+        }
+
+        .instrument {
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+            height: 160px;
+            position: relative;
+        }
+        .instrument-label { margin-top: 10px; font-weight: bold; font-size: 0.9em; color: #34495e; }
+        .instrument-value { font-family: monospace; font-size: 1.1em; color: #2980b9; margin-top: 2px;}
+
+        /* TERMOMETER CSS */
+        .thermometer-tube {
+            width: 20px; height: 100px; background: #ddd; border-radius: 10px; border: 2px solid #999;
+            position: relative; overflow: hidden;
+        }
+        .thermometer-liquid {
+            width: 100%; background: #e74c3c; position: absolute; bottom: 0;
+            height: 50%; transition: height 0.2s ease-out;
+        }
+        .thermometer-bulb {
+            width: 30px; height: 30px; background: #e74c3c; border-radius: 50%; margin-top: -5px; z-index: 2;
+        }
+
+        /* HYGROMETER CSS */
+        .gauge {
+            width: 100px; height: 50px; /* Halvcirkel */
+            background: #ddd;
+            border-top-left-radius: 100px;
+            border-top-right-radius: 100px;
+            border: 2px solid #999; border-bottom: 0;
+            position: relative; overflow: hidden;
+        }
+        .gauge-inner {
+            width: 100%; height: 100%;
+            background: linear-gradient(to right, #f1c40f 0%, #2ecc71 50%, #3498db 100%);
+            opacity: 0.3;
+        }
+        .gauge-needle {
+            width: 4px; height: 45px; background: #c0392b;
+            position: absolute; bottom: 0; left: 48px;
+            transform-origin: bottom center;
+            transform: rotate(-90deg); /* -90 = 0%, 90 = 100% */
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Bouncy effekt */
+            border-radius: 2px;
+        }
+        .gauge-center { width: 10px; height: 10px; background: #333; border-radius: 50%; position: absolute; bottom: -5px; left: 45px; }
+
+        /* REGNMÅLER CSS */
+        .rain-tube {
+            width: 40px; height: 100px; border: 2px solid #3498db; border-top: none; background: rgba(255,255,255,0.5);
+            position: relative; display: flex; align-items: flex-end;
+        }
+        .rain-water {
+            width: 100%; background: rgba(52, 152, 219, 0.8); height: 0%;
+            transition: height 0.2s;
+        }
+        .reset-btn {
+            margin-top: 5px; padding: 4px 8px; font-size: 0.8em; cursor: pointer;
+            background: #fff; border: 1px solid #ccc; border-radius: 4px;
+        }
+        .reset-btn:hover { background: #eee; }
+
+        /* GRAF & CONTROLS */
+        canvas { background: #fff; border: 1px solid #ddd; border-radius: 4px; width: 100%; height: auto; cursor: crosshair;}
+        
+        .controls { margin-top: 20px; display: grid; gap: 20px; background: #fafafa; padding: 15px; border-radius: 8px; border: 1px solid #eee; }
+        .control-group { display: flex; flex-direction: column; }
+        label { font-weight: bold; margin-bottom: 5px; font-size: 0.9em; display: flex; justify-content: space-between; }
+        input[type=range] { width: 100%; cursor: pointer; }
+
+        /* Regn Animation på grafen */
+        #rain-overlay {
+            position: absolute; pointer-events: none; display: none;
+            flex-direction: column; align-items: center;
+            transition: left 0.1s, top 0.1s;
+        }
+        .cloud { font-size: 50px; line-height: 1; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.2)); }
+        .drops { font-size: 20px; color: #3498db; animation: fall 0.5s infinite linear; margin-top: -10px; }
+        @keyframes fall { 0% { opacity: 0; transform: translateY(0); } 50% { opacity: 1; } 100% { opacity: 0; transform: translateY(20px); } }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Klimasimulator: Dugpunkt</h2>
+
+        <div class="dashboard">
+            
+            <div class="instrument">
+                <div class="thermometer-tube">
+                    <div class="thermometer-liquid" id="anim-temp"></div>
+                </div>
+                <div class="thermometer-bulb"></div>
+                <div class="instrument-label">Temperatur</div>
+                <div class="instrument-value" id="val-temp-inst">20°C</div>
+            </div>
+
+            <div class="instrument">
+                <div class="gauge">
+                    <div class="gauge-inner"></div>
+                    <div class="gauge-needle" id="anim-rh"></div>
+                    <div class="gauge-center"></div>
+                </div>
+                <div class="instrument-label">Relativ Fugtighed</div>
+                <div class="instrument-value" id="val-rh-inst">59%</div>
+            </div>
+
+            <div class="instrument">
+                <div class="rain-tube">
+                    <div class="rain-water" id="anim-rain"></div>
+                </div>
+                <button class="reset-btn" onclick="resetRain()">Nulstil</button>
+                <div class="instrument-label">Nedbør</div>
+                <div class="instrument-value" id="val-rain-inst">0 g</div>
+            </div>
+
+        </div>
+
+        <div style="position: relative;">
+            <canvas id="chart" width="600" height="350"></canvas>
+            
+            <div id="rain-overlay">
+                <div class="cloud">🌧️</div>
+                <div class="drops">💧💧</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <label><span>Temperatur</span> <span id="lbl-temp">20°C</span></label>
+                <input type="range" id="slider-temp" min="0" max="35" step="0.1" value="20">
+            </div>
+            <div class="control-group">
+                <label><span>Vanddamp i luften</span> <span id="lbl-water">10 g/m³</span></label>
+                <input type="range" id="slider-water" min="0" max="40" step="0.1" value="10">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('chart');
+        const ctx = canvas.getContext('2d');
+        const sliderTemp = document.getElementById('slider-temp');
+        const sliderWater = document.getElementById('slider-water');
+        const rainOverlay = document.getElementById('rain-overlay');
+        
+        // Instrument elements
+        const animTemp = document.getElementById('anim-temp');
+        const animRH = document.getElementById('anim-rh');
+        const animRain = document.getElementById('anim-rain');
+        
+        // Text displays
+        const valTempInst = document.getElementById('val-temp-inst');
+        const valRHInst = document.getElementById('val-rh-inst');
+        const valRainInst = document.getElementById('val-rain-inst');
+        const lblTemp = document.getElementById('lbl-temp');
+        const lblWater = document.getElementById('lbl-water');
+
+        // State variables
+        let totalRain = 0;
+
+        // Constants
+        const padding = 40;
+        const width = 600;
+        const height = 350;
+        const maxX = 35; // Max temp
+        const maxY = 40; // Max water
+
+        // Math Model (Tilpasset: 0C=5g, 30C=30g)
+        function getMaxCapacity(temp) {
+            return 5 * Math.exp(0.06 * temp);
+        }
+
+        function getX(temp) { return padding + (temp / maxX) * (width - 2 * padding); }
+        function getY(grams) { return height - padding - (grams / maxY) * (height - 2 * padding); }
+
+        function updateSimulation(source) {
+            let temp = parseFloat(sliderTemp.value);
+            let water = parseFloat(sliderWater.value);
+            let maxWater = getMaxCapacity(temp);
+            let isRaining = false;
+
+            // FYSISK LOGIK
+            if (source === 'temp') {
+                // Hvis temperaturen falder og vandindhold > max, så regner det
+                if (water > maxWater) {
+                    let rainAmount = water - maxWater;
+                    totalRain += rainAmount; // Saml regn op
+                    
+                    water = maxWater;
+                    sliderWater.value = water; // Tvangsflyt slideren
+                    isRaining = true;
+                }
+            } else if (source === 'water') {
+                // Manuel overfyldning
+                if (water > maxWater) {
+                    isRaining = true;
+                }
+            }
+
+            let visualWater = Math.min(water, maxWater);
+            let rh = (visualWater / maxWater) * 100;
+            if (isRaining) rh = 100;
+
+            // Tegn graf
+            drawGraph(temp, visualWater, maxWater, water, isRaining);
+            
+            // Opdater Instrumenter
+            updateInstruments(temp, rh, totalRain);
+
+            // Opdater labels nede ved sliders
+            lblTemp.innerText = temp.toFixed(1) + "°C";
+            lblWater.innerText = water.toFixed(1) + " g/m³";
+        }
+
+        function updateInstruments(temp, rh, rain) {
+            // 1. Termometer (0 til 35 grader)
+            let tempPercent = (temp / 35) * 100;
+            animTemp.style.height = tempPercent + "%";
+            valTempInst.innerText = temp.toFixed(1) + "°C";
+
+            // 2. Hygrometer (0 til 100%) -90deg til 90deg
+            let rotation = (rh * 1.8) - 90;
+            animRH.style.transform = `rotate(${rotation}deg)`;
+            valRHInst.innerText = Math.round(rh) + "%";
+
+            // 3. Regnmåler (Visualiser op til 50g som fuld)
+            let rainVisualMax = 50; 
+            let rainHeight = (rain / rainVisualMax) * 100;
+            if (rainHeight > 100) rainHeight = 100;
+            animRain.style.height = rainHeight + "%";
+            valRainInst.innerText = rain.toFixed(1) + " g";
+        }
+
+        function resetRain() {
+            totalRain = 0;
+            updateSimulation('none'); // Refresh display
+        }
+
+        function drawGraph(temp, visualWater, maxWater, inputWater, isRaining) {
+            ctx.clearRect(0, 0, width, height);
+
+            // Akser
+            ctx.beginPath(); ctx.strokeStyle = '#95a5a6'; ctx.lineWidth = 2;
+            ctx.moveTo(padding, padding); ctx.lineTo(padding, height - padding); ctx.lineTo(width - padding, height - padding);
+            ctx.stroke();
+
+            // Labels
+            ctx.fillStyle = '#7f8c8d'; ctx.font = '12px Arial';
+            ctx.fillText("0°C", padding - 10, height - padding + 20);
+            ctx.fillText("35°C", width - padding - 10, height - padding + 20);
+            ctx.fillText("40g", padding - 35, padding + 5);
+
+            // Dugpunktskurve
+            ctx.beginPath(); ctx.strokeStyle = '#2980b9'; ctx.lineWidth = 3;
+            for (let t = 0; t <= maxX; t += 0.5) {
+                let px = getX(t); let py = getY(getMaxCapacity(t));
+                if (t === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+            }
+            ctx.stroke();
+
+            // Fyld
+            ctx.lineTo(getX(maxX), getY(0)); ctx.lineTo(getX(0), getY(0));
+            ctx.fillStyle = 'rgba(52, 152, 219, 0.1)'; ctx.fill();
+
+            // Prikken
+            ctx.beginPath(); ctx.fillStyle = '#2c3e50';
+            ctx.arc(getX(temp), getY(visualWater), 7, 0, Math.PI * 2);
+            ctx.fill(); ctx.stroke();
+
+            // Regnsky position
+            if (isRaining) {
+                rainOverlay.style.display = 'flex';
+                rainOverlay.style.left = (getX(temp) - 25) + 'px'; // Centreret over prik
+                rainOverlay.style.top = (getY(maxWater) - 70) + 'px';
+            } else {
+                rainOverlay.style.display = 'none';
+            }
+        }
+
+        // Listeners
+        sliderTemp.addEventListener('input', () => updateSimulation('temp'));
+        sliderWater.addEventListener('input', () => updateSimulation('water'));
+
+        // Start
+        updateSimulation('temp');
+    </script>
+</body>
+</html>
