@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avanceret Enzym Aktivitet Simulator</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* --- CSS STYLING --- */
+        body { font-family: 'Segoe UI', Roboto, sans-serif; background: #f0f2f5; text-align: center; padding: 20px; color: #333; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 6px 15px rgba(0,0,0,0.1); }
+        h2 { color: #c2185b; margin-bottom: 25px; }
+
+        /* Den visuelle boks */
+        .visual-box {
+            height: 220px; /* Lidt højere for bedre plads til grafik */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            background: #fff0f5; /* Lys pink baggrund ala referencen */
+            border-radius: 12px;
+            border: 2px solid #f8bbd0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* --- SVG GRAFIK STYLING & ANIMATIONER --- */
+        #enzyme-system-svg {
+            width: 200px;
+            height: auto;
+            overflow: visible;
+        }
+
+        /* Standard farver */
+        .enzyme-shape { fill: #d81b60; transition: all 0.8s ease; } /* Lyserød som referencen */
+        .substrate-shape { fill: #880e4f; transition: all 0.5s ease; } /* Mørkere rød som referencen */
+
+        /* Animationer */
+        @keyframes shake-light {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(-1px, 1px) rotate(-1deg); }
+            75% { transform: translate(1px, -1px) rotate(1deg); }
+        }
+        @keyframes shake-vigorous {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            20% { transform: translate(-2px, 0px) rotate(2deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            60% { transform: translate(-2px, 1px) rotate(0deg); }
+            80% { transform: translate(1px, -1px) rotate(2deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+        @keyframes float-around {
+            0%, 100% { transform: translate(-40px, -10px); }
+            50% { transform: translate(-50px, 10px); }
+        }
+
+        /* TILSTANDE (Styres af JavaScript) */
+
+        /* Tilstand: Lav Temperatur */
+        .state-low #substrate-group {
+            animation: float-around 4s ease-in-out infinite;
+        }
+        .state-low #enzyme-group {
+            animation: shake-light 3s infinite;
+        }
+
+        /* Tilstand: Optimum (Bundet) */
+        .state-optimum #substrate-group {
+            /* Flyt substratet ind i hakket */
+            transform: translate(0px, 0px); 
+        }
+        .state-optimum #enzyme-system-svg {
+             /* Ryst hele systemet */
+            animation: shake-vigorous 0.5s infinite;
+        }
+
+        /* Tilstand: Denatureret (Ødelagt) */
+        .state-denatured .enzyme-shape {
+            fill: #78909c; /* Skift farve til kedelig grå */
+            /* "Smelt" formen ved at strække og vride den */
+            transform: scaleY(0.7) scaleX(1.1) skewX(15deg); 
+            transform-origin: center;
+        }
+        .state-denatured #substrate-group {
+            /* Substratet kan ikke binde, svæver væk */
+            transform: translate(-60px, -30px) rotate(-20deg);
+            opacity: 0.6;
+        }
+        .state-denatured #enzyme-group {
+             animation: shake-light 1s infinite;
+        }
+
+
+        /* Status Panel og Slider Styling */
+        .status-panel { margin-top: 15px; padding: 12px; border-radius: 8px; font-weight: bold; color: #333; transition: background-color 0.3s ease;}
+        .slider-container { margin: 30px 0 10px; }
+        input[type=range] { width: 80%; cursor: pointer; }
+        label { font-size: 1.1em; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Enzym Aktivitet Simulator</h2>
+    
+    <div class="visual-box" id="visual-container">
+        <svg id="enzyme-system-svg" viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg">
+            <g id="enzyme-group" transform="translate(80, 75)">
+                 <path class="enzyme-shape" d="M -40,-40 L 10,-40 L 10,-20 L 30,-20 L 30,20 L 10,20 L 10,40 L -40,40 C -60,40 -60,-40 -40,-40 Z" />
+            </g>
+            <g id="substrate-group" transform="translate(-50, 75)">
+                 <rect class="substrate-shape" x="90" y="-18" width="28" height="36" rx="4" />
+            </g>
+        </svg>
+    </div>
+
+    <div id="status-text" class="status-panel" style="background-color: #e1f5fe;">
+        Temp: 0°C - Lav Energi
+    </div>
+
+    <canvas id="enzymeChart" width="400" height="200"></canvas>
+
+    <div class="slider-container">
+        <label for="tempSlider">Temperatur: <span id="tempValue">0</span>°C</label><br>
+        <input type="range" id="tempSlider" min="0" max="80" value="0" step="1">
+    </div>
+</div>
+
+<script>
+    // --- JAVASCRIPT LOGIK ---
+
+    // 1. Matematisk model
+    function calculateRate(temp) {
+        if (temp > 60) return 0; 
+        // Justeret kurve for at gøre toppen lidt bredere
+        let activation = Math.pow(temp, 1.8) / 25; 
+        let denaturation = 1;
+        if (temp > 40) {
+            // Stejlt fald efter 40 grader
+            denaturation = 1 - (Math.pow((temp - 40), 1.5) / 80); 
+        }
+        let rate = activation * denaturation;
+        return Math.max(0, rate);
+    }
+
+    // 2. Initialiser Grafen (Chart.js)
+    const ctx = document.getElementById('enzymeChart').getContext('2d');
+    const labels = Array.from({length: 81}, (_, i) => i);
+    const dataPoints = labels.map(t => calculateRate(t));
+
+    const chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Reaktionshastighed',
+                data: dataPoints,
+                borderColor: '#c2185b', // Matcher enzymfarven
+                backgroundColor: 'rgba(194, 24, 91, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                pointRadius: 0,
+                tension: 0.3 // Blødere kurve
+            }, {
+                label: 'Nuværende Temp',
+                data: Array(81).fill(null),
+                backgroundColor: '#880e4f',
+                borderColor: 'white',
+                borderWidth: 2,
+                pointRadius: 8,
+                pointHoverRadius: 10,
+                showLine: false
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { title: { display: true, text: 'Temperatur (°C)' }, grid: {display: false} },
+                y: { title: { display: true, text: 'Aktivitet' }, min: 0, grid: {color: '#eee'} }
+            },
+            animation: { duration: 0 }
+        }
+    });
+
+    // 3. Interaktivitet og Visuel Opdatering
+    const slider = document.getElementById('tempSlider');
+    const tempValDisplay = document.getElementById('tempValue');
+    const statusText = document.getElementById('status-text');
+    const visualContainer = document.getElementById('visual-container');
+    const svgElement = document.getElementById('enzyme-system-svg');
+
+    function updateSimulation() {
+        let t = parseInt(slider.value);
+        let rate = calculateRate(t);
+
+        tempValDisplay.innerText = t;
+
+        // Opdater grafen
+        let pointData = Array(81).fill(null);
+        pointData[t] = rate;
+        chart.data.datasets[1].data = pointData;
+        chart.update();
+
+        // Opdater grafikken
+        updateGraphicVisuals(t);
+    }
+
+    function updateGraphicVisuals(t) {
+        // Nulstil alle tilstands-klasser først
+        visualContainer.classList.remove('state-low', 'state-optimum', 'state-denatured');
+        svgElement.style.animation = 'none';
+        svgElement.offsetHeight; // Trigger reflow for at genstarte animationer
+
+        let desc = "";
+        let bgColor = "";
+
+        if (t < 15) {
+            // Lav temperatur
+            visualContainer.classList.add('state-low');
+            desc = "TILSTAND: LAV ENERGI. Molekylerne bevæger sig langsomt. Få kollisioner.";
+            bgColor = "#b3e5fc"; // Kold blå
+        } 
+        else if (t >= 15 && t <= 35) {
+            // Stigende aktivitet (bruger også low-state animationen, bare hurtigere i teorien)
+            visualContainer.classList.add('state-low');
+             // Vi gør animationen lidt hurtigere via JS hvis vi vil, men CSS standard er ok her
+            desc = "TILSTAND: STIGENDE AKTIVITET. Mere varme = Flere sammenstød.";
+            bgColor = "#fff9c4"; // Gul
+        }
+        else if (t > 35 && t <= 42) {
+            // Optimum
+            visualContainer.classList.add('state-optimum');
+            desc = "TILSTAND: OPTIMUM! Substratet passer perfekt i det aktive center.";
+            bgColor = "#c8e6c9"; // Grøn
+        }
+        else if (t > 42) {
+            // Denaturering
+            visualContainer.classList.add('state-denatured');
+            desc = "TILSTAND: DENATURERING. Varmen ødelægger enzymets form. Reaktionen stopper.";
+            bgColor = "#ffcdd2"; // Rød
+        }
+        
+        statusText.innerText = desc;
+        statusText.style.backgroundColor = bgColor;
+    }
+
+    slider.addEventListener('input', updateSimulation);
+    updateSimulation(); // Start
+</script>
+
+</body>
+</html>
