@@ -1,473 +1,293 @@
 <!DOCTYPE html>
 <html lang="da">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-  <title>Enzymhastighed – collision + fit</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enzym Syntese Simulator</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* --- GRUNDLÆGGENDE DESIGN --- */
+        body { font-family: 'Segoe UI', sans-serif; background: #f9fbfd; text-align: center; padding: 20px; color: #333; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 5px 25px rgba(0,0,0,0.1); }
+        h2 { color: #1b5e20; margin-bottom: 25px; } /* Mørkegrøn titel */
 
-  <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; background:#f4f6f8; text-align:center; padding:20px; color:#222; }
-    .container { max-width: 860px; margin: 0 auto; background:white; padding: 22px; border-radius: 14px; box-shadow: 0 6px 24px rgba(0,0,0,0.08); }
-    h2 { margin: 6px 0 18px; color:#1f2d3d; }
+        /* --- VISUEL BOKS --- */
+        .visual-box {
+            height: 260px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            background: linear-gradient(to bottom, #ffffff, #e8f5e9); /* Svag grøn gradient baggrund */
+            border-radius: 12px;
+            border: 1px solid #c8e6c9;
+            position: relative;
+            overflow: hidden;
+        }
 
-    .visual-box{
-      height: 280px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      margin: 8px 0 14px;
-      background: linear-gradient(to bottom, #ffffff, #f0f7ff);
-      border-radius: 14px;
-      border: 1px solid #dde6ee;
-      position: relative;
-      overflow:hidden;
-    }
+        /* --- SVG ELEMENTER --- */
+        #reaction-svg {
+            width: 320px;
+            height: 240px;
+            overflow: visible;
+        }
 
-    #simSvg { width: 720px; max-width: 100%; height: 260px; }
+        /* Enzymet (Den grønne form) */
+        .enzyme-body {
+            fill: url(#gradGreen); /* 3D effekt */
+            stroke: #1b5e20;
+            stroke-width: 2px;
+            filter: drop-shadow(0px 4px 4px rgba(0,0,0,0.3));
+            transition: all 0.8s ease;
+            transform-origin: center center;
+        }
 
-    .enzyme-fill { fill:#E91E63; }
-    .enzyme-stroke { stroke:#B2164B; stroke-width:3; }
+        /* Substrater (Gul og Rød) */
+        .sub-yellow { fill: url(#gradYellow); stroke: #fbc02d; stroke-width: 1px; }
+        .sub-red { fill: url(#gradRed); stroke: #d32f2f; stroke-width: 1px; }
+        
+        /* Produkt (Orange) */
+        .prod-orange { fill: url(#gradOrange); stroke: #f57c00; stroke-width: 1px; opacity: 0; }
 
-    /* “hul” i enzymet: tegnes som hvidt cut-out */
-    .pocket-cut { fill:#fff; opacity: 0.95; }
+        /* --- ANIMATIONER --- */
 
-    .subA { fill:#3F51B5; stroke:#fff; stroke-width:2; }
-    .subB { fill:#2196F3; stroke:#fff; stroke-width:2; }
-    .bond { stroke:#222; stroke-width:4; stroke-linecap:round; opacity:1; }
+        /* 1. LAV TEMP: Svæver tilfældigt rundt */
+        @keyframes float-aimless {
+            0%, 100% { transform: translate(0, -60px) rotate(10deg); }
+            50% { transform: translate(-20px, -70px) rotate(-5deg); }
+        }
+        @keyframes float-aimless-2 {
+            0%, 100% { transform: translate(0, -60px) rotate(-10deg); }
+            50% { transform: translate(20px, -50px) rotate(5deg); }
+        }
 
-    .product { opacity: 0; }
+        /* 2. OPTIMUM: Syntese Processen (Ind -> Smelt -> Ud) */
+        /* Animation for de to små (Input) */
+        @keyframes inputs-enter {
+            0% { transform: translate(0, -100px) scale(1); opacity: 1; }
+            40% { transform: translate(0, 0) scale(1); opacity: 1; } /* Lander i enzymet */
+            45% { transform: translate(0, 0) scale(0.9); opacity: 1; } /* Presser sammen */
+            50% { transform: translate(0, 0) scale(0.1); opacity: 0; } /* Forsvinder (bliver til produkt) */
+            100% { transform: translate(0, 0) scale(0); opacity: 0; }
+        }
 
-    .label { fill:#fff; font-weight:700; font-size:12px; letter-spacing: 0.5px; }
+        /* Animation for den store (Produkt) */
+        @keyframes product-exit {
+            0%, 45% { transform: translate(0, 0) scale(0.1); opacity: 0; }
+            50% { transform: translate(0, 0) scale(1); opacity: 1; } /* Popper frem */
+            60% { transform: translate(0, -10px) scale(1.1); opacity: 1; } /* Puls */
+            100% { transform: translate(0, -120px) rotate(360deg); opacity: 1; } /* Flyver væk */
+        }
 
-    .status-panel { padding: 12px 14px; border-radius: 10px; font-weight: 650; margin: 6px 0 14px; background:#e3f2fd; }
-    .slider-container { margin: 14px 0 2px; }
-    input[type=range]{ width: 86%; cursor:pointer; }
-    .tiny { font-size: 12px; color:#4a5568; margin-top: 6px; }
+        /* 3. DENATURERET: Enzymet ødelægges */
+        .enzyme-denatured {
+            /* Flader ud og bliver skæv */
+            transform: scaleY(0.4) scaleX(1.2) rotate(5deg);
+            fill: #78909c !important; /* Bliver grå */
+        }
+        @keyframes bounce-off {
+            0% { transform: translate(0, -100px); }
+            50% { transform: translate(10px, -40px); } /* Rammer det ødelagte enzym */
+            100% { transform: translate(-50px, -120px) rotate(-45deg); } /* Bouncer væk */
+        }
 
-    /* denaturerings-vibe */
-    .shake { animation: shake 0.22s infinite linear; transform-origin: center; }
-    @keyframes shake {
-      0% { transform: translate(0,0) rotate(0deg); }
-      25% { transform: translate(0.8px,-0.6px) rotate(-0.4deg); }
-      50% { transform: translate(-0.7px,0.6px) rotate(0.5deg); }
-      75% { transform: translate(0.6px,0.4px) rotate(-0.3deg); }
-      100% { transform: translate(0,0) rotate(0deg); }
-    }
-  </style>
+        /* --- TILSTANDSSTYRING (CSS Klasser) --- */
+        
+        /* State: Low */
+        .state-low #group-yellow { animation: float-aimless 6s infinite ease-in-out; }
+        .state-low #group-red { animation: float-aimless-2 5s infinite ease-in-out; }
+        
+        /* State: Optimum */
+        .state-optimum #group-inputs { animation: inputs-enter 2s infinite cubic-bezier(0.4, 0, 0.2, 1); }
+        .state-optimum #group-product { animation: product-exit 2s infinite cubic-bezier(0.4, 0, 0.2, 1); }
+        
+        /* State: Denatured */
+        .state-denatured .enzyme-body { 
+            /* Triggered via class above */
+        }
+        .state-denatured #group-inputs {
+            animation: bounce-off 1.5s infinite linear;
+        }
+
+        /* UI */
+        .status-panel { margin-top: -10px; margin-bottom: 20px; padding: 15px; border-radius: 8px; font-weight: bold; color: #1b5e20; }
+        .slider-container { margin: 20px 0; }
+        input[type=range] { width: 80%; accent-color: #2e7d32; cursor: pointer; }
+    </style>
 </head>
-
 <body>
-  <div class="container">
-    <h2>Enzymspaltning: collision + “fit” der giver mening</h2>
 
-    <div class="visual-box" id="visualBox">
-      <svg id="simSvg" viewBox="0 0 720 260" xmlns="http://www.w3.org/2000/svg">
-        <!-- Enzym (fast) -->
-        <g id="enzyme" transform="translate(420,130)">
-          <path id="enzymeBody" class="enzyme-fill enzyme-stroke"
-                d="M -210,85
-                   C -235,35 -225,-40 -175,-75
-                   C -120,-115 -30,-120 0,-118
-                   C 30,-120 120,-115 175,-75
-                   C 225,-40 235,35 210,85
-                   Z
+<div class="container">
+    <h2>Enzym Syntese: Opbygning af Molekyler</h2>
+    
+    <div class="visual-box" id="visual-container">
+        <svg id="reaction-svg" viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg">
+            
+            <defs>
+                <radialGradient id="gradGreen" cx="30%" cy="30%" r="70%">
+                    <stop offset="0%" style="stop-color:#66bb6a;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#1b5e20;stop-opacity:1" />
+                </radialGradient>
+                <radialGradient id="gradYellow" cx="30%" cy="30%" r="70%">
+                    <stop offset="0%" style="stop-color:#fff59d;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#fbc02d;stop-opacity:1" />
+                </radialGradient>
+                <radialGradient id="gradRed" cx="30%" cy="30%" r="70%">
+                    <stop offset="0%" style="stop-color:#ef9a9a;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#c62828;stop-opacity:1" />
+                </radialGradient>
+                <radialGradient id="gradOrange" cx="30%" cy="30%" r="70%">
+                    <stop offset="0%" style="stop-color:#ffcc80;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#e65100;stop-opacity:1" />
+                </radialGradient>
+            </defs>
 
-                   M -90,-40
-                   A 34,34 0 0,0 -22,-40
-                   A 34,34 0 0,0 -90,-40
-                   Z
+            <g transform="translate(100, 110)">
+                <path id="enzyme-shape" class="enzyme-body" d="M -60,-20 
+                         C -60,40 60,40 60,-20 
+                         C 50,-20 50,10 30,10 
+                         C 20,10 10,-10 0,-10 
+                         C -10,-10 -20,10 -30,10 
+                         C -50,10 -50,-20 -60,-20 Z" />
+            </g>
 
-                   M 22,-40
-                   A 34,34 0 0,0 90,-40
-                   A 34,34 0 0,0 22,-40
-                   Z" />
-          <!-- Aktivt site: hul der matcher substratet -->
-          <g id="pocket" transform="translate(0,-46)">
-            <!-- outlines that show the two indentations clearly -->
-            <circle id="pocketA" class="pocket-cut" cx="-56" cy="-40" r="34"/>
-            <circle id="pocketB" class="pocket-cut" cx="56" cy="-40" r="34"/>
+            <g id="group-inputs">
+                <g id="group-yellow" transform="translate(70, 105)">
+                    <circle class="sub-yellow" cx="0" cy="0" r="18" />
+                </g>
+                <g id="group-red" transform="translate(130, 105)">
+                    <path class="sub-red" d="M -15,-10 Q 0,-25 15,-10 Q 20,0 15,15 Q 0,25 -15,15 Q -20,0 -15,-10" />
+                </g>
+            </g>
 
-            <circle fill="none" stroke="#ffffff" stroke-width="2.6" opacity="0.95" cx="-56" cy="-40" r="34"/>
-            <circle fill="none" stroke="#ffffff" stroke-width="2.6" opacity="0.95" cx="56" cy="-40" r="34"/>
-          </g>
+            <g id="group-product" transform="translate(100, 105)">
+                <path class="prod-orange" d="M -25,0 Q -25,-20 0,-20 Q 25,-20 25,0 Q 25,20 0,20 Q -25,20 -25,0 Z" transform="scale(1.5, 1)"/>
+            </g>
 
-          <text class="label" x="0" y="74" text-anchor="middle">ENZYM</text>
-        </g>
-
-        <!-- Substrat (bevæger sig) -->
-        <g id="substrate" transform="translate(140,70)">
-          <line id="bond" class="bond" x1="-10" y1="0" x2="10" y2="0" />
-          <circle id="subA" class="subA" cx="-26" cy="0" r="18"></circle>
-          <circle id="subB" class="subB" cx="26" cy="0" r="18"></circle>
-        </g>
-
-        <!-- Produkter -->
-        <g id="products">
-          <circle id="prodA" class="subA product" cx="0" cy="0" r="16"></circle>
-          <circle id="prodB" class="subB product" cx="0" cy="0" r="16"></circle>
-        </g>
-      </svg>
+        </svg>
     </div>
 
-    <div id="status" class="status-panel">Temp: 0°C – lav energi, få sammenstød.</div>
+    <div id="status-text" class="status-panel" style="background-color: #e8f5e9;">
+        Temp: 0°C - Lav Energi
+    </div>
 
-    <canvas id="enzymeChart" width="400" height="180"></canvas>
+    <canvas id="enzymeChart" width="400" height="200"></canvas>
 
     <div class="slider-container">
-      <label for="tempSlider">Temperatur: <span id="tempValue">0</span>°C</label><br/>
-      <input type="range" id="tempSlider" min="0" max="80" value="0" step="1" />
-      <div class="tiny">Optimum er sat til ca. 37–45°C (justér i koden hvis du vil).</div>
+        <label for="tempSlider">Temperatur: <span id="tempValue">0</span>°C</label><br>
+        <input type="range" id="tempSlider" min="0" max="80" value="0" step="1">
     </div>
-  </div>
+</div>
 
 <script>
-/* =========================
-   1) Kurve til grafen
-========================= */
-function calculateRate(temp) {
-  if (temp > 62) return 0;
-
-  // Stigning i sammenstød/energi
-  const activation = (temp * temp) / 30;
-
-  // Denaturering efter ~45°C
-  let denaturation = 1;
-  if (temp > 45) {
-    denaturation = 1 - (Math.pow((temp - 45), 1.7) / 90);
-  }
-
-  return Math.max(0, activation * denaturation);
-}
-
-/* =========================
-   2) Chart.js setup
-========================= */
-const ctx = document.getElementById('enzymeChart').getContext('2d');
-const labels = Array.from({length: 81}, (_, i) => i);
-const dataPoints = labels.map(t => calculateRate(t));
-
-const chart = new Chart(ctx, {
-  type: 'line',
-  data: {
-    labels,
-    datasets: [{
-      data: dataPoints,
-      borderColor: '#E91E63',
-      backgroundColor: 'rgba(233, 30, 99, 0.12)',
-      borderWidth: 3,
-      fill: true,
-      pointRadius: 0,
-      tension: 0.35
-    },{
-      data: Array(81).fill(null),
-      pointBackgroundColor: '#2196F3',
-      pointBorderColor: '#fff',
-      pointBorderWidth: 2,
-      pointRadius: 8,
-      showLine: false
-    }]
-  },
-  options: {
-    responsive: true,
-    plugins: { legend: { display:false }, tooltip: { enabled:false } },
-    scales: {
-      x: { title: { display:true, text:'Temperatur (°C)' }, grid: { display:false } },
-      y: { title: { display:true, text:'Produkter pr. sekund (model)' }, min:0, ticks:{ display:false } }
-    },
-    animation: { duration: 0 }
-  }
-});
-
-/* =========================
-   3) Sim-logic: collision + fit
-========================= */
-const slider = document.getElementById('tempSlider');
-const tempValue = document.getElementById('tempValue');
-const status = document.getElementById('status');
-
-const substrateEl = document.getElementById('substrate');
-const bondEl = document.getElementById('bond');
-
-const enzymeEl = document.getElementById('enzyme');
-const enzymeBody = document.getElementById('enzymeBody');
-const pocketA = document.getElementById('pocketA');
-const pocketB = document.getElementById('pocketB');
-const pocketPath = document.getElementById('pocketPath');
-
-const prodA = document.getElementById('prodA');
-const prodB = document.getElementById('prodB');
-
-const box = { w: 720, h: 260 };
-const pocketWorld = { x: 420, y: 86 }; // centrum for aktivt site (world coords)
-
-let tC = 0;
-let state = "free"; // free | bound | splitting
-
-function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
-function rand(a,b){ return a + Math.random()*(b-a); }
-
-// Substrat-position og -hastighed
-let s = { x: 140, y: 70, vx: 1.2, vy: 1.0 };
-
-// Produkter (to partikler)
-let p = {
-  ax: 0, ay: 0, bx: 0, by: 0,
-  avx: 0, avy: 0, bvx: 0, bvy: 0,
-  alive: false
-};
-
-// Temperatur -> “termisk” fart
-function thermalSpeed(temp){
-  const base = 0.6 + temp * 0.06; // 0°C ~0.6, 40°C ~3.0
-  return clamp(base, 0.6, 4.2);
-}
-
-// Binding-sandsynlighed (styret af temp)
-function bindingChance(temp){
-  if (temp < 12) return 0.03;
-  if (temp < 28) return 0.10;
-  if (temp < 37) return 0.22;
-  if (temp <= 45) return 0.42;  // optimum
-  if (temp <= 55) return 0.10;
-  return 0.02;
-}
-
-// Denaturering: ødelæg pocket-geometrien (så “fit” går i stykker)
-function setDenaturedLook(isDenatured){
-  enzymeEl.classList.toggle('shake', isDenatured);
-
-  if (!isDenatured){
-    pocketA.setAttribute('r', '34');
-    pocketB.setAttribute('r', '34');
-    pocketA.setAttribute('cx', '-56');
-    pocketB.setAttribute('cx', '56');
-    // pocketPath is no longer used in the new pocket, so guard it:
-    if (pocketPath) pocketPath.setAttribute('d', '');
-
-    enzymeBody.setAttribute('d',
-      `M -210,85
-       C -235,35 -225,-40 -175,-75
-       C -120,-115 -30,-120 0,-118
-       C 30,-120 120,-115 175,-75
-       C 225,-40 235,35 210,85
-       Z
-
-       M -90,-40
-       A 34,34 0 0,0 -22,-40
-       A 34,34 0 0,0 -90,-40
-       Z
-
-       M 22,-40
-       A 34,34 0 0,0 90,-40
-       A 34,34 0 0,0 22,-40
-       Z`);
-  } else {
-    pocketA.setAttribute('r', '22');
-    pocketB.setAttribute('r', '28');
-    pocketA.setAttribute('cx', '-42');
-    pocketB.setAttribute('cx', '66');
-    if (pocketPath) pocketPath.setAttribute('d', '');
-
-    enzymeBody.setAttribute('d',
-      `M -210,85
-       C -250,20 -205,-55 -140,-78
-       C -70,-102 40,-112 120,-78
-       C 205,-40 255,25 210,85
-       Z`);
-  }
-}
-
-// Er substratet tæt nok på aktivt site?
-function nearPocket(){
-  const dx = s.x - pocketWorld.x;
-  const dy = s.y - pocketWorld.y;
-  return Math.hypot(dx, dy) < 22;
-}
-
-function bind(){
-  state = "bound";
-  s.x = pocketWorld.x;
-  s.y = pocketWorld.y;
-  s.vx = 0; s.vy = 0;
-
-  substrateEl.style.transition = "transform 120ms ease-out";
-  substrateEl.setAttribute('transform', `translate(${s.x},${s.y}) scale(1.05)`);
-  setTimeout(() => substrateEl.style.transition = "", 140);
-
-  setTimeout(startSplit, 220);
-}
-
-function startSplit(){
-  if (state !== "bound") return;
-  state = "splitting";
-
-  bondEl.style.transition = "opacity 120ms linear";
-  bondEl.style.opacity = "0";
-
-  // start produkter ved pocket og send dem ud
-  p.ax = s.x - 18; p.ay = s.y;
-  p.bx = s.x + 18; p.by = s.y;
-  p.avx = -rand(1.6, 2.6); p.avy = -rand(0.6, 1.6);
-  p.bvx =  rand(1.6, 2.6); p.bvy = -rand(0.6, 1.6);
-  p.alive = true;
-
-  prodA.setAttribute('cx', p.ax); prodA.setAttribute('cy', p.ay);
-  prodB.setAttribute('cx', p.bx); prodB.setAttribute('cy', p.by);
-  prodA.style.opacity = "1";
-  prodB.style.opacity = "1";
-
-  // skjul substrat
-  substrateEl.style.opacity = "0";
-
-  setTimeout(resetSubstrate, 900);
-}
-
-function resetSubstrate(){
-  state = "free";
-  substrateEl.style.opacity = "1";
-  bondEl.style.opacity = "1";
-  bondEl.style.transition = "";
-
-  prodA.style.opacity = "0";
-  prodB.style.opacity = "0";
-  p.alive = false;
-
-  s.x = rand(80, 200);
-  s.y = rand(50, 140);
-
-  const sp = thermalSpeed(tC);
-  s.vx = rand(0.6, 1.2) * sp;
-  s.vy = rand(-0.8, 0.8) * sp;
-
-  substrateEl.setAttribute('transform', `translate(${s.x},${s.y})`);
-}
-
-// Bevæg substrat rundt + bounce i box
-function stepFree(){
-  const jitter = clamp(tC / 80, 0, 1) * 0.25;
-  s.vx += rand(-jitter, jitter);
-  s.vy += rand(-jitter, jitter);
-
-  const maxV = thermalSpeed(tC);
-  const v = Math.hypot(s.vx, s.vy);
-  if (v > maxV){
-    s.vx = (s.vx / v) * maxV;
-    s.vy = (s.vy / v) * maxV;
-  }
-
-  s.x += s.vx;
-  s.y += s.vy;
-
-  const m = 28;
-  if (s.x < m){ s.x = m; s.vx *= -1; }
-  if (s.x > box.w - m){ s.x = box.w - m; s.vx *= -1; }
-  if (s.y < m){ s.y = m; s.vy *= -1; }
-  if (s.y > box.h - m){ s.y = box.h - m; s.vy *= -1; }
-
-  substrateEl.setAttribute('transform', `translate(${s.x},${s.y})`);
-}
-
-function stepProducts(){
-  if (!p.alive) return;
-
-  p.avy += 0.05;
-  p.bvy += 0.05;
-
-  p.ax += p.avx; p.ay += p.avy;
-  p.bx += p.bvx; p.by += p.bvy;
-
-  prodA.setAttribute('cx', p.ax); prodA.setAttribute('cy', p.ay);
-  prodB.setAttribute('cx', p.bx); prodB.setAttribute('cy', p.by);
-}
-
-// Main loop
-function tick(){
-  const denatured = (tC > 48);
-
-  if (state === "free"){
-    stepFree();
-
-    // kun binding hvis ikke denatureret
-    if (!denatured && nearPocket()){
-      if (Math.random() < bindingChance(tC)){
-        bind();
-      } else {
-        // glider forbi: lille “afvisning”
-        s.vx *= -0.6;
-        s.vy += rand(-0.8, 0.8);
-      }
+    // --- 1. MATEMATISK MODEL ---
+    function calculateRate(temp) {
+        if (temp > 60) return 0;
+        let activation = Math.pow(temp, 2) / 30; 
+        let denaturation = 1;
+        if (temp > 40) {
+            denaturation = 1 - (Math.pow((temp - 40), 1.8) / 100); 
+        }
+        return Math.max(0, activation * denaturation);
     }
-  } else if (state === "splitting"){
-    stepProducts();
-  }
 
-  requestAnimationFrame(tick);
-}
+    // --- 2. GRAF OPSÆTNING ---
+    const ctx = document.getElementById('enzymeChart').getContext('2d');
+    const labels = Array.from({length: 81}, (_, i) => i);
+    const dataPoints = labels.map(t => calculateRate(t));
 
-/* =========================
-   4) UI opdatering
-========================= */
-function setStatusText(temp){
-  let desc, bg;
-  if (temp < 12){
-    desc = `Temp: ${temp}°C – lav energi: få sammenstød, sjælden binding.`;
-    bg = "#e3f2fd";
-  } else if (temp < 28){
-    desc = `Temp: ${temp}°C – flere sammenstød: binding sker nu og da.`;
-    bg = "#fffde7";
-  } else if (temp < 37){
-    desc = `Temp: ${temp}°C – nærmer sig optimum: god chance for “fit” og reaktion.`;
-    bg = "#f1f8e9";
-  } else if (temp <= 45){
-    desc = `Temp: ${temp}°C – OPTIMUM: høj binding → spaltning til produkter.`;
-    bg = "#e8f5e9";
-  } else if (temp <= 55){
-    desc = `Temp: ${temp}°C – begyndende denaturering: aktivt site mister form → færre reaktioner.`;
-    bg = "#ffebee";
-  } else {
-    desc = `Temp: ${temp}°C – denatureret: aktivt site kollapser → næsten ingen reaktion.`;
-    bg = "#ffcdd2";
-  }
-  status.textContent = desc;
-  status.style.backgroundColor = bg;
-}
+    const chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Reaktionshastighed',
+                data: dataPoints,
+                borderColor: '#2e7d32', // Grøn graf
+                backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                pointRadius: 0,
+                tension: 0.4
+            }, {
+                data: Array(81).fill(null), // Den røde prik
+                pointBackgroundColor: '#ff9800',
+                pointBorderColor: '#fff',
+                pointRadius: 8,
+                showLine: false
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { title: { display: true, text: 'Temperatur (°C)' }, grid: {display: false} },
+                y: { title: { display: true, text: 'Syntese-hastighed' }, min: 0, ticks: {display: false} }
+            },
+            animation: { duration: 0 }
+        }
+    });
 
-function updateAll(){
-  tC = parseInt(slider.value, 10);
-  tempValue.textContent = tC;
+    // --- 3. VISUEL STYRING ---
+    const slider = document.getElementById('tempSlider');
+    const tempValDisplay = document.getElementById('tempValue');
+    const statusText = document.getElementById('status-text');
+    const visualContainer = document.getElementById('visual-container');
+    const enzymeShape = document.getElementById('enzyme-shape');
 
-  // graf-punkt
-  const rate = calculateRate(tC);
-  const pointData = Array(81).fill(null);
-  pointData[tC] = rate;
-  chart.data.datasets[1].data = pointData;
-  chart.update();
+    function updateSimulation() {
+        let t = parseInt(slider.value);
+        let rate = calculateRate(t);
 
-  setDenaturedLook(tC > 48);
+        tempValDisplay.innerText = t;
 
-  // hvis du cranker helt op, så reset så det ikke “hænger fast”
-  if (tC > 60 && state !== "free"){
-    resetSubstrate();
-  }
+        // Graf
+        let pointData = Array(81).fill(null);
+        pointData[t] = rate;
+        chart.data.datasets[1].data = pointData;
+        chart.update();
 
-  // gør det tydeligt at temp ændrer bevægelsen
-  if (state === "free"){
-    const sp = thermalSpeed(tC);
-    const v = Math.hypot(s.vx, s.vy) || 1;
-    s.vx = (s.vx / v) * rand(0.7, 1.0) * sp;
-    s.vy = (s.vy / v) * rand(0.7, 1.0) * sp;
-  }
+        // Grafik
+        updateVisuals(t);
+    }
 
-  setStatusText(tC);
-}
+    function updateVisuals(t) {
+        visualContainer.classList.remove('state-low', 'state-optimum', 'state-denatured');
+        enzymeShape.classList.remove('enzyme-denatured');
 
-slider.addEventListener('input', updateAll);
+        let desc = "";
+        let bgColor = "";
 
-// init
-updateAll();
-resetSubstrate();
-requestAnimationFrame(tick);
+        if (t < 15) {
+            visualContainer.classList.add('state-low');
+            desc = "LAV TEMPERATUR: Substraterne bevæger sig for langsomt til at møde enzymet.";
+            bgColor = "#e8f5e9"; 
+        } 
+        else if (t >= 15 && t <= 35) {
+            visualContainer.classList.add('state-low'); 
+            // Her ville animationen i princippet være hurtigere, men vi bruger low-state animation
+            desc = "STIGENDE TEMPERATUR: Substraterne (Gul og Rød) nærmer sig enzymet oftere.";
+            bgColor = "#fff9c4"; // Gul
+        }
+        else if (t > 35 && t <= 45) {
+            visualContainer.classList.add('state-optimum');
+            desc = "OPTIMUM: Substraterne bindes i enzymet og samles til et nyt produkt (Orange).";
+            bgColor = "#c8e6c9"; // Grøn
+        }
+        else if (t > 45) {
+            visualContainer.classList.add('state-denatured');
+            enzymeShape.classList.add('enzyme-denatured');
+            desc = "DENATURERING: Enzymet mister sin form. Substraterne kan ikke længere binde.";
+            bgColor = "#ffccbc"; // Rød
+        }
+        
+        statusText.innerText = desc;
+        statusText.style.backgroundColor = bgColor;
+    }
+
+    slider.addEventListener('input', updateSimulation);
+    updateSimulation(); // Start
 </script>
+
 </body>
 </html>
