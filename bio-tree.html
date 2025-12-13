@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bio Tree Prototype</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f9f9f9;
+      overflow: hidden;
+    }
+
+    .network {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      position: relative;
+    }
+
+    .node {
+      position: absolute;
+      background-color: #6BA292;
+      color: white;
+      border-radius: 50%;
+      width: 80px;
+      height: 80px;
+      text-align: center;
+      line-height: 80px;
+      font-size: 14px;
+      font-weight: bold;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      cursor: pointer;
+      transition: transform 200ms;
+    }
+
+    .node:hover {
+      transform: scale(1.1);
+    }
+
+    .link {
+      stroke: #ccc;
+      stroke-width: 2;
+    }
+
+  </style>
+</head>
+<body>
+<div class="network" id="network"></div>
+<script>
+  const nodes = [
+    { id: 'cell', label: 'Cellen', x: 400, y: 300 },
+    { id: 'membrane', label: 'Membranprocesser', x: 600, y: 200 },
+    { id: 'growth', label: 'Vækst', x: 200, y: 200 },
+    { id: 'dna', label: 'DNA', x: 600, y: 400 },
+    { id: 'metabolism', label: 'Basal stofskifte', x: 200, y: 400 }
+  ];
+
+  const links = [
+    { source: 'cell', target: 'membrane' },
+    { source: 'cell', target: 'growth' },
+    { source: 'cell', target: 'dna' },
+    { source: 'cell', target: 'metabolism' }
+  ];
+
+  const network = document.getElementById('network');
+
+  nodes.forEach(node => {
+    const div = document.createElement('div');
+    div.className = 'node';
+    div.style.left = `${node.x}px`;
+    div.style.top = `${node.y}px`;
+    div.innerText = node.label;
+    network.appendChild(div);
+  });
+
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.style.position = "absolute";
+  svg.style.width = "100%";
+  svg.style.height = "100%";
+  svg.style.top = "0";
+  svg.style.left = "0";
+  network.prepend(svg);
+
+  links.forEach(link => {
+    const sourceNode = nodes.find(node => node.id === link.source);
+    const targetNode = nodes.find(node => node.id === link.target);
+
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("x1", sourceNode.x + 40);
+    line.setAttribute("y1", sourceNode.y + 40);
+    line.setAttribute("x2", targetNode.x + 40);
+    line.setAttribute("y2", targetNode.y + 40);
+    line.classList.add("link");
+    svg.appendChild(line);
+  });
+</script>
+</body>
+</html>
