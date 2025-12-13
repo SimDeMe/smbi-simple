@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enzym Spaltnings Simulator</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* --- CSS STYLING --- */
+        body { font-family: 'Segoe UI', Roboto, Helvetica, sans-serif; background: #f4f6f8; text-align: center; padding: 20px; color: #333; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        h2 { color: #2c3e50; margin-bottom: 25px; }
+
+        /* Visuel boks */
+        .visual-box {
+            height: 240px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            background: linear-gradient(to bottom, #ffffff, #f0f7ff);
+            border-radius: 12px;
+            border: 1px solid #dae1e7;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* --- SVG GRAFIK & ANIMATIONER --- */
+        #enzyme-system-svg {
+            width: 300px;
+            height: 220px;
+            overflow: visible;
+        }
+
+        /* Design af elementerne */
+        .enzyme-body { 
+            fill: #E91E63; 
+            stroke: #C2185B; 
+            stroke-width: 3px; 
+            transition: d 1s ease, fill 0.5s ease, transform 0.5s ease; /* Blød overgang ved formskift */
+        }
+        
+        .sub-circle-left { fill: #3F51B5; stroke: #fff; stroke-width: 2px; }
+        .sub-circle-right { fill: #2196F3; stroke: #fff; stroke-width: 2px; }
+        
+        /* Forbindelsen mellem kuglerne (bindeleddet) */
+        .bond-line { 
+            stroke: #333; 
+            stroke-width: 4px; 
+            stroke-linecap: round;
+            opacity: 1;
+            transition: opacity 0.2s;
+        }
+
+        /* --- ANIMATIONS DEFINITIONER --- */
+
+        /* 1. Lav Temp: Svæver tilfældigt */
+        @keyframes float-idle {
+            0%, 100% { transform: translate(0, -50px) rotate(5deg); }
+            50% { transform: translate(0, -60px) rotate(-5deg); }
+        }
+
+        /* 2. Optimum: REAKTIONSCYKLUS (Ned -> Split -> Op) */
+        @keyframes reaction-cycle {
+            0% { 
+                transform: translate(0, -80px); /* Start højt oppe */
+            }
+            30% { 
+                transform: translate(0, 10px); /* Snap ned i "B" formen */
+            }
+            45% {
+                transform: translate(0, 10px) scale(1.1); /* Lille puls (reaktion sker) */
+            }
+            60% {
+                transform: translate(0, -40px); /* Løft op igen */
+            }
+            100% { 
+                transform: translate(0, -100px); /* Flyv væk */
+            }
+        }
+
+        /* Animation for selve kuglerne (at de går fra hinanden) */
+        @keyframes split-apart-left {
+            0%, 60% { transform: translate(0, 0); } /* Hold sammen indtil de forlader enzymet */
+            100% { transform: translate(-40px, -20px); } /* Flyv til venstre */
+        }
+        @keyframes split-apart-right {
+            0%, 60% { transform: translate(0, 0); }
+            100% { transform: translate(40px, -20px); } /* Flyv til højre */
+        }
+        
+        /* 3. Denatureret: Ryster og kan ikke passe */
+        @keyframes confused-bounce {
+            0%, 100% { transform: translate(-10px, -60px) rotate(-10deg); }
+            50% { transform: translate(30px, -50px) rotate(10deg); }
+        }
+
+        /* --- TILSTANDS KLASSER --- */
+
+        /* LAV TEMPERATUR */
+        .state-low #substrate-group {
+            animation: float-idle 5s ease-in-out infinite;
+        }
+
+        /* OPTIMUM (Reaktionen kører) */
+        .state-optimum #substrate-group {
+            animation: reaction-cycle 2s infinite ease-in-out;
+        }
+        .state-optimum .sub-circle-left {
+            animation: split-apart-left 2s infinite ease-in-out;
+        }
+        .state-optimum .sub-circle-right {
+            animation: split-apart-right 2s infinite ease-in-out;
+        }
+        .state-optimum .bond-line {
+            animation: fade-out-bond 2s infinite; /* Bindestregen forsvinder */
+        }
+        @keyframes fade-out-bond {
+            0%, 60% { opacity: 1; }
+            65%, 100% { opacity: 0; }
+        }
+
+        /* DENATURERET (Enzymet smelter) */
+        .state-denatured .enzyme-body {
+            fill: #90A4AE; /* Kedelig grå */
+            /* Her ændrer vi formen via CSS transformering så "hullerne" forsvinder */
+            transform: scaleY(0.6) scaleX(1.1); 
+            transform-origin: center bottom;
+        }
+        .state-denatured #substrate-group {
+            animation: confused-bounce 1s infinite; /* Hurtig, kaotisk bevægelse */
+            opacity: 0.6;
+        }
+
+        /* UI Elementer */
+        .status-panel { padding: 15px; border-radius: 8px; font-weight: bold; color: #333; margin-top: -10px; margin-bottom: 20px;}
+        .slider-container { margin: 20px 0; }
+        input[type=range] { width: 80%; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Enzym Spaltning: Fra Substrat til Produkter</h2>
+    
+    <div class="visual-box" id="visual-container">
+        <svg id="enzyme-system-svg" viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg">
+            
+            <g id="enzyme-group" transform="translate(100, 110)">
+                <path class="enzyme-body" d="M -70,30 L 70,30 L 70,-10 
+                                             A 30,30 0 0,0 10,-10 
+                                             L 10,-5 L -10,-5 L -10,-10
+                                             A 30,30 0 0,0 -70,-10 Z" />
+                
+                <text x="0" y="20" text-anchor="middle" fill="white" font-size="12" font-family="Arial">ENZYM</text>
+            </g>
+
+            <g id="substrate-group">
+                <line class="bond-line" x1="-15" y1="0" x2="15" y2="0" />
+                
+                <circle class="sub-circle-left" cx="-25" cy="0" r="20" />
+                
+                <circle class="sub-circle-right" cx="25" cy="0" r="20" />
+            </g>
+
+        </svg>
+    </div>
+
+    <div id="status-text" class="status-panel" style="background-color: #e1f5fe;">
+        Temp: 0°C - Lav Energi
+    </div>
+
+    <canvas id="enzymeChart" width="400" height="200"></canvas>
+
+    <div class="slider-container">
+        <label for="tempSlider">Temperatur: <span id="tempValue">0</span>°C</label><br>
+        <input type="range" id="tempSlider" min="0" max="80" value="0" step="1">
+    </div>
+</div>
+
+<script>
+    // --- JAVASCRIPT LOGIK ---
+
+    // 1. Matematisk model for reaktionshastighed
+    function calculateRate(temp) {
+        if (temp > 60) return 0; 
+        
+        // Arrhenius-lignende stigning
+        let activation = Math.pow(temp, 2) / 30; 
+        
+        let denaturation = 1;
+        if (temp > 40) {
+            // Brat fald efter 40 grader
+            denaturation = 1 - (Math.pow((temp - 40), 1.8) / 100); 
+        }
+        
+        let rate = activation * denaturation;
+        return Math.max(0, rate);
+    }
+
+    // 2. Opsætning af Graf (Chart.js)
+    const ctx = document.getElementById('enzymeChart').getContext('2d');
+    const labels = Array.from({length: 81}, (_, i) => i);
+    const dataPoints = labels.map(t => calculateRate(t));
+
+    const chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Reaktionshastighed',
+                data: dataPoints,
+                borderColor: '#E91E63', 
+                backgroundColor: 'rgba(233, 30, 99, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                pointRadius: 0,
+                tension: 0.4 
+            }, {
+                data: Array(81).fill(null), // Den røde prik
+                pointBackgroundColor: '#2196F3',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointRadius: 8,
+                showLine: false
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false }, tooltip: {enabled: false} },
+            scales: {
+                x: { title: { display: true, text: 'Temperatur (°C)' }, grid: {display: false} },
+                y: { title: { display: true, text: 'Produkter pr. sekund' }, min: 0, ticks: {display: false} }
+            },
+            animation: { duration: 0 }
+        }
+    });
+
+    // 3. Styring af Animationer
+    const slider = document.getElementById('tempSlider');
+    const tempValDisplay = document.getElementById('tempValue');
+    const statusText = document.getElementById('status-text');
+    const visualContainer = document.getElementById('visual-container');
+    const svgElement = document.getElementById('enzyme-system-svg');
+
+    function updateSimulation() {
+        let t = parseInt(slider.value);
+        let rate = calculateRate(t);
+
+        tempValDisplay.innerText = t;
+
+        // Opdater graf-prikken
+        let pointData = Array(81).fill(null);
+        pointData[t] = rate;
+        chart.data.datasets[1].data = pointData;
+        chart.update();
+
+        // Opdater grafikken
+        updateGraphicVisuals(t);
+    }
+
+    function updateGraphicVisuals(t) {
+        // Nulstil klasser
+        visualContainer.classList.remove('state-low', 'state-optimum', 'state-denatured');
+        
+        // Tvungen genstart af animation ved store skift (valgfrit, men giver pænere overgange)
+        // svgElement.style.animation = 'none';
+        // svgElement.offsetHeight; 
+        
+        let desc = "";
+        let bgColor = "";
+
+        if (t < 15) {
+            visualContainer.classList.add('state-low');
+            desc = "LAV TEMPERATUR: Substrat og enzym bevæger sig for langsomt til at mødes.";
+            bgColor = "#e3f2fd"; // Meget lys blå
+        } 
+        else if (t >= 15 && t <= 35) {
+            // Genbrug "optimum" animationen, men gør den langsommere via inline style hvis muligt, 
+            // eller bare vis dem tættere på hinanden. Her kører vi optimum-state for simplicitet, 
+            // men brugeren vil se grafen er lav.
+            visualContainer.classList.add('state-low'); 
+            desc = "STIGENDE TEMPERATUR: Flere sammenstød øger chancen for reaktion.";
+            bgColor = "#fffde7"; // Meget lys gul
+        }
+        else if (t > 35 && t <= 45) {
+            visualContainer.classList.add('state-optimum');
+            desc = "OPTIMUM: Substratet passer perfekt (Lock & Key) og spaltes til to produkter.";
+            bgColor = "#e8f5e9"; // Lys grøn
+        }
+        else if (t > 45) {
+            visualContainer.classList.add('state-denatured');
+            desc = "DENATURERING: Enzymets struktur kollapser. Substratet passer ikke længere.";
+            bgColor = "#ffebee"; // Lys rød
+        }
+        
+        statusText.innerText = desc;
+        statusText.style.backgroundColor = bgColor;
+    }
+
+    slider.addEventListener('input', updateSimulation);
+    updateSimulation(); // Start
+</script>
+
+</body>
+</html>
