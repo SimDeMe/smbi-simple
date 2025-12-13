@@ -1,53 +1,218 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="da">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Biological Network Tree</title>
+    <title>Biologi C Netværk</title>
     <style>
-        /* Add some basic styles for the layout */
-        body {
-            font-family: Arial, sans-serif;
+        body, html {
             margin: 0;
             padding: 0;
-            background-color: #f9f9f9;
+            width: 100%;
+            height: 100%;
+            background-color: #f7f9f5; /* Meget lys, "klinisk" men naturlig baggrund */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
         }
 
-        header {
-            background-color: #4CAF50;
-            color: white;
-            text-align: center;
-            padding: 1rem 0;
+        svg {
+            width: 100%;
+            height: 100%;
         }
 
-        #tree-container {
-            margin: 2rem auto;
-            padding: 1rem;
-            width: 90%;
-            max-width: 800px;
-            background-color: white;
-            border-radius: 5px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        text {
+            fill: #1a2622;
+            font-size: 13px;
+            font-weight: 600;
+            pointer-events: none;
+            text-anchor: middle;
+            dominant-baseline: central;
+            font-family: 'Verdana', sans-serif;
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.7); /* Gør tekst læsbar på farvet baggrund */
         }
 
-        .node {
-            display: inline-block;
-            margin: 0.5rem;
-            padding: 0.5rem 1rem;
-            border: 1px solid #ccc;
-            border-radius: 3px;
-            background-color: #e8f5e9;
+        path.node-shape {
+            transition: all 0.4s ease;
+            cursor: grab;
+            opacity: 0.9;
+        }
+        path.node-shape:hover {
+            stroke: #2c3e50;
+            stroke-width: 2.5px;
+            opacity: 1;
+            filter: drop-shadow(0px 5px 5px rgba(0,0,0,0.2));
+        }
+        
+        path.node-shape:active {
+            cursor: grabbing;
         }
     </style>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body>
-    <header>
-        <h1>Biological Network Tree</h1>
-    </header>
-    <main id="tree-container">
-        <div class="node">Node 1</div>
-        <div class="node">Node 2</div>
-        <div class="node">Node 3</div>
-    </main>
+
+<div id="graph-container"></div>
+
+<script>
+    // --- 1. BIOLOGI C DATA ---
+    
+    const nodes = [
+        // Centrum
+        { id: "Biologi C", group: 0, size: 70 },
+
+        // Klynge 1: Cellen & Det Mikroskopiske (Grønlige/Blå nuancer)
+        { id: "Celler", group: 1, size: 55 },
+        { id: "DNA", group: 1, size: 45 },
+        { id: "Mitose", group: 1, size: 40 },
+        { id: "Eukaryot", group: 1, size: 35 },
+        { id: "Prokaryot", group: 1, size: 35 },
+        { id: "Enzymer", group: 1, size: 40 },
+
+        // Klynge 2: Energi & Processer (Varme/Energi farver)
+        { id: "Energi", group: 2, size: 50 },
+        { id: "Fotosyntese", group: 2, size: 45 },
+        { id: "Respiration", group: 2, size: 45 },
+        { id: "Gær", group: 2, size: 30 },
+
+        // Klynge 3: Økologi & Miljø (Jordfarver)
+        { id: "Økologi", group: 3, size: 55 },
+        { id: "Fødekæde", group: 3, size: 40 },
+        { id: "Næringsstoffer", group: 3, size: 35 },
+        { id: "Kulstofkredsløb", group: 3, size: 40 },
+        
+        // Klynge 4: Kroppen (Rødlige nuancer)
+        { id: "Fordøjelse", group: 4, size: 40 },
+        { id: "Kost", group: 4, size: 35 },
+    ];
+
+    const links = [
+        // Forbindelser fra Centrum
+        { source: "Biologi C", target: "Celler", type: "strong" },
+        { source: "Biologi C", target: "Økologi", type: "strong" },
+        { source: "Biologi C", target: "Energi", type: "strong" },
+        
+        // Cellebiologi
+        { source: "Celler", target: "DNA", type: "strong" },
+        { source: "Celler", target: "Mitose", type: "strong" }, // Celledeling
+        { source: "Celler", target: "Eukaryot", type: "weak" },
+        { source: "Celler", target: "Prokaryot", type: "weak" },
+        { source: "DNA", target: "Mitose", type: "weak" }, // DNA kopieres før mitose
+        { source: "Celler", target: "Enzymer", type: "strong" }, // Enzymer styrer cellen
+
+        // Energi processer
+        { source: "Energi", target: "Fotosyntese", type: "strong" },
+        { source: "Energi", target: "Respiration", type: "strong" },
+        { source: "Fotosyntese", target: "Respiration", type: "strong" }, // De er hinandens modsætninger (meget vigtigt C koncept)
+        { source: "Respiration", target: "Gær", type: "weak" }, // Gæring er anaerob respiration
+
+        // Økologi
+        { source: "Økologi", target: "Fødekæde", type: "strong" },
+        { source: "Økologi", target: "Kulstofkredsløb", type: "strong" },
+        { source: "Økologi", target: "Næringsstoffer", type: "weak" },
+        
+        // Tværgående / Organiske sammenhænge
+        { source: "Fotosyntese", target: "Kulstofkredsløb", type: "weak" }, // Planter optager CO2
+        { source: "Respiration", target: "Kulstofkredsløb", type: "weak" }, // Dyr udleder CO2
+        { source: "Enzymer", target: "Fordøjelse", type: "strong" }, // Enzymer nedbryder mad
+        { source: "Kost", target: "Fordøjelse", type: "strong" },
+        { source: "Næringsstoffer", target: "Gær", type: "weak" }, 
+    ];
+
+    // Farver tilpasset biologi-temaer
+    // 0: Rod (Mørkegrøn), 1: Celler (Lys grøn), 2: Energi (Sol/Gul), 3: Økologi (Jord/Brun), 4: Krop (Kød/Rød)
+    const colorScale = d3.scaleOrdinal()
+        .domain([0, 1, 2, 3, 4])
+        .range(["#4a6c56", "#a8d5ba", "#f9d56e", "#d4a373", "#e6b8b8"]);
+
+
+    // --- 2. SETUP & SIMULERING (Samme motor som før) ---
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+
+    const svg = d3.select("#graph-container")
+        .append("svg")
+        .attr("viewBox", [0, 0, width, height]);
+
+    // Opret organiske former
+    function createBlobPath(radius) {
+        const points = [];
+        const steps = 9; // Lidt flere punkter for mere detalje
+        const variance = 0.20; 
+
+        for (let i = 0; i < steps; i++) {
+            const angle = (i / steps) * Math.PI * 2;
+            const randomVar = 1 - variance + Math.random() * (variance * 2);
+            const r = radius * randomVar;
+            points.push([Math.cos(angle) * r, Math.sin(angle) * r]);
+        }
+        return d3.line().curve(d3.curveBasisClosed)(points);
+    }
+
+    nodes.forEach(node => {
+        node.pathData = createBlobPath(node.size);
+    });
+
+    const simulation = d3.forceSimulation(nodes)
+        .force("link", d3.forceLink(links).id(d => d.id).distance(d => d.type === 'strong' ? 120 : 180)) // Svage grene er længere
+        .force("charge", d3.forceManyBody().strength(-400))
+        .force("center", d3.forceCenter(width / 2, height / 2))
+        .force("collide", d3.forceCollide().radius(d => d.size + 15));
+
+    // Tegn Links
+    const link = svg.append("g")
+        .attr("stroke-opacity", 0.6)
+        .selectAll("path")
+        .data(links)
+        .join("path")
+        .attr("fill", "none")
+        .attr("stroke", d => d.type === 'strong' ? "#556b2f" : "#8fbc8f") // Oliven vs lys grøn
+        .attr("stroke-width", d => d.type === 'strong' ? 3.5 : 1.5)
+        .attr("stroke-dasharray", d => d.type === 'strong' ? "0" : "4,4");
+
+    // Tegn Noder
+    const node = svg.append("g")
+        .selectAll("g")
+        .data(nodes)
+        .join("g")
+        .call(d3.drag()
+            .on("start", dragstarted)
+            .on("drag", dragged)
+            .on("end", dragended));
+
+    node.append("path")
+        .attr("class", "node-shape")
+        .attr("d", d => d.pathData)
+        .attr("fill", d => colorScale(d.group))
+        .attr("stroke", "#fff")
+        .attr("stroke-width", 2);
+
+    node.append("text")
+        .text(d => d.id);
+
+    simulation.on("tick", () => {
+        link.attr("d", d => {
+            const dx = d.target.x - d.source.x;
+            const dy = d.target.y - d.source.y;
+            const dr = Math.sqrt(dx * dx + dy * dy) * 1.5; 
+            return `M${d.source.x},${d.source.y}A${dr},${dr} 0 0,1 ${d.target.x},${d.target.y}`;
+        });
+        node.attr("transform", d => `translate(${d.x},${d.y})`);
+    });
+
+    function dragstarted(event, d) {
+        if (!event.active) simulation.alphaTarget(0.3).restart();
+        d.fx = d.x;
+        d.fy = d.y;
+    }
+    function dragged(event, d) {
+        d.fx = event.x;
+        d.fy = event.y;
+    }
+    function dragended(event, d) {
+        if (!event.active) simulation.alphaTarget(0);
+        d.fx = null;
+        d.fy = null;
+    }
+</script>
 </body>
 </html>
