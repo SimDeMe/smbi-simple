@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Termisk Cirkulation - 2 Trins Flow</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+            color: #333;
+        }
+
+        /* --- STAGE & VISUALS --- */
+        .stage-container {
+            position: relative;
+            width: 800px;
+            height: 500px;
+            background: linear-gradient(to bottom, #dbebf9 0%, #ffffff 100%);
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            margin-bottom: 20px;
+        }
+
+        .sun {
+            position: absolute;
+            top: 20px; left: 50%;
+            transform: translateX(-50%) scale(1);
+            width: 50px; height: 50px;
+            background: radial-gradient(circle, #ffd700, #ff8c00);
+            border-radius: 50%;
+            box-shadow: 0 0 40px rgba(255, 165, 0, 0.8);
+            z-index: 1; transition: transform 0.5s;
+        }
+
+        /* Columns */
+        .columns-wrapper {
+            display: flex; align-items: flex-end;
+            width: 90%; height: 100%; z-index: 5;
+            padding-bottom: 50px;
+        }
+        .column {
+            flex: 1; margin: 0 4px;
+            background: rgba(100, 181, 246, 0.2);
+            border: 1px dashed #aaa; border-bottom: none;
+            position: relative; transition: background-color 1s;
+        }
+
+        /* Isobar SVG */
+        svg.isobars {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%; pointer-events: none; z-index: 6;
+        }
+
+        /* Pressure Tags */
+        .pressure-tag {
+            position: absolute; background: white;
+            border: 1px solid #333; padding: 2px 6px;
+            font-size: 12px; font-weight: bold; border-radius: 4px;
+            opacity: 0; transition: opacity 0.5s, color 0.5s; white-space: nowrap; z-index: 20;
+        }
+        .tag-top { top: -20px; left: 50%; transform: translateX(-50%); }
+        .tag-bot { bottom: 5px; left: 50%; transform: translateX(-50%); background: #f9f9f9; }
+
+        /* --- ANIMATED FLOW ARROWS --- */
+        .flow-container {
+            position: absolute;
+            height: 40px; width: 120px;
+            overflow: hidden;
+            z-index: 15; opacity: 0; transition: opacity 1s;
+            pointer-events: none;
+        }
+        .flow-mover {
+            display: flex; font-size: 30px; font-weight: 900;
+            animation: flowAnim 0.8s infinite linear;
+        }
+        /* The animation moves the repeating arrows to create flow illusion */
+        @keyframes flowAnim {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-45px); } /* Move exactly one arrow width */
+        }
+
+        .flow-top { color: #d32f2f; }
+        .flow-bot { color: #1976D2; }
+
+        /* Ground Labels */
+        .ground-bar {
+            position: absolute; bottom: 0; width: 100%; height: 50px;
+            background: #795548; display: flex; color: white; font-size: 0.8rem; z-index: 10;
+        }
+        .ground-segment { flex: 1; display: flex; justify-content: center; align-items: center; border-right: 1px solid rgba(255,255,255,0.3); }
+
+        /* --- CONTROLS --- */
+        .controls-panel {
+            background: white; padding: 20px; border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05); width: 800px;
+            display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;
+        }
+        .step-box {
+            border: 1px solid #eee; padding: 15px; border-radius: 8px; background: #fafafa;
+            display: flex; flex-direction: column; justify-content: space-between;
+        }
+        .step-title { font-weight: bold; margin-bottom: 10px; color: #444; display: block; border-bottom: 2px solid #ddd; padding-bottom: 5px;}
+        .step-desc { font-size:11px; color:#555; min-height:35px; margin-bottom: 10px;}
+        
+        button {
+            width: 100%; padding: 10px; background-color: #2196F3;
+            color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;
+        }
+        button:disabled { background-color: #ccc; cursor: not-allowed; }
+        button.active-btn { background-color: #FF5722; animation: pulse 1.5s infinite; }
+
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
+        input[type=range] { width: 100%; cursor: pointer; }
+
+    </style>
+</head>
+<body>
+
+    <div style="text-align:center; margin-bottom:10px;">
+        <h2>Simulation: Termisk Cirkulation (To-Trins Flow)</h2>
+    </div>
+
+    <div class="stage-container">
+        <div class="sun" id="sun"></div>
+        <svg class="isobars" id="svgOverlay"></svg>
+
+        <div class="flow-container flow-top" id="flow-T-L" style="top: 25%; left: 28%; transform: rotate(180deg);">
+             <div class="flow-mover">➜ ➜ ➜ ➜</div>
+        </div>
+        <div class="flow-container flow-top" id="flow-T-R" style="top: 25%; right: 28%;">
+             <div class="flow-mover">➜ ➜ ➜ ➜</div>
+        </div>
+        
+        <div class="flow-container flow-bot" id="flow-B-L" style="bottom: 70px; left: 28%;">
+             <div class="flow-mover">➜ ➜ ➜ ➜</div>
+        </div>
+        <div class="flow-container flow-bot" id="flow-B-R" style="bottom: 70px; right: 28%; transform: rotate(180deg);">
+             <div class="flow-mover">➜ ➜ ➜ ➜</div>
+        </div>
+
+
+        <div class="columns-wrapper">
+            <div class="column" id="col-L" style="height:250px;">
+                <div class="pressure-tag tag-top" id="pt-L-top">300</div>
+                <div class="pressure-tag tag-bot" id="pt-L-bot">1013</div>
+            </div>
+            <div class="column" id="col-C" style="height:250px;">
+                <div class="pressure-tag tag-top" id="pt-C-top">300</div>
+                <div class="pressure-tag tag-bot" id="pt-C-bot">1013</div>
+            </div>
+            <div class="column" id="col-R" style="height:250px;">
+                <div class="pressure-tag tag-top" id="pt-R-top">300</div>
+                <div class="pressure-tag tag-bot" id="pt-R-bot">1013</div>
+            </div>
+        </div>
+
+        <div class="ground-bar">
+            <div class="ground-segment">Kold (Vendekreds)</div>
+            <div class="ground-segment" id="ground-center">Varm (Ækvator)</div>
+            <div class="ground-segment">Kold (Vendekreds)</div>
+        </div>
+    </div>
+
+    <div class="controls-panel">
+        
+        <div class="step-box">
+            <div>
+                <span class="step-title">1. Energi & Udvidelse</span>
+                <p class="step-desc" id="desc1">Start solen. Luften i midten udvider sig og bliver højere.</p>
+                <input type="range" id="tempSlider" min="0" max="100" value="0">
+            </div>
+        </div>
+
+        <div class="step-box">
+            <div>
+                <span class="step-title">2. Vind i Højden (Udstromning)</span>
+                <p class="step-desc" id="desc2">Trykket er nu højest i toppen af den varme søjle. Luften vil væk.</p>
+            </div>
+            <button id="btnTopWind" disabled>Start Vind i Højden</button>
+        </div>
+
+        <div class="step-box">
+            <div>
+                <span class="step-title">3. Vind ved Jorden (Erstatning)</span>
+                <p class="step-desc" id="desc3">Fordi luften forsvandt i toppen, mangler den nu ved jorden (Lavtryk).</p>
+            </div>
+            <button id="btnBotWind" disabled>Start Vind ved Jorden</button>
+        </div>
+
+    </div>
+
+    <script>
+        // --- VARIABLES ---
+        const BASE_HEIGHT = 250;
+        let currentTemp = 0;
+        let isExpanded = false;
+        let pressureInterval;
+
+        // --- DOM ELEMENTS ---
+        const slider = document.getElementById('tempSlider');
+        const colC = document.getElementById('col-C');
+        const sun = document.getElementById('sun');
+        const groundC = document.getElementById('ground-center');
+        const svg = document.getElementById('svgOverlay');
+        
+        const btnTop = document.getElementById('btnTopWind');
+        const btnBot = document.getElementById('btnBotWind');
+        const desc1 = document.getElementById('desc1');
+        const desc2 = document.getElementById('desc2');
+        const desc3 = document.getElementById('desc3');
+
+        // Tags & Flows
+        const tagsTop = [document.getElementById('pt-L-top'), document.getElementById('pt-C-top'), document.getElementById('pt-R-top')];
+        const tagsBot = [document.getElementById('pt-L-bot'), document.getElementById('pt-C-bot'), document.getElementById('pt-R-bot')];
+        const flowsTop = [document.getElementById('flow-T-L'), document.getElementById('flow-T-R')];
+        const flowsBot = [document.getElementById('flow-B-L'), document.getElementById('flow-B-R')];
+
+        // --- ANIMATION LOOP (Column Growth) ---
+        let renderHeight = BASE_HEIGHT;
+        let targetHeight = BASE_HEIGHT;
+        function animateCol() {
+            let diff = targetHeight - renderHeight;
+            if(Math.abs(diff) > 0.5) {
+                renderHeight += diff * 0.05; drawIsobars(); 
+            } else { renderHeight = targetHeight; drawIsobars(); }
+            colC.style.height = renderHeight + "px";
+            requestAnimationFrame(animateCol);
+        }
+        animateCol();
+
+        // --- HANDLERS ---
+
+        // 1. SLIDER (Heating Phase)
+        slider.addEventListener('input', (e) => {
+            resetAll(); 
+            currentTemp = parseInt(e.target.value);
+            
+            if(currentTemp > 30) {
+                // Visuals for heating
+                targetHeight = BASE_HEIGHT + (currentTemp * 1.8);
+                colC.style.backgroundColor = `rgba(255, ${200 - currentTemp}, 100, 0.3)`;
+                sun.style.transform = `translateX(-50%) scale(${1 + currentTemp/100})`;
+                groundC.style.backgroundColor = `rgb(${121 + currentTemp}, 85, 72)`;
+                
+                // Update UI for next step
+                desc1.innerText = "Luften er udvidet. Søjlen er højere, men vejer stadig det samme ved jorden (1013 hPa).";
+                desc2.innerText = `Der er nu en "bakke" i atmosfæren. Trykket i toppen er ${300 + Math.floor(currentTemp/2)} hPa mod 300 hPa ude i siderne.`;
+                
+                tagsTop.forEach(t => t.style.opacity = 1);
+                tagsBot.forEach(t => t.style.opacity = 1);
+                document.getElementById('pt-C-top').innerText = (300 + Math.floor(currentTemp/2)); // Higher pressure aloft
+
+                btnTop.disabled = false;
+                btnTop.classList.add("active-btn"); // Pulse effect
+                isExpanded = true;
+            } else {
+                resetVisuals();
+            }
+        });
+
+        // 2. BUTTON TOP WIND (Mass Transfer Phase)
+        btnTop.addEventListener('click', () => {
+            btnTop.disabled = true; slider.disabled = true;
+            btnTop.classList.remove("active-btn");
+            
+            // Show animated flow
+            flowsTop.forEach(f => f.style.opacity = 1);
+            desc2.innerText = "Luften strømmer nu væk fra højtrykket i toppen (ned ad bakken).";
+            
+            desc3.innerText = "Hold øje med trykket ved jorden! Det falder i midten, fordi luften forsvinder.";
+            
+            // Start simulating pressure change at surface due to mass loss aloft
+            startPressureSimulation();
+        });
+
+        // 3. BUTTON BOTTOM WIND (Replacement Phase)
+        btnBot.addEventListener('click', () => {
+            btnBot.disabled = true;
+            btnBot.classList.remove("active-btn");
+            clearInterval(pressureInterval); // Stop changing values
+
+            // Show animated flow
+            flowsBot.forEach(f => f.style.opacity = 1);
+            desc3.innerHTML = "<strong>Termisk Lavtryk dannet!</strong> Vinden ved jorden (fx Passatvinden) blæser nu ind for at udligne underskuddet.";
+        });
+
+
+        // --- UTILS ---
+        function startPressureSimulation() {
+            let pCenter = 1013;
+            let pSides = 1013;
+            // Target pressures depending on temp
+            let targetCenter = 1013 - (currentTemp / 2.5); 
+            
+            pressureInterval = setInterval(() => {
+                if(pCenter > targetCenter) {
+                    pCenter -= 0.5;
+                    pSides += 0.25; // Sides gain the mass lost from center
+                    
+                    tagsBot[1].innerText = Math.round(pCenter); // Center
+                    tagsBot[0].innerText = Math.round(pSides); // Left
+                    tagsBot[2].innerText = Math.round(pSides); // Right
+
+                    tagsBot[1].style.color = "red"; // Highlight low
+                    tagsBot[0].style.color = "blue"; // Highlight high
+                    tagsBot[2].style.color = "blue";
+                } else {
+                    // Simulation done, ready for next step
+                    clearInterval(pressureInterval);
+                    btnBot.disabled = false;
+                    btnBot.classList.add("active-btn");
+                    desc3.innerText = `Trykket i midten er faldet til ${Math.round(pCenter)} hPa. Der mangler luft!`;
+                }
+            }, 100);
+        }
+
+
+        function resetAll() {
+            clearInterval(pressureInterval);
+            flowsTop.forEach(f => f.style.opacity = 0);
+            flowsBot.forEach(f => f.style.opacity = 0);
+            tagsTop.forEach(t => t.style.opacity = 0);
+            tagsBot.forEach(t => { t.style.opacity = 0; t.innerText = "1013"; t.style.color = "black"; });
+            
+            btnTop.disabled = true; btnTop.classList.remove("active-btn");
+            btnBot.disabled = true; btnBot.classList.remove("active-btn");
+            slider.disabled = false;
+
+            desc1.innerText = "Start solen. Luften i midten udvider sig og bliver højere.";
+            desc2.innerText = "Afventer opvarmning...";
+            desc3.innerText = "Afventer vind i højden...";
+        }
+
+        function resetVisuals() {
+            targetHeight = BASE_HEIGHT;
+            colC.style.backgroundColor = "rgba(100, 181, 246, 0.2)";
+            sun.style.transform = "translateX(-50%) scale(1)";
+            groundC.style.backgroundColor = "";
+            isExpanded = false;
+            document.getElementById('pt-C-top').innerText = "300";
+        }
+
+        function drawIsobars() {
+            let xL=130, xC=400, xR=670;
+            let yBase = 500 - 50 - BASE_HEIGHT; 
+            let yHot = 500 - 50 - renderHeight;
+
+            // A smooth curve passing through the three points
+            const d = `M ${xL-60} ${yBase} L ${xL} ${yBase} 
+                       Q ${(xL+xC)/2} ${yHot} ${xC} ${yHot} 
+                       Q ${(xC+xR)/2} ${yHot} ${xR} ${yBase} 
+                       L ${xR+60} ${yBase}`;
+
+            svg.innerHTML = `<path d="${d}" stroke="#555" stroke-width="2" fill="none" />`;
+        }
+    </script>
+</body>
+</html>
