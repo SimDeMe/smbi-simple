@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <title>Hormoncyklus - Biologisk Simulation</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; display: flex; flex-direction: column; align-items: center; }
+        h1 { color: #2c3e50; margin-bottom: 5px; }
+        .subtitle { color: #7f8c8d; margin-bottom: 20px; font-size: 0.9em; }
+        
+        /* Layout Container */
+        .container { display: flex; gap: 20px; max-width: 1200px; }
+        
+        /* Venstre side: Anatomi */
+        .anatomy-panel { position: relative; width: 500px; height: 600px; background: white; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid #ddd;}
+        canvas#anatomyCanvas { width: 100%; height: 100%; }
+
+        /* Højre side: Data */
+        .data-panel { width: 500px; display: flex; flex-direction: column; gap: 20px; }
+        
+        /* Grafer */
+        .graph-box { background: white; padding: 15px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        canvas#graphCanvas { width: 100%; height: 200px; background: #fafafa; border: 1px solid #eee; }
+
+        /* Termometre (Søjler) */
+        .meters { display: flex; justify-content: space-around; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .meter-group { text-align: center; width: 60px; }
+        .bar-container { height: 150px; background: #e0e0e0; border-radius: 5px; position: relative; margin-bottom: 5px; overflow: hidden; }
+        .bar-fill { position: absolute; bottom: 0; width: 100%; transition: height 0.1s; }
+        
+        /* Farvekoder */
+        .color-fsh { background-color: #3498db; }
+        .color-lh { background-color: #9b59b6; }
+        .color-est { background-color: #e74c3c; }
+        .color-prog { background-color: #f1c40f; }
+
+        /* Info tekst */
+        #statusText { font-weight: bold; color: #333; min-height: 1.5em; font-size: 14px; }
+        .legend { font-size: 12px; color: #666; margin-top: 5px;}
+        .controls { margin-top: 10px; display: flex; align-items: center; gap: 15px;}
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; background: #27ae60; color: white; border: none; border-radius: 5px; }
+        button:hover { background: #219150; }
+        .day-display { font-size: 20px; font-weight: bold; color: #2c3e50; background: white; padding: 5px 15px; border-radius: 5px; border: 1px solid #ccc;}
+    </style>
+</head>
+<body>
+
+    <h1>Simulering: Kvindens Hormoncyklus</h1>
+    <div class="subtitle">Dynamisk matematisk model (Feedback loops)</div>
+    
+    <div class="controls">
+        <button id="playButton" onclick="togglePause()">Start</button>
+        <button onclick="resetSim()">Nulstil</button>
+        <div class="day-display">Dag: <span id="dayDisplay">1.0</span></div>
+    </div>
+
+    <div class="container">
+        <div class="anatomy-panel">
+            <canvas id="anatomyCanvas" width="500" height="600"></canvas>
+            <div style="position: absolute; bottom: 10px; left: 10px; font-size: 12px; color: #777;">
+                <span style="color:green; font-weight:bold;">GRØN PIL</span> = Stimulerer (+) <br>
+                <span style="color:red; font-weight:bold;">RØD PIL</span> = Hæmmer (-)
+            </div>
+        </div>
+
+        <div class="data-panel">
+            <div class="graph-box">
+                <div id="statusText">Systemet er klar. Tryk Start.</div>
+            </div>
+
+            <div class="meters">
+                <div class="meter-group">
+                    <div class="bar-container"><div id="bar-fsh" class="bar-fill color-fsh" style="height: 0%;"></div></div>
+                    <small>FSH</small>
+                </div>
+                <div class="meter-group">
+                    <div class="bar-container"><div id="bar-lh" class="bar-fill color-lh" style="height: 0%;"></div></div>
+                    <small>LH</small>
+                </div>
+                <div class="meter-group">
+                    <div class="bar-container"><div id="bar-est" class="bar-fill color-est" style="height: 0%;"></div></div>
+                    <small>Østrogen</small>
+                </div>
+                <div class="meter-group">
+                    <div class="bar-container"><div id="bar-prog" class="bar-fill color-prog" style="height: 0%;"></div></div>
+                    <small>Progest.</small>
+                </div>
+            </div>
+
+            <div class="graph-box">
+                <canvas id="graphCanvas" width="460" height="200"></canvas>
+                <div class="legend">
+                    <span style="color:#3498db">■ FSH</span> &nbsp; 
+                    <span style="color:#9b59b6">■ LH</span> &nbsp; 
+                    <span style="color:#e74c3c">■ Østrogen</span> &nbsp; 
+                    <span style="color:#f1c40f">■ Progesteron</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // --- GRAFIK SETUP ---
+    const anatomyCanvas = document.getElementById('anatomyCanvas');
+    const actx = anatomyCanvas.getContext('2d');
+    const bgImage = new Image();
+    bgImage.src = 'anatomi.png'; // Husk at have billedet i samme mappe!
+    
+    const graphCanvas = document.getElementById('graphCanvas');
+    const gctx = graphCanvas.getContext('2d');
+    
+    // --- KONFIGURATION AF MODEL (Matematikken) ---
+    const config = {
+        dt: 0.05, // Hastighed
+        clearance: { fsh: 0.05, lh: 0.15, est: 0.05, prog: 0.05 },
+        ovulationThreshold: 40, 
+        estrogenTrigger: 25     
+    };
+
+    // --- TILSTAND (State) ---
+    let sim = {
+        time: 1.0,           
+        cycleDay: 1.0,     // Dage i nuværende cyklus (til grafen)
+        fsh: 6, lh: 3, est: 5, prog: 0,
+        follicleSize: 1,   
+        clSize: 0,         
+        hasOvulated: false,
+        paused: true
+    };
+
+    // Data til grafen (resetter ved ny cyklus)
+    let historyData = { fsh: [], lh: [], est: [], prog: [] };
+
+    // --- HOVED LOOP (Motoren) ---
+    function updateModel() {
+        if (sim.paused) return;
+
+        // 1. Definer Feedback
+        let inhibition = 1 / (1 + (sim.est * 0.05) + (sim.prog * 3.0)); 
+        let positiveFeedback = 0;
+        if (sim.est > config.estrogenTrigger && sim.prog < 2) {
+            positiveFeedback = (sim.est - config.estrogenTrigger) * 2.0; 
+        }
+
+        // 2. Beregn ændringer (Hormoner)
+        let fshProd = 1.8 * inhibition; 
+        if (sim.prog < 1 && sim.clSize < 2 && sim.hasOvulated) fshProd += 2.0; // Genstart hjælp
+        let fshChange = (fshProd - (sim.fsh * config.clearance.fsh)) * config.dt;
+
+        let lhProd = (1.0 * inhibition) + positiveFeedback;
+        let lhChange = (lhProd - (sim.lh * config.clearance.lh)) * config.dt;
+
+        // 3. Biologi (Follikel & Corpus Luteum)
+        if (!sim.hasOvulated) {
+            // Follikel vokser
+            let growth = (sim.fsh > 2) ? sim.fsh * 0.08 : 0;
+            sim.follicleSize += growth * config.dt;
+            
+            // Follikel laver Østrogen
+            let targetEst = sim.follicleSize * 3.5;
+            sim.est += (targetEst - sim.est) * 0.5 * config.dt;
+
+            document.getElementById('statusText').innerText = "Fase: Follikulær (Østrogen stiger, Follikel vokser)";
+            if(positiveFeedback > 0) document.getElementById('statusText').innerText = "KRITISK PUNKT: Positiv Feedback -> LH Surge!";
+        }
+
+        // Ægløsning tjek
+        if (!sim.hasOvulated && sim.lh > config.ovulationThreshold) {
+            triggerOvulation();
+        }
+
+        // Corpus Luteum fase
+        if (sim.hasOvulated) {
+            document.getElementById('statusText').innerText = "Fase: Luteal (Progesteron dominerer, Ingen ny follikel)";
+            sim.clSize -= 0.8 * config.dt; // Dødshastighed
+            
+            if (sim.clSize <= 0) {
+                startNewCycle(); // Matematisk reset
+            } else {
+                // CL laver Progesteron
+                let targetProg = sim.clSize * 1.5;
+                sim.prog += (targetProg - sim.prog) * 0.2 * config.dt;
+                // CL laver lidt Østrogen
+                sim.est += (sim.clSize * 0.8 - sim.est) * 0.1 * config.dt;
+            }
+        } else {
+            sim.prog -= sim.prog * 0.1 * config.dt;
+        }
+
+        // 4. Opdater værdier
+        sim.fsh += fshChange;
+        sim.lh += lhChange;
+        
+        // Sikkerhedsgrænser (Ingen negative hormoner)
+        if(sim.fsh < 0) sim.fsh = 0; if(sim.lh < 0) sim.lh = 0; if(sim.est < 0) sim.est = 0;
+
+        // Tid
+        sim.time += config.dt;
+        sim.cycleDay += config.dt;
+
+        // Gem data til graf (kun hver 5. 'tick' for at spare hukommelse/tegnekraft)
+        if (Math.floor(sim.time * 10) % 5 === 0) {
+            historyData.fsh.push(sim.fsh);
+            historyData.lh.push(sim.lh);
+            historyData.est.push(sim.est);
+            historyData.prog.push(sim.prog);
+        }
+
+        updateUI();
+    }
+
+    function triggerOvulation() {
+        sim.hasOvulated = true;
+        sim.follicleSize = 0; 
+        sim.clSize = 10;      
+        sim.est = 10; // Dykker efter ægløsning
+        document.getElementById('statusText').innerText = "HÆNDELSE: ÆGLØSNING!";
+    }
+
+    function startNewCycle() {
+        sim.clSize = 0;
+        sim.hasOvulated = false; 
+        sim.follicleSize = 1;
+        sim.cycleDay = 1.0;
+        
+        
+        document.getElementById('statusText').innerText = "Ny Cyklus Starter...";
+    }
+
+    // --- TEGNING (Visualisering) ---
+    function drawAnatomy() {
+        actx.clearRect(0, 0, 500, 600);
+        if (bgImage.complete) actx.drawImage(bgImage, 0, 0, 500, 600);
+
+        // Positioner for æggestokken
+        const centerX = 145; 
+        const centerY = 400;
+
+        // TEGN FOLLIKEL (Hvis vi er før ægløsning)
+        if (!sim.hasOvulated) {
+            // Skaler follicleSize (math 1-10) til pixels (5-50)
+            let radius = sim.follicleSize * 5; 
+            
+            actx.beginPath();
+            actx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+            actx.fillStyle = "white"; 
+            actx.shadowBlur = 10; actx.shadowColor = "white"; // Glød
+            actx.fill();
+            actx.shadowBlur = 0;
+            actx.strokeStyle = "#333";
+            actx.stroke();
+        } 
+        // TEGN DET GULE LEGEME (Efter ægløsning)
+        else {
+            let radius = sim.clSize * 4; // Skalerer ned når den dør
+            actx.beginPath();
+            actx.arc(centerX, 465, radius, 0, Math.PI * 2);
+            actx.fillStyle = "#f1c40f"; // Gul
+            actx.fill();
+            actx.stroke();
+        }
+
+        // TEGN ÆGGETS REJSE (Simpel animation lige efter ægløsning)
+        // Vi bruger 'sim.clSize' som tidsmarkør - når den er stor (lige efter ægløsning) er ægget på vej
+        if (sim.hasOvulated && sim.clSize > 8) {
+            let travel = (10 - sim.clSize) / 2; // 0 til 1
+            // Simpel bane
+            let ex = 140 + (travel * 100);
+            let ey = 465 - (travel * 80);
+            
+            actx.beginPath();
+            actx.arc(ex, ey, 6, 0, Math.PI*2);
+            actx.fillStyle = "#e74c3c";
+            actx.fill();
+            actx.stroke();
+        }
+
+        // FEEDBACK PILE
+        // Grøn Pil: Hjerne -> Æggestok (FSH styrke)
+        let fshStrength = Math.min(5, sim.fsh / 5);
+        drawArrow(250, 150, 120, 310, "green", fshStrength);
+
+        // Rød/Grøn Pil: Æggestok -> Hjerne (Feedback)
+        let feedbackColor = "red"; // Standard negativ
+        if (sim.est > config.estrogenTrigger && !sim.hasOvulated) feedbackColor = "#00ff00"; // Positiv switch!
+        
+        let hormoneLevel = (sim.est + sim.prog) / 10;
+        drawCurvedArrow(100, 320, 200, 100, feedbackColor, hormoneLevel);
+    }
+
+    function drawGraph() {
+        gctx.clearRect(0, 0, 460, 200);
+        
+        // 1. Definer "Vinduet" - Hvor mange dage vil vi se på skærmen ad gangen?
+        // Med vores nuværende hastighed gemmer vi data ca. 4 gange pr dag.
+        // Hvis vi vil se ca 60 dage (2 cyklusser) på skærmen: 60 * 4 = 240 punkter.
+        const visiblePoints = 300; 
+        
+        // Beregn afstand mellem punkter (pixels)
+        const xStep = 460 / visiblePoints; 
+
+        // Tegn akser og gitter
+        gctx.beginPath(); gctx.strokeStyle = "#eee";
+        gctx.moveTo(0, 180); gctx.lineTo(460, 180); // X-akse
+        // Lav lodrette linjer for hver "måned" (ca hver 120. pixel)
+        for(let x=460; x>0; x-= (28 * 4 * xStep)) {
+             gctx.moveTo(x, 0); gctx.lineTo(x, 200);
+        }
+        gctx.stroke();
+
+        // Tegn graferne med den nye "rullende" logik
+        plotRollingLine(historyData.fsh, "#3498db", 40, xStep);
+        plotRollingLine(historyData.lh, "#9b59b6", 50, xStep);
+        plotRollingLine(historyData.est, "#e74c3c", 40, xStep);
+        plotRollingLine(historyData.prog, "#f1c40f", 20, xStep);
+
+        // Tegn "Pennen" (Lodret streg i højre side hvor vi er nu)
+        gctx.beginPath();
+        gctx.moveTo(458, 0); gctx.lineTo(458, 200);
+        gctx.strokeStyle = "#333"; gctx.lineWidth = 2;
+        gctx.stroke();
+    }
+
+    function plotRollingLine(data, color, maxVal, xStep) {
+        if(data.length < 2) return;
+        
+        gctx.beginPath();
+        gctx.strokeStyle = color;
+        gctx.lineWidth = 2;
+
+        // Vi starter tegningen fra den nyeste data (slutningen af arrayet)
+        // og tegner baglæns mod venstre, indtil vi rammer kanten af skærmen.
+        
+        let startIndex = data.length - 1;
+        
+        // Start "pennen" helt ude til højre (pixel 460)
+        let currentX = 460;
+        
+        gctx.moveTo(currentX, 180 - (data[startIndex] * (160/maxVal)));
+
+        // Loop baglæns gennem data
+        for (let i = startIndex - 1; i >= 0; i--) {
+            currentX -= xStep; // Flyt mod venstre
+            
+            // Hvis vi er røget ud over venstre kant, stop med at tegne
+            if (currentX < 0) break;
+
+            let y = 180 - (data[i] * (160/maxVal));
+            if(y < 10) y = 10; // Loft på grafen
+            
+            gctx.lineTo(currentX, y);
+        }
+        gctx.stroke();
+    }
+
+    // --- UI UPDATES ---
+    function updateUI() {
+        document.getElementById('dayDisplay').innerText = sim.cycleDay.toFixed(1);
+        
+        // Søjler (Max værdier er hardcoded for visuel effekt)
+        setBar('bar-fsh', sim.fsh, 20);
+        setBar('bar-lh', sim.lh, 50);
+        setBar('bar-est', sim.est, 40);
+        setBar('bar-prog', sim.prog, 15);
+    }
+
+    function setBar(id, val, max) {
+        let pct = (val / max) * 100;
+        if(pct > 100) pct = 100;
+        document.getElementById(id).style.height = pct + "%";
+    }
+
+    function drawArrow(x1, y1, x2, y2, color, width) {
+        if (width < 0.5) return;
+        actx.beginPath(); actx.moveTo(x1, y1); actx.lineTo(x2, y2);
+        actx.strokeStyle = color; actx.lineWidth = width; actx.stroke();
+        actx.beginPath(); actx.arc(x2, y2, 4, 0, Math.PI*2); actx.fillStyle = color; actx.fill();
+    }
+    
+    function drawCurvedArrow(x1, y1, x2, y2, color, width) {
+        if (width < 0.5) return;
+        actx.beginPath(); actx.moveTo(x1, y1);
+        actx.bezierCurveTo(x1-50, y1-100, x2-50, y2+50, x2, y2);
+        actx.strokeStyle = color; actx.lineWidth = width; actx.stroke();
+        actx.beginPath(); actx.arc(x2, y2, 4, 0, Math.PI*2); actx.fillStyle = color; actx.fill();
+    }
+
+    // --- KONTROL ---
+    function togglePause() {
+        sim.paused = !sim.paused;
+        document.getElementById('playButton').textContent = sim.paused ? "Start" : "Pause";
+    }
+
+    function resetSim() {
+        sim.time = 1; sim.cycleDay = 1; sim.paused = true;
+        sim.fsh = 6; sim.lh = 3; sim.est = 5; sim.prog = 0;
+        sim.follicleSize = 1; sim.clSize = 0; sim.hasOvulated = false;
+        historyData = { fsh: [], lh: [], est: [], prog: [] };
+        
+        document.getElementById('playButton').textContent = "Start";
+        updateUI(); drawAnatomy(); drawGraph();
+    }
+
+    // Animations Loop
+    function loop() {
+        updateModel();
+        drawAnatomy();
+        drawGraph();
+        requestAnimationFrame(loop);
+    }
+
+    // Start
+    bgImage.onload = () => drawAnatomy();
+    loop();
+
+</script>
+</body>
+</html>
