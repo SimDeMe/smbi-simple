@@ -42,6 +42,7 @@
         .day-selector { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px; max-width: 800px; justify-content: center; }
         .day-selector button { padding: 8px 12px; background: #3498db; }
         .day-selector button:hover { background: #2c81bc; }
+        .day-selector button.active { background: #1d5d98; }
     </style>
 </head>
 <body>
@@ -49,21 +50,11 @@
     <h1>Simulering: Kvindens Hormoncyklus</h1>
     
     <div class="controls">
-        <button onclick="togglePause()">Start / Pause</button>
+        <button id="playButton" onclick="togglePause()">Start</button>
         <button onclick="resetSim()">Nulstil</button>
         <span style="margin-left: 20px; font-size: 18px;">Dag: <span id="dayDisplay">1</span></span>
     </div>
-    <div class="day-selector" aria-label="Vælg startdag">
-        <!-- Generer dag-knapper 1-28 -->
-        <script>
-          for (let d = 1; d <= 28; d++) {
-            const btn = document.createElement('button');
-            btn.textContent = d;
-            btn.onclick = () => jumpToDay(d);
-            document.currentScript.parentElement.appendChild(btn);
-          }
-        </script>
-    </div>
+    <div class="day-selector" aria-label="Vælg startdag"></div>
 
     <div class="container">
         <div class="anatomy-panel">
@@ -119,6 +110,9 @@
     bgImage.src = 'anatomi.png'; // Navnet på din fil
     const graphCanvas = document.getElementById('graphCanvas');
     const gctx = graphCanvas.getContext('2d');
+    const playButton = document.getElementById('playButton');
+    const daySelector = document.querySelector('.day-selector');
+    const dayButtons = [];
 
     let state = {
         day: 1, // 1 til 28
@@ -173,9 +167,11 @@
         // 2. Ægløsning (Dag 14)
         else if (Math.floor(state.day) === 14) {
             document.getElementById('statusText').innerText = "Fase: ÆGLØSNING!";
-            // Kunstigt peak (Surge)
-            if(state.lh < 80) state.lh = 80;
-            if(state.fsh < 30) state.fsh = 30;
+            // Sæt peak kun én gang i starten af dagen
+            if (state.subDay < 0.03) {
+                state.lh = 80;
+                state.fsh = 30;
+            }
             
             // Animation af ægløsning håndteres i drawAnatomy
             state.corpusLuteum = true;
@@ -305,23 +301,57 @@
         // Ægløsning og transport gennem æggeleder (Dag 14 til 18)
         if (state.day >= 14 && state.day < 18) {
             
-            // 1. Hvor langt er ægget på rejsen? (0.0 = Start, 1.0 = Slut)
-            // Vi dividerer med 4, fordi rejsen nu tager 4 dage (18 - 14)
-            let t = (state.day - 14) / 4; 
-
-            // 2. Koordinater (Tilpas disse til din tegning!)
-            let startX = 140, startY = 465; // Ved æggestokken
-            let slutX = 250,  slutY = 400;  // Inde i livmoderen
+            // Ægløsning og transport (Dag 14 til 18) - MED FASTE PUNKTER
+        if (state.day >= 14 && state.day < 18) {
             
-            // "Kontrolpunktet" bestemmer buen. 
-            // Sæt Y lavt (fx 300) for at trække buen opad (mod æggelederen)
-            // Sæt X lidt til venstre (fx 100) for at få buen ud til siden
-            let kontrolX = 100, kontrolY = 300; 
+            // --- KONFIGURATION AF RUTEN ---
+            // Her bestemmer du præcis, hvor ægget skal være på hver hele dag.
+            // Ret tallene (x, y), så de passer til DIN tegning!
+            const punkter = [
+                { x: 140, y: 465 }, // Dag 14 (Start ved æggestok)
+                { x: 100, y: 350 }, // Dag 15 (På vej op)
+                { x: 180, y: 320 }, // Dag 16 (Toppen af æggelederen)
+                { x: 230, y: 350 }, // Dag 17 (På vej ned mod livmoder)
+                { x: 250, y: 400 }  // Dag 18 (Ankomst i livmoder)
+            ];
 
-            // 3. Matematisk formel for en blød bue (Kvadratisk Bézier)
-            // Du behøver ikke forstå matematikken, bare at den bruger punkterne ovenfor
-            let x = (1 - t) * (1 - t) * startX + 2 * (1 - t) * t * kontrolX + t * t * slutX;
-            let y = (1 - t) * (1 - t) * startY + 2 * (1 - t) * t * kontrolY + t * t * slutY;
+            // --- BEREGNING (Rør ikke ved dette) ---
+            
+            // 1. Find ud af hvilke to punkter vi er imellem
+            let index = Math.floor(state.day) - 14; // Fx 0, 1, 2 eller 3
+            let punktA = punkter[index];
+            let punktB = punkter[index + 1];
+
+            // 2. Hvor langt er vi mellem punkt A og B? (0.0 til 1.0)
+            let t = state.day - Math.floor(state.day); 
+
+            // 3. Lineær bevægelse (lige linje mellem punkterne)
+            let x = punktA.x + (punktB.x - punktA.x) * t;
+            let y = punktA.y + (punktB.y - punktA.y) * t;
+
+            // 4. Tilføj SINUSBUE (Gør linjen blødere/buet)
+            // '20' er hvor meget den buer ud til siden/opad mellem punkterne.
+            // Prøv at ændre 20 til -20, hvis den buer den forkerte vej.
+            let bue = Math.sin(t * Math.PI) * 20; 
+
+            // Hvis bevægelsen primært er lodret, lægger vi buen til X. 
+            // Hvis den er vandret, lægger vi buen til Y.
+            if (Math.abs(punktB.x - punktA.x) > Math.abs(punktB.y - punktA.y)) {
+                y -= bue; // Vandret bevægelse -> Bue op/ned
+            } else {
+                x -= bue; // Lodret bevægelse -> Bue til siden
+            }
+
+            // --- TEGNING ---
+            actx.beginPath();
+            actx.arc(x, y, 6, 0, Math.PI * 2);
+            actx.fillStyle = "#e74c3c";
+            actx.fill();
+            actx.stroke();
+            
+            // Debug tekst (Kan slettes): Viser dagens nummer ved ægget
+            // actx.fillStyle = "black"; actx.fillText(Math.floor(state.day), x+10, y);
+        }
 
             // 4. Tegn ægget
             actx.beginPath();
@@ -462,6 +492,7 @@
     // --- UI UPDATES ---
     function updateUI() {
         document.getElementById('dayDisplay').innerText = Math.floor(state.day);
+        highlightDayButton(Math.floor(state.day));
         
         // Opdater termometre (søjler)
         document.getElementById('bar-fsh').style.height = Math.min(100, state.fsh) + "%";
@@ -471,36 +502,58 @@
     }
 
     function togglePause() {
+        // Hvis vi starter fra en pauset tilstand, nulstil grafhistorikken for en ren start
+        if (state.paused) {
+            historyData = { fsh: [], lh: [], est: [], prog: [] };
+        }
         state.paused = !state.paused;
+        updatePlayButton();
     }
 
     function resetSim() {
-        state.day = 1;
-        state.fsh = 15; state.lh = 5; state.estrogen = 10; state.progesterone = 1;
-        state.follicleSize = 5; state.corpusLuteum = false; state.liningThickness = 2;
+        // Nulstil alle state-variabler til deres startværdier
+        Object.assign(state, {
+            day: 1, subDay: 0, fsh: 15, lh: 5, estrogen: 10, progesterone: 1,
+            follicleSize: 5, corpusLuteum: false, liningThickness: 2, paused: true
+        });
+        // Nulstil grafhistorik
         historyData = { fsh: [], lh: [], est: [], prog: [] };
-        state.paused = true;
+        // Opdater UI
+        updatePlayButton();
+        updateUI();
+        // Tegn den nulstillede tilstand
+        drawAnatomy();
+        drawGraph();
+    }
+
+    // Hop direkte til en valgt dag
+    function jumpToDay(targetDay) {
+        resetSim(); // Start fra en ren tilstand
+        state.paused = false; // Kør simulationen i baggrunden
+        // Simuler hurtigt frem til dagen før den valgte dag
+        while (state.day < targetDay) {
+            updateModel();
+        }
+        state.day = targetDay; state.subDay = 0; // Land præcist på dagen
+        // Sørg for, at simulationen er pauset, så brugeren kan trykke "Start"
+        state.paused = true; 
+        updatePlayButton();
+        // Opdater UI og tegn alt for den nye dag
         updateUI();
         drawAnatomy();
         drawGraph();
     }
 
-    // Hop direkte til en valgt dag ved hurtigt at simulere frem til den
-    function jumpToDay(targetDay) {
-        targetDay = Math.max(1, Math.min(28, targetDay));
-        resetSim();
-        state.paused = false;
-        let safety = 0;
-        while (Math.floor(state.day) < targetDay && safety < 5000) {
-            updateModel();
-            safety++;
+    function updatePlayButton() {
+        if (playButton) {
+            playButton.textContent = state.paused ? "Start" : "Pause";
         }
-        state.day = targetDay;
-        state.subDay = 0;
-        state.paused = true;
-        updateUI();
-        drawAnatomy();
-        drawGraph();
+    }
+
+    function highlightDayButton(day) {
+        dayButtons.forEach(btn => {
+            btn.classList.toggle('active', Number(btn.dataset.day) === day);
+        });
     }
 
     // --- HOVED LOOP ---
@@ -511,7 +564,17 @@
         requestAnimationFrame(loop);
     }
 
-    // Start
+    // Generer dag-knapper og start
+    for (let d = 1; d <= 28; d++) {
+        const btn = document.createElement('button');
+        btn.type = "button";
+        btn.textContent = d;
+        btn.dataset.day = d;
+        btn.onclick = () => jumpToDay(d);
+        dayButtons.push(btn);
+        daySelector.appendChild(btn);
+    }
+
     resetSim();
     loop();
 
