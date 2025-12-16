@@ -139,8 +139,15 @@
             state.day++;
             state.subDay = 0;
         }
-        if (state.day > 29) resetSim(); // Start forfra
 
+        // --- TJEK OM VI SKAL STARTE NY CYKLUS ---
+        if (state.day >= 29) { 
+            startNewCycle(); // Kald nulstillings-funktionen
+            return; // Stop her, så vi ikke beregner mere på dag 29
+        }
+
+        // --- HER ER LOGIKKEN TILBAGE PÅ SIN PLADS ---
+        
         // 1. Follikelfase (Dag 1-13)
         if (state.day < 14) {
             document.getElementById('statusText').innerText = "Fase: Follikulær - Østrogen stiger, FSH falder (Negativ feedback)";
@@ -172,8 +179,6 @@
                 state.lh = 80;
                 state.fsh = 30;
             }
-            
-            // Animation af ægløsning håndteres i drawAnatomy
             state.corpusLuteum = true;
         }
 
@@ -187,13 +192,12 @@
 
             // Det gule legeme producerer Progesteron
             let daysSinceOvulation = state.day - 14;
-            // Parabel-kurve for corpus luteum helbred
             let clHealth = Math.max(0, 14 - Math.abs(daysSinceOvulation - 7)); 
             
-            state.progesterone = 5 + (clHealth * 4); // Maxer omkring dag 21
+            state.progesterone = 5 + (clHealth * 4); 
             state.estrogen = 20 + (clHealth * 1.5);
 
-            // NEGATIV FEEDBACK: Høj progesteron dræber FSH/LH produktion
+            // NEGATIV FEEDBACK
             if (state.progesterone > 10) {
                 state.fsh = Math.max(2, state.fsh - 0.1);
                 state.lh = Math.max(2, state.lh - 0.1);
@@ -221,6 +225,25 @@
         updateUI();
     }
 
+    function startNewCycle() {
+        // 1. Sæt dag tilbage til start
+        state.day = 1;
+        state.subDay = 0;
+
+        // 2. Nulstil biologi-værdier til "start-niveau"
+        state.fsh = 15;
+        state.lh = 5;
+        state.estrogen = 10;
+        state.progesterone = 1;
+        state.follicleSize = 5;       
+        state.corpusLuteum = false;   
+        state.liningThickness = 2;    
+
+        // 3. Nulstil graf-data
+        historyData = { fsh: [], lh: [], est: [], prog: [] };
+        
+        // Vi pauser IKKE. Den kører bare videre med de nye, lave tal.
+    }
     // --- TEGNEFUNKTIONER (Visualisering) ---
     function drawAnatomy() {
         // Ryd lærredet
@@ -297,16 +320,10 @@
             actx.stroke();
         }
 
-        // Ægløsning Animation (Ægget flyver)
         // Ægløsning og transport gennem æggeleder (Dag 14 til 18)
         if (state.day >= 14 && state.day < 18) {
             
-            // Ægløsning og transport (Dag 14 til 18) - MED FASTE PUNKTER
-        if (state.day >= 14 && state.day < 18) {
-            
             // --- KONFIGURATION AF RUTEN ---
-            // Her bestemmer du præcis, hvor ægget skal være på hver hele dag.
-            // Ret tallene (x, y), så de passer til DIN tegning!
             const punkter = [
                 { x: 140, y: 465 }, // Dag 14 (Start ved æggestok)
                 { x: 100, y: 350 }, // Dag 15 (På vej op)
@@ -315,27 +332,26 @@
                 { x: 250, y: 400 }  // Dag 18 (Ankomst i livmoder)
             ];
 
-            // --- BEREGNING (Rør ikke ved dette) ---
-            
+            // --- BEREGNING ---
             // 1. Find ud af hvilke to punkter vi er imellem
-            let index = Math.floor(state.day) - 14; // Fx 0, 1, 2 eller 3
+            let index = Math.floor(state.day) - 14; 
+            
+            // Sikkerheds-tjek så vi ikke crasher hvis index bliver for højt
+            if (index >= punkter.length - 1) index = punkter.length - 2;
+
             let punktA = punkter[index];
             let punktB = punkter[index + 1];
 
-            // 2. Hvor langt er vi mellem punkt A og B? (0.0 til 1.0)
+            // 2. Hvor langt er vi mellem punkt A og B?
             let t = state.day - Math.floor(state.day); 
 
-            // 3. Lineær bevægelse (lige linje mellem punkterne)
+            // 3. Lineær bevægelse
             let x = punktA.x + (punktB.x - punktA.x) * t;
             let y = punktA.y + (punktB.y - punktA.y) * t;
 
-            // 4. Tilføj SINUSBUE (Gør linjen blødere/buet)
-            // '20' er hvor meget den buer ud til siden/opad mellem punkterne.
-            // Prøv at ændre 20 til -20, hvis den buer den forkerte vej.
+            // 4. Tilføj SINUSBUE
             let bue = Math.sin(t * Math.PI) * 20; 
 
-            // Hvis bevægelsen primært er lodret, lægger vi buen til X. 
-            // Hvis den er vandret, lægger vi buen til Y.
             if (Math.abs(punktB.x - punktA.x) > Math.abs(punktB.y - punktA.y)) {
                 y -= bue; // Vandret bevægelse -> Bue op/ned
             } else {
@@ -344,23 +360,12 @@
 
             // --- TEGNING ---
             actx.beginPath();
-            actx.arc(x, y, 6, 0, Math.PI * 2);
-            actx.fillStyle = "#e74c3c";
+            actx.arc(x, y, 6, 0, Math.PI * 2); 
+            actx.fillStyle = "#e74c3c"; // Rød
             actx.fill();
             actx.stroke();
             
-            // Debug tekst (Kan slettes): Viser dagens nummer ved ægget
-            // actx.fillStyle = "black"; actx.fillText(Math.floor(state.day), x+10, y);
-        }
-
-            // 4. Tegn ægget
-            actx.beginPath();
-            actx.arc(x, y, 6, 0, Math.PI * 2); // Lidt større æg (6px)
-            actx.fillStyle = "#e74c3c"; // Rødlig farve
-            actx.fill();
-            actx.stroke();
-            
-            // Valgfrit: Skriv tekst hvis musen er over (eller bare altid)
+            // Valgfrit: Tekst label
             if (t > 0.1 && t < 0.9) {
                 actx.fillStyle = "black";
                 actx.font = "10px Arial";
@@ -509,6 +514,29 @@
         state.paused = !state.paused;
         updatePlayButton();
     }
+
+    function startNewCycle() {
+        // 1. Sæt dag tilbage til start
+        state.day = 1;
+        state.subDay = 0;
+
+        // 2. Nulstil biologi-værdier (VIGTIGT: Ellers er folliklen kæmpestor fra start)
+        state.fsh = 15;
+        state.lh = 5;
+        state.estrogen = 10;
+        state.progesterone = 1;
+        state.follicleSize = 5;       // Gør folliklen lille igen
+        state.corpusLuteum = false;   // Fjern det gule legeme
+        state.liningThickness = 2;    // Gør slimhinden tynd (efter menstruation)
+
+        // 3. Nulstil graf-data, så stregen kan tegnes på ny fra venstre
+        // Vi beholder IKKE den gamle streg, da grafen viser "Dag 1 til 28"
+        historyData = { fsh: [], lh: [], est: [], prog: [] };
+        
+        // Bemærk: Vi sætter IKKE state.paused = true. Simulationen kører videre.
+    }
+
+    
 
     function resetSim() {
         // Nulstil alle state-variabler til deres startværdier
