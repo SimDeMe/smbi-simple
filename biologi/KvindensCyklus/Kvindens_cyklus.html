@@ -2,13 +2,14 @@
 <html lang="da">
 <head>
     <meta charset="UTF-8">
-    <title>Hormoncyklus Simulering - Biologi C</title>
+    <title>Hormoncyklus - Komplet Simulation</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; display: flex; flex-direction: column; align-items: center; }
-        h1 { color: #2c3e50; }
+        h1 { color: #2c3e50; margin-bottom: 5px; }
+        .subtitle { color: #7f8c8d; margin-bottom: 20px; font-size: 0.9em; }
         
         /* Layout Container */
-        .container { display: flex; gap: 20px; max-width: 1200px; margin-top: 20px; }
+        .container { display: flex; gap: 20px; max-width: 1200px; }
         
         /* Venstre side: Anatomi */
         .anatomy-panel { position: relative; width: 500px; height: 600px; background: white; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid #ddd;}
@@ -34,54 +35,47 @@
         .color-prog { background-color: #f1c40f; }
 
         /* Info tekst */
-        #statusText { font-weight: bold; color: #333; min-height: 1.5em; }
+        #statusText { font-weight: bold; color: #333; min-height: 1.5em; font-size: 14px; }
         .legend { font-size: 12px; color: #666; margin-top: 5px;}
-        .controls { margin-top: 10px; }
+        .controls { margin-top: 10px; display: flex; align-items: center; gap: 15px;}
         button { padding: 10px 20px; font-size: 16px; cursor: pointer; background: #27ae60; color: white; border: none; border-radius: 5px; }
         button:hover { background: #219150; }
-        .day-selector { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px; max-width: 800px; justify-content: center; }
-        .day-selector button { padding: 8px 12px; background: #3498db; }
-        .day-selector button:hover { background: #2c81bc; }
-        .day-selector button.active { background: #1d5d98; }
+        .day-display { font-size: 20px; font-weight: bold; color: #2c3e50; background: white; padding: 5px 15px; border-radius: 5px; border: 1px solid #ccc;}
     </style>
 </head>
 <body>
 
     <h1>Simulering: Kvindens Hormoncyklus</h1>
+    <div class="subtitle">Dynamisk model med feedback & partikler</div>
     
     <div class="controls">
         <button id="playButton" onclick="togglePause()">Start</button>
         <button onclick="resetSim()">Nulstil</button>
-        <span style="margin-left: 20px; font-size: 18px;">Dag: <span id="dayDisplay">1</span></span>
+        <div class="day-display">Dag i cyklus: <span id="dayDisplay">1.0</span></div>
     </div>
-    <div class="day-selector" aria-label="Vælg startdag"></div>
 
     <div class="container">
+        
         <div class="anatomy-panel">
             <canvas id="anatomyCanvas" width="500" height="600"></canvas>
-            <div style="position: absolute; bottom: 10px; left: 10px; font-size: 12px; color: #777;">
-                <span style="color:green; font-weight:bold;">GRØN PIL</span> = Stimulerer (+) <br>
-                <span style="color:red; font-weight:bold;">RØD PIL</span> = Hæmmer (-)
-            </div>
         </div>
 
         <div class="data-panel">
-            
             <div class="graph-box">
-                <div id="statusText">Fase 1: Follikulær fase - Ægget modnes...</div>
+                <div id="statusText">Systemet er klar. Tryk Start.</div>
             </div>
 
             <div class="meters">
                 <div class="meter-group">
-                    <div class="bar-container"><div id="bar-fsh" class="bar-fill color-fsh" style="height: 20%;"></div></div>
+                    <div class="bar-container"><div id="bar-fsh" class="bar-fill color-fsh" style="height: 0%;"></div></div>
                     <small>FSH</small>
                 </div>
                 <div class="meter-group">
-                    <div class="bar-container"><div id="bar-lh" class="bar-fill color-lh" style="height: 10%;"></div></div>
+                    <div class="bar-container"><div id="bar-lh" class="bar-fill color-lh" style="height: 0%;"></div></div>
                     <small>LH</small>
                 </div>
                 <div class="meter-group">
-                    <div class="bar-container"><div id="bar-est" class="bar-fill color-est" style="height: 10%;"></div></div>
+                    <div class="bar-container"><div id="bar-est" class="bar-fill color-est" style="height: 0%;"></div></div>
                     <small>Østrogen</small>
                 </div>
                 <div class="meter-group">
@@ -103,510 +97,238 @@
     </div>
 
 <script>
-    // --- KONFIGURATION & VARIABLER ---
+    // --- GRAFIK SETUP ---
     const anatomyCanvas = document.getElementById('anatomyCanvas');
     const actx = anatomyCanvas.getContext('2d');
     const bgImage = new Image();
-    bgImage.src = 'anatomi.png'; // Navnet på din fil
+    bgImage.src = 'anatomi.png'; 
+    
     const graphCanvas = document.getElementById('graphCanvas');
     const gctx = graphCanvas.getContext('2d');
-    const playButton = document.getElementById('playButton');
-    const daySelector = document.querySelector('.day-selector');
-    const dayButtons = [];
+    
+    // --- KONFIGURATION AF MODEL ---
+    const config = {
+        dt: 0.05, 
+        clearance: { fsh: 0.05, lh: 0.15, est: 0.05, prog: 0.05 },
+        ovulationThreshold: 40, 
+        estrogenTrigger: 25     
+    };
 
-    let state = {
-        day: 1, // 1 til 28
-        subDay: 0, // Bruges til animation steps mellem dage
-        fsh: 15,
-        lh: 5,
-        estrogen: 10,
-        progesterone: 1,
-        follicleSize: 5, // radius i pixels
-        liningThickness: 2, // mm
-        corpusLuteum: false, // Er det gule legeme aktivt?
+    // --- TILSTAND (State) ---
+    let sim = {
+        time: 1.0,           
+        cycleDay: 1.0,     
+        fsh: 6, lh: 3, est: 5, prog: 0,
+        follicleSize: 1,   
+        clSize: 0,         
+        hasOvulated: false,
         paused: true
     };
 
+    // Data til grafen (Rullende)
     let historyData = { fsh: [], lh: [], est: [], prog: [] };
 
-    // --- LOGIK MOTOREN (Baseret på din tekst) ---
+    // --- PARTIKEL SYSTEM ---
+    let particles = []; 
+    class Particle {
+        constructor(x, y, color, direction) {
+            this.x = x; this.y = y; this.color = color;
+            this.vx = (Math.random() - 0.5) * 1.5; 
+            this.vy = direction * (1 + Math.random()); 
+            this.life = 1.0; 
+            this.decay = 0.01 + Math.random() * 0.02; 
+        }
+        update() { this.x += this.vx; this.y += this.vy; this.life -= this.decay; }
+        draw(ctx) {
+            ctx.globalAlpha = this.life; ctx.beginPath();
+            ctx.arc(this.x, this.y, 3, 0, Math.PI * 2); 
+            ctx.fillStyle = this.color; ctx.fill(); ctx.globalAlpha = 1.0; 
+        }
+    }
+
+    // --- HOVED MOTOR ---
     function updateModel() {
-        if (state.paused) return;
+        if (sim.paused) return;
 
-        // Kør tid fremad (ca 60 frames pr "dag")
-        state.subDay += 0.02; 
-        if (state.subDay >= 1) {
-            state.day++;
-            state.subDay = 0;
+        // Feedback Loops
+        let inhibition = 1 / (1 + (sim.est * 0.05) + (sim.prog * 3.0)); 
+        let positiveFeedback = 0;
+        if (sim.est > config.estrogenTrigger && sim.prog < 2) {
+            positiveFeedback = (sim.est - config.estrogenTrigger) * 2.0; 
         }
 
-        // --- TJEK OM VI SKAL STARTE NY CYKLUS ---
-        if (state.day >= 29) { 
-            startNewCycle(); // Kald nulstillings-funktionen
-            return; // Stop her, så vi ikke beregner mere på dag 29
+        // Hormon beregninger
+        let fshProd = 1.8 * inhibition; 
+        if (sim.prog < 1 && sim.clSize < 2 && sim.hasOvulated) fshProd += 2.0; 
+        let fshChange = (fshProd - (sim.fsh * config.clearance.fsh)) * config.dt;
+
+        let lhProd = (1.0 * inhibition) + positiveFeedback;
+        let lhChange = (lhProd - (sim.lh * config.clearance.lh)) * config.dt;
+
+        // Biologi
+        if (!sim.hasOvulated) {
+            let growth = (sim.fsh > 2) ? sim.fsh * 0.08 : 0;
+            sim.follicleSize += growth * config.dt;
+            let targetEst = sim.follicleSize * 3.5;
+            sim.est += (targetEst - sim.est) * 0.5 * config.dt;
+            document.getElementById('statusText').innerText = "Fase: Follikulær (Østrogen stiger, Follikel vokser)";
         }
 
-        // --- HER ER LOGIKKEN TILBAGE PÅ SIN PLADS ---
-        
-        // 1. Follikelfase (Dag 1-13)
-        if (state.day < 14) {
-            document.getElementById('statusText').innerText = "Fase: Follikulær - Østrogen stiger, FSH falder (Negativ feedback)";
-            
-            // Follikel vokser pga FSH
-            state.follicleSize += state.fsh * 0.005;
-            
-            // Follikel laver Østrogen
-            state.estrogen = state.follicleSize * 2.0;
+        if (!sim.hasOvulated && sim.lh > config.ovulationThreshold) {
+            sim.hasOvulated = true;
+            sim.follicleSize = 0; sim.clSize = 10; sim.est = 10; 
+            document.getElementById('statusText').innerText = "HÆNDELSE: ÆGLØSNING!";
+        }
 
-            // Feedback logik
-            if (state.estrogen < 60) {
-                // NEGATIV FEEDBACK: Østrogen hæmmer FSH
-                state.fsh -= 0.05;
-                if (state.fsh < 5) state.fsh = 5;
+        if (sim.hasOvulated) {
+            document.getElementById('statusText').innerText = "Fase: Luteal (Progesteron dominerer)";
+            sim.clSize -= 0.8 * config.dt; 
+            if (sim.clSize <= 0) {
+                startNewCycle(); // Starter forfra
             } else {
-                 // POSITIV FEEDBACK (Lige før ægløsning): Østrogen trigger LH/FSH spike
-                document.getElementById('statusText').innerText = "KRITISK PUNKT: Positiv Feedback! LH Surge!";
-                state.lh += 2.0; 
-                state.fsh += 0.5;
+                let targetProg = sim.clSize * 1.5;
+                sim.prog += (targetProg - sim.prog) * 0.2 * config.dt;
+                sim.est += (sim.clSize * 0.8 - sim.est) * 0.1 * config.dt;
             }
+        } else {
+            sim.prog -= sim.prog * 0.1 * config.dt;
         }
 
-        // 2. Ægløsning (Dag 14)
-        else if (Math.floor(state.day) === 14) {
-            document.getElementById('statusText').innerText = "Fase: ÆGLØSNING!";
-            // Sæt peak kun én gang i starten af dagen
-            if (state.subDay < 0.03) {
-                state.lh = 80;
-                state.fsh = 30;
-            }
-            state.corpusLuteum = true;
-        }
+        sim.fsh += fshChange; sim.lh += lhChange;
+        if(sim.fsh < 0) sim.fsh = 0; if(sim.lh < 0) sim.lh = 0; if(sim.est < 0) sim.est = 0;
 
-        // 3. Lutealfase (Dag 15-28)
-        else {
-            document.getElementById('statusText').innerText = "Fase: Luteal - Progesteron dominerer (Negativ Feedback)";
-            
-            // Hormoner crasher efter ægløsning
-            state.lh = Math.max(2, state.lh - 2);
-            state.fsh = Math.max(4, state.fsh - 1);
+        sim.time += config.dt; sim.cycleDay += config.dt;
 
-            // Det gule legeme producerer Progesteron
-            let daysSinceOvulation = state.day - 14;
-            let clHealth = Math.max(0, 14 - Math.abs(daysSinceOvulation - 7)); 
-            
-            state.progesterone = 5 + (clHealth * 4); 
-            state.estrogen = 20 + (clHealth * 1.5);
-
-            // NEGATIV FEEDBACK
-            if (state.progesterone > 10) {
-                state.fsh = Math.max(2, state.fsh - 0.1);
-                state.lh = Math.max(2, state.lh - 0.1);
-            }
-
-            // Livmoderslimhinde vokser
-            state.liningThickness = 5 + (state.progesterone / 3);
-        }
-
-        // 4. Menstruation (Slutningen)
-        if (state.day > 26) {
-            document.getElementById('statusText').innerText = "Fase: Menstruation - Slimhinden afstødes";
-            state.liningThickness -= 0.2; // Blødning
-            if(state.liningThickness < 2) state.liningThickness = 2;
-        }
-
-        // Gem historik til graf
-        if (Math.floor(state.day) > historyData.fsh.length) {
-            historyData.fsh.push(state.fsh);
-            historyData.lh.push(state.lh);
-            historyData.est.push(state.estrogen);
-            historyData.prog.push(state.progesterone);
+        // Gem data
+        if (Math.floor(sim.time * 10) % 5 === 0) {
+            historyData.fsh.push(sim.fsh); historyData.lh.push(sim.lh);
+            historyData.est.push(sim.est); historyData.prog.push(sim.prog);
         }
 
         updateUI();
     }
 
     function startNewCycle() {
-        // 1. Sæt dag tilbage til start
-        state.day = 1;
-        state.subDay = 0;
-
-        // 2. Nulstil biologi-værdier til "start-niveau"
-        state.fsh = 15;
-        state.lh = 5;
-        state.estrogen = 10;
-        state.progesterone = 1;
-        state.follicleSize = 5;       
-        state.corpusLuteum = false;   
-        state.liningThickness = 2;    
-
-        // 3. Nulstil graf-data
-        historyData = { fsh: [], lh: [], est: [], prog: [] };
-        
-        // Vi pauser IKKE. Den kører bare videre med de nye, lave tal.
+        sim.clSize = 0; sim.hasOvulated = false; sim.follicleSize = 1;
+        sim.cycleDay = 1.0;
+        // VIGTIGT: Vi sletter IKKE historyData her!
     }
-    // --- TEGNEFUNKTIONER (Visualisering) ---
+
+    // --- TEGNING ---
     function drawAnatomy() {
-        // Ryd lærredet
         actx.clearRect(0, 0, 500, 600);
+        if (bgImage.complete) actx.drawImage(bgImage, 0, 0, 500, 600);
+        const centerX = 145; const centerY = 400;
 
-        // HVIS billedet er indlæst, tegn det som baggrund
-        if (bgImage.complete) {
-            actx.drawImage(bgImage, 0, 0, 500, 600);
-        }
-
-        // 1. Tegn Hjerne (Hypothalamus/Hypofyse)
-        // drawOrgan(250, 80, 60, "Hypothalamus", "#bdc3c7");
-        // drawOrgan(250, 130, 40, "Hypofyse", "#95a5a6");
-
-        // 2. Tegn Livmoder
-        // drawUterus(250, 400, state.liningThickness);
-
-      /*   // 3. Tegn Æggestok (Ovarie) - Venstre side
-        actx.beginPath();
-        actx.ellipse(120, 350, 50, 35, 0, 0, Math.PI * 2);
-        actx.fillStyle = "#f8c471"; // Hudfarve-ish
-        actx.fill();
-        actx.stroke();
-        actx.fillStyle = "black";
-        actx.fillText("Æggestok", 100, 400);
- */
-        // Tegn Follikel eller Gule Legeme indeni æggestokken
-        if (!state.corpusLuteum || state.day < 14) {
-            // Voksende follikel (hvid cirkel)
-            // 1. Hvor langt er vi i processen? (0.0 = Dag 1, 1.0 = Dag 14)
-            // Vi bruger Math.max for at sikre, at vi ikke dividerer med 0 eller får negative tal
-            let progress = Math.max(0, (state.day - 1) / 13);
-            if (progress > 1) progress = 1;
-
-            // 2. Start- og slutkoordinater (Dine tal)
-            let startX = 145; 
-            let startY = 400;
-            let endX = 140;   
-            let endY = 465;
-
-            // 3. Beregn den "lige vej" mellem punkterne
-            let currentX = startX + (endX - startX) * progress;
-            let currentY = startY + (endY - startY) * progress;
-
-            // 4. Tilføj "BUE-EFFEKT"
-            // Vi bruger sinus-kurven til at skubbe X-værdien lidt ud til siden midtvejs.
-            // Tallet '20' afgør, hvor stor buen er. Prøv at ændre 20 til 40 eller -20 for at ændre buen.
-            let bue = Math.sin(progress * Math.PI) * 50; 
-            
-            currentX += bue; 
-
-            // --- BEREGN BEVÆGELSE SLUT ---
-
-            // Voksende follikel tegnes på den nye position (currentX, currentY)
-            actx.beginPath();
-            actx.arc(currentX, currentY, state.follicleSize, 0, Math.PI * 2);
-            
-            actx.fillStyle = "white"; // Eller en svag gullig farve
-            actx.fill();
-            actx.stroke();
-
-/*             actx.beginPath();
-            actx.arc(145, 400, state.follicleSize, 0, Math.PI * 2);
-            actx.fillStyle = "white";
-            actx.fill();
-            actx.stroke(); */
+        // Anatomi
+        if (!sim.hasOvulated) {
+            let radius = sim.follicleSize * 5; 
+            actx.beginPath(); actx.arc(centerX, centerY, radius, 0, Math.PI*2);
+            actx.fillStyle = "white"; actx.shadowBlur=10; actx.shadowColor="white"; actx.fill();
+            actx.shadowBlur=0; actx.strokeStyle="#333"; actx.stroke();
         } else {
-            // Det Gule Legeme (Skrumper mod slutningen)
-            let shrink = Math.max(0.2, (28 - state.day) / 14);
-            actx.beginPath();
-            actx.arc(140, 465, 25 * shrink, 0, Math.PI * 2);
-            actx.fillStyle = "#f1c40f"; // GUL
-            actx.fill();
-            actx.stroke();
+            let radius = sim.clSize * 4; 
+            actx.beginPath(); actx.arc(centerX, 465, radius, 0, Math.PI*2);
+            actx.fillStyle="#f1c40f"; actx.fill(); actx.stroke();
         }
 
-        // Ægløsning og transport gennem æggeleder (Dag 14 til 18)
-        if (state.day >= 14 && state.day < 18) {
-            
-            // --- KONFIGURATION AF RUTEN ---
-            const punkter = [
-                { x: 140, y: 465 }, // Dag 14 (Start ved æggestok)
-                { x: 100, y: 350 }, // Dag 15 (På vej op)
-                { x: 180, y: 320 }, // Dag 16 (Toppen af æggelederen)
-                { x: 230, y: 350 }, // Dag 17 (På vej ned mod livmoder)
-                { x: 250, y: 400 }  // Dag 18 (Ankomst i livmoder)
-            ];
-
-            // --- BEREGNING ---
-            // 1. Find ud af hvilke to punkter vi er imellem
-            let index = Math.floor(state.day) - 14; 
-            
-            // Sikkerheds-tjek så vi ikke crasher hvis index bliver for højt
-            if (index >= punkter.length - 1) index = punkter.length - 2;
-
-            let punktA = punkter[index];
-            let punktB = punkter[index + 1];
-
-            // 2. Hvor langt er vi mellem punkt A og B?
-            let t = state.day - Math.floor(state.day); 
-
-            // 3. Lineær bevægelse
-            let x = punktA.x + (punktB.x - punktA.x) * t;
-            let y = punktA.y + (punktB.y - punktA.y) * t;
-
-            // 4. Tilføj SINUSBUE
-            let bue = Math.sin(t * Math.PI) * 20; 
-
-            if (Math.abs(punktB.x - punktA.x) > Math.abs(punktB.y - punktA.y)) {
-                y -= bue; // Vandret bevægelse -> Bue op/ned
-            } else {
-                x -= bue; // Lodret bevægelse -> Bue til siden
-            }
-
-            // --- TEGNING ---
-            actx.beginPath();
-            actx.arc(x, y, 6, 0, Math.PI * 2); 
-            actx.fillStyle = "#e74c3c"; // Rød
-            actx.fill();
-            actx.stroke();
-            
-            // Valgfrit: Tekst label
-            if (t > 0.1 && t < 0.9) {
-                actx.fillStyle = "black";
-                actx.font = "10px Arial";
-                actx.fillText("Æggeleder", x + 10, y);
-            }
+        // Æg
+        if (sim.hasOvulated && sim.clSize > 8) {
+            let travel = (10 - sim.clSize) / 2; 
+            let ex = 140 + (travel * 100); let ey = 465 - (travel * 80);
+            actx.beginPath(); actx.arc(ex, ey, 6, 0, Math.PI*2);
+            actx.fillStyle = "#e74c3c"; actx.fill(); actx.stroke();
         }
 
-        // --- FEEDBACK PILE (Det vigtigste!) ---
-        
-        // Pil 1: Hjerne -> Æggestok (FSH/LH)
-        // Altid Grøn (Stimulerende), tykkelse afhænger af niveau
-        drawArrow(250, 150, 120, 310, "green", (state.fsh + state.lh)/15);
-        
-        // Pil 2: Æggestok -> Hjerne (Østrogen/Progesteron Feedback)
-        // Farve skifter!
-        let feedbackColor = "red"; // Standard er negativ feedback
-        
-        // Hvis vi er i det "Kritiske punkt" (Dag 13-14) og østrogen er tårnhøj -> POSITIV
-        if (state.day > 12 && state.day < 14.5 && state.estrogen > 50) {
-            feedbackColor = "#00ff00"; // Neongrøn for tydelighed
+        // Partikler
+        if (!sim.paused) {
+            spawnParticles(260, 140, sim.fsh, "#3498db", 1); 
+            spawnParticles(260, 140, sim.lh,  "#9b59b6", 1); 
+            spawnParticles(145, 400, sim.est, "#e74c3c", -1); 
+            if(sim.hasOvulated) spawnParticles(145, 465, sim.prog, "#f1c40f", -1); 
         }
-        
-        let hormoneLevel = (state.estrogen + state.progesterone) / 10;
-        // Tegn pilen buet tilbage
-        drawCurvedArrow(100, 320, 200, 100, feedbackColor, hormoneLevel);
+        for (let i = particles.length - 1; i >= 0; i--) {
+            let p = particles[i]; p.update(); p.draw(actx);
+            if (p.life <= 0) particles.splice(i, 1);
+        }
     }
 
+    function spawnParticles(x, y, level, color, dir) {
+        let count = Math.floor(level / 8); 
+        if (Math.random() < (level % 8) / 8) count++;
+        for(let i=0; i<count; i++) particles.push(new Particle(x, y, color, dir));
+    }
+
+    // --- RULLENDE GRAF ---
     function drawGraph() {
         gctx.clearRect(0, 0, 460, 200);
-        
-        // Tegn akser
-        gctx.beginPath();
-        gctx.moveTo(30, 10); gctx.lineTo(30, 180); gctx.lineTo(450, 180);
-        gctx.strokeStyle = "#ccc";
+        const visiblePoints = 300; 
+        const xStep = 460 / visiblePoints; 
+
+        gctx.beginPath(); gctx.strokeStyle = "#eee";
+        gctx.moveTo(0, 180); gctx.lineTo(460, 180); 
+        let pixelsPerMonth = 28 * 4 * xStep;
+        for(let x=460; x>0; x-= pixelsPerMonth) {
+             gctx.moveTo(x, 0); gctx.lineTo(x, 200);
+        }
         gctx.stroke();
 
-        // Helper funktion til at tegne linjer
-        function plotLine(data, color, maxVal) {
-            gctx.beginPath();
-            gctx.strokeStyle = color;
-            gctx.lineWidth = 2;
-            for (let i = 0; i < data.length; i++) {
-                let x = 30 + (i * (420/28)); // Skaler til 28 dage
-                let y = 180 - (data[i] * (160/maxVal)); // Skaler højde
-                if (i===0) gctx.moveTo(x,y); else gctx.lineTo(x,y);
-            }
-            gctx.stroke();
+        plotRollingLine(historyData.fsh, "#3498db", 40, xStep);
+        plotRollingLine(historyData.lh, "#9b59b6", 50, xStep);
+        plotRollingLine(historyData.est, "#e74c3c", 40, xStep);
+        plotRollingLine(historyData.prog, "#f1c40f", 20, xStep);
+
+        // Nål
+        gctx.beginPath(); gctx.moveTo(458, 0); gctx.lineTo(458, 200);
+        gctx.strokeStyle = "#333"; gctx.lineWidth = 2; gctx.stroke();
+    }
+
+    function plotRollingLine(data, color, maxVal, xStep) {
+        if(data.length < 2) return;
+        gctx.beginPath(); gctx.strokeStyle = color; gctx.lineWidth = 2;
+        let startIndex = data.length - 1;
+        let currentX = 460;
+        gctx.moveTo(currentX, 180 - (data[startIndex] * (160/maxVal)));
+        for (let i = startIndex - 1; i >= 0; i--) {
+            currentX -= xStep; 
+            if (currentX < 0) break; 
+            let y = 180 - (data[i] * (160/maxVal));
+            if(y < 10) y = 10; 
+            gctx.lineTo(currentX, y);
         }
-
-        plotLine(historyData.fsh, "#3498db", 100);
-        plotLine(historyData.lh, "#9b59b6", 100);
-        plotLine(historyData.est, "#e74c3c", 100);
-        plotLine(historyData.prog, "#f1c40f", 50);
-        
-        // Tegn linje for "nu"
-        let currentX = 30 + ((state.day-1) * (420/28));
-        gctx.beginPath(); gctx.moveTo(currentX, 10); gctx.lineTo(currentX, 180);
-        gctx.strokeStyle = "black"; gctx.setLineDash([5, 3]); gctx.stroke(); gctx.setLineDash([]);
+        gctx.stroke();
     }
 
-    // --- HJÆLPEFUNKTIONER TIL GRAFIK ---
-    function drawOrgan(x, y, r, label, color) {
-        actx.beginPath();
-        actx.arc(x, y, r, 0, Math.PI * 2);
-        actx.fillStyle = color;
-        actx.fill();
-        actx.stroke();
-        actx.fillStyle = "black";
-        actx.textAlign = "center";
-        actx.fillText(label, x, y);
-    }
-
-    function drawUterus(x, y, thickness) {
-        actx.beginPath();
-        // Simpel trekant/pæreform
-        actx.moveTo(x-60, y-80);
-        actx.lineTo(x+60, y-80);
-        actx.lineTo(x, y+80);
-        actx.closePath();
-        actx.fillStyle = "#e6b0aa";
-        actx.fill();
-        actx.stroke();
-        
-        // Slimhinde (rød kant indeni)
-        actx.lineWidth = thickness; 
-        actx.strokeStyle = "#c0392b";
-        actx.stroke();
-        actx.lineWidth = 1; // Reset
-        actx.strokeStyle = "black";
-        
-        actx.fillStyle = "black";
-        actx.fillText("Livmoder", x, y);
-    }
-
-    function drawArrow(x1, y1, x2, y2, color, width) {
-        if (width < 0.5) return; // Tegn ikke usynlige pile
-        actx.beginPath();
-        actx.moveTo(x1, y1);
-        actx.lineTo(x2, y2);
-        actx.strokeStyle = color;
-        actx.lineWidth = width;
-        actx.stroke();
-        actx.lineWidth = 1;
-        
-        // Pilespids (meget simpel)
-        actx.beginPath();
-        actx.arc(x2, y2, 4, 0, Math.PI*2);
-        actx.fillStyle = color;
-        actx.fill();
-    }
-
-    function drawCurvedArrow(x1, y1, x2, y2, color, width) {
-        if (width < 0.5) return;
-        actx.beginPath();
-        actx.moveTo(x1, y1);
-        // Bezier kurve for at lave en bue uden om organerne
-        actx.bezierCurveTo(x1-50, y1-100, x2-50, y2+50, x2, y2);
-        actx.strokeStyle = color;
-        actx.lineWidth = width;
-        actx.stroke();
-        actx.lineWidth = 1;
-        
-        actx.beginPath();
-        actx.arc(x2, y2, 4, 0, Math.PI*2);
-        actx.fillStyle = color;
-        actx.fill();
-    }
-
-    // --- UI UPDATES ---
+    // --- UI ---
     function updateUI() {
-        document.getElementById('dayDisplay').innerText = Math.floor(state.day);
-        highlightDayButton(Math.floor(state.day));
-        
-        // Opdater termometre (søjler)
-        document.getElementById('bar-fsh').style.height = Math.min(100, state.fsh) + "%";
-        document.getElementById('bar-lh').style.height = Math.min(100, state.lh) + "%";
-        document.getElementById('bar-est').style.height = Math.min(100, state.estrogen) + "%";
-        document.getElementById('bar-prog').style.height = Math.min(100, state.progesterone * 2) + "%"; // Skalerer lidt op
+        document.getElementById('dayDisplay').innerText = sim.cycleDay.toFixed(1);
+        setBar('bar-fsh', sim.fsh, 20); setBar('bar-lh', sim.lh, 50);
+        setBar('bar-est', sim.est, 40); setBar('bar-prog', sim.prog, 15);
     }
-
+    function setBar(id, val, max) {
+        let pct = (val / max) * 100; if(pct > 100) pct = 100;
+        document.getElementById(id).style.height = pct + "%";
+    }
     function togglePause() {
-        // Hvis vi starter fra en pauset tilstand, nulstil grafhistorikken for en ren start
-        if (state.paused) {
-            historyData = { fsh: [], lh: [], est: [], prog: [] };
-        }
-        state.paused = !state.paused;
-        updatePlayButton();
+        sim.paused = !sim.paused;
+        document.getElementById('playButton').textContent = sim.paused ? "Start" : "Pause";
     }
-
-    function startNewCycle() {
-        // 1. Sæt dag tilbage til start
-        state.day = 1;
-        state.subDay = 0;
-
-        // 2. Nulstil biologi-værdier (VIGTIGT: Ellers er folliklen kæmpestor fra start)
-        state.fsh = 15;
-        state.lh = 5;
-        state.estrogen = 10;
-        state.progesterone = 1;
-        state.follicleSize = 5;       // Gør folliklen lille igen
-        state.corpusLuteum = false;   // Fjern det gule legeme
-        state.liningThickness = 2;    // Gør slimhinden tynd (efter menstruation)
-
-        // 3. Nulstil graf-data, så stregen kan tegnes på ny fra venstre
-        // Vi beholder IKKE den gamle streg, da grafen viser "Dag 1 til 28"
-        historyData = { fsh: [], lh: [], est: [], prog: [] };
-        
-        // Bemærk: Vi sætter IKKE state.paused = true. Simulationen kører videre.
-    }
-
-    
-
     function resetSim() {
-        // Nulstil alle state-variabler til deres startværdier
-        Object.assign(state, {
-            day: 1, subDay: 0, fsh: 15, lh: 5, estrogen: 10, progesterone: 1,
-            follicleSize: 5, corpusLuteum: false, liningThickness: 2, paused: true
-        });
-        // Nulstil grafhistorik
+        sim.time = 1; sim.cycleDay = 1; sim.paused = true;
+        sim.fsh = 6; sim.lh = 3; sim.est = 5; sim.prog = 0;
+        sim.follicleSize = 1; sim.clSize = 0; sim.hasOvulated = false;
         historyData = { fsh: [], lh: [], est: [], prog: [] };
-        // Opdater UI
-        updatePlayButton();
-        updateUI();
-        // Tegn den nulstillede tilstand
-        drawAnatomy();
-        drawGraph();
+        document.getElementById('playButton').textContent = "Start";
+        updateUI(); drawAnatomy(); drawGraph();
     }
-
-    // Hop direkte til en valgt dag
-    function jumpToDay(targetDay) {
-        resetSim(); // Start fra en ren tilstand
-        state.paused = false; // Kør simulationen i baggrunden
-        // Simuler hurtigt frem til dagen før den valgte dag
-        while (state.day < targetDay) {
-            updateModel();
-        }
-        state.day = targetDay; state.subDay = 0; // Land præcist på dagen
-        // Sørg for, at simulationen er pauset, så brugeren kan trykke "Start"
-        state.paused = true; 
-        updatePlayButton();
-        // Opdater UI og tegn alt for den nye dag
-        updateUI();
-        drawAnatomy();
-        drawGraph();
-    }
-
-    function updatePlayButton() {
-        if (playButton) {
-            playButton.textContent = state.paused ? "Start" : "Pause";
-        }
-    }
-
-    function highlightDayButton(day) {
-        dayButtons.forEach(btn => {
-            btn.classList.toggle('active', Number(btn.dataset.day) === day);
-        });
-    }
-
-    // --- HOVED LOOP ---
     function loop() {
-        updateModel();
-        drawAnatomy();
-        drawGraph();
-        requestAnimationFrame(loop);
+        updateModel(); drawAnatomy(); drawGraph(); requestAnimationFrame(loop);
     }
 
-    // Generer dag-knapper og start
-    for (let d = 1; d <= 28; d++) {
-        const btn = document.createElement('button');
-        btn.type = "button";
-        btn.textContent = d;
-        btn.dataset.day = d;
-        btn.onclick = () => jumpToDay(d);
-        dayButtons.push(btn);
-        daySelector.appendChild(btn);
-    }
-
-    resetSim();
+    bgImage.onload = () => drawAnatomy();
+    setTimeout(() => drawAnatomy(), 100); 
     loop();
 
 </script>
-
 </body>
 </html>
