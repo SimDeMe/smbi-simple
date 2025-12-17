@@ -132,7 +132,7 @@
     class Particle {
         constructor(x, y, color, direction) {
             this.x = x; this.y = y; this.color = color;
-            this.vx = (Math.random() - 0.5) * 1.5; 
+            this.vx = (Math.random() - 0.5) * 4; 
             this.vy = direction * (1 + Math.random()); 
             this.life = 1.0; 
             this.decay = 0.01 + Math.random() * 0.02; 
@@ -217,17 +217,30 @@
     function drawAnatomy() {
         actx.clearRect(0, 0, 500, 600);
         if (bgImage.complete) actx.drawImage(bgImage, 0, 0, 500, 600);
-        const centerX = 145; const centerY = 400;
+        
+        // Variabler til position (så vi kan bruge dem til partikler også)
+        let follicleX = 145;
+        let follicleY = 400;
 
         // Tegn Anatomi
         if (!sim.hasOvulated) {
-            let radius = sim.follicleSize * 5; 
-            actx.beginPath(); actx.arc(centerX, centerY, radius, 0, Math.PI*2);
+            // Beregn position: Bevægelse fra 400 -> 465 i en bue
+            let progress = (sim.follicleSize - 1) / 9.0; // Antager max str ca 10
+            if (progress < 0) progress = 0;
+            if (progress > 1) progress = 1;
+            
+            follicleX = 145 + Math.sin(progress * Math.PI) * 30; // Buer ud til siden
+            follicleY = 400 + (progress * 65); // Bevæger sig nedad
+
+            let radius = sim.follicleSize * 2.5; 
+            actx.beginPath(); actx.arc(follicleX, follicleY, radius, 0, Math.PI*2);
             actx.fillStyle = "white"; actx.shadowBlur=10; actx.shadowColor="white"; actx.fill();
             actx.shadowBlur=0; actx.strokeStyle="#333"; actx.stroke();
         } else {
+            // Efter ægløsning er vi ved det gule legeme (465)
+            follicleX = 145; follicleY = 465;
             let radius = sim.clSize * 4; 
-            actx.beginPath(); actx.arc(centerX, 465, radius, 0, Math.PI*2);
+            actx.beginPath(); actx.arc(145, 465, radius, 0, Math.PI*2);
             actx.fillStyle="#f1c40f"; actx.fill(); actx.stroke();
         }
 
@@ -243,7 +256,7 @@
         if (!sim.paused) {
             spawnParticles(260, 140, sim.fsh, "#3498db", 1); // FSH (Blå)
             spawnParticles(260, 140, sim.lh,  "#9b59b6", 1); // LH (Lilla)
-            spawnParticles(145, 400, sim.est, "#e74c3c", -1); // Østrogen (Rød)
+            spawnParticles(follicleX, follicleY, sim.est, "#e74c3c", -1); // Østrogen (Rød)
             if(sim.hasOvulated) spawnParticles(145, 465, sim.prog, "#f1c40f", -1); // Prog (Gul)
         }
         
@@ -255,8 +268,8 @@
     }
 
     function spawnParticles(x, y, level, color, dir) {
-        let count = Math.floor(level / 8); 
-        if (Math.random() < (level % 8) / 8) count++;
+        let count = Math.floor(level / 2); 
+        if (Math.random() < (level % 2) / 2) count++;
         for(let i=0; i<count; i++) particles.push(new Particle(x, y, color, dir));
     }
 
