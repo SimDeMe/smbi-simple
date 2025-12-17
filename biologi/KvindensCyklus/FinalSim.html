@@ -40,6 +40,7 @@
         .controls { margin-top: 10px; display: flex; align-items: center; gap: 15px;}
         button { padding: 10px 20px; font-size: 16px; cursor: pointer; background: #27ae60; color: white; border: none; border-radius: 5px; }
         button:hover { background: #219150; }
+        button.pill-active { background: #e67e22; }
         .day-display { font-size: 20px; font-weight: bold; color: #2c3e50; background: white; padding: 5px 15px; border-radius: 5px; border: 1px solid #ccc;}
     </style>
 </head>
@@ -51,6 +52,7 @@
     <div class="controls">
         <button id="playButton" onclick="togglePause()">Start</button>
         <button onclick="resetSim()">Nulstil</button>
+        <button id="pillButton" onclick="togglePill()">Tag P-pille</button>
         <div class="day-display">Dag i cyklus: <span id="dayDisplay">1.0</span></div>
     </div>
 
@@ -62,6 +64,10 @@
         <div class="data-panel">
             <div class="graph-box">
                 <div id="statusText">Systemet er klar. Tryk Start.</div>
+            </div>
+
+            <div class="graph-box" style="padding: 5px;">
+                <canvas id="diagramCanvas" width="460" height="150"></canvas>
             </div>
 
             <div class="meters">
@@ -104,6 +110,9 @@
     
     const graphCanvas = document.getElementById('graphCanvas');
     const gctx = graphCanvas.getContext('2d');
+
+    const diagramCanvas = document.getElementById('diagramCanvas');
+    const dctx = diagramCanvas.getContext('2d');
     
     // --- KONFIGURATION AF MODEL ---
     const config = {
@@ -121,7 +130,10 @@
         follicleSize: 1,   
         clSize: 0,         
         hasOvulated: false,
-        paused: true
+        paused: true,
+        onPill: false,
+        pillDay: 0,        // Tæller dage i p-pille pakken (1-28)
+        isMenstruating: false
     };
 
     // Data til grafen (Rullende)
@@ -149,6 +161,27 @@
     function updateModel() {
         if (sim.paused) return;
 
+        // --- P-PILLE LOGIK (21 dage aktiv / 7 dage pause) ---
+        let pillEst = 0;
+        let pillProg = 0;
+
+        if (sim.onPill) {
+            sim.pillDay += config.dt;
+            if (sim.pillDay > 28) sim.pillDay = 1; // Start ny pakke
+
+            if (sim.pillDay <= 21) {
+                // Aktive piller
+                pillEst = 8;   // Lidt mere østrogen for at hjælpe feedback
+                pillProg = 12; // Meget mere progesteron for at banke FSH helt i bund
+                document.getElementById('statusText').innerText = `P-pille: Aktiv (Dag ${Math.floor(sim.pillDay)}/21)`;
+            } else {
+                // Pause uge (Ingen hormoner -> Blødning)
+                document.getElementById('statusText').innerText = `P-pille: Pause (Dag ${Math.floor(sim.pillDay-21)}/7)`;
+            }
+        } else {
+            sim.pillDay = 0;
+        }
+
         // Feedback Loops
         let inhibition = 1 / (1 + (sim.est * 0.05) + (sim.prog * 3.0)); 
         let positiveFeedback = 0;
@@ -166,10 +199,13 @@
 
         // Biologi
         if (!sim.hasOvulated) {
-            let growth = (sim.fsh > 2) ? sim.fsh * 0.08 : 0;
+            // Hvis FSH er lav (pga p-piller), skal folliklen skrumpe (atresi)
+            let growth = (sim.fsh > 2.0) ? sim.fsh * 0.08 : -5.0; 
             sim.follicleSize += growth * config.dt;
-            let targetEst = sim.follicleSize * 3.5;
-            sim.est += (targetEst - sim.est) * 0.5 * config.dt;
+            if (sim.follicleSize < 1) sim.follicleSize = 1;
+
+            let targetEst = Math.max(sim.follicleSize * 3.5, pillEst); // P-pille sætter bundniveau
+            sim.est += (targetEst - sim.est) * 0.5 * config.dt; 
             document.getElementById('statusText').innerText = "Fase: Follikulær (Østrogen stiger, Follikel vokser)";
         }
 
@@ -185,18 +221,30 @@
             if (sim.clSize <= 0) {
                 startNewCycle(); // Starter forfra
             } else {
-                let targetProg = sim.clSize * 1.5;
+                let targetProg = Math.max(sim.clSize * 1.5, pillProg);
                 sim.prog += (targetProg - sim.prog) * 0.2 * config.dt;
-                sim.est += (sim.clSize * 0.8 - sim.est) * 0.1 * config.dt;
+                let targetEst = Math.max(sim.clSize * 0.8, pillEst);
+                sim.est += (targetEst - sim.est) * 0.1 * config.dt;
             }
         } else {
-            sim.prog -= sim.prog * 0.1 * config.dt;
+            // Ingen CL: Progesteron falder mod 0 (eller mod p-pille niveau)
+            sim.prog += (pillProg - sim.prog) * 0.3 * config.dt;
         }
 
         sim.fsh += fshChange; sim.lh += lhChange;
         if(sim.fsh < 0) sim.fsh = 0; if(sim.lh < 0) sim.lh = 0; if(sim.est < 0) sim.est = 0;
 
         sim.time += config.dt; sim.cycleDay += config.dt;
+
+        // --- MENSTRUATION STATUS ---
+        sim.isMenstruating = false;
+        if (sim.onPill) {
+            // På p-piller: Blødning i slutningen af pausen (f.eks. dag 23-28)
+            if (sim.pillDay > 23) sim.isMenstruating = true;
+        } else {
+            // Normal cyklus: Dag 1-5
+            if (sim.cycleDay <= 5) sim.isMenstruating = true;
+        }
 
         // Gem data
         if (Math.floor(sim.time * 10) % 5 === 0) {
@@ -252,11 +300,22 @@
             actx.fillStyle = "#e74c3c"; actx.fill(); actx.stroke();
         }
 
+        // Menstruation (Blod)
+        if (sim.isMenstruating && !sim.paused) {
+            // Spawn røde partikler fra livmoderen (ca midt i billedet, lidt nede)
+            spawnParticles(275, 460, 15, "#8b0000", 1); 
+        }
+
         // GENERER PARTIKLER (Her laves de!)
         if (!sim.paused) {
             spawnParticles(260, 140, sim.fsh, "#3498db", 1); // FSH (Blå)
             spawnParticles(260, 140, sim.lh,  "#9b59b6", 1); // LH (Lilla)
-            spawnParticles(follicleX, follicleY, sim.est, "#e74c3c", -1); // Østrogen (Rød)
+            
+            // Skaler emission baseret på kildens størrelse (Follikel eller CL)
+            let sourceSize = sim.hasOvulated ? sim.clSize : sim.follicleSize;
+            let estEmission = sim.est * (sourceSize / 10);
+            spawnParticles(follicleX, follicleY, estEmission, "#e74c3c", -1); // Østrogen (Rød)
+            
             if(sim.hasOvulated) spawnParticles(145, 465, sim.prog, "#f1c40f", -1); // Prog (Gul)
         }
         
@@ -315,6 +374,60 @@
         gctx.stroke();
     }
 
+    // --- BLOKDIAGRAM ---
+    function drawDiagram() {
+        dctx.clearRect(0, 0, 460, 150);
+        
+        const cx = 230; // Center X
+        const topY = 35;
+        const botY = 115;
+        
+        // Bokse
+        dctx.fillStyle = "#fff"; dctx.strokeStyle = "#333"; dctx.lineWidth = 2;
+        dctx.fillRect(cx - 50, topY - 15, 100, 30); dctx.strokeRect(cx - 50, topY - 15, 100, 30);
+        dctx.fillRect(cx - 50, botY - 15, 100, 30); dctx.strokeRect(cx - 50, botY - 15, 100, 30);
+        
+        dctx.fillStyle = "#333"; dctx.font = "bold 14px sans-serif"; dctx.textAlign = "center"; dctx.textBaseline = "middle";
+        dctx.fillText("Hypofyse", cx, topY);
+        dctx.fillText("Ovarier", cx, botY);
+        
+        // Pile ned (FSH / LH)
+        drawArrow(dctx, cx - 20, topY + 15, cx - 20, botY - 15, "#3498db"); // FSH
+        drawArrow(dctx, cx + 20, topY + 15, cx + 20, botY - 15, "#9b59b6"); // LH
+        dctx.font = "10px sans-serif";
+        dctx.fillStyle = "#3498db"; dctx.fillText("FSH", cx - 35, (topY+botY)/2);
+        dctx.fillStyle = "#9b59b6"; dctx.fillText("LH", cx + 35, (topY+botY)/2);
+
+        // Negativ Feedback (Højre side) - RØD
+        let negActive = (sim.est > 2 || sim.prog > 1);
+        let negColor = negActive ? "#e74c3c" : "#eee";
+        drawFeedbackLoop(dctx, cx, topY, botY, 1, negColor, "-", "Negativ Feedback");
+
+        // Positiv Feedback (Venstre side) - GRØN
+        let posActive = (sim.est > config.estrogenTrigger && sim.prog < 2);
+        let posColor = posActive ? "#27ae60" : "#eee";
+        drawFeedbackLoop(dctx, cx, topY, botY, -1, posColor, "+", "Positiv Feedback");
+    }
+
+    function drawArrow(ctx, x1, y1, x2, y2, color) {
+        ctx.beginPath(); ctx.strokeStyle = color; ctx.lineWidth = 2;
+        ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+        let angle = Math.atan2(y2-y1, x2-x1);
+        ctx.beginPath();
+        ctx.moveTo(x2, y2);
+        ctx.lineTo(x2 - 8 * Math.cos(angle - Math.PI/6), y2 - 8 * Math.sin(angle - Math.PI/6));
+        ctx.lineTo(x2 - 8 * Math.cos(angle + Math.PI/6), y2 - 8 * Math.sin(angle + Math.PI/6));
+        ctx.fillStyle = color; ctx.fill();
+    }
+
+    function drawFeedbackLoop(ctx, cx, topY, botY, dir, color, symbol, label) {
+        ctx.beginPath(); ctx.strokeStyle = color; ctx.lineWidth = (color === "#eee") ? 1 : 3;
+        ctx.moveTo(cx + (50*dir), botY); ctx.lineTo(cx + (100*dir), botY); 
+        ctx.lineTo(cx + (100*dir), topY); ctx.lineTo(cx + (50*dir), topY); ctx.stroke();
+        ctx.fillStyle = color; ctx.font = "bold 16px sans-serif"; ctx.fillText(symbol, cx + (100*dir), (topY+botY)/2);
+        ctx.fillStyle = (color === "#eee") ? "#ccc" : "#333"; ctx.font = "10px sans-serif"; ctx.fillText(label, cx + (100*dir), topY - 10);
+    }
+
     // --- UI FUNKTIONER ---
     function updateUI() {
         document.getElementById('dayDisplay').innerText = sim.cycleDay.toFixed(1);
@@ -329,16 +442,26 @@
         sim.paused = !sim.paused;
         document.getElementById('playButton').textContent = sim.paused ? "Start" : "Pause";
     }
+    function togglePill() {
+        sim.onPill = !sim.onPill;
+        const btn = document.getElementById('pillButton');
+        btn.textContent = sim.onPill ? "Stop P-pille" : "Tag P-pille";
+        btn.className = sim.onPill ? "pill-active" : "";
+    }
     function resetSim() {
         sim.time = 1; sim.cycleDay = 1; sim.paused = true;
         sim.fsh = 6; sim.lh = 3; sim.est = 5; sim.prog = 0;
         sim.follicleSize = 1; sim.clSize = 0; sim.hasOvulated = false;
+        sim.onPill = false;
         historyData = { fsh: [], lh: [], est: [], prog: [] };
+        sim.pillDay = 0; sim.isMenstruating = true; // Starter med menstruation
         document.getElementById('playButton').textContent = "Start";
+        document.getElementById('pillButton').textContent = "Tag P-pille";
+        document.getElementById('pillButton').className = "";
         updateUI(); drawAnatomy(); drawGraph();
     }
     function loop() {
-        updateModel(); drawAnatomy(); drawGraph(); requestAnimationFrame(loop);
+        updateModel(); drawAnatomy(); drawGraph(); drawDiagram(); requestAnimationFrame(loop);
     }
 
     // Start
