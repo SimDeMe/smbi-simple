@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="da">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Kontakt</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><a href="index.html">← Forside</a></div>
+    <nav class="nav">
+      <a href="biologi.html">Biologi</a>
+      <a href="geografi.html">Geografi</a>
+      <a class="active" href="contact.html">Kontakt</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <h1>Kontakt</h1>
+    <p class="muted">Send en besked via formularen – den går til min Formspree-inbox.</p>
+
+    <section class="card">
+      <form class="contact-form" action="https://formspree.io/f/maqwwlzd" method="POST">
+        <label>
+          Din email
+          <input type="email" name="email" required placeholder="navn@email.dk" />
+        </label>
+        <label>
+          Besked
+          <textarea name="message" required placeholder="Hej …"></textarea>
+        </label>
+        <button type="submit">Send</button>
+      </form>
+      <div id="formStatus" class="alert info" aria-live="polite"></div>
+      <p class="muted small" style="margin-top:10px;">Formspree håndterer afsendelsen – jeg ser ikke din adresse andre steder.</p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span>© <span id="year"></span></span>
+  </footer>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+
+    // Håndter submit med tak-besked uden side-skift
+    const form = document.querySelector(".contact-form");
+    const statusBox = document.getElementById("formStatus");
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      statusBox.textContent = "Sender...";
+      statusBox.className = "alert info";
+
+      try {
+        const res = await fetch(form.action, {
+          method: "POST",
+          body: new FormData(form),
+          headers: { Accept: "application/json" },
+        });
+
+        if (res.ok) {
+          statusBox.textContent = "Tak for din besked! Jeg vender tilbage så hurtigt som muligt.";
+          statusBox.className = "alert success";
+          form.reset();
+        } else {
+          throw new Error("Send fejlede");
+        }
+      } catch (err) {
+        statusBox.textContent = "Noget gik galt. Prøv igen, eller send direkte til min mail.";
+        statusBox.className = "alert error";
+      }
+    });
+  </script>
+</body>
+</html>
