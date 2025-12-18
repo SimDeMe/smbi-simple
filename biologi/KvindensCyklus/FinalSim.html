@@ -222,13 +222,15 @@
                 startNewCycle(); // Starter forfra
             } else {
                 let targetProg = Math.max(sim.clSize * 1.5, pillProg);
-                sim.prog += (targetProg - sim.prog) * 0.2 * config.dt;
+                let progSpeed = sim.onPill ? 2.0 : 0.2; // Hurtigere optagelse af p-pille
+                sim.prog += (targetProg - sim.prog) * progSpeed * config.dt;
                 let targetEst = Math.max(sim.clSize * 0.8, pillEst);
                 sim.est += (targetEst - sim.est) * 0.1 * config.dt;
             }
         } else {
             // Ingen CL: Progesteron falder mod 0 (eller mod p-pille niveau)
-            sim.prog += (pillProg - sim.prog) * 0.3 * config.dt;
+            let progSpeed = sim.onPill ? 2.0 : 0.3; // Hurtigere optagelse af p-pille
+            sim.prog += (pillProg - sim.prog) * progSpeed * config.dt;
         }
 
         sim.fsh += fshChange; sim.lh += lhChange;
