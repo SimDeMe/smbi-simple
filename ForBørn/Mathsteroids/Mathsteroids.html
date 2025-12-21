@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Math Asteroids</title>
+  <style>
+    body { margin:0; background:#0b0f1a; color:#e8eefc; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; }
+    #wrap { display:flex; justify-content:center; align-items:center; height:100vh; }
+    canvas { background: radial-gradient(circle at 30% 30%, #101a33, #070a12); border-radius: 14px; box-shadow: 0 10px 40px rgba(0,0,0,.45); }
+    .hint { position:fixed; bottom:10px; width:100%; text-align:center; font-size:12px; opacity:.7; }
+    
+    /* UI Overlay Styles */
+    #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; display: flex; justify-content: center; align-items: center; }
+    .menu { pointer-events: auto; background: rgba(16, 26, 51, 0.95); padding: 30px; border-radius: 12px; border: 1px solid #4a5d85; text-align: center; box-shadow: 0 0 30px rgba(0,0,0,0.8); color: #e8eefc; }
+    .menu h1 { margin-top: 0; color: #8ab4f8; }
+    .control-group { margin: 15px 0; text-align: left; }
+    .control-group label { display: block; margin: 5px 0; cursor: pointer; }
+    .btn { background: #1a73e8; color: white; border: none; padding: 10px 20px; font-size: 18px; border-radius: 6px; cursor: pointer; margin-top: 15px; width: 100%; }
+    .btn:hover { background: #135aba; }
+    
+    #pause-btn { pointer-events: auto; position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 8px 15px; border-radius: 4px; cursor: pointer; display: none; }
+    #pause-btn:hover { background: rgba(255,255,255,0.2); }
+  </style>
+</head>
+<body>
+  <div id="wrap">
+    <canvas id="game" width="900" height="600"></canvas>
+    
+    <div id="ui-layer">
+      <div id="start-menu" class="menu">
+        <h1>Math Asteroids</h1>
+        <div class="control-group">
+          <label>Start Level (1-10): <input type="number" id="inp-level" value="1" min="1" max="10" style="width:50px; background:#0b0f1a; color:white; border:1px solid #444; padding:4px;"></label>
+        </div>
+        <div class="control-group">
+          <div style="margin-bottom:5px; font-weight:bold;">Regnearter:</div>
+          <label><input type="checkbox" id="cb-plus" checked> Plus (+)</label>
+          <label><input type="checkbox" id="cb-minus" checked> Minus (-)</label>
+          <label><input type="checkbox" id="cb-mul"> Gange (×)</label>
+          <label><input type="checkbox" id="cb-div"> Division (÷)</label>
+        </div>
+        <button class="btn" id="btn-start">Start Spil</button>
+        <div style="margin-top:25px; border-top:1px solid #4a5d85; padding-top:15px;">
+          <h3 style="margin:0 0 10px 0; font-size:18px; color:#8ab4f8;">Highscores</h3>
+          <ul id="hs-list" style="padding:0; margin:0; list-style:none; text-align:left; font-size:15px; color:#cbd5e1;"></ul>
+        </div>
+      </div>
+    </div>
+
+    <button id="pause-btn">Pause</button>
+  </div>
+  <div class="hint">Styring: WASD / piletaster + Space (skyd). R (restart).</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById("game");
+  const ctx = canvas.getContext("2d");
+
+  const W = canvas.width, H = canvas.height;
+
+  // ---------- Utils ----------
+  const rand = (a,b)=> a + Math.random()*(b-a);
+  const clamp = (v,a,b)=> Math.max(a, Math.min(b,v));
+  const dist2 = (ax,ay,bx,by)=> (ax-bx)*(ax-bx) + (ay-by)*(ay-by);
+
+  // ---------- Audio ----------
+  const Sfx = {
+    ctx: null,
+    noise: null,
+    init() {
+      if (this.ctx) return;
+      const C = window.AudioContext || window.webkitAudioContext;
+      if (!C) return;
+      this.ctx = new C();
+      const l = this.ctx.sampleRate * 0.5;
+      this.noise = this.ctx.createBuffer(1, l, this.ctx.sampleRate);
+      const d = this.noise.getChannelData(0);
+      for(let i=0; i<l; i++) d[i] = Math.random()*2-1;
+      this.music();
+    },
+    play(type, f, gl, vol) {
+      if (!this.ctx) return;
+      if (this.ctx.state === 'suspended') this.ctx.resume();
+      const o = this.ctx.createOscillator(), g = this.ctx.createGain();
+      o.type = type; o.frequency.setValueAtTime(f, this.ctx.currentTime);
+      if (gl) o.frequency.exponentialRampToValueAtTime(gl, this.ctx.currentTime + 0.2);
+      g.gain.setValueAtTime(vol, this.ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.2);
+      o.connect(g); g.connect(this.ctx.destination);
+      o.start(); o.stop(this.ctx.currentTime + 0.2);
+    },
+    boom(vol=0.15) {
+      if (!this.ctx) return;
+      const s = this.ctx.createBufferSource(), g = this.ctx.createGain(), f = this.ctx.createBiquadFilter();
+      s.buffer = this.noise; f.type = 'lowpass'; f.frequency.value = 600;
+      g.gain.setValueAtTime(vol, this.ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.4);
+      s.connect(f); f.connect(g); g.connect(this.ctx.destination); s.start();
+    },
+    shoot() { this.play('square', 800, 100, 0.04); },
+    win() { this.play('sine', 523, 0, 0.05); setTimeout(()=>this.play('sine', 659, 0, 0.05), 100); },
+    music() {
+      const bgm = new Audio('asteroids.mp3');
+      bgm.loop = true;
+      bgm.volume = 0.4;
+      bgm.play().catch(()=>{});
+    }
+  };
+
+  // ---------- Input ----------
+  const keys = new Set();
+  window.addEventListener("keydown", (e)=>{
+    Sfx.init();
+    keys.add(e.code);
+    if (["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","Space"].includes(e.code)) e.preventDefault();
+    if (e.code === "KeyR") reset();
+  });
+  window.addEventListener("keyup", (e)=> keys.delete(e.code));
+
+  // ---------- Game state ----------
+  let ship, bullets, asteroids, score, lives, level, task, gameOver, lastShot, paused = false, gameRunning = false;
+  let config = { ops: ['+'], startLevel: 1 };
+  let highscores = [];
+
+  function loadHighscores() {
+    try { highscores = JSON.parse(localStorage.getItem('mathsteroids_hs')) || []; } catch(e){ highscores=[]; }
+    updateMenuHighscores();
+  }
+
+  function saveHighscore(name, score, lvl) {
+    highscores.push({name, score, lvl});
+    highscores.sort((a,b) => b.score - a.score);
+    highscores = highscores.slice(0, 5);
+    localStorage.setItem('mathsteroids_hs', JSON.stringify(highscores));
+    updateMenuHighscores();
+  }
+
+  function updateMenuHighscores() {
+    const el = document.getElementById('hs-list');
+    if(el) {
+      el.innerHTML = highscores.length 
+        ? highscores.map((e,i) => `<li><span style="float:left">${i+1}. ${e.name}</span><span style="float:right">${e.score}</span><div style="clear:both"></div></li>`).join('') 
+        : '<li style="opacity:0.5; list-style:none; text-align:center;">Ingen scores endnu</li>';
+    }
+  }
+
+  function makeTask() {
+    // Vælg en tilfældig operation fra de valgte
+    let opType = config.ops[Math.floor(Math.random() * config.ops.length)];
+    if (!opType) opType = '+'; // Fallback
+
+    let a, b, op, ans;
+
+    if (opType === '×') {
+      a = Math.floor(rand(2, clamp(4 + level/2, 6, 12)));
+      b = Math.floor(rand(2, clamp(4 + level/2, 6, 12)));
+      op = "×";
+      ans = a * b;
+    } else if (opType === '-') {
+      a = Math.floor(rand(5, 12 + level));
+      b = Math.floor(rand(2, Math.min(a, 10 + level)));
+      op = "−";
+      ans = a - b;
+    } else if (opType === '/') {
+      // Division: Vi finder b og svaret først, så a bliver et pænt tal
+      b = Math.floor(rand(2, clamp(3 + level/3, 4, 10))); 
+      ans = Math.floor(rand(2, clamp(3 + level/2, 5, 12)));
+      a = b * ans;
+      op = "÷";
+    } else {
+      // Plus
+      a = Math.floor(rand(2, 10 + level));
+      b = Math.floor(rand(2, 10 + level));
+      op = "+";
+      ans = a + b;
+    }
+
+    return { a, b, op, ans, text: `${a} ${op} ${b} = ?` };
+  }
+
+  function spawnAsteroidsForTask() {
+    asteroids = [];
+    const correct = task.ans;
+
+    // antal muligheder
+    const n = clamp(3 + Math.floor(level/3), 3, 5);
+
+    // generér unikke svarmuligheder (inkl korrekt)
+    const answers = new Set([correct]);
+    while (answers.size < n) {
+      // “nær-svar” gør det spændende: tæt på korrekt men ikke samme
+      const offset = Math.floor(rand(-6, 7));
+      const candidate = correct + offset;
+      if (candidate !== correct && candidate >= 0 && candidate <= 250) answers.add(candidate);
+    }
+    const arr = [...answers];
+
+    // shuffle
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+
+    for (let i=0;i<arr.length;i++) {
+      const isBoss = (level % 5 === 0) && (arr[i] === correct);
+      const r = isBoss ? 60 : rand(26, 42);
+      asteroids.push({
+        x: rand(r, W - r),
+        y: rand(r, H - r),
+        vx: rand(-1.4, 1.4) * (1 + level*0.05),
+        vy: rand(-1.4, 1.4) * (1 + level*0.05),
+        r,
+        value: arr[i],
+        isCorrect: arr[i] === correct,
+        wob: rand(0, Math.PI*2),
+        size: 3,
+        hp: isBoss ? 3 : 1,
+        boss: isBoss
+      });
+    }
+  }
+
+  function reset() {
+    // Brug start-level fra config hvis det er første spil, ellers fortsæt progression eller reset
+    if (!gameRunning) level = config.startLevel; 
+    else level = config.startLevel; // Reset til valgte level ved 'R'
+
+    ship = { x: W/2, y: H/2, a: -Math.PI/2, vx: 0, vy: 0, r: 14, lastHit: 0 };
+    bullets = [];
+    score = 0;
+    lives = 3;
+    gameOver = false;
+    lastShot = 0;
+    gameRunning = true;
+    paused = false;
+
+    task = makeTask();
+    spawnAsteroidsForTask();
+  }
+
+  // ---------- Gameplay ----------
+  function shoot(now) {
+    const cooldown = 180; // ms
+    if (now - lastShot < cooldown) return;
+    lastShot = now;
+
+    const spd = 8.5;
+    bullets.push({
+      x: ship.x + Math.cos(ship.a)*ship.r,
+      y: ship.y + Math.sin(ship.a)*ship.r,
+      vx: ship.vx + Math.cos(ship.a)*spd,
+      vy: ship.vy + Math.sin(ship.a)*spd,
+      life: 70
+    });
+    Sfx.shoot();
+  }
+
+  function advanceTask(success) {
+    if (success) {
+      score += 100 + Math.floor(level*10);
+      level += 1;
+      lives += 1;
+    } else {
+      lives -= 1;
+      if (lives <= 0) doGameOver();
+    }
+    if (!gameOver) {
+      // ny opgave og nyt sæt asteroider
+      task = makeTask();
+      spawnAsteroidsForTask();
+      // “pusterum”: ryd bullets
+      bullets = [];
+      // ship tilbage til midten (mindre frustrerende for børn)
+      ship.x = W/2; ship.y = H/2; ship.vx = 0; ship.vy = 0;
+    }
+  }
+
+  function update(now) {
+    if (gameOver) return;
+    if (paused) return;
+
+    // Rotation
+    const rotSpd = 0.055;
+    if (keys.has("ArrowLeft") || keys.has("KeyA")) ship.a -= rotSpd;
+    if (keys.has("ArrowRight") || keys.has("KeyD")) ship.a += rotSpd;
+
+    // Thrust
+    const thrust = 0.16;
+    if (keys.has("ArrowUp") || keys.has("KeyW")) {
+      ship.vx += Math.cos(ship.a)*thrust;
+      ship.vy += Math.sin(ship.a)*thrust;
+    }
+    if (keys.has("ArrowDown") || keys.has("KeyS")) {
+      ship.vx -= Math.cos(ship.a)*thrust*0.6;
+      ship.vy -= Math.sin(ship.a)*thrust*0.6;
+    }
+
+    // Friktion / fartgrænse
+    ship.vx *= 0.985;
+    ship.vy *= 0.985;
+    const maxV = 6.5;
+    ship.vx = clamp(ship.vx, -maxV, maxV);
+    ship.vy = clamp(ship.vy, -maxV, maxV);
+
+    // Move ship + wrap
+    ship.x += ship.vx; ship.y += ship.vy;
+    if (ship.x < 0) ship.x += W;
+    if (ship.x > W) ship.x -= W;
+    if (ship.y < 0) ship.y += H;
+    if (ship.y > H) ship.y -= H;
+
+    // Shoot
+    if (keys.has("Space")) shoot(now);
+
+    // Bullets
+    for (const b of bullets) {
+      b.x += b.vx; b.y += b.vy;
+      b.life -= 1;
+      // wrap også bullets for “asteroids feel”
+      if (b.x < 0) b.x += W;
+      if (b.x > W) b.x -= W;
+      if (b.y < 0) b.y += H;
+      if (b.y > H) b.y -= H;
+    }
+    bullets = bullets.filter(b => b.life > 0);
+
+    // Asteroids movement
+    for (const a of asteroids) {
+      a.wob += 0.03;
+      a.x += a.vx; a.y += a.vy;
+      if (a.x < -a.r) a.x = W + a.r;
+      if (a.x > W + a.r) a.x = -a.r;
+      if (a.y < -a.r) a.y = H + a.r;
+      if (a.y > H + a.r) a.y = -a.r;
+    }
+
+    // Collision: ship vs asteroid
+    for (const a of asteroids) {
+      const rr = (ship.r + a.r) * (ship.r + a.r);
+      if (dist2(ship.x, ship.y, a.x, a.y) < rr) {
+        if (now - ship.lastHit > 2000) { // 2s invulnerability
+          lives--;
+          ship.lastHit = now;
+          Sfx.boom(0.2);
+          if (lives <= 0) doGameOver();
+        }
+        // “bump”
+        ship.vx *= -0.8; ship.vy *= -0.8;
+      }
+    }
+
+    // Collision: bullet vs asteroid
+    for (let i = bullets.length - 1; i >= 0; i--) {
+      const b = bullets[i];
+      for (let j = asteroids.length - 1; j >= 0; j--) {
+        const a = asteroids[j];
+        if (!a) continue;
+        const rr = a.r * a.r;
+        if (dist2(b.x, b.y, a.x, a.y) < rr) {
+          // Hit!
+          bullets.splice(i, 1); // consume bullet
+
+          if (a.hp > 1) {
+            a.hp--;
+            a.hitFlash = 6;
+            Sfx.boom(0.1);
+            a.vx += b.vx * 0.05;
+            a.vy += b.vy * 0.05;
+            break;
+          }
+
+          if (a.isCorrect) {
+            // Correct answer hit, advance the task
+            Sfx.win();
+            advanceTask(true);
+            return; // New task is starting, so exit collision check
+          }
+          
+          // Incorrect answer or fragment hit
+          const wasBoss = a.boss;
+          const wasCorrect = a.isCorrect;
+          const val = a.value;
+          const oldSize = a.size;
+
+          if (a.value !== undefined) {
+            // It was a math asteroid with a wrong number
+            score = Math.max(0, score - 40);
+            Sfx.boom();
+          } else {
+            // It was a fragment without a number
+            score += 20;
+            Sfx.boom();
+          }
+          
+          asteroids.splice(j, 1); // Remove original asteroid
+
+          if (oldSize > 1) {
+            const newSize = oldSize - 1;
+            const numFragments = 2;
+            for (let k = 0; k < numFragments; k++) {
+          if (wasBoss) {
+            // Split boss into 3 fragments with same value
+            for (let k=0; k<3; k++) {
+              asteroids.push({
+                x: a.x,
+                y: a.y,
+                vx: a.vx + rand(-1, 1),
+                vy: a.vy + rand(-1, 1),
+                r: a.r * 0.6,
+                size: newSize,
+                wob: rand(0, Math.PI*2),
+                // Note: fragments have no 'value' or 'isCorrect' property
+                x: a.x, y: a.y,
+                vx: a.vx + rand(-1, 1), vy: a.vy + rand(-1, 1),
+                r: a.r * 0.6, size: oldSize - 1, wob: rand(0, Math.PI*2),
+                value: val, isCorrect: wasCorrect, hp: 1, boss: false
+              });
+            }
+            Sfx.boom(0.3);
+          } else {
+            if (!wasCorrect) {
+              if (val !== undefined) {
+                score = Math.max(0, score - 40);
+                Sfx.boom();
+              } else {
+                score += 20;
+                Sfx.boom();
+              }
+              if (oldSize > 1) {
+                const newSize = oldSize - 1;
+                const numFragments = 2;
+                for (let k = 0; k < numFragments; k++) {
+                  asteroids.push({
+                    x: a.x, y: a.y,
+                    vx: a.vx + rand(-1, 1), vy: a.vy + rand(-1, 1),
+                    r: a.r * 0.6, size: newSize, wob: rand(0, Math.PI*2)
+                  });
+                }
+              }
+            } else {
+              Sfx.boom(0.1);
+            }
+          }
+
+          if (wasCorrect) {
+            const remaining = asteroids.filter(x => x.isCorrect).length;
+            if (remaining === 0) {
+              Sfx.win();
+              advanceTask(true);
+              return;
+            }
+          }
+          
+          break; // bullet is gone, prevent multiple hits with same bullet
+        }
+      }
+    }
+  }
+
+  // ---------- Render ----------
+  function drawShip() {
+    ctx.save();
+    ctx.translate(ship.x, ship.y);
+    ctx.rotate(ship.a);
+
+    ctx.beginPath();
+    ctx.moveTo(ship.r + 6, 0);
+    ctx.lineTo(-ship.r, ship.r * 0.75);
+    ctx.lineTo(-ship.r * 0.6, 0);
+    ctx.lineTo(-ship.r, -ship.r * 0.75);
+    ctx.closePath();
+
+    ctx.strokeStyle = "#e8eefc";
+    ctx.lineWidth = 2.2;
+    ctx.stroke();
+
+    // lille cockpit
+    ctx.beginPath();
+    ctx.arc(ship.r * 0.2, 0, 3.2, 0, Math.PI*2);
+    ctx.fillStyle = "#e8eefc";
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  function drawAsteroid(a) {
+    // uregelmæssig “rock” form
+    ctx.save();
+    ctx.translate(a.x, a.y);
+    ctx.rotate(Math.sin(a.wob)*0.2);
+
+    ctx.beginPath();
+    const spikes = 10;
+    for (let i=0;i<=spikes;i++) {
+      const ang = (i/spikes)*Math.PI*2;
+      const rad = a.r * (0.75 + 0.25*Math.sin(a.wob + i*1.7));
+      const px = Math.cos(ang)*rad;
+      const py = Math.sin(ang)*rad;
+      if (i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+    }
+    ctx.closePath();
+
+    if (a.hitFlash > 0) {
+      ctx.fillStyle = "#ffffff";
+      ctx.fill();
+      a.hitFlash--;
+    }
+
+    ctx.strokeStyle = "#e8eefc";
+    ctx.globalAlpha = 0.95;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // tal på stenen
+    if (a.value !== undefined) {
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = "#e8eefc";
+      ctx.font = `700 ${Math.floor(a.r*0.8)}px system-ui, -apple-system, Segoe UI, Roboto`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(a.value, 0, 1);
+    }
+
+    ctx.restore();
+  }
+
+  function drawHUD() {
+    // top bar
+    ctx.save();
+    ctx.fillStyle = "rgba(0,0,0,0.35)";
+    ctx.fillRect(0, 0, W, 64);
+
+    ctx.fillStyle = "#e8eefc";
+    ctx.font = "700 26px system-ui, -apple-system, Segoe UI, Roboto";
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+    ctx.fillText(task.text, 18, 32);
+
+    ctx.font = "600 16px system-ui, -apple-system, Segoe UI, Roboto";
+    ctx.textAlign = "right";
+    ctx.fillText(`Score: ${score}   Liv: ${lives}   Level: ${level}`, W - 18, 32);
+
+    ctx.restore();
+  }
+
+  function doGameOver() {
+    gameOver = true;
+    setTimeout(() => {
+      const lowest = highscores.length < 5 ? 0 : highscores[4].score;
+      if (score > lowest) {
+        const name = prompt(`Ny Highscore: ${score}!\nIndtast dit navn:`) || "Anonym";
+        saveHighscore(name, score, level);
+      }
+    }, 100);
+  }
+
+  function drawGameOver() {
+    ctx.save();
+    ctx.fillStyle = "rgba(0,0,0,0.55)";
+    ctx.fillRect(0,0,W,H);
+
+    ctx.fillStyle = "#e8eefc";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.font = "800 54px system-ui, -apple-system, Segoe UI, Roboto";
+    ctx.fillText("GAME OVER", W/2, H/2 - 40);
+
+    ctx.font = "600 20px system-ui, -apple-system, Segoe UI, Roboto";
+    ctx.fillText(`Score: ${score}  |  Level nået: ${level}`, W/2, H/2 + 10);
+    ctx.fillText("Tryk R for at starte igen", W/2, H/2 + 45);
+
+    // Draw highscores
+    ctx.font = "700 22px system-ui";
+    ctx.fillStyle = "#8ab4f8";
+    ctx.fillText("Highscores", W/2, H/2 + 95);
+    
+    ctx.font = "500 16px system-ui";
+    ctx.fillStyle = "#e8eefc";
+    let y = H/2 + 125;
+    for (let i=0; i<highscores.length; i++) {
+      const s = highscores[i];
+      ctx.fillText(`${i+1}. ${s.name} : ${s.score}`, W/2, y);
+      y += 24;
+    }
+    ctx.restore();
+  }
+
+  function drawPaused() {
+    ctx.save();
+    ctx.fillStyle = "rgba(0,0,0,0.4)";
+    ctx.fillRect(0,0,W,H);
+    ctx.fillStyle = "#e8eefc";
+    ctx.font = "700 40px system-ui";
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText("PAUSE", W/2, H/2);
+    ctx.restore();
+  }
+
+  function render() {
+    ctx.clearRect(0,0,W,H);
+
+    // Stars (billig parallax-ish)
+    ctx.save();
+    ctx.globalAlpha = 0.18;
+    for (let i=0;i<120;i++) {
+      const x = (i*97 + score*0.3) % W;
+      const y = (i*53 + score*0.15) % H;
+      ctx.fillRect(x, y, 2, 2);
+    }
+    ctx.restore();
+
+    // asteroids
+    for (const a of asteroids) drawAsteroid(a);
+
+    // bullets
+    ctx.save();
+    ctx.fillStyle = "#e8eefc";
+    for (const b of bullets) {
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, 2.2, 0, Math.PI*2);
+      ctx.fill();
+    }
+    ctx.restore();
+
+    drawShip();
+    drawHUD();
+
+    if (gameOver) drawGameOver();
+    if (paused && !gameOver) drawPaused();
+  }
+
+  // ---------- Loop ----------
+  let last = performance.now();
+  function loop(now) {
+    const dt = now - last;
+    last = now;
+    // dt bruges ikke meget endnu, men fint at have
+    if (gameRunning) {
+      update(now);
+      render();
+    }
+    requestAnimationFrame(loop);
+  }
+
+  // ---------- UI Logic ----------
+  const startMenu = document.getElementById('start-menu');
+  const pauseBtn = document.getElementById('pause-btn');
+  const btnStart = document.getElementById('btn-start');
+
+  btnStart.addEventListener('click', () => {
+    // Læs indstillinger
+    const lvlInput = parseInt(document.getElementById('inp-level').value) || 1;
+    config.startLevel = clamp(lvlInput, 1, 10);
+    
+    config.ops = [];
+    if (document.getElementById('cb-plus').checked) config.ops.push('+');
+    if (document.getElementById('cb-minus').checked) config.ops.push('-');
+    if (document.getElementById('cb-mul').checked) config.ops.push('×');
+    if (document.getElementById('cb-div').checked) config.ops.push('/');
+    
+    if (config.ops.length === 0) config.ops.push('+'); // Sikkerhed
+
+    // Start spil
+    Sfx.init(); // Init audio context on click
+    startMenu.style.display = 'none';
+    pauseBtn.style.display = 'block';
+    reset();
+  });
+
+  pauseBtn.addEventListener('click', () => {
+    if (!gameRunning || gameOver) return;
+    paused = !paused;
+    pauseBtn.textContent = paused ? "Fortsæt" : "Pause";
+  });
+
+  // Init highscores
+  loadHighscores();
+
+  // Start loop (men venter på gameRunning = true for at opdatere spillet)
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
