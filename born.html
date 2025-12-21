@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="da">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Børn – oversigt</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><a href="index.html">← Forside</a></div>
+    <nav class="nav">
+      <a href="biologi.html">Biologi</a>
+      <a href="geografi.html">Geografi</a>
+      <a class="active" href="born.html">Børn</a>
+      <a href="contact.html">Kontakt</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <h1>Børn</h1>
+    <!-- <p class="muted">Her samler du spil og små øvelser til de yngre.</p> -->
+
+    <section class="card">
+      <h2>Spil / Øvelser</h2>
+
+      <ul class="list">
+        <li>
+          <a href="ForBørn/Mathsteroids/Mathsteroids.html">Mathsteroids</a>
+          <span class="tag">C</span><span class="tag">matematik</span>
+        </li>
+      </ul>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span>© <span id="year"></span></span>
+  </footer>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
