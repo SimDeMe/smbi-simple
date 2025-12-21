@@ -370,47 +370,17 @@
             break;
           }
 
-          if (a.isCorrect) {
-            // Correct answer hit, advance the task
-            Sfx.win();
-            advanceTask(true);
-            return; // New task is starting, so exit collision check
-          }
-          
-          // Incorrect answer or fragment hit
           const wasBoss = a.boss;
           const wasCorrect = a.isCorrect;
           const val = a.value;
           const oldSize = a.size;
-
-          if (a.value !== undefined) {
-            // It was a math asteroid with a wrong number
-            score = Math.max(0, score - 40);
-            Sfx.boom();
-          } else {
-            // It was a fragment without a number
-            score += 20;
-            Sfx.boom();
-          }
           
           asteroids.splice(j, 1); // Remove original asteroid
 
-          if (oldSize > 1) {
-            const newSize = oldSize - 1;
-            const numFragments = 2;
-            for (let k = 0; k < numFragments; k++) {
           if (wasBoss) {
             // Split boss into 3 fragments with same value
             for (let k=0; k<3; k++) {
               asteroids.push({
-                x: a.x,
-                y: a.y,
-                vx: a.vx + rand(-1, 1),
-                vy: a.vy + rand(-1, 1),
-                r: a.r * 0.6,
-                size: newSize,
-                wob: rand(0, Math.PI*2),
-                // Note: fragments have no 'value' or 'isCorrect' property
                 x: a.x, y: a.y,
                 vx: a.vx + rand(-1, 1), vy: a.vy + rand(-1, 1),
                 r: a.r * 0.6, size: oldSize - 1, wob: rand(0, Math.PI*2),
