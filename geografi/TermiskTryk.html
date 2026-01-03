@@ -71,26 +71,30 @@
         .tag-top { top: -20px; left: 50%; transform: translateX(-50%); }
         .tag-bot { bottom: 5px; left: 50%; transform: translateX(-50%); background: #f9f9f9; }
 
-        /* --- ANIMATED FLOW ARROWS --- */
+        /* --- ANIMATED FLOW PARTICLES --- */
         .flow-container {
             position: absolute;
             height: 40px; width: 120px;
             overflow: hidden;
             z-index: 15; opacity: 0; transition: opacity 1s;
             pointer-events: none;
+            background-image: radial-gradient(circle, currentColor 2px, transparent 3px);
+            background-size: 18px 18px;
+            background-repeat: repeat;
         }
-        .flow-mover {
-            display: flex; font-size: 30px; font-weight: 900;
-            animation: flowAnim 0.8s infinite linear;
-        }
-        /* The animation moves the repeating arrows to create flow illusion */
-        @keyframes flowAnim {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-45px); } /* Move exactly one arrow width */
-        }
-
         .flow-top { color: #d32f2f; }
         .flow-bot { color: #1976D2; }
+        .flow-right { animation: flowRight 0.8s linear infinite; }
+        .flow-left { animation: flowLeft 0.8s linear infinite; }
+
+        @keyframes flowRight {
+            0% { background-position: 0 0; }
+            100% { background-position: 18px 0; }
+        }
+        @keyframes flowLeft {
+            0% { background-position: 0 0; }
+            100% { background-position: -18px 0; }
+        }
 
         /* Ground Labels */
         .ground-bar {
@@ -134,18 +138,14 @@
         <div class="sun" id="sun"></div>
         <svg class="isobars" id="svgOverlay"></svg>
 
-        <div class="flow-container flow-top" id="flow-T-L" style="top: 25%; left: 28%; transform: rotate(180deg);">
-             <div class="flow-mover">➜ ➜ ➜ ➜</div>
+        <div class="flow-container flow-top flow-left" id="flow-T-L" style="top: 25%; left: 28%;">
         </div>
-        <div class="flow-container flow-top" id="flow-T-R" style="top: 25%; right: 28%;">
-             <div class="flow-mover">➜ ➜ ➜ ➜</div>
+        <div class="flow-container flow-top flow-right" id="flow-T-R" style="top: 25%; right: 28%;">
         </div>
         
-        <div class="flow-container flow-bot" id="flow-B-L" style="bottom: 70px; left: 28%;">
-             <div class="flow-mover">➜ ➜ ➜ ➜</div>
+        <div class="flow-container flow-bot flow-right" id="flow-B-L" style="bottom: 70px; left: 28%;">
         </div>
-        <div class="flow-container flow-bot" id="flow-B-R" style="bottom: 70px; right: 28%; transform: rotate(180deg);">
-             <div class="flow-mover">➜ ➜ ➜ ➜</div>
+        <div class="flow-container flow-bot flow-left" id="flow-B-R" style="bottom: 70px; right: 28%;">
         </div>
 
 
@@ -352,16 +352,34 @@
 
         function drawIsobars() {
             let xL=130, xC=400, xR=670;
-            let yBase = 500 - 50 - BASE_HEIGHT; 
-            let yHot = 500 - 50 - renderHeight;
+            const numIsobars = 5;
+            let paths = '';
 
-            // A smooth curve passing through the three points
-            const d = `M ${xL-60} ${yBase} L ${xL} ${yBase} 
-                       Q ${(xL+xC)/2} ${yHot} ${xC} ${yHot} 
-                       Q ${(xC+xR)/2} ${yHot} ${xR} ${yBase} 
-                       L ${xR+60} ${yBase}`;
+            // Base y-position for the top of the cold columns
+            let yBaseTop = 500 - 50 - BASE_HEIGHT; 
 
-            svg.innerHTML = `<path d="${d}" stroke="#555" stroke-width="2" fill="none" />`;
+            for (let i = 0; i < numIsobars; i++) {
+                // Distribute isobars vertically inside the column.
+                let yOffset = (i + 1) * (BASE_HEIGHT / (numIsobars + 1));
+                
+                let ySide = yBaseTop + yOffset;
+                
+                // The air below a pressure surface expands. We calculate the new height of that surface.
+                let expansionRatio = renderHeight / BASE_HEIGHT;
+                let heightFromGround = BASE_HEIGHT - yOffset;
+                let newHeightFromGround = heightFromGround * expansionRatio;
+                let yCenter = 500 - 50 - newHeightFromGround;
+
+                // A smooth curve passing through the three points
+                const d = `M ${xL-60} ${ySide} L ${xL} ${ySide} 
+                           Q ${(xL+xC)/2} ${yCenter} ${xC} ${yCenter} 
+                           Q ${(xC+xR)/2} ${yCenter} ${xR} ${ySide} 
+                           L ${xR+60} ${ySide}`;
+
+                paths += `<path d="${d}" stroke="#555" stroke-width="2" fill="none" stroke-dasharray="${i % 2 === 0 ? '5,5' : 'none'}"/>`;
+            }
+
+            svg.innerHTML = paths;
         }
     </script>
 </body>

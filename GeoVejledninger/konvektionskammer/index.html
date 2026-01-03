@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <title>Forsøgsvejledning: Konveksionskammer</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.5;
+            color: #333;
+            background-color: white;
+        }
+        h1 { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; }
+        h2 { color: #2c3e50; margin-top: 30px; border-bottom: 1px solid #ccc; }
+        
+        .info-box {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .materials-list { column-count: 2; }
+        .materials-list li { margin-bottom: 5px; }
+
+        .step-container {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            break-inside: avoid;
+        }
+        .step-number {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-right: 15px;
+            color: #007bff;
+            min-width: 30px;
+        }
+        .step-content { flex-grow: 1; }
+        .step-image-placeholder {
+            width: 150px;
+            height: 100px;
+            border: 2px dashed #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 0.8em;
+            margin-left: 15px;
+            text-align: center;
+            background-color: #fff;
+            flex-shrink: 0;
+        }
+
+        .write-line {
+            display: block;
+            width: 100%;
+            height: 30px;
+            border-bottom: 1px dashed #000;
+            margin-bottom: 10px;
+        }
+
+        .draw-box {
+            width: 100%;
+            height: 300px;
+            border: 2px solid #333;
+            margin-top: 10px;
+            position: relative;
+            background-color: #fff;
+        }
+        .draw-box span {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #ccc;
+            font-size: 1.5em;
+            text-align: center;
+        }
+
+        @media print {
+            .no-print { display: none; }
+            body { font-size: 12pt; }
+            h2 { page-break-after: avoid; }
+            .step-container { page-break-inside: avoid; }
+            .draw-box { break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+
+    <button onclick="window.print()" class="no-print" style="font-size: 16px; padding: 10px; margin-bottom: 20px; cursor: pointer;">🖨️ Print Vejledning</button>
+
+    <h1>Konveksionskammer (Termisk Høj- og Lavtryk)</h1>
+    
+    <div class="info-box">
+        <p><strong>Klasse:</strong> ____________________</p>
+        <p><strong>Navn:</strong> _______________________________________________________</p>
+        <p><strong>Dato:</strong> ____________________</p>
+        <p><strong>Formål:</strong> At undersøge hvordan termisk høj- og lavtryk opstår.</p>
+    </div>
+
+    <h2>1. Det skal I bruge</h2>
+    <ul class="materials-list">
+        <li>Konveksionskammer med metalplade</li>
+        <li>Fyrfadslys</li>
+        <li>Tændstikker</li>
+        <li>Røgelsespind (eller papir-"snøvs")</li>
+        <li>Mørk baggrund (fx en jakke eller PC-cover)</li>
+        <li>Stopur/Mobil</li>
+    </ul>
+
+    <h2>2. Sådan gør I (Step-by-Step)</h2>
+
+    <div class="step-container">
+        <div class="step-number">1</div>
+        <div class="step-content">
+            <strong>Gør klar:</strong><br>
+            Find et sted udenfor (hvis muligt) eller et køligt sted. Læg metalpladen på et koldt underlag. Pladen skal være så kold som muligt.
+        </div>
+        <div class="step-image-placeholder">
+            <svg width="100%" height="100%" viewBox="0 0 150 100">
+                <rect x="10" y="70" width="130" height="10" fill="#8B4513" rx="2" />
+                <rect x="30" y="65" width="90" height="5" fill="#777" />
+                <text x="75" y="50" font-size="24" text-anchor="middle">❄️</text>
+            </svg>
+        </div>
+    </div>
+
+    <div class="step-container">
+        <div class="step-number">2</div>
+        <div class="step-content">
+            <strong>Tænd lyset:</strong><br>
+            Sæt fyrfadslyset i den <em>ene</em> cirkel på metalpladen og tænd det.
+        </div>
+        <div class="step-image-placeholder">
+            <svg width="100%" height="100%" viewBox="0 0 150 100">
+                <rect x="30" y="80" width="90" height="5" fill="#777" />
+                <rect x="45" y="65" width="15" height="15" fill="#eee" stroke="#999" />
+                <path d="M52.5 50 Q57 60 52.5 65 Q48 60 52.5 50" fill="#FFD700" stroke="#FF8C00" stroke-width="1"/>
+            </svg>
+        </div>
+    </div>
+
+    <div class="step-container">
+        <div class="step-number">3</div>
+        <div class="step-content">
+            <strong>Saml kammeret:</strong><br>
+            Sæt plexiglas-kassen ovenpå pladen. Sørg for, at skorstenene passer præcis med cirklerne i bunden.
+        </div>
+        <div class="step-image-placeholder">
+            <svg width="100%" height="100%" viewBox="0 0 150 100">
+                <rect x="30" y="80" width="90" height="5" fill="#777" />
+                <rect x="45" y="65" width="15" height="15" fill="#eee" stroke="#999" />
+                <path d="M52.5 50 Q57 60 52.5 65 Q48 60 52.5 50" fill="#FFD700" />
+                <g stroke="#333" fill="none" stroke-width="2">
+                    <rect x="30" y="30" width="90" height="50" />
+                    <rect x="40" y="10" width="20" height="20" />
+                    <rect x="90" y="10" width="20" height="20" />
+                </g>
+                <path d="M130 30 L130 60 L125 55 M130 60 L135 55" stroke="#007bff" stroke-width="2" fill="none" />
+            </svg>
+        </div>
+    </div>
+
+    <div class="step-container">
+        <div class="step-number">4</div>
+        <div class="step-content">
+            <strong>Vent:</strong><br>
+            Vent nu i ca. 5 minutter. Lyset varmer den ene side op, mens den anden side forbliver kold.<br>
+            <em>Tip: Sæt en mørk baggrund op bag kammeret, så I bedre kan se røgen.</em>
+        </div>
+        <div class="step-image-placeholder">
+            <svg width="100%" height="100%" viewBox="0 0 150 100">
+                <circle cx="75" cy="50" r="30" fill="#fff" stroke="#333" stroke-width="2" />
+                <path d="M75 50 L75 30" stroke="#333" stroke-width="2" />
+                <path d="M75 50 L90 60" stroke="#333" stroke-width="2" />
+                <text x="75" y="95" font-size="14" text-anchor="middle" font-family="sans-serif" fill="#333">5 min</text>
+            </svg>
+        </div>
+    </div>
+
+    <div class="step-container">
+        <div class="step-number">5</div>
+        <div class="step-content">
+            <strong>Røg-testen:</strong><br>
+            Tænd røgelsespinden, lad den brænde lidt, og pust så flammen ud, så den ryger kraftigt.<br>
+            Hold den rygende pind hen over den <strong>kolde skorsten</strong> (den skorsten, hvor lyset IKKE står under).
+        </div>
+        <div class="step-image-placeholder">
+            <svg width="100%" height="100%" viewBox="0 0 150 100">
+                <g stroke="#333" fill="none" stroke-width="1.5">
+                    <rect x="30" y="35" width="90" height="45" />
+                    <rect x="40" y="15" width="20" height="20" />
+                    <rect x="90" y="15" width="20" height="20" />
+                </g>
+                <rect x="45" y="70" width="10" height="10" fill="#eee" stroke="#999" />
+                <circle cx="50" cy="65" r="3" fill="orange" />
+                <line x1="100" y1="5" x2="100" y2="15" stroke="#8B4513" stroke-width="3" />
+                <path d="M100 15 Q105 25 100 35 Q95 45 100 55" fill="none" stroke="#888" stroke-width="2" stroke-dasharray="3,2" />
+            </svg>
+        </div>
+    </div>
+
+    <div class="step-container">
+        <div class="step-number">6</div>
+        <div class="step-content">
+            <strong>Observer:</strong><br>
+            Kig godt efter! Hvilken vej bevæger røgen sig inde i kassen? Bevæger den sig ned, hen ad bunden, eller op?<br>
+            Tag evt. billeder eller video.
+        </div>
+        <div class="step-image-placeholder">
+            <svg width="100%" height="100%" viewBox="0 0 150 100">
+                <g stroke="#333" fill="none" stroke-width="1.5" opacity="0.3">
+                    <rect x="30" y="35" width="90" height="45" />
+                    <rect x="40" y="15" width="20" height="20" />
+                    <rect x="90" y="15" width="20" height="20" />
+                </g>
+                <path d="M100 25 V 70 H 50 V 25" fill="none" stroke="#007bff" stroke-width="2" marker-end="url(#arrowhead)" />
+                <g transform="translate(10, 40) scale(0.8)">
+                    <path d="M0 15 Q15 0 30 15 Q15 30 0 15 Z" fill="#fff" stroke="#333" stroke-width="2"/>
+                    <circle cx="15" cy="15" r="5" fill="#333"/>
+                </g>
+                <defs>
+                    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                        <polygon points="0 0, 10 3.5, 0 7" fill="#007bff" />
+                    </marker>
+                </defs>
+            </svg>
+        </div>
+    </div>
+
+    <h2 style="page-break-before: always;">3. Resultater & Analyse</h2>
+    
+    <p><strong>Opgave:</strong> Indsæt et foto af jeres forsøg herunder, eller lav en præcis tegning af, hvordan røgen bevægede sig.</p>
+    <ul>
+        <li>Tegn pile på billedet, der viser røgens retning.</li>
+        <li>Skriv et <strong>H</strong> der, hvor der er Højtryk.</li>
+        <li>Skriv et <strong>L</strong> der, hvor der er Lavtryk.</li>
+    </ul>
+
+    <div class="draw-box">
+    </div>
+
+    <h2>4. Spørgsmål</h2>
+    
+    <p><strong>1. Beskriv hvordan et termisk <em>lavtryk</em> udvikles, og hvor I ser det i forsøget?</strong></p>
+    <div class="write-line"></div>
+    <div class="write-line"></div>
+    <div class="write-line"></div>
+    <div class="write-line"></div>
+
+</body>
+</html>
