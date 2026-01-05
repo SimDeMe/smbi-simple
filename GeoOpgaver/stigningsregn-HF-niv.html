@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <title>Arbejdsark: Stigningsregn og Føhn-effekt (HF)</title>
+    <style>
+        body {
+            font-family: 'Times New Roman', serif;
+            line-height: 1.5;
+            color: #000;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px;
+            background: #fff;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 24px;
+            text-transform: uppercase;
+            border-bottom: 2px solid #000;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            font-size: 18px;
+            background-color: #eee;
+            padding: 5px 10px;
+            margin-top: 30px;
+            border-left: 5px solid #333;
+            -webkit-print-color-adjust: exact;
+        }
+
+        p {
+            margin-bottom: 10px;
+        }
+
+        .header-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            font-weight: bold;
+        }
+
+        .header-field {
+            border-bottom: 1px solid #000;
+            width: 45%;
+            display: inline-block;
+            padding-bottom: 5px;
+        }
+
+        .question-box {
+            margin-bottom: 20px;
+            page-break-inside: avoid;
+        }
+
+        .answer-line {
+            display: block;
+            border-bottom: 1px solid #999;
+            height: 25px;
+            margin-top: 5px;
+            width: 100%;
+        }
+
+        .short-answer {
+            display: inline-block;
+            border-bottom: 1px solid #000;
+            width: 80px;
+            text-align: center;
+            margin: 0 5px;
+        }
+
+        .settings-box {
+            border: 1px dashed #333;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: sans-serif;
+            font-size: 0.9em;
+            background-color: #f9f9f9;
+        }
+
+        .checklist {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .checklist li {
+            margin-bottom: 10px;
+            padding-left: 25px;
+            text-indent: -25px;
+        }
+
+        /* Print-specifikke regler */
+        @media print {
+            body { padding: 20px; }
+            .no-print { display: none; }
+            h2 { background-color: #eee !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="no-print" style="text-align: right; margin-bottom: 20px;">
+        <button onclick="window.print()" style="padding: 10px 20px; cursor: pointer; font-size: 16px;">🖨️ Udskriv Arbejdsark</button>
+    </div>
+
+    <h1>Arbejdsark: Stigningsregn og Føhn-effekt</h1>
+
+    <div class="header-info">
+        <div class="header-field">Navn: </div>
+        <div class="header-field">Klasse: </div>
+    </div>
+
+    <div style="background-color: #f0f0f0; padding: 15px; border-radius: 5px; margin-bottom: 20px; font-style: italic;">
+        <strong>Instruktion:</strong><br>
+        1. Åbn simuleringen på din computer.<br>
+        2. Brug skyderne nederst til at indstille temperatur og vandindhold.<br>
+        3. Træk den hvide luft-cirkel med musen for at flytte luften over bjerget.
+    </div>
+
+    <h2>Opgave 1: Tør luft (Ingen skyer)</h2>
+    <p>Vi starter med luft, der indeholder meget lidt vand. Vi skal se, hvordan temperaturen ændrer sig, når der ikke dannes skyer.</p>
+    
+    <div class="settings-box">
+        <strong>Indstil startværdier:</strong><br>
+        Start Temperatur: 20 °C<br>
+        Start Vandindhold: 4 g/m³ (Træk skyderen langt ned)
+    </div>
+
+    <div class="question-box">
+        <p>Træk luften op til toppen af bjerget.</p>
+        <ul>
+            <li>Bliver der dannet en sky? (Ja / Nej): <span class="short-answer"></span></li>
+            <li>Kig på den grå boks øverst ("Process"). Hvad står der? "Tøradiabatisk" eller "Fugtadiabatisk"?<br>
+            Svar: <div class="answer-line"></div></li>
+        </ul>
+        
+        <p>Træk luften ned på den anden side (til dalen).</p>
+        <ul>
+            <li>Hvad er temperaturen nede i dalen nu? <span class="short-answer"></span> °C</li>
+            <li>Er det varmere, koldere eller samme temperatur som ved starten?<br>
+            Svar: <div class="answer-line"></div></li>
+        </ul>
+    </div>
+
+    <h2>Opgave 2: Fugtig luft (Skyer og Regn)</h2>
+    <p>Nu giver vi luften mere vand. Vi skal finde ud af, i hvilken højde skyerne dannes (Dugpunktet).</p>
+
+    <div class="settings-box">
+        <strong>Indstil startværdier:</strong><br>
+        Start Temperatur: 20 °C<br>
+        Start Vandindhold: 12 g/m³
+    </div>
+
+    <div class="question-box">
+        <p>Træk langsomt luften op ad bjerget. Hold øje med Højdemåleren.</p>
+        <ul>
+            <li>I hvilken højde (cirka) dukker skyen op?<br>
+            Svar: Ca. <span class="short-answer"></span> meter over havet.</li>
+        </ul>
+
+        <p>Træk luften helt op til toppen.</p>
+        <ul>
+            <li>Hvor mange grader er der på toppen af bjerget? <span class="short-answer"></span> °C</li>
+            <li>Kommer der nedbør? (Ja / Nej): <span class="short-answer"></span></li>
+        </ul>
+    </div>
+
+    <h2>Opgave 3: Føhn-effekten</h2>
+    <p>Her skal vi undersøge det fænomen, der kaldes Føhn-vind. Det sker, når luften smider sit vand på den ene side af bjerget.</p>
+
+    <div class="settings-box">
+        <strong>Indstil startværdier:</strong><br>
+        Tryk på knappen "Nulstil" ved regnmåleren.<br>
+        Start Temperatur: 20 °C<br>
+        Start Vandindhold: 12 g/m³ (Samme som før)
+    </div>
+
+    <div class="question-box">
+        <p><strong>Udfør eksperimentet:</strong> Træk luften hele vejen over bjerget og ned i dalen på den anden side.</p>
+        <p>Aflæs resultaterne i dalen:</p>
+        <ul>
+            <li>Hvad er temperaturen i dalen nu? <span class="short-answer"></span> °C</li>
+            <li>Sammenlign med start-temperaturen (20 °C). Er luften blevet varmere eller koldere?<br>
+            Svar: <span class="short-answer" style="width: 200px;"></span></li>
+        </ul>
+    </div>
+
+    <div class="question-box">
+        <p><strong>Forklaring (Sæt kryds):</strong></p>
+        <p>Hvorfor er luften blevet varmere på bagsiden af bjerget?</p>
+        <ul class="checklist">
+            <li>[ &nbsp;&nbsp; ] Fordi solen skinner mere deromme.</li>
+            <li>[ &nbsp;&nbsp; ] Fordi luften mistede vand (energi) som regn på vejen op, og varmes hurtigt op på vejen ned.</li>
+        </ul>
+    </div>
+
+    <h2>Opgave 4: Hvornår sner det?</h2>
+    <p>Temperaturen falder, jo højere vi kommer op. Hvornår bliver regn til sne?</p>
+
+    <div class="settings-box">
+        <strong>Indstil startværdier:</strong><br>
+        Start Temperatur: 10 °C (Det er en kold dag)<br>
+        Start Vandindhold: 8 g/m³
+    </div>
+
+    <div class="question-box">
+        <p>Træk luften op ad bjerget. I starten falder nedbøren som regn (blå streger).<br>
+        Hold øje med termometeret. Når det rammer 0 °C, ændres nedbøren.</p>
+        <p>Hvad sker der med nedbøren i simuleringen?</p>
+        <div class="answer-line"></div>
+        <div class="answer-line"></div>
+    </div>
+
+    <h2>Ekstra: Hvor meget regn?</h2>
+    <div class="question-box">
+        <p>Prøv at sætte både temperatur og vandindhold på maksimum. Træk luften over bjerget. Hvor mange mm nedbør kan du få regnmåleren op på?</p>
+        <p><strong>Rekord:</strong> <span class="short-answer"></span> mm.</p>
+    </div>
+
+</body>
+</html>

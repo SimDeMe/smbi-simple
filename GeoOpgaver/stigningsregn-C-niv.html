@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <title>Opgave: Stigningsregn og Føhn-effekt</title>
+    <style>
+        body {
+            font-family: 'Times New Roman', serif; /* Seriffer er gode til print */
+            line-height: 1.5;
+            color: #000;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px;
+            background: #fff;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 24px;
+            text-transform: uppercase;
+            border-bottom: 2px solid #000;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            font-size: 18px;
+            background-color: #eee;
+            padding: 5px 10px;
+            margin-top: 30px;
+            border-left: 5px solid #333;
+            -webkit-print-color-adjust: exact; /* Sikrer at baggrundsfarven printes */
+        }
+
+        h3 {
+            font-size: 16px;
+            margin-top: 20px;
+            font-style: italic;
+        }
+
+        p {
+            margin-bottom: 10px;
+        }
+
+        .header-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            font-weight: bold;
+        }
+
+        .header-field {
+            border-bottom: 1px solid #000;
+            width: 45%;
+            display: inline-block;
+            padding-bottom: 5px;
+        }
+
+        .question-box {
+            margin-bottom: 20px;
+            page-break-inside: avoid; /* Undgår at et spørgsmål knækker over to sider */
+        }
+
+        .answer-line {
+            display: block;
+            border-bottom: 1px solid #999;
+            height: 25px;
+            margin-top: 5px;
+            width: 100%;
+        }
+
+        .short-answer {
+            display: inline-block;
+            border-bottom: 1px solid #000;
+            width: 100px;
+            text-align: center;
+            margin: 0 5px;
+        }
+
+        .settings-box {
+            border: 1px dashed #333;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: sans-serif;
+            font-size: 0.9em;
+            background-color: #f9f9f9;
+        }
+
+        ul {
+            list-style-type: square;
+        }
+
+        /* Print-specifikke regler */
+        @media print {
+            body { padding: 20px; }
+            .no-print { display: none; }
+            h2 { background-color: #eee !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="no-print" style="text-align: right; margin-bottom: 20px;">
+        <button onclick="window.print()" style="padding: 10px 20px; cursor: pointer; font-size: 16px;">🖨️ Udskriv Arbejdsark</button>
+    </div>
+
+    <h1>Opgave: Stigningsregn og Føhn-effekt</h1>
+
+    <div class="header-info">
+        <div class="header-field">Navn: </div>
+        <div class="header-field">Klasse: </div>
+    </div>
+
+    <p><strong>Formål:</strong> At undersøge de fysiske processer bag temperaturændringer i atmosfæren (adiabatiske processer) og anvende denne viden til at forklare dannelsen af stigningsregn og Føhn-vinde.</p>
+
+    <h2>Del 1: Teoretisk forforståelse</h2>
+    <p><em>Besvar følgende spørgsmål med hjælp fra din grundbog (Kapitel 4, s. 91-94) før du starter simulationen.</em></p>
+
+    <div class="question-box">
+        <h3>1. Hvorfor falder temperaturen?</h3>
+        <p>Når en luftboble stiger til vejrs, falder det atmosfæriske tryk, hvilket får luften til at udvide sig. Ifølge teksten kræver denne udvidelse energi. Hvor tages denne energi fra, og hvad er konsekvensen for temperaturen (se afsnittet om tilstandsligningen)?</p>
+        <div class="answer-line"></div>
+        <div class="answer-line"></div>
+    </div>
+
+    <div class="question-box">
+        <h3>2. De to afkølingshastigheder (lapse rates)</h3>
+        <p>Angiv værdierne for temperaturfaldet pr. 100 meter ifølge teksten:</p>
+        <ul>
+            <li>Tøradiabatisk afkøling (umættet luft): <span class="short-answer"></span> °C pr. 100 m.</li>
+            <li>Fugtadiabatisk afkøling (mættet luft): <span class="short-answer"></span> °C pr. 100 m.</li>
+        </ul>
+    </div>
+
+    <h2>Del 2: Den tøradiabatiske proces (Simulation)</h2>
+    
+    <div class="settings-box">
+        <strong>Indstil simulationen:</strong><br>
+        Start Temperatur: 20 °C<br>
+        Start Vandindhold: 5 g/m³ (Lavt nok til ingen skyer).
+    </div>
+
+    <div class="question-box">
+        <h3>1. Observation og Beregning</h3>
+        <p>Træk luftpakken fra havniveau (0 m) op til toppen af bjerget (2000 m).</p>
+        <ul>
+            <li>Start-temperatur (0 m): <strong>20 °C</strong></li>
+            <li>Aflæst slut-temperatur (2000 m): <span class="short-answer"></span> °C</li>
+        </ul>
+        <p>Beregn temperaturfaldet pr. 100 meter baseret på dine tal fra simulationen:</p>
+        <p style="font-family: monospace;">(20 - SlutTemp) / 20 = _______ °C/100m</p>
+    </div>
+
+    <div class="question-box">
+        <h3>2. Verifikation</h3>
+        <p>Stemmer dit resultat overens med teoriens værdi for tøradiabatisk afkøling?</p>
+        <div class="answer-line"></div>
+    </div>
+
+    <h2>Del 3: Mætning, faseovergang og latent varme</h2>
+
+    <div class="settings-box">
+        <strong>Indstil simulationen:</strong><br>
+        Start Temperatur: 20 °C<br>
+        Start Vandindhold: 12 g/m³
+    </div>
+
+    <div class="question-box">
+        <h3>1. Find Kondensationsniveauet (Dugpunktet)</h3>
+        <p>Træk langsomt luften op ad bjerget. Stop præcis der, hvor den relative luftfugtighed rammer 100%, og skyen opstår.</p>
+        <ul>
+            <li>Højde for skybunden: Ca. <span class="short-answer"></span> m.o.h.</li>
+            <li>Hvad kaldes det temperaturniveau, som luften netop har ramt her? <span class="short-answer" style="width: 200px;"></span></li>
+        </ul>
+    </div>
+
+    <div class="question-box">
+        <h3>2. Analyse af fugtadiabatisk afkøling</h3>
+        <p>Træk nu luften videre fra skybunden og op til toppen. Observer, at temperaturen nu falder langsommere.</p>
+        <p><strong>VIGTIGT:</strong> Forklar med egne ord, hvorfor temperaturfaldet er mindre (kun ca. 0,5°C/100m) inde i skyen. Hvad sker der fysisk med vanddampen, når den bliver til dråber, og hvordan påvirker det temperaturen? (Inddrag begrebet <em>fortætningsvarme</em> eller <em>latent varme</em>).</p>
+        <div class="answer-line"></div>
+        <div class="answer-line"></div>
+        <div class="answer-line"></div>
+    </div>
+
+    <h2>Del 4: Føhn-effekten (Syntese)</h2>
+    <p><em>Fortsæt med samme indstillinger (20°C / 12 g/m³). Træk luften fra toppen (2000 m) ned til dalen på den modsatte side (200 m).</em></p>
+
+    <div class="question-box">
+        <h3>1. Processen på læsiden</h3>
+        <p>Hvilken proces angiver simulationen under nedstigningen: Tøradiabatisk eller Fugtadiabatisk?</p>
+        <div class="answer-line"></div>
+        <p>Hvorfor bruger vi denne sats, selvom luften lige har været fuld af skyer? (Hvad skete der med vandet på vej op?)</p>
+        <div class="answer-line"></div>
+    </div>
+
+    <div class="question-box">
+        <h3>2. Energiregnskabet</h3>
+        <ul>
+            <li>Temperatur ved start (0 m): <strong>20 °C</strong></li>
+            <li>Temperatur i dalen (200 m): <span class="short-answer"></span> °C</li>
+        </ul>
+        <p><strong>Konklusion:</strong> Forklar temperaturforskellen. Vi har flyttet luft fra 0 m til 200 m, men alligevel er luften blevet varmere. Hvor er den "ekstra" varme kommet fra? (Hint: Se tilbage på din forklaring i Opgave 3.2).</p>
+        <div class="answer-line"></div>
+        <div class="answer-line"></div>
+        <div class="answer-line"></div>
+    </div>
+
+    <h2>Del 5: Perspektivering</h2>
+
+    <div class="question-box">
+        <h3>Sammenligning med Konvektionsregn</h3>
+        <p>I denne simulation presses luften op, fordi den møder en fysisk forhindring (et bjerg). Beskriv kort, hvad der får luften til at stige til vejrs ved <strong>Konvektionsregn</strong> (se fig. 4.12 i teksten). Hvilken rolle spiller jordoverfladen her?</p>
+        <div class="answer-line"></div>
+        <div class="answer-line"></div>
+        <div class="answer-line"></div>
+    </div>
+
+</body>
+</html>
