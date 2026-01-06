@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <title>Opgave: Vandets Kredsløb</title>
+    <style>
+        body {
+            font-family: 'Times New Roman', serif;
+            line-height: 1.5;
+            color: #000;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px;
+            background: #fff;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 24px;
+            text-transform: uppercase;
+            border-bottom: 2px solid #000;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            font-size: 18px;
+            background-color: #eee;
+            padding: 5px 10px;
+            margin-top: 30px;
+            border-left: 5px solid #333;
+            -webkit-print-color-adjust: exact;
+        }
+
+        h3 {
+            font-size: 16px;
+            margin-top: 20px;
+            font-style: italic;
+        }
+
+        p {
+            margin-bottom: 10px;
+        }
+
+        .header-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            font-weight: bold;
+        }
+
+        .header-field {
+            border-bottom: 1px solid #000;
+            width: 30%;
+            display: inline-block;
+            padding-bottom: 5px;
+        }
+
+        .question-box {
+            margin-bottom: 20px;
+            page-break-inside: avoid;
+        }
+
+        .answer-line {
+            display: block;
+            border-bottom: 1px solid #999;
+            height: 25px;
+            margin-top: 5px;
+            width: 100%;
+        }
+
+        .short-answer {
+            display: inline-block;
+            border-bottom: 1px solid #000;
+            width: 150px;
+            text-align: center;
+            margin: 0 5px;
+        }
+
+        .settings-box {
+            border: 1px dashed #333;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: sans-serif;
+            font-size: 0.9em;
+            background-color: #f9f9f9;
+        }
+
+        ul {
+            list-style-type: square;
+        }
+        
+        /* Simpel tabel-stil der passer til designet */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 0.95em;
+        }
+        th, td {
+            border: 1px solid #333;
+            padding: 8px;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+        }
+
+        @media print {
+            body { padding: 20px; }
+            .no-print { display: none; }
+            h2 { background-color: #eee !important; }
+
+            /* Print-styring: én opgave pr. side */
+            .opgave {
+                page-break-after: always;
+                break-after: page;
+            }
+            .opgave:last-of-type {
+                page-break-after: auto;
+                break-after: auto;
+            }
+
+            /* Undgå at overskrifter bliver stående alene nederst på en side */
+            h2 {
+                page-break-after: avoid;
+                break-after: avoid-page;
+            }
+
+            /* Hold spørgsmål + svarfelter samlet */
+            .settings-box,
+            .question-box,
+            table {
+                page-break-inside: avoid;
+                break-inside: avoid-page;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="no-print" style="text-align: right; margin-bottom: 20px;">
+        <button onclick="window.print()" style="padding: 10px 20px; cursor: pointer; font-size: 16px;">🖨️ Udskriv Arbejdsark</button>
+    </div>
+
+    <h1>Opgave: Vandets Kredsløb</h1>
+
+    <div class="header-info">
+        <div class="header-field">Navne: </div>
+        <div class="header-field">Klasse: </div>
+        <div class="header-field">Dato: </div>
+    </div>
+
+<section class="opgave">
+    <h2>Opgave 1 (30 min): Tegneopgave – Vandets kredsløb</h2>
+    
+    <div class="settings-box">
+        <strong>Formål:</strong> Opbyg en samlet, visuel forståelse af vandets kredsløb som et system med magasiner, transportmekanismer og balance.
+    </div>
+
+    <p><strong>Materialer:</strong> A3 papir, blyanter, farver lim/tape, post-its og farvet papir.</p>
+
+    <p><strong>Instruktion:</strong> I skal lave en samlet tegning af vandets kredsløb på et blankt stykke papir. Tegningen skal indeholde følgende elementer:</p>
+    <ul>
+        <li>De vigtigste <strong>magasiner</strong> (hav, atmosfære, is/sne, overfladevand, jord, grundvand).</li>
+        <li>De vigtigste <strong>transportmekanismer</strong> (nedbør, afstrømning, infiltration, fordampning, transpiration).</li>
+        <li>Angivelse af opholdstid (list magasinerne fra kortest til længst).</li>
+        <li>Relevante led fra vandbalanceligningen.</li>
+    </ul>
+    <p><em>Bemærk:</em> I denne opgave arbejder I med <strong>overblik og struktur</strong>. Det er ikke afgørende, om alle fagbegreber bruges helt præcist endnu – det kommer i næste opgave.</p>
+</section>
+
+<section class="opgave">
+    <h2>Opgave 2 (15 min): Begrebs-placering</h2>
+    <p><em>Anvend tegningen fra Opgave 1.</em> I denne opgave skal I <strong>kvalitetssikre og præcisere</strong> jeres tegning ved at bruge de korrekte fagbegreber. Her handler det ikke om at tegne nyt, men om at gøre modellen <strong>fagligt skarp</strong>.</p>
+
+    <div class="settings-box">
+        <strong>Begrebsliste:</strong><br>
+        Infiltration, Overfladeafstrømning, Grundvandsspejl, Grundvandsmagasin, Porøsitet, Permeabilitet, Evaporation, Transpiration, Rodzone, Kapillærzone.
+    </div>
+
+    <div class="question-box">
+        <h3>Mini-tjek: Definitioner</h3>
+        <p>Hvilket begreb forklarer "hvor hurtigt vand kan passere gennem jorden"?</p>
+        <span class="short-answer" style="width: 100%;"></span>
+        
+        <p>Hvilket begreb forklarer "hvor meget vand jorden kan rumme i alt"?</p>
+        <span class="short-answer" style="width: 100%;"></span>
+        
+        <p>Hvilke to processer tilsammen kaldes ofte <em>evapotranspiration</em>?</p>
+        <span class="short-answer" style="width: 100%;"></span>
+    </div>
+
+    <div class="question-box">
+        <h3>Opsamling i gruppen</h3>
+        <p>1) Det mest forvirrende begreb var:</p>
+        <div class="answer-line"></div>
+        <p>2) Sådan skelner vi mellem porøsitet og permeabilitet:</p>
+        <div class="answer-line"></div>
+    </div>
+</section>
+
+<section class="opgave">
+    <h2>Opgave 3 (15 min): Mini-case – "Hvor bliver regnen af?"</h2>
+    
+    <div class="settings-box">
+        <strong>Scenarie:</strong> Der falder <strong>30 mm regn</strong> på ét døgn i tre forskellige områder. I skal vurdere vandets vej gennem systemet.
+    </div>
+
+    <p><strong>Udfyld tabellen med jeres bedste geografiske forklaring:</strong></p>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 20%">Område</th>
+                <th style="width: 25%">Hvad dominerer? <br><small>(Afstrømning, infiltration, fordampning)</small></th>
+                <th style="width: 25%">Hvor ender vandet? <br><small>(Vandløb, kloak, grundvand)</small></th>
+                <th style="width: 30%">Mulig konsekvens</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>1) By</strong><br><small>(Asfalt, tage)</small></td>
+                <td><br><br></td>
+                <td><br><br></td>
+                <td><br><br></td>
+            </tr>
+            <tr>
+                <td><strong>2) Landbrug</strong><br><small>(Marker, leret jord)</small></td>
+                <td><br><br></td>
+                <td><br><br></td>
+                <td><br><br></td>
+            </tr>
+            <tr>
+                <td><strong>3) Skov</strong><br><small>(Muld, tæt vegetation)</small></td>
+                <td><br><br></td>
+                <td><br><br></td>
+                <td><br><br></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="question-box">
+        <h3>Bonusspørgsmål</h3>
+        <p>Hvilket område bidrager mest til grundvandsdannelse på langt sigt? Forklar kort.</p>
+        <div class="answer-line"></div>
+        <div class="answer-line"></div>
+        <p>Hvilket område har størst risiko for hurtige vandstandsstigninger i vandløb?</p>
+        <div class="answer-line"></div>
+    </div>
+</section>
+
+<section class="opgave">
+    <h2>Opgave 4 (10 min): Mennesket piller ved vandet</h2>
+    <p><em>Vælg to af nedenstående indgreb. Beskriv ændringen i vandbalancen og en mulig konsekvens.</em></p>
+    
+    <div class="settings-box">
+        <strong>Valgmuligheder:</strong> Asfalt/byggeri, Dræning af marker, Skovrejsning, Afskovning, Kanalisering af vandløb.
+    </div>
+
+    <div class="question-box">
+        <h3>Indgreb 1: <span class="short-answer" style="width: 200px; text-align: left;"></span></h3>
+        <p>Hvad ændres i vandbalancen (fx mere/mindre infiltration/fordampning)?</p>
+        <div class="answer-line"></div>
+        <p>Mulig konsekvens for natur eller mennesker:</p>
+        <div class="answer-line"></div>
+    </div>
+
+    <div class="question-box">
+        <h3>Indgreb 2: <span class="short-answer" style="width: 200px; text-align: left;"></span></h3>
+        <p>Hvad ændres i vandbalancen?</p>
+        <div class="answer-line"></div>
+        <p>Mulig konsekvens for natur eller mennesker:</p>
+        <div class="answer-line"></div>
+    </div>
+</section>
+
+</body>
+</html>
