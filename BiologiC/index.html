@@ -1,0 +1,80 @@
+
+
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <title>Biologi C – Forløbsoversigt</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            max-width: 900px;
+            margin: 40px auto;
+            line-height: 1.6;
+        }
+
+        h1 {
+            margin-bottom: 0.2em;
+        }
+
+        .meta-links a {
+            margin-right: 20px;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .modules {
+            margin-top: 40px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .module {
+            padding: 20px;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .module a {
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .active {
+            border-color: #2b7cff;
+            background-color: #eef4ff;
+        }
+
+        .inactive {
+            opacity: 0.4;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Biologi C</h1>
+    <p>Oversigt over forløbet. Her finder du forløbsplan, undervisningsbeskrivelse og adgang til de enkelte moduler.</p>
+
+    <div class="meta-links">
+        <a href="#">📘 Forløbsplan</a>
+        <a href="#">📄 Undervisningsbeskrivelse</a>
+    </div>
+
+    <div class="modules">
+        <div class="module active">
+            <a href="/1_DNA/index.html">Modul 1 – DNA</a>
+        </div>
+
+        <div class="module inactive">Modul 2</div>
+        <div class="module inactive">Modul 3</div>
+        <div class="module inactive">Modul 4</div>
+        <div class="module inactive">Modul 5</div>
+        <div class="module inactive">Modul 6</div>
+    </div>
+
+</body>
+</html>
