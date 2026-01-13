@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNA Bygger Simulering</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f4f8;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+            user-select: none; /* Forhindrer tekstmarkering under drag-drop */
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        #status-bar {
+            background-color: #fff;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.1em;
+            max-width: 800px;
+            border-left: 5px solid #27ae60;
+        }
+
+        #game-area {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+            justify-content: center;
+            width: 100%;
+            max-width: 1200px;
+            min-height: 600px;
+        }
+
+        /* Parts Bin (Venstre side) */
+        #parts-bin {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            width: 200px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .bin-section {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            width: 100%;
+            text-align: center;
+        }
+        .bin-section:last-child { border-bottom: none; }
+        .bin-label { font-size: 0.9em; color: #777; margin-bottom: 5px; display: block; }
+
+        /* Workspace (Højre side) */
+        #workspace {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            flex-grow: 1;
+            min-height: 600px;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            overflow: hidden;
+        }
+
+        /* Draggable Elements */
+        .part {
+            cursor: grab;
+            position: relative;
+            transition: transform 0.1s;
+            z-index: 10;
+        }
+        .part:active { cursor: grabbing; z-index: 100; }
+
+        /* Shapes */
+        .phosphate {
+            width: 40px;
+            height: 40px;
+            background-color: #f1c40f; /* Gul */
+            border-radius: 50%;
+            border: 2px solid #d4ac0d;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            color: #fff;
+            font-size: 12px;
+        }
+
+        .sugar {
+            width: 50px;
+            height: 50px;
+            background-color: #3498db; /* Blå */
+            clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            font-size: 10px;
+            font-weight: bold;
+            padding-top: 5px; /* Juster tekst pga form */
+        }
+
+        .base {
+            width: 60px;
+            height: 30px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            font-weight: bold;
+            font-size: 14px;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .base-A { background-color: #e74c3c; } /* Rød */
+        .base-T { background-color: #27ae60; } /* Grøn */
+        .base-C { background-color: #2980b9; } /* Mørkeblå */
+        .base-G { background-color: #f39c12; } /* Orange */
+
+        /* Nucleotide Container (Assembly Area) */
+        .nucleotide-slot {
+            width: 140px;
+            height: 100px;
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            margin: 10px;
+            position: relative;
+            background-color: #fafafa;
+        }
+        
+        .nucleotide-slot.completed {
+            border: 2px solid #27ae60;
+            background-color: #eafaf1;
+        }
+
+        /* Drop Zones inside Nucleotide Slot */
+        .zone {
+            position: absolute;
+            border: 1px dotted #ddd;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 10px;
+            color: #ccc;
+        }
+        .zone-p { top: 10px; left: 10px; width: 40px; height: 40px; }
+        .zone-s { top: 30px; left: 45px; width: 50px; height: 50px; }
+        .zone-b { top: 35px; left: 85px; width: 50px; height: 30px; border-radius: 4px; }
+
+        /* Strand Assembly Area */
+        #strand-container {
+            display: flex;
+            gap: 50px;
+            padding-top: 40px;
+        }
+
+        .strand-column {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 150px;
+            position: relative;
+        }
+
+        .strand-label {
+            font-weight: bold;
+            color: #555;
+            margin: 10px 0;
+            font-size: 1.2em;
+        }
+
+        .nucleotide-wrapper {
+            position: relative;
+            width: 140px;
+            height: 90px; /* Lidt overlap for backbone */
+            transition: all 0.3s ease;
+        }
+
+        /* Visual adjustments for assembled nucleotides */
+        .assembled-nucleotide {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        .assembled-nucleotide .phosphate { position: absolute; top: 0; left: 10px; }
+        .assembled-nucleotide .sugar { position: absolute; top: 25px; left: 40px; z-index: 2; }
+        .assembled-nucleotide .base { position: absolute; top: 35px; left: 80px; z-index: 1; }
+
+        /* Inverted strand (Right side) */
+        .inverted .phosphate { top: 50px; left: 90px; }
+        .inverted .sugar { top: 25px; left: 50px; transform: rotate(180deg); }
+        .inverted .base { top: 35px; left: 0px; } /* Base peger mod venstre */
+
+        /* Buttons */
+        button {
+            background-color: #2c3e50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-top: 20px;
+        }
+        button:hover { background-color: #34495e; }
+        button:disabled { background-color: #ccc; cursor: not-allowed; }
+
+        /* Hydrogen Bonds */
+        .hydrogen-bonds {
+            position: absolute;
+            top: 35px;
+            left: -60px; /* Justeret til at passe med gap + centrering */
+            width: 60px;
+            height: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 6px;
+            z-index: 0;
+        }
+        .bond-line {
+            width: 80%;
+            border-top: 2px dashed #95a5a6;
+            height: 0;
+        }
+
+        /* Backbone Bonds (Phosphate-Sugar) */
+        .bond {
+            position: absolute;
+            background-color: #7f8c8d;
+            height: 3px;
+            transform-origin: 0 0; /* Rotate from top-left */
+            z-index: 0;
+            border-radius: 2px;
+        }
+
+        /* Normal Strand (Left) */
+        /* Internal P -> S */
+        .nucleotide-wrapper:not(.inverted) .bond-internal {
+            width: 46px;
+            top: 20px;
+            left: 30px;
+            transform: rotate(40deg);
+        }
+        /* External S -> Next P */
+        .nucleotide-wrapper:not(.inverted) .bond-external {
+            width: 70px;
+            top: 50px;
+            left: 65px;
+            transform: rotate(120deg);
+        }
+
+        /* Inverted Strand (Right) */
+        /* Internal S -> P */
+        .nucleotide-wrapper.inverted .bond-internal {
+            width: 40px;
+            top: 50px;
+            left: 75px;
+            transform: rotate(30deg);
+        }
+        /* External P -> Next S */
+        .nucleotide-wrapper.inverted .bond-external {
+            width: 78px;
+            top: 70px;
+            left: 110px;
+            transform: rotate(116deg);
+        }
+
+        /* Hide external bond for the last nucleotide in the column 
+           (It is the second to last child because of the label) */
+        .strand-column .nucleotide-wrapper:nth-last-child(2) .bond-external {
+            display: none;
+        }
+
+        .hidden { display: none !important; }
+
+    </style>
+</head>
+<body>
+
+    <h1>🧬 DNA Bygger Simulering</h1>
+    
+    <div id="status-bar">
+        Velkommen! Lad os starte med at bygge byggestenene til DNA. <br>
+        <strong>Opgave:</strong> Byg 5 nukleotider ved at samle Phosphat (P), Sukker (D) og en Base.
+    </div>
+
+    <div id="game-area">
+        <!-- Parts Bin -->
+        <div id="parts-bin">
+            <div class="bin-section">
+                <span class="bin-label">Rygrad</span>
+                <div class="part phosphate" draggable="true" data-type="phosphate">P</div>
+                <div style="height:10px"></div>
+                <div class="part sugar" draggable="true" data-type="sugar">D</div>
+            </div>
+            <div class="bin-section">
+                <span class="bin-label">Baser</span>
+                <div class="part base base-A" draggable="true" data-type="base" data-val="A">A</div>
+                <div style="height:5px"></div>
+                <div class="part base base-T" draggable="true" data-type="base" data-val="T">T</div>
+                <div style="height:5px"></div>
+                <div class="part base base-C" draggable="true" data-type="base" data-val="C">C</div>
+                <div style="height:5px"></div>
+                <div class="part base base-G" draggable="true" data-type="base" data-val="G">G</div>
+            </div>
+            <button id="next-btn" class="hidden" onclick="nextPhase()">Næste Trin</button>
+        </div>
+
+        <!-- Workspace -->
+        <div id="workspace">
+            <!-- Phase 1: Build Nucleotides -->
+            <div id="phase1-container" style="display:flex; flex-wrap:wrap; justify-content:center;">
+                <!-- Slots generated by JS -->
+            </div>
+
+            <!-- Phase 2 & 3: Assemble Strands -->
+            <div id="strand-container" class="hidden">
+                <div class="strand-column" id="strand-1">
+                    <div class="strand-label">5' Ende</div>
+                    <!-- Nucleotides dropped here -->
+                    <div class="strand-label" style="margin-top: auto;">3' Ende</div>
+                </div>
+                <div class="strand-column" id="strand-2">
+                    <div class="strand-label">3' Ende</div>
+                    <!-- Complementary nucleotides dropped here -->
+                    <div class="strand-label" style="margin-top: auto;">5' Ende</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let phase = 1;
+        let nucleotidesBuilt = []; // Array of objects {id, base, p, s}
+        let currentNucleotides = 0;
+        const targetNucleotides = 5;
+        let strand1Sequence = [];
+        let strand2Count = 0;
+
+        // Setup Phase 1
+        const phase1Container = document.getElementById('phase1-container');
+        
+        function initPhase1() {
+            for(let i=0; i<targetNucleotides; i++) {
+                createNucleotideSlot(i);
+            }
+        }
+
+        function createNucleotideSlot(id) {
+            const slot = document.createElement('div');
+            slot.className = 'nucleotide-slot';
+            slot.dataset.id = id;
+            slot.innerHTML = `
+                <div class="zone zone-p" data-accept="phosphate">P</div>
+                <div class="zone zone-s" data-accept="sugar">D</div>
+                <div class="zone zone-b" data-accept="base">Base</div>
+            `;
+            phase1Container.appendChild(slot);
+        }
+
+        // Drag and Drop Logic
+        let draggedItem = null;
+        let draggedType = null;
+        let draggedVal = null;
+
+        document.addEventListener('dragstart', (e) => {
+            if(e.target.classList.contains('part')) {
+                draggedItem = e.target;
+                draggedType = e.target.dataset.type;
+                draggedVal = e.target.dataset.val;
+                e.dataTransfer.setData('text/plain', draggedType);
+                e.dataTransfer.effectAllowed = 'copy'; // We copy from bin
+            } else if (e.target.classList.contains('nucleotide-wrapper')) {
+                // Dragging a completed nucleotide in Phase 2/3
+                draggedItem = e.target;
+                draggedType = 'nucleotide';
+                draggedVal = e.target.dataset.base;
+                e.dataTransfer.setData('text/plain', 'nucleotide');
+                e.dataTransfer.effectAllowed = 'move';
+            }
+        });
+
+        document.addEventListener('dragover', (e) => {
+            e.preventDefault(); // Allow dropping
+        });
+
+        document.addEventListener('drop', (e) => {
+            e.preventDefault();
+            
+            // Phase 1 Logic: Dropping parts into slots
+            if (phase === 1 || phase === 3) {
+                // Find closest drop zone or slot
+                let zone = e.target.closest('.zone');
+                const slot = e.target.closest('.nucleotide-slot');
+
+                // If dropped on slot but not specific zone, try to find the matching zone
+                if (!zone && slot) {
+                    zone = slot.querySelector(`.zone[data-accept="${draggedType}"]`);
+                }
+
+                if (zone && zone.dataset.accept === draggedType && !zone.querySelector('.part')) {
+                    // Check if slot is already completed
+                    const parentSlot = zone.closest('.nucleotide-slot');
+                    if(parentSlot.classList.contains('completed')) return;
+
+                    // Clone the part
+                    const clone = draggedItem.cloneNode(true);
+                    clone.style.position = 'static';
+                    clone.style.margin = '0';
+                    clone.draggable = false; // Once placed, cannot move in this phase
+                    clone.style.cursor = 'pointer';
+                    clone.title = "Klik for at fjerne";
+                    
+                    // Click to remove logic
+                    clone.onclick = function(e) {
+                        e.stopPropagation();
+                        const z = this.parentNode;
+                        const s = z.closest('.nucleotide-slot');
+                        this.remove();
+                        
+                        // Restore placeholder
+                        if(z.dataset.accept === 'phosphate') z.innerText = 'P';
+                        if(z.dataset.accept === 'sugar') z.innerText = 'D';
+                        if(z.dataset.accept === 'base') z.innerText = 'Base';
+                        
+                        if(s) s.classList.remove('completed');
+                        if(phase === 1) document.getElementById('next-btn').classList.add('hidden');
+                    };
+                    
+                    // Clear zone text/placeholder
+                    zone.innerHTML = '';
+                    zone.appendChild(clone);
+                    
+                    checkSlotCompletion(parentSlot);
+                }
+            }
+
+            // Phase 2 Logic: Building Strand 1
+            if (phase === 2) {
+                const strand1 = document.getElementById('strand-1');
+                // Check if dropping on strand 1 area
+                if (e.target.closest('#strand-1') && draggedType === 'nucleotide') {
+                    // Append to strand 1
+                    // In a real game we might check position, here we just append
+                    strand1.insertBefore(draggedItem, strand1.lastElementChild); // Insert before "3' End" label
+                    draggedItem.draggable = false; // Lock it
+                    strand1Sequence.push(draggedItem.dataset.base);
+                    
+                    checkStrand1Completion();
+                }
+            }
+
+            // Phase 3 Logic: Building Strand 2 (Attaching)
+            if (phase === 3 && draggedType === 'nucleotide') {
+                // Dropping a new nucleotide onto Strand 2 area
+                const strand2 = document.getElementById('strand-2');
+                const targetIndex = strand2Count;
+                
+                // We need to match it against strand 1's nucleotide at this index
+                if (targetIndex < strand1Sequence.length) {
+                    const targetBase = strand1Sequence[targetIndex];
+                    const myBase = draggedVal;
+                    
+                    // Check pairing
+                    if (checkPairing(targetBase, myBase)) {
+                        // Correct!
+                        // Visual: Invert it to look like right side of helix
+                        draggedItem.classList.add('inverted');
+                        draggedItem.draggable = false;
+
+                        // Add hydrogen bonds
+                        const bondContainer = document.createElement('div');
+                        bondContainer.className = 'hydrogen-bonds';
+                        // C-G har 3 bindinger, A-T har 2
+                        const bondCount = (myBase === 'C' || myBase === 'G') ? 3 : 2;
+                        for(let i=0; i<bondCount; i++) {
+                            const line = document.createElement('div');
+                            line.className = 'bond-line';
+                            bondContainer.appendChild(line);
+                        }
+                        draggedItem.appendChild(bondContainer);
+                        
+                        // Insert into DOM at correct position (top to bottom)
+                        // Insert before the last label (5' End)
+                        strand2.insertBefore(draggedItem, strand2.lastElementChild);
+                        
+                        strand2Count++;
+                        
+                        // Remove the empty slot used to build it
+                        // (In this simplified version, we just let them drag from the build area)
+                        // We need to clear the build area slot that this came from?
+                        // Actually, draggedItem is the element itself moving.
+                        
+                        // If we moved it from a slot, that slot is now empty? 
+                        // The slot container remains, but the wrapper is gone.
+                        // Let's regenerate a new empty slot for the user to build the next one.
+                        generateNewBuildSlot();
+
+                        checkStrand2Completion();
+                    } else {
+                        alert(`Fejl! ${myBase} kan ikke parres med ${targetBase}. Husk reglerne: A-T og C-G.`);
+                    }
+                }
+            }
+        });
+
+        function checkSlotCompletion(slot) {
+            const p = slot.querySelector('.zone-p .part');
+            const s = slot.querySelector('.zone-s .part');
+            const b = slot.querySelector('.zone-b .part');
+
+            if (p && s && b) {
+                slot.classList.add('completed');
+                
+                // Get base value
+                const baseVal = slot.querySelector('.base').dataset.val;
+                slot.dataset.baseVal = baseVal;
+
+                // If phase 1, check if all 5 are done
+                if (phase === 1) {
+                    const allSlots = document.querySelectorAll('.nucleotide-slot');
+                    const allCompleted = Array.from(allSlots).every(s => s.classList.contains('completed'));
+                    
+                    if (allCompleted) {
+                        document.getElementById('next-btn').classList.remove('hidden');
+                        document.getElementById('status-bar').innerHTML = "Godt klaret! Du har bygget 5 nukleotider. <br>Klik på 'Næste Trin' for at samle DNA-strengen.";
+                    }
+                }
+
+                // If phase 3, convert immediately to draggable nucleotide
+                if (phase === 3) {
+                    convertToDraggable(slot);
+                }
+            }
+        }
+
+        function convertToDraggable(slot) {
+            // Create the visual representation of the assembled nucleotide
+            const baseVal = slot.dataset.baseVal;
+            
+            const wrapper = document.createElement('div');
+            wrapper.className = 'nucleotide-wrapper';
+            wrapper.draggable = true;
+            wrapper.dataset.base = baseVal;
+            
+            wrapper.innerHTML = `
+                <div class="assembled-nucleotide">
+                    <div class="bond bond-internal"></div>
+                    <div class="bond bond-external"></div>
+                    <div class="phosphate">P</div>
+                    <div class="sugar">D</div>
+                    <div class="base base-${baseVal}">${baseVal}</div>
+                </div>
+            `;
+
+            // Replace the slot content with this wrapper, or just replace the slot?
+            // In Phase 1 -> 2 transition, we will replace all slots.
+            // In Phase 3, we replace the slot immediately so it can be dragged.
+            slot.replaceWith(wrapper);
+        }
+
+        function nextPhase() {
+            if (phase === 1) {
+                phase = 2;
+                document.getElementById('status-bar').innerHTML = "<strong>Fase 2:</strong> Træk dine nukleotider over til venstre side (Strand 1) for at samle dem. <br>Husk: DNA bygges fra 5' mod 3'.";
+                document.getElementById('next-btn').classList.add('hidden');
+                
+                // Convert all slots to draggable items
+                const slots = document.querySelectorAll('.nucleotide-slot');
+                slots.forEach(slot => convertToDraggable(slot));
+
+                // Show strand container
+                document.getElementById('strand-container').classList.remove('hidden');
+                // Hide phase 1 container (now empty/converted)
+                // Actually the converted items are in phase1-container. We leave them there as a "pool".
+                
+            } else if (phase === 2) {
+                // Transition to Phase 3
+                phase = 3;
+                document.getElementById('status-bar').innerHTML = "<strong>Fase 3:</strong> Byg den komplementære streng. <br>1. Byg et nukleotid i boksen. <br>2. Træk det over til højre streng. Det skal passe med basen overfor (A-T, C-G).";
+                document.getElementById('next-btn').classList.add('hidden');
+                
+                // Clear the pool area
+                phase1Container.innerHTML = '';
+                
+                // Create one new slot for building
+                generateNewBuildSlot();
+            }
+        }
+
+        function checkStrand1Completion() {
+            const strand1 = document.getElementById('strand-1');
+            // Count children minus labels (2 labels)
+            const count = strand1.children.length - 2;
+            
+            if (count === targetNucleotides) {
+                document.getElementById('status-bar').innerHTML = "Flot! Du har samlet den kodende streng. <br>Nu skal vi lave den komplementære streng.";
+                document.getElementById('next-btn').classList.remove('hidden');
+            }
+        }
+
+        function generateNewBuildSlot() {
+            // Only need one slot at a time for Phase 3
+            // Check if one exists
+            if(document.querySelector('.nucleotide-slot')) return;
+            
+            if(strand2Count < targetNucleotides) {
+                createNucleotideSlot(99); // ID doesn't matter much here
+            }
+        }
+
+        function checkPairing(base1, base2) {
+            if ((base1 === 'A' && base2 === 'T') || (base1 === 'T' && base2 === 'A')) return true;
+            if ((base1 === 'C' && base2 === 'G') || (base1 === 'G' && base2 === 'C')) return true;
+            return false;
+        }
+
+        function checkStrand2Completion() {
+            if (strand2Count === targetNucleotides) {
+                document.getElementById('status-bar').innerHTML = "🎉 Tillykke! Du har bygget et komplet dobbeltstrenget DNA-molekyle. <br>Bemærk hvordan strengene løber antiparallelt (5'-3' mod 3'-5').";
+                document.getElementById('status-bar').style.backgroundColor = "#d4efdf";
+                document.getElementById('status-bar').style.borderColor = "#27ae60";
+                
+                // Confetti or celebration could go here
+            } else {
+                // Prompt for next
+                const nextBase = strand1Sequence[strand2Count];
+                // Optional hint
+                // document.getElementById('status-bar').innerHTML += ` (Næste base skal passe med ${nextBase})`;
+            }
+        }
+
+        // Initialize
+        initPhase1();
+
+        // Allow deleting wrong nucleotides in Phase 3 by dropping them back in the bin
+        const bin = document.getElementById('parts-bin');
+        bin.addEventListener('dragover', e => e.preventDefault());
+        bin.addEventListener('drop', e => {
+            e.preventDefault();
+            if(phase === 3 && draggedType === 'nucleotide') {
+                draggedItem.remove();
+                generateNewBuildSlot();
+            }
+        });
+    </script>
+</body>
+</html>
