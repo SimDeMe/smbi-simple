@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Arbejdsark: Fra Kiwi til Kode</title>
+
+  <style>
+    /* ---------- PRINT OPSÆTNING ---------- */
+    @page {
+      size: A4;
+      margin: 18mm 16mm 18mm 16mm;
+    }
+
+    :root{
+      --text: #000;
+      --muted: #444;
+      --line: #bdbdbd;
+      --soft: #f2f2f2;
+    }
+
+    /* Sørg for at browseren prøver at bevare farver i print */
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+    body{
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      color: var(--text);
+      margin: 0;
+      background: #fff;
+    }
+
+    .page{
+      max-width: 190mm;
+      margin: 0 auto;
+      padding: 0;
+    }
+
+    header{
+      margin-bottom: 6mm;
+      border-bottom: 2px solid #000;
+      padding-bottom: 4mm;
+    }
+
+    h1{
+      font-size: 18pt;
+      margin: 0 0 2mm 0;
+      letter-spacing: 0.2px;
+    }
+
+    .meta{
+      display: flex;
+      gap: 10mm;
+      align-items: baseline;
+      flex-wrap: wrap;
+      font-size: 11pt;
+    }
+
+    .label{
+      font-weight: 700;
+    }
+
+    .name-line{
+      flex: 1 1 auto;
+      min-width: 90mm;
+      border-bottom: 1px solid #000;
+      height: 6mm;
+      transform: translateY(1mm);
+    }
+
+    .purpose{
+      margin: 4mm 0 0 0;
+      font-size: 11pt;
+      color: var(--muted);
+    }
+
+    hr{
+      border: none;
+      border-top: 1px solid #000;
+      margin: 6mm 0;
+    }
+
+    h2{
+      font-size: 13pt;
+      margin: 6mm 0 2mm 0;
+      padding: 2mm 3mm;
+      background: var(--soft);
+      border-left: 5px solid #000;
+    }
+
+    .lead{
+      margin: 0 0 4mm 0;
+      font-style: italic;
+      color: var(--muted);
+      font-size: 10.5pt;
+    }
+
+    .q{
+      margin: 3.5mm 0 2mm 0;
+      font-size: 11pt;
+      line-height: 1.35;
+    }
+
+    .tip{
+      color: var(--muted);
+      font-size: 10pt;
+      margin-top: 1mm;
+    }
+
+    /* Checkbox-liste (printvenlig) */
+    .choices{
+      margin: 2mm 0 0 0;
+      padding-left: 0;
+      list-style: none;
+    }
+    .choices li{
+      display: grid;
+      grid-template-columns: 6mm 1fr;
+      gap: 2.5mm;
+      align-items: start;
+      margin: 1.8mm 0;
+      font-size: 11pt;
+    }
+    .box{
+      width: 4.5mm;
+      height: 4.5mm;
+      border: 1.6px solid #000;
+      margin-top: 0.8mm;
+    }
+
+    /* Svarlinjer */
+    .lines{
+      margin: 2mm 0 0 0;
+    }
+    .line{
+      border-bottom: 1px solid var(--line);
+      height: 7mm;
+      margin: 1.8mm 0;
+    }
+    .line.tight{ height: 6mm; }
+
+    /* Inline "blank" (til udfyld-ord) */
+    .blank{
+      display: inline-block;
+      min-width: 32mm;
+      border-bottom: 1.6px solid #000;
+      height: 5.5mm;
+      vertical-align: baseline;
+      transform: translateY(1mm);
+    }
+    .blank.sm{ min-width: 22mm; }
+    .blank.xs{ min-width: 14mm; }
+    .blank.lg{ min-width: 46mm; }
+
+    /* Kodeblokke */
+    .code{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 11pt;
+      padding: 3mm 4mm;
+      border: 1px solid #000;
+      background: #fff;
+      margin: 2mm 0 3mm 0;
+      white-space: pre-wrap;
+    }
+
+    /* Triplet-felter */
+    .triplets{
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6mm;
+      margin: 2mm 0 2mm 0;
+      align-items: end;
+    }
+    .triplet{
+      display: grid;
+      grid-template-rows: auto auto;
+      gap: 1mm;
+    }
+    .triplet .tlabel{
+      font-size: 10pt;
+      color: var(--muted);
+    }
+    .triplet .tbox{
+      height: 10mm;
+      border-bottom: 1.6px solid #000;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      letter-spacing: 2px;
+      display: flex;
+      align-items: flex-end;
+      padding-bottom: 1mm;
+    }
+
+    ol{
+      margin: 2mm 0 0 6mm;
+      padding: 0;
+    }
+    ol li{
+      margin: 2mm 0;
+      font-size: 11pt;
+    }
+
+    .callout{
+      margin-top: 4mm;
+      font-weight: 700;
+    }
+
+    /* Undgå dumme sideskift midt i opgaver */
+    .keep{
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    /* Små justeringer til print */
+    @media print{
+      a{ color: #000; text-decoration: none; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+
+    <header>
+      <h1>Arbejdsark: Fra Kiwi til Kode</h1>      
+    </header>
+      
+    <section class="keep">
+      <h2>Del 1: Jagten på Kiwiens DNA (Mens vi venter...)</h2>
+      <p class="lead">Vi har lige most en kiwi og udsat den for lidt af hvert. Men hvorfor gjorde vi egentlig det?</p>
+
+      <div class="q">
+        <strong>1. Hvorfor brugte vi opvaskemiddel?</strong>
+        <div class="tip">(Tip: Tænk på, hvad cellemembraner er lavet af – se evt. bogens s. 21)</div>
+        <ul class="choices">
+          <li><span class="box" aria-hidden="true"></span><span>For at dræbe bakterier på kiwien.</span></li>
+          <li><span class="box" aria-hidden="true"></span><span>For at opløse fedtmembranerne (phospholipiderne) omkring cellen og kernen, så DNA’et kan komme ud.</span></li>
+          <li><span class="box" aria-hidden="true"></span><span>For at farve DNA’et grønt.</span></li>
+        </ul>
+      </div>
+
+      <div class="q">
+        <strong>2. Hvorfor skulle blandingen holdes kold (og hvorfor tilsatte vi salt)?</strong>
+        <div class="tip">(Tip: Enzymer er proteiner, der kan klippe DNA i stykker)</div>
+        <div class="lines">
+          <div class="line"></div>
+          <div class="line"></div>
+        </div>
+      </div>
+
+      <div class="q">
+        <strong>3. Hvad skete der, da vi hældte iskold sprit (ethanol) ned til kiwi-saften?</strong>
+        <div class="lines">
+          <div class="line"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="keep">
+      <h2>Del 2: Det Centrale Dogme – Livets Opskrift 📖</h2>
+      <p class="lead">Læs side 120-123 i <em>Biologi i udvikling C</em> og udfyld de manglende ord.</p>
+
+      <p class="q">
+        I biologien har vi en gylden regel for, hvordan information flyder. Det kaldes <strong>Det Centrale Dogme</strong>:
+      </p>
+
+      <p class="q" style="font-size:12pt;">
+        <strong>DNA</strong> &nbsp; → &nbsp; <span class="blank sm"></span> &nbsp; → &nbsp; <span class="blank sm"></span>
+      </p>
+
+      <p class="q">Dette sker i to store trin:</p>
+
+      <div class="q">
+        <strong>TRIN 1: TRANSKRIPTION (Afskrivning)</strong>
+        <ul style="margin:2mm 0 0 6mm;">
+          <li>Foregår inde i cellens <span class="blank sm"></span>.</li>
+          <li>Her åbnes DNA-strengen, og genet kopieres over til et molekyle, der hedder <strong>mRNA</strong> (Messenger-RNA).</li>
+          <li>I RNA er basen Thymin (T) erstattet af basen <span class="blank sm"></span>.</li>
+          <li>Reglen er: C parres med <span class="blank xs"></span>, og A parres med <span class="blank xs"></span>.</li>
+        </ul>
+      </div>
+
+      <div class="q">
+        <strong>TRIN 2: TRANSLATION (Oversættelse)</strong>
+        <ul style="margin:2mm 0 0 6mm;">
+          <li>Foregår ude i cytoplasmaet på de små "fabrikker", der kaldes <span class="blank sm"></span>.</li>
+          <li>Her læses mRNA-koden tre baser ad gangen. En gruppe på tre baser (fx AUG) kaldes et <span class="blank sm"></span> (eller en triplet).</li>
+          <li>Hver triplet koder for én bestemt <span class="blank sm"></span>.</li>
+          <li>Disse byggeklodser sættes sammen til en lang kæde, som folder sig og bliver til et færdigt <span class="blank sm"></span>.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="keep">
+      <h2>Del 3: Knæk Koden!</h2>
+      <p class="lead">Nu skal du lege celle. Brug "Den genetiske kode" (Figur 170 på side 122) til at oversætte nedenstående gen til et protein.</p>
+
+      <p class="q"><strong>Her er din DNA-skabelonstreng:</strong></p>
+      <div class="code">T  A  C    G  G  A    C  A  T    A  T  T</div>
+
+      <div class="q"><strong>Opgave A: Lav Transkription (DNA → mRNA)</strong></div>
+      <div class="tip">Husk baseparringsreglen for RNA: A → U, T → A, C → G, G → C</div>
+
+      <div class="q" style="margin-top:2mm;"><strong>mRNA:</strong></div>
+      <div class="triplets" aria-label="mRNA tripletter">
+        <div class="triplet">
+          <div class="tlabel">Triplet 1</div>
+          <div class="tbox">__ __ __</div>
+        </div>
+        <div class="triplet">
+          <div class="tlabel">Triplet 2</div>
+          <div class="tbox">__ __ __</div>
+        </div>
+        <div class="triplet">
+          <div class="tlabel">Triplet 3</div>
+          <div class="tbox">__ __ __</div>
+        </div>
+        <div class="triplet">
+          <div class="tlabel">Triplet 4</div>
+          <div class="tbox">__ __ __</div>
+        </div>
+      </div>
+
+      <div class="q"><strong>Opgave B: Lav Translation (mRNA → Aminosyrer)</strong></div>
+      <div class="tip">Slå dine mRNA-tripletter op i skemaet på side 122.</div>
+
+      <ol>
+        <li>Første triplet (Start): <span class="blank lg"></span></li>
+        <li>Anden triplet: <span class="blank lg"></span></li>
+        <li>Tredje triplet: <span class="blank lg"></span></li>
+        <li>Fjerde triplet (Stop): <span class="blank lg"></span></li>
+      </ol>
+
+      <p class="callout">Tillykke! Du har lige bygget et lille stykke protein.</p>
+    </section>
+
+    <section class="keep">
+      <h2>Del 4: Når opskriften har fejl (Mutationer)</h2>
+      <p class="lead">Kig på side 128-129. Vi skal bruge dette i næste modul.</p>
+
+      <p class="q">
+        Forestil dig, at der skete en fejl i DNA'et i Opgave 3.
+        Hvis det første <strong>C</strong> i DNA-strengen (<span style="font-family:ui-monospace,monospace;">TAC</span>)
+        blev muteret til et <strong>G</strong> (<span style="font-family:ui-monospace,monospace;">TAG</span>)...
+      </p>
+
+      <div class="q">
+        <strong>1.</strong> Hvad ville der så stå i mRNA'et i stedet for <span style="font-family:ui-monospace,monospace;">AUG</span>?<br />
+        Svar: <span class="blank sm"></span>
+      </div>
+
+      <div class="q">
+        <strong>2.</strong> Kig i kodeskemaet på s. 122. Hvilken aminosyre koder det nye mRNA for?<br />
+        Svar: <span class="blank lg"></span>
+      </div>
+
+      <div class="q">
+        <strong>3.</strong> Hvad tror du, det betyder for proteinet, hvis start-signalet er væk?
+        <div class="lines">
+          <div class="line"></div>
+          <div class="line"></div>
+          <div class="line tight"></div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</body>
+</html>
