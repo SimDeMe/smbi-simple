@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drejebog: Modul 2 - Biologi C</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            line-height: 1.5;
+            color: #000;
+            background-color: #fff;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header Styling */
+        header {
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        h1 { margin: 0; font-size: 24px; text-transform: uppercase; letter-spacing: 1px; }
+        .meta { font-size: 14px; color: #555; margin-top: 5px; }
+
+        /* Section Styling */
+        h2 {
+            font-size: 18px;
+            background-color: #eee;
+            padding: 5px 10px;
+            border-left: 5px solid #333;
+            margin-top: 25px;
+        }
+        
+        /* Time Slots */
+        .slot {
+            display: flex;
+            margin-bottom: 15px;
+            border-bottom: 1px dotted #ccc;
+            padding-bottom: 15px;
+            page-break-inside: avoid;
+        }
+        .time {
+            flex: 0 0 70px;
+            font-weight: bold;
+            font-family: monospace;
+            font-size: 14px;
+            color: #333;
+        }
+        .content {
+            flex: 1;
+        }
+        .activity-title {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+            font-size: 16px;
+        }
+
+        /* Checklists & Lists */
+        ul.checklist {
+            list-style-type: none;
+            padding: 0;
+        }
+        ul.checklist li:before {
+            content: "☐ ";
+            font-size: 1.2em;
+        }
+        ul { margin-top: 5px; padding-left: 20px; }
+        
+        /* Teacher Notes Box */
+        .notes-box {
+            border: 2px dashed #666;
+            padding: 15px;
+            background-color: #fafafa;
+            margin-top: 30px;
+            page-break-inside: avoid;
+        }
+
+        /* Print Specifics */
+        @media print {
+            body { padding: 0; font-size: 12pt; }
+            .notes-box { background-color: #fff; }
+            h2 { background-color: transparent; border-left: 5px solid #000; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Drejebog: Modul 2</h1>
+    <div class="meta">
+        <strong>Emne:</strong> Fra kode til krop (Proteinsyntese) & DNA-ekstraktion<br>
+        <strong>Dato:</strong> Torsdag d. 22. januar 2026 | <strong>Tid:</strong> 90 minutter<br>
+        <strong>Lektie:</strong> Biologi i udvikling s. 120-123
+    </div>
+</header>
+
+<section>
+    <h2>Forberedelse (Før timen)</h2>
+    <ul class="checklist">
+        <li><strong>Majs-tjek:</strong> Er jorden fugtig? (Vand dem inden timen, hvis de er tørre).</li>
+        <li><strong>Lab-udstyr (pr. gruppe):</strong>
+            <ul>
+                <li>1/2 Kiwi (eller løg/jordbær).</li>
+                <li>Ekstraktionsbuffer (Opvaskemiddel + Salt + Vand).</li>
+                <li>Husholdningssprit (SKAL være iskold – læg i fryseren dagen før!).</li>
+                <li>Filter (kaffefilter/gaze), tragt, reagensglas, pinde.</li>
+            </ul>
+        </li>
+        <li><strong>Print:</strong> "Det genetiske hjul" (Kodetabel) til øvelse 4, hvis de ikke har bogen med.</li>
+    </ul>
+</section>
+
+<section>
+    <h2>Køreplan</h2>
+
+    <div class="slot">
+        <div class="time">00-10</div>
+        <div class="content">
+            <span class="activity-title">1. Intro & Majs-pleje</span>
+            <ul>
+                <li><strong>Majs-status:</strong> Eleverne tjekker deres bakker. Er der spirer? (De er nu 8 dage gamle). Husk at vande!</li>
+                <li><strong>Recap (Modul 1):</strong>
+                    <ul>
+                        <li>Hvad er basereglen? (A-T, C-G).</li>
+                        <li>Hvor ligger DNA'et? (I cellekernen).</li>
+                    </ul>
+                </li>
+                <li><strong>Dagens mål:</strong> Hvordan kommer opskriften ud af kernen og bliver til "dig"? Og vi skal se DNA i virkeligheden.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="slot">
+        <div class="time">10-30</div>
+        <div class="content">
+            <span class="activity-title">2. Teori (Del 1): Det Centrale Dogme</span>
+            <ul>
+                <li><strong>Problemet:</strong> DNA er "Kogebogen" på biblioteket (Kernen). Den er for værdifuld til at låne ud.</li>
+                <li><strong>Løsningen:</strong> Vi tager en fotokopi → <strong>mRNA</strong>.</li>
+                <li><strong>Processen (Transskription):</strong>
+                    <ul>
+                        <li>DNA åbnes.</li>
+                        <li>En kopi laves (Bemærk: T erstattes af U i RNA).</li>
+                        <li>Kopien sendes ud i cellen (til ribosomet).</li>
+                    </ul>
+                </li>
+                <li></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="slot">
+        <div class="time">30-60</div>
+        <div class="content">
+            <span class="activity-title">3. Øvelse: DNA fra Kiwi (Lab)</span>
+            <p><em>Formål: At gøre det abstrakte molekyle konkret.</em></p>
+            <ul>
+                <li><strong>Trin 1 (Mos):</strong> Ødelæg cellevæggen (mekanisk).</li>
+                <li><strong>Trin 2 (Sæbe/Salt):</strong> Sæben opløser fedtmembranerne (celle- og kernemembran). Saltet får DNA til at klumpe.</li>
+                <li><strong>Trin 3 (Filtrer):</strong> Fjern klumperne. Vi vil kun have væsken.</li>
+                <li><strong>Trin 4 (Sprit):</strong> Hæld forsigtigt iskold sprit ned langs kanten.</li>
+                <li><strong>Resultat:</strong> DNA fælder ud som hvidt "snot" i grænsefladen mellem saft og sprit.</li>
+                <li><strong>Journal-noter:</strong> Eleverne tager billeder og noterer <em>hvorfor</em> vi bruger sæbe og sprit (vigtigt til eksamen).</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="slot">
+        <div class="time">60-80</div>
+        <div class="content">
+            <span class="activity-title">4. Teori (Del 2) & Papirøvelse: Translation</span>
+            <ul>
+                <li><strong>Tilbage i klassen:</strong> Nu har vi en mRNA-kopi. Hvordan læses den?</li>
+                <li><strong>Ribosomet:</strong> Cellen "kok" eller "printer".</li>
+                <li><strong>Translation:</strong>
+                    <ul>
+                        <li>Sproget oversættes fra "Baser" til "Aminosyrer".</li>
+                        <li>3 baser (Triplet) = 1 Aminosyre.</li>
+                    </ul>
+                </li>
+                <li><strong>Opgave: "Brug hjulet"</strong>
+                    <ul>
+                        <li>Læreren skriver en DNA-streng på tavlen: <code>TAC - GGG - CAT - ATT</code></li>
+                        <li>Eleverne oversætter til mRNA: <code>AUG - CCC - GUA - UAA</code></li>
+                        <li>Eleverne bruger kodesonuen i bogen til at finde aminosyrerne: <em>Start - Prolin - Valin - Stop</em>.</li>
+                        <li>
+
+[Image of genetic code codon wheel]
+</li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="slot">
+        <div class="time">80-90</div>
+        <div class="content">
+            <span class="activity-title">5. Opsamling & Oprydning</span>
+            <ul>
+                <li>Er alt glasvudstyr vasket af?</li>
+                <li><strong>Konklusion:</strong> Rækkefølgen af baser (A,T,C,G) bestemmer rækkefølgen af aminosyrer → som bestemmer proteinets form → som bestemmer funktionen (f.eks. grøn farve i majs).</li>
+                <li><strong>Næste gang:</strong> Vi skal se på, hvordan egenskaber går i arv (Genetik og stamtavler).</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<div class="notes-box">
+    <strong>Pædagogiske pointer:</strong><br>
+    <ul>
+        <li><strong>Fejlkilde i Lab:</strong> Hvis spritten ikke er kold nok, fælder DNA'et ikke tydeligt ud.</li>
+        <li><strong>Vigtig distinktion:</strong> Mange elever bytter rundt på <em>Transskription</em> (i kernen) og <em>Translation</em> (på ribosomet). Brug analogien: Transskription = at <em>skrive</em> af (kopi). Translation = at <em>oversætte</em> (nyt sprog).</li>
+        <li><strong>Urasil (U):</strong> Husk at nævne, at i RNA findes T ikke. Den er erstattet af U. Det driller dem altid i opgaven.</li>
+    </ul>
+</div>
+
+</body>
+</html>

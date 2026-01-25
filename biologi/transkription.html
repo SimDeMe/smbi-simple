@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transkription i Eukaryote Celler</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        header {
+            background: #fff;
+            width: 100%;
+            padding: 15px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            text-align: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        h1 { margin: 0; font-size: 1.5rem; color: #2c3e50; }
+        .subtitle { font-size: 0.9rem; color: #7f8c8d; margin-top: 5px; }
+
+        /* Status Bar */
+        #status-bar {
+            margin-top: 10px;
+            display: flex;
+            gap: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: #bdc3c7;
+        }
+        .status-step { padding: 5px 10px; border-radius: 15px; transition: all 0.3s; }
+        .status-step.active { background-color: #3498db; color: white; box-shadow: 0 2px 5px rgba(52, 152, 219, 0.4); }
+
+        /* Game Area */
+        #game-container {
+            flex-grow: 1;
+            width: 100%;
+            max-width: 1000px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        svg {
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, #ffffff 0%, #f0f2f5 100%);
+            border-radius: 8px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.02);
+        }
+
+        /* Inventory / Tools */
+        #inventory {
+            background: #fff;
+            width: 100%;
+            padding: 15px 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            z-index: 10;
+            height: 120px;
+        }
+
+        .tool-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            padding: 0 15px;
+            border-right: 1px solid #eee;
+        }
+        .tool-group:last-child { border-right: none; }
+        .tool-label { font-size: 0.8rem; color: #7f8c8d; text-transform: uppercase; letter-spacing: 1px; }
+
+        /* Draggable Items (DOM overlay for inventory, but we use SVG for game) 
+           Actually, we will draw inventory items in SVG to allow seamless drag from bottom to top.
+           So #inventory is just a visual container background.
+        */
+        #inventory { position: absolute; bottom: 0; }
+
+        /* Tooltip */
+        #tooltip {
+            position: absolute;
+            background: rgba(44, 62, 80, 0.9);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 100;
+            max-width: 200px;
+        }
+
+        /* Reset Button */
+        #btn-reset {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        #btn-reset:hover { background: #c0392b; }
+
+        /* SVG Styles */
+        .dna-backbone { stroke: #2980b9; stroke-width: 4; fill: none; stroke-linecap: round; }
+        .dna-base-line { stroke: #bdc3c7; stroke-width: 2; }
+        .dna-text { font-family: monospace; font-weight: bold; font-size: 14px; fill: #2c3e50; text-anchor: middle; dominant-baseline: middle; }
+        
+        .rna-backbone { stroke: #e67e22; stroke-width: 4; fill: none; stroke-linecap: round; }
+        .rna-text { font-family: monospace; font-weight: bold; font-size: 14px; fill: #d35400; text-anchor: middle; dominant-baseline: middle; }
+
+        .molecule { cursor: grab; transition: filter 0.2s; }
+        .molecule:hover { filter: brightness(1.1); }
+        .molecule:active { cursor: grabbing; }
+        
+        .highlight-zone { fill: rgba(46, 204, 113, 0.2); stroke: #2ecc71; stroke-dasharray: 5; display: none; }
+        .highlight-zone.visible { display: block; animation: pulse 1.5s infinite; }
+
+        @keyframes pulse {
+            0% { opacity: 0.3; }
+            50% { opacity: 0.7; }
+            100% { opacity: 0.3; }
+        }
+
+        .fade-in { animation: fadeIn 0.5s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Transkription i Eukaryote Celler</h1>
+    <div class="subtitle">Byg mRNA ud fra DNA-skabelonen</div>
+    
+    <div id="status-bar">
+        <div id="step-init" class="status-step active">1. Initiering</div>
+        <div id="step-elong" class="status-step">2. Elongering</div>
+        <div id="step-term" class="status-step">3. Terminering</div>
+    </div>
+    <button id="btn-reset" onclick="resetSim()">Nulstil</button>
+</header>
+
+<div id="game-container">
+    <svg id="sim-svg" viewBox="0 0 800 500" preserveAspectRatio="xMidYMid slice">
+        <defs>
+            <!-- Glow Filter -->
+            <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="3" result="blur" />
+                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+        </defs>
+        
+        <!-- Background Elements -->
+        <g id="dna-layer"></g>
+        <g id="rna-layer"></g>
+        <g id="enzyme-layer"></g>
+        
+        <!-- Interactive Layer -->
+        <g id="drag-layer"></g>
+        
+        <!-- Inventory Backgrounds (Visual only) -->
+        <line x1="0" y1="380" x2="800" y2="380" stroke="#eee" stroke-width="2" />
+        <text x="100" y="480" text-anchor="middle" fill="#95a5a6" font-size="12">TRANSKRIPTIONS-<br>FAKTORER</text>
+        <text x="250" y="480" text-anchor="middle" fill="#95a5a6" font-size="12">RNA POLYMERASE</text>
+        <text x="550" y="480" text-anchor="middle" fill="#95a5a6" font-size="12">RNA NUKLEOTIDER</text>
+    </svg>
+</div>
+
+<div id="tooltip">Info</div>
+
+<script>
+    const svg = document.getElementById('sim-svg');
+    const dnaLayer = document.getElementById('dna-layer');
+    const rnaLayer = document.getElementById('rna-layer');
+    const enzymeLayer = document.getElementById('enzyme-layer');
+    const dragLayer = document.getElementById('drag-layer');
+    const tooltip = document.getElementById('tooltip');
+    const svgNS = "http://www.w3.org/2000/svg";
+
+    // --- CONFIGURATION ---
+    // Template Strand (3' -> 5' direction for reading, but we draw left to right)
+    // Let's say left is 3' end of template.
+    // Sequence: Promoter region ... Gene ... Terminator
+    const sequence = "ATATTT" + "TACGCATCG" + "ACT"; 
+    // Coding:   TATAAA   ATGCGTAGC   TGA
+    // mRNA:              AUGCGUAGC   UGA
+    
+    const promoterIndex = 0; // Start of TATA box
+    const geneStartIndex = 6; // Start of transcription
+    const terminatorIndex = sequence.length - 3;
+
+    const baseX = 50;
+    const baseY = 200;
+    const baseSpacing = 40;
+
+    // State
+    let state = 'INIT_TF'; // INIT_TF, INIT_POL, ELONGATION, TERMINATED
+    let transcriptionIndex = 0; // Relative to geneStartIndex
+    let rnaSequence = "";
+    
+    // Dragging
+    let draggedElement = null;
+    let dragOffset = { x: 0, y: 0 };
+    let originalPos = { x: 0, y: 0 };
+
+    // Objects
+    let tfBound = false;
+    let polBound = false;
+    let polymeraseObj = null;
+
+    function init() {
+        drawDNA();
+        spawnInventory();
+        updateStatus('INIT_TF');
+    }
+
+    function resetSim() {
+        dnaLayer.innerHTML = '';
+        rnaLayer.innerHTML = '';
+        enzymeLayer.innerHTML = '';
+        dragLayer.innerHTML = '';
+        state = 'INIT_TF';
+        transcriptionIndex = 0;
+        rnaSequence = "";
+        tfBound = false;
+        polBound = false;
+        polymeraseObj = null;
+        init();
+    }
+
+    // --- DRAWING ---
+    function drawDNA() {
+        // Draw two strands
+        // Top Strand (Coding 5'->3') - Visual only mostly
+        // Bottom Strand (Template 3'->5') - The active one
+
+        let pathTop = `M ${baseX} ${baseY - 20}`;
+        let pathBot = `M ${baseX} ${baseY + 20}`;
+
+        for (let i = 0; i < sequence.length; i++) {
+            const x = baseX + i * baseSpacing;
+            
+            // Base pairs
+            const templateBase = sequence[i];
+            const codingBase = getComplementDNA(templateBase);
+
+            // Draw crossbars (hydrogen bonds)
+            const line = document.createElementNS(svgNS, "line");
+            line.setAttribute("x1", x);
+            line.setAttribute("y1", baseY - 15);
+            line.setAttribute("x2", x);
+            line.setAttribute("y2", baseY + 15);
+            line.setAttribute("class", "dna-base-line");
+            line.id = `bond-${i}`;
+            dnaLayer.appendChild(line);
+
+            // Text Top
+            const tTop = document.createElementNS(svgNS, "text");
+            tTop.setAttribute("x", x);
+            tTop.setAttribute("y", baseY - 28);
+            tTop.textContent = codingBase;
+            tTop.setAttribute("class", "dna-text");
+            tTop.style.fontSize = "12px";
+            dnaLayer.appendChild(tTop);
+
+            // Text Bottom
+            const tBot = document.createElementNS(svgNS, "text");
+            tBot.setAttribute("x", x);
+            tBot.setAttribute("y", baseY + 32);
+            tBot.textContent = templateBase;
+            tBot.setAttribute("class", "dna-text");
+            tBot.id = `template-base-${i}`;
+            dnaLayer.appendChild(tBot);
+
+            // Highlight TATA box
+            if (i >= promoterIndex && i < promoterIndex + 6) {
+                const rect = document.createElementNS(svgNS, "rect");
+                rect.setAttribute("x", x - 15);
+                rect.setAttribute("y", baseY - 45);
+                rect.setAttribute("width", 30);
+                rect.setAttribute("height", 90);
+                rect.setAttribute("fill", "rgba(241, 196, 15, 0.2)");
+                rect.setAttribute("stroke", "none");
+                dnaLayer.insertBefore(rect, line);
+            }
+
+            pathTop += ` L ${x} ${baseY - 20}`;
+            pathBot += ` L ${x} ${baseY + 20}`;
+        }
+
+        // Draw Backbones
+        // We draw them as simple lines for now, but we might bend them later
+        const bbTop = document.createElementNS(svgNS, "path");
+        bbTop.setAttribute("d", pathTop);
+        bbTop.setAttribute("class", "dna-backbone");
+        bbTop.id = "backbone-top";
+        dnaLayer.insertBefore(bbTop, dnaLayer.firstChild);
+
+        const bbBot = document.createElementNS(svgNS, "path");
+        bbBot.setAttribute("d", pathBot);
+        bbBot.setAttribute("class", "dna-backbone");
+        bbBot.id = "backbone-bot";
+        dnaLayer.insertBefore(bbBot, dnaLayer.firstChild);
+
+        // Labels
+        const labelProm = document.createElementNS(svgNS, "text");
+        labelProm.setAttribute("x", baseX + 2 * baseSpacing);
+        labelProm.setAttribute("y", baseY - 60);
+        labelProm.textContent = "Promotor (TATA)";
+        labelProm.setAttribute("class", "dna-text");
+        labelProm.style.fill = "#f39c12";
+        dnaLayer.appendChild(labelProm);
+    }
+
+    function spawnInventory() {
+        // 1. Transcription Factor (TFIID)
+        createDraggable("tf", 100, 420, "Transkriptionsfaktor", "#27ae60", "rect", {w:50, h:30, r:10});
+
+        // 2. RNA Polymerase
+        createDraggable("pol", 250, 410, "RNA Polymerase", "#8e44ad", "ellipse", {rx:40, ry:25});
+
+        // 3. Nucleotides
+        const nucs = ['A', 'U', 'C', 'G'];
+        nucs.forEach((n, i) => {
+            createDraggable("nuc", 450 + i*60, 420, n, getNucColor(n), "circle", {r:18}, n);
+        });
+    }
+
+    function createDraggable(type, x, y, title, color, shape, dims, textContent = "") {
+        const g = document.createElementNS(svgNS, "g");
+        g.setAttribute("transform", `translate(${x}, ${y})`);
+        g.setAttribute("class", "molecule");
+        g.dataset.type = type;
+        g.dataset.title = title;
+        if(textContent) g.dataset.base = textContent;
+
+        // Shape
+        let el;
+        if (shape === "rect") {
+            el = document.createElementNS(svgNS, "rect");
+            el.setAttribute("x", -dims.w/2); el.setAttribute("y", -dims.h/2);
+            el.setAttribute("width", dims.w); el.setAttribute("height", dims.h);
+            el.setAttribute("rx", dims.r);
+        } else if (shape === "ellipse") {
+            el = document.createElementNS(svgNS, "ellipse");
+            el.setAttribute("rx", dims.rx); el.setAttribute("ry", dims.ry);
+        } else if (shape === "circle") {
+            el = document.createElementNS(svgNS, "circle");
+            el.setAttribute("r", dims.r);
+        }
+        
+        el.setAttribute("fill", color);
+        el.setAttribute("stroke", "rgba(0,0,0,0.2)");
+        el.setAttribute("stroke-width", "2");
+        g.appendChild(el);
+
+        // Text
+        if (textContent) {
+            const t = document.createElementNS(svgNS, "text");
+            t.textContent = textContent;
+            t.setAttribute("dy", "5");
+            t.setAttribute("text-anchor", "middle");
+            t.setAttribute("fill", "white");
+            t.setAttribute("font-weight", "bold");
+            t.setAttribute("pointer-events", "none");
+            g.appendChild(t);
+        } else if (type === 'tf') {
+            const t = document.createElementNS(svgNS, "text");
+            t.textContent = "TF";
+            t.setAttribute("dy", "5");
+            t.setAttribute("text-anchor", "middle");
+            t.setAttribute("fill", "white");
+            t.setAttribute("font-size", "12px");
+            t.setAttribute("pointer-events", "none");
+            g.appendChild(t);
+        } else if (type === 'pol') {
+             const t = document.createElementNS(svgNS, "text");
+            t.textContent = "Pol II";
+            t.setAttribute("dy", "5");
+            t.setAttribute("text-anchor", "middle");
+            t.setAttribute("fill", "white");
+            t.setAttribute("font-size", "14px");
+            t.setAttribute("pointer-events", "none");
+            g.appendChild(t);
+        }
+
+        // Events
+        g.addEventListener("mousedown", startDrag);
+        g.addEventListener("mouseenter", showTooltip);
+        g.addEventListener("mouseleave", hideTooltip);
+
+        dragLayer.appendChild(g);
+    }
+
+    // --- DRAG SYSTEM ---
+    function startDrag(e) {
+        if (state === 'TERMINATED') return;
+        
+        draggedElement = e.currentTarget;
+        
+        // If it's a nucleotide, clone it so the bin stays full
+        if (draggedElement.dataset.type === 'nuc') {
+            const clone = draggedElement.cloneNode(true);
+            clone.addEventListener("mousedown", startDrag);
+            clone.addEventListener("mouseenter", showTooltip);
+            clone.addEventListener("mouseleave", hideTooltip);
+            dragLayer.appendChild(clone);
+            // We drag the clone
+            draggedElement = clone;
+        }
+
+        const pt = getMousePos(e);
+        const tf = getTransform(draggedElement);
+        originalPos = { x: tf.x, y: tf.y };
+        dragOffset = { x: pt.x - tf.x, y: pt.y - tf.y };
+
+        window.addEventListener("mousemove", doDrag);
+        window.addEventListener("mouseup", endDrag);
+    }
+
+    function doDrag(e) {
+        if (!draggedElement) return;
+        e.preventDefault();
+        const pt = getMousePos(e);
+        setTransform(draggedElement, pt.x - dragOffset.x, pt.y - dragOffset.y);
+    }
+
+    function endDrag(e) {
+        if (!draggedElement) return;
+        window.removeEventListener("mousemove", doDrag);
+        window.removeEventListener("mouseup", endDrag);
+
+        const type = draggedElement.dataset.type;
+        const pos = getTransform(draggedElement);
+
+        // Logic based on state
+        let success = false;
+
+        if (state === 'INIT_TF' && type === 'tf') {
+            // Target: Promoter region (approx x=100 to 200, y=200)
+            if (dist(pos.x, pos.y, baseX + 2.5*baseSpacing, baseY) < 60) {
+                snapTo(draggedElement, baseX + 2.5*baseSpacing, baseY);
+                draggedElement.style.pointerEvents = "none"; // Lock it
+                tfBound = true;
+                updateStatus('INIT_POL');
+                success = true;
+            }
+        }
+        else if (state === 'INIT_POL' && type === 'pol') {
+            // Target: On top of TF
+            if (dist(pos.x, pos.y, baseX + 2.5*baseSpacing, baseY) < 60) {
+                snapTo(draggedElement, baseX + 2.5*baseSpacing, baseY - 10);
+                draggedElement.style.pointerEvents = "none";
+                polBound = true;
+                polymeraseObj = draggedElement;
+                openBubble();
+                updateStatus('ELONGATION');
+                success = true;
+            }
+        }
+        else if (state === 'ELONGATION' && type === 'nuc') {
+            // Target: The active site of Polymerase
+            // Pol is at geneStartIndex + transcriptionIndex
+            const currentDNAIndex = geneStartIndex + transcriptionIndex;
+            const targetX = baseX + currentDNAIndex * baseSpacing;
+            const targetY = baseY; // Active site
+
+            if (dist(pos.x, pos.y, targetX, targetY) < 50) {
+                // Check match
+                const templateBase = sequence[currentDNAIndex];
+                const incomingBase = draggedElement.dataset.base;
+                
+                if (checkPair(templateBase, incomingBase)) {
+                    // Success!
+                    addRNA(incomingBase, targetX, targetY);
+                    draggedElement.remove(); // Remove the dragged nuc
+                    success = true;
+                    advancePolymerase();
+                } else {
+                    // Wrong base feedback
+                    showFeedback(pos.x, pos.y, "Forkert base!");
+                }
+            }
+        }
+
+        // If failed and it was a clone (nuc), remove it. If TF/Pol, return home.
+        if (!success) {
+            if (type === 'nuc') {
+                draggedElement.remove();
+            } else {
+                setTransform(draggedElement, originalPos.x, originalPos.y);
+                if (type === 'pol' && state === 'INIT_TF') {
+                    showFeedback(pos.x, pos.y, "Mangler Transkriptionsfaktor!");
+                }
+            }
+        }
+
+        draggedElement = null;
+    }
+
+    // --- GAME LOGIC ---
+    function openBubble() {
+        // Visual effect: Separate strands
+        document.getElementById('backbone-top').setAttribute("transform", "translate(0, -15)");
+        document.getElementById('backbone-bot').setAttribute("transform", "translate(0, 15)");
+        // Hide hydrogen bonds in the active area?
+        // For simplicity, we just keep them or fade them.
+    }
+
+    function advancePolymerase() {
+        transcriptionIndex++;
+        const nextIndex = geneStartIndex + transcriptionIndex;
+
+        // Move Pol
+        const newX = baseX + nextIndex * baseSpacing;
+        polymeraseObj.style.transition = "transform 0.5s";
+        setTransform(polymeraseObj, newX, baseY - 10);
+
+        // Check Termination
+        if (nextIndex >= geneStartIndex + 9) { // End of gene in our short sequence
+            setTimeout(terminate, 600);
+        }
+    }
+
+    function addRNA(base, x, y) {
+        rnaSequence += base;
+        
+        const g = document.createElementNS(svgNS, "g");
+        g.setAttribute("class", "fade-in");
+        
+        // Draw RNA nucleotide
+        const circle = document.createElementNS(svgNS, "circle");
+        circle.setAttribute("cx", x);
+        circle.setAttribute("cy", baseY + 5); // Slightly offset
+        circle.setAttribute("r", 12);
+        circle.setAttribute("fill", getNucColor(base));
+        g.appendChild(circle);
+
+        const t = document.createElementNS(svgNS, "text");
+        t.setAttribute("x", x);
+        t.setAttribute("y", baseY + 9);
+        t.setAttribute("text-anchor", "middle");
+        t.setAttribute("fill", "white");
+        t.setAttribute("font-size", "10px");
+        t.textContent = base;
+        g.appendChild(t);
+
+        // Draw bond to previous if exists
+        if (rnaSequence.length > 1) {
+            const prevX = x - baseSpacing;
+            const line = document.createElementNS(svgNS, "line");
+            line.setAttribute("x1", prevX);
+            line.setAttribute("y1", baseY + 5);
+            line.setAttribute("x2", x);
+            line.setAttribute("y2", baseY + 5);
+            line.setAttribute("stroke", "#e67e22");
+            line.setAttribute("stroke-width", "4");
+            // Insert line before circle so it looks connected
+            rnaLayer.appendChild(line);
+        }
+
+        rnaLayer.appendChild(g);
+
+        // Animate RNA "tail" falling off? 
+        // In this simple view, we keep it hybridized or just trailing.
+        // Let's shift the older RNA parts up/out to simulate the tail exiting the polymerase.
+        // For this 2D view, keeping it linear is easiest to understand.
+    }
+
+    function terminate() {
+        state = 'TERMINATED';
+        updateStatus('TERMINATED');
+        
+        // Pol falls off
+        polymeraseObj.style.transform += " translate(50px, -100px) rotate(20deg)";
+        polymeraseObj.style.opacity = "0";
+
+        // RNA releases
+        rnaLayer.childNodes.forEach(node => {
+            // Simple animation to float away
+            node.style.transition = "transform 2s";
+            node.style.transform = "translate(0, 100px)";
+        });
+
+        showFeedback(400, 100, "Færdig! mRNA frigivet.");
+    }
+
+    // --- HELPERS ---
+    function updateStatus(s) {
+        state = s;
+        document.querySelectorAll('.status-step').forEach(el => el.classList.remove('active'));
+        if (s === 'INIT_TF' || s === 'INIT_POL') document.getElementById('step-init').classList.add('active');
+        if (s === 'ELONGATION') document.getElementById('step-elong').classList.add('active');
+        if (s === 'TERMINATED') document.getElementById('step-term').classList.add('active');
+    }
+
+    function getComplementDNA(dnaBase) {
+        const map = { 'A': 'T', 'T': 'A', 'C': 'G', 'G': 'C' };
+        return map[dnaBase];
+    }
+
+    function checkPair(dnaBase, rnaBase) {
+        // DNA A -> RNA U
+        // DNA T -> RNA A
+        // DNA C -> RNA G
+        // DNA G -> RNA C
+        if (dnaBase === 'A' && rnaBase === 'U') return true;
+        if (dnaBase === 'T' && rnaBase === 'A') return true;
+        if (dnaBase === 'C' && rnaBase === 'G') return true;
+        if (dnaBase === 'G' && rnaBase === 'C') return true;
+        return false;
+    }
+
+    function getNucColor(base) {
+        const colors = { 'A': '#e74c3c', 'U': '#f1c40f', 'C': '#2980b9', 'G': '#2ecc71', 'T': '#27ae60' };
+        return colors[base] || '#95a5a6';
+    }
+
+    function getMousePos(evt) {
+        const pt = svg.createSVGPoint();
+        pt.x = evt.clientX;
+        pt.y = evt.clientY;
+        return pt.matrixTransform(svg.getScreenCTM().inverse());
+    }
+
+    function getTransform(el) {
+        const transform = el.getAttribute("transform");
+        if (!transform) return { x: 0, y: 0 };
+        const match = /translate\(([^,]+),\s*([^)]+)\)/.exec(transform);
+        return match ? { x: parseFloat(match[1]), y: parseFloat(match[2]) } : { x: 0, y: 0 };
+    }
+
+    function setTransform(el, x, y) {
+        el.setAttribute("transform", `translate(${x}, ${y})`);
+    }
+
+    function snapTo(el, x, y) {
+        setTransform(el, x, y);
+    }
+
+    function dist(x1, y1, x2, y2) {
+        return Math.sqrt((x1-x2)**2 + (y1-y2)**2);
+    }
+
+    function showTooltip(e) {
+        const title = e.currentTarget.dataset.title;
+        if (!title) return;
+        tooltip.textContent = title;
+        tooltip.style.opacity = 1;
+        tooltip.style.left = (e.clientX + 10) + 'px';
+        tooltip.style.top = (e.clientY + 10) + 'px';
+    }
+
+    function hideTooltip() {
+        tooltip.style.opacity = 0;
+    }
+
+    function showFeedback(x, y, msg) {
+        const t = document.createElementNS(svgNS, "text");
+        t.setAttribute("x", x);
+        t.setAttribute("y", y - 30);
+        t.setAttribute("text-anchor", "middle");
+        t.setAttribute("fill", "#e74c3c");
+        t.setAttribute("font-weight", "bold");
+        t.setAttribute("class", "fade-in");
+        t.textContent = msg;
+        svg.appendChild(t);
+        setTimeout(() => t.remove(), 1500);
+    }
+
+    // Start
+    init();
+
+</script>
+</body>
+</html>
