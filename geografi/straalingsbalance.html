@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interaktiv Strålingsbalance</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8fafc;
+            color: #334155;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            max-width: 1000px;
+            width: 100%;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+        h1 { text-align: center; color: #0f172a; }
+        .controls {
+            background: #f1f5f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        input[type=range] {
+            width: 80%;
+            max-width: 400px;
+            margin: 15px 0;
+        }
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+        .temp-display { color: #dc2626; }
+        .co2-display { color: #4338ca; }
+        
+        svg {
+            width: 100%;
+            height: auto;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background-color: #e0f2fe; /* Himmel */
+        }
+        
+        /* Pilestyles */
+        .sw-arrow { stroke: #fca5a5; fill: none; transition: stroke-width 0.3s; } /* Kortbølget (Rødlig) */
+        .lw-arrow { stroke: #60a5fa; fill: none; transition: stroke-width 0.3s; } /* Langbølget (Blålig) */
+        .heat-arrow { stroke: #86efac; fill: none; transition: stroke-width 0.3s; } /* Varme (Grønlig) */
+        
+        text {
+            font-size: 14px;
+            fill: #1e293b;
+            font-family: sans-serif;
+            pointer-events: none;
+            transition: all 0.3s;
+        }
+        .label-bg {
+            fill: rgba(255,255,255,0.8);
+        }
+        .bold { font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Den Globale Strålingsbalance</h1>
+    
+    <div class="controls">
+        <label for="ghg-slider" class="bold">Mængde af Drivhusgasser i atmosfæren</label><br>
+        <input type="range" id="ghg-slider" min="0.7" max="1.5" step="0.01" value="1.0">
+        <div class="stats">
+            <span class="co2-display">Drivhusgaseffekt: <span id="ghg-val">100</span>%</span>
+            <span class="temp-display">Estimeret Overfladetemperatur: <span id="temp-val">15.0</span> °C</span>
+        </div>
+        <p style="font-size: 0.9em; color: #64748b; margin-top: 10px;">
+            Træk i skyderen for at se, hvordan ændringer i atmosfærens absorptionsevne påvirker varmeudstrålingen og den atmosfæriske modstråling. Balancen vedligeholdes matematisk.
+        </p>
+    </div>
+
+    <svg viewBox="0 0 1000 650" id="diagram">
+        <defs>
+            <marker id="arrow-sw" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="#fca5a5" />
+            </marker>
+            <marker id="arrow-lw" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="#60a5fa" />
+            </marker>
+            <marker id="arrow-heat" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="#86efac" />
+            </marker>
+        </defs>
+
+        <rect x="0" y="0" width="1000" height="60" fill="#cbd5e1" /> <text x="20" y="35" class="bold">Verdensrummet / Atmosfærens ydergrænse</text>
+        
+        <rect x="0" y="550" width="1000" height="100" fill="#d6d3d1" /> <text x="20" y="600" class="bold">Jordens overflade</text>
+
+        <rect x="580" y="250" width="380" height="150" fill="#e2e8f0" rx="20" opacity="0.9" /> <text x="770" y="325" text-anchor="middle" class="bold" font-size="16px">Atmosfære / Skyer</text>
+
+        <path d="M 150 60 L 150 550" class="sw-arrow" stroke-width="40" marker-end="url(#arrow-sw)" />
+        <rect x="90" y="100" width="120" height="25" class="label-bg" rx="4"/>
+        <text x="150" y="118" text-anchor="middle">100 (Indstråling)</text>
+        
+        <rect x="90" y="520" width="120" height="25" class="label-bg" rx="4"/>
+        <text x="150" y="538" text-anchor="middle">47 (Ki Absorberet)</text>
+
+        <path d="M 150 150 L 300 60" class="sw-arrow" stroke-width="15" marker-end="url(#arrow-sw)" />
+        <rect x="230" y="70" width="80" height="25" class="label-bg" rx="4"/>
+        <text x="270" y="88" text-anchor="middle">-34 (Albedo)</text>
+
+        <path d="M 150 250 Q 580 250 580 280" class="sw-arrow" stroke-width="10" marker-end="url(#arrow-sw)" />
+        <rect x="300" y="235" width="180" height="25" class="label-bg" rx="4"/>
+        <text x="390" y="253" text-anchor="middle">19 (Absorberet i atmosfæren)</text>
+
+        <path d="M 420 550 L 420 400" class="heat-arrow" stroke-width="12" marker-end="url(#arrow-heat)" />
+        <rect x="360" y="450" width="120" height="25" class="label-bg" rx="4"/>
+        <text x="420" y="468" text-anchor="middle">-23 (Fordampning)</text>
+
+        <path d="M 500 550 L 500 400" class="heat-arrow" stroke-width="8" marker-end="url(#arrow-heat)" />
+        <rect x="440" y="420" width="120" height="25" class="label-bg" rx="4"/>
+        <text x="500" y="438" text-anchor="middle">-10 (Varmeledning)</text>
+
+        <path id="path-lu" d="M 640 550 L 640 400" class="lw-arrow" stroke-width="40" marker-end="url(#arrow-lw)"/>
+        <rect x="580" y="480" width="120" height="25" class="label-bg" rx="4"/>
+        <text id="val-lu" x="640" y="498" text-anchor="middle" class="bold">-119 (Lu Udstråling)</text>
+
+        <path id="path-atmos-abs" d="M 640 400 Q 640 350 680 350" class="lw-arrow" stroke-width="35" marker-end="url(#arrow-lw)"/>
+        <rect x="510" y="335" width="130" height="25" class="label-bg" rx="4"/>
+        <text id="val-atmos-abs" x="575" y="353" text-anchor="middle">101 (Absorberet)</text>
+
+        <path id="path-direct" d="M 640 400 L 640 60" class="lw-arrow" stroke-width="8" marker-end="url(#arrow-lw)"/>
+        <rect x="530" y="100" width="105" height="25" class="label-bg" rx="4"/>
+        <text id="val-direct" x="582" y="118" text-anchor="middle">-18 (Direkte Lu)</text>
+
+        <path id="path-atmos-up" d="M 850 250 L 850 60" class="lw-arrow" stroke-width="20" marker-end="url(#arrow-lw)"/>
+        <rect x="760" y="100" width="180" height="25" class="label-bg" rx="4"/>
+        <text id="val-atmos-up" x="850" y="118" text-anchor="middle">-48 (Langbølget udstråling)</text>
+
+        <path id="path-atmos-down" d="M 850 400 L 850 550" class="lw-arrow" stroke-width="38" marker-end="url(#arrow-lw)"/>
+        <rect x="750" y="480" width="200" height="25" class="label-bg" rx="4"/>
+        <text id="val-atmos-down" x="850" y="498" text-anchor="middle" class="bold">105 (Atmosfærisk modstråling)</text>
+
+    </svg>
+</div>
+
+<script>
+    const slider = document.getElementById('ghg-slider');
+    const ghgVal = document.getElementById('ghg-val');
+    const tempVal = document.getElementById('temp-val');
+
+    // DOM Elementer for tekster
+    const txtLu = document.getElementById('val-lu');
+    const txtDirect = document.getElementById('val-direct');
+    const txtAtmosAbs = document.getElementById('val-atmos-abs');
+    const txtAtmosUp = document.getElementById('val-atmos-up');
+    const txtAtmosDown = document.getElementById('val-atmos-down');
+
+    // DOM Elementer for pile (stroke-width)
+    const pathLu = document.getElementById('path-lu');
+    const pathDirect = document.getElementById('path-direct');
+    const pathAtmosAbs = document.getElementById('path-atmos-abs');
+    const pathAtmosUp = document.getElementById('path-atmos-up');
+    const pathAtmosDown = document.getElementById('path-atmos-down');
+
+    // Hjælpefunktion til udregning og opdatering
+    function updateSimulation() {
+        let G = parseFloat(slider.value); // Baseline er 1.0 (100%)
+        
+        ghgVal.textContent = Math.round(G * 100);
+
+        // Matematisk steady-state model for energibalancen
+        // Baseline brøker fra din figur:
+        // Fraction of Lu absorbed by atmos (f) = 101 / 119 = 0.8487
+        // Fraction of Atmos emission going down (k) = 105 / 153 = 0.686
+        
+        // G påvirker atmosfærens absorptionsevne (optisk tykkelse)
+        let f = 1 - (18 / 119) / G; 
+        let k = 1 - (48 / 153) / G; 
+
+        // Undgå division med 0 eller negative værdier ved ekstreme inputs
+        if(f > 0.99) f = 0.99;
+        if(k > 0.95) k = 0.95;
+
+        // Udregn nye balancer ud fra statiske varme-input til atmosfæren (52 enheder = 19 SW + 23 Latent + 10 Sensibel)
+        // og overfladen (14 = Ki(47) - Latent(23) - Sensibel(10))
+        let E_atmos_down = (k * (52 + 14 * f)) / (1 - k * f);
+        let Lu = 14 + E_atmos_down;
+        let Direct = Lu * (1 - f);
+        let Atmos_abs = Lu * f;
+        let E_atmos_total = 52 + Atmos_abs;
+        let E_atmos_up = E_atmos_total - E_atmos_down;
+
+        // Estimer temperatur (Grov omregning fra strålingsenheder til Kelvin -> Celsius)
+        // 100 enheder svarer til ca. 340 W/m2.
+        let W_m2 = Lu * 3.4; 
+        let Temp_K = Math.pow(W_m2 / 5.67e-8, 0.25);
+        let Temp_C = Temp_K - 273.15;
+        
+        // --- Opdater UI Tekster ---
+        tempVal.textContent = Temp_C.toFixed(1);
+        txtLu.textContent = `-${Lu.toFixed(0)} (Lu Udstråling)`;
+        txtDirect.textContent = `-${Direct.toFixed(0)} (Direkte Lu)`;
+        txtAtmosAbs.textContent = `${Atmos_abs.toFixed(0)} (Absorberet)`;
+        txtAtmosUp.textContent = `-${E_atmos_up.toFixed(0)} (Langbølget udstråling)`;
+        txtAtmosDown.textContent = `${E_atmos_down.toFixed(0)} (Atmosfærisk modstråling)`;
+
+        // --- Opdater Pilens Tykkelse (Visuel feedback) ---
+        // Basis tykkelser skaleres relativt til deres nye værdier
+        pathLu.setAttribute('stroke-width', Math.max(5, 40 * (Lu / 119)));
+        pathDirect.setAttribute('stroke-width', Math.max(2, 8 * (Direct / 18)));
+        pathAtmosAbs.setAttribute('stroke-width', Math.max(5, 35 * (Atmos_abs / 101)));
+        pathAtmosUp.setAttribute('stroke-width', Math.max(5, 20 * (E_atmos_up / 48)));
+        pathAtmosDown.setAttribute('stroke-width', Math.max(5, 38 * (E_atmos_down / 105)));
+    }
+
+    // Event listener
+    slider.addEventListener('input', updateSimulation);
+    
+    // Initial kørsel
+    updateSimulation();
+</script>
+
+</body>
+</html>
