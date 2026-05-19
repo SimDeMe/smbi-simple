@@ -1,4 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
+  const yearEl = document.getElementById('year');
+  if (yearEl) yearEl.textContent = new Date().getFullYear();
+
   const searchInput = document.getElementById('search-input');
   if (!searchInput) return;
 

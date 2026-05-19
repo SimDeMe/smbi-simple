@@ -33,7 +33,7 @@
         </label>
         <button type="submit">Send</button>
       </form>
-      <div id="formStatus" class="alert info" aria-live="polite"></div>
+      <div id="formStatus" class="alert" aria-live="polite" style="display:none"></div>
       <p class="muted small" style="margin-top:10px;">Formspree håndterer afsendelsen – jeg ser ikke din adresse andre steder.</p>
     </section>
   </main>
@@ -42,9 +42,8 @@
     <span>© <span id="year"></span></span>
   </footer>
 
+  <script src="site.js"></script>
   <script>
-    document.getElementById("year").textContent = new Date().getFullYear();
-
     // Håndter submit med tak-besked uden side-skift
     const form = document.querySelector(".contact-form");
     const statusBox = document.getElementById("formStatus");
@@ -53,6 +52,7 @@
       event.preventDefault();
       statusBox.textContent = "Sender...";
       statusBox.className = "alert info";
+      statusBox.style.display = "";
 
       try {
         const res = await fetch(form.action, {
