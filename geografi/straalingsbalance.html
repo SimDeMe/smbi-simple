@@ -3,233 +3,951 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interaktiv Strålingsbalance</title>
+    <title>Strålingbalance-simulator</title>
     <style>
+        /* ── Root variabler ── */
+        :root {
+            --bg:       #1a1a2e;
+            --panel:    #16213e;
+            --card:     #0d1b35;
+            --border:   rgba(77, 201, 246, 0.18);
+            --blue:     #4dc9f6;
+            --red:      #e94560;
+            --yellow:   #f5c842;
+            --green:    #4caf87;
+            --text:     #eaeaea;
+            --muted:    #8899aa;
+            --radius:   12px;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f8fafc;
-            color: #334155;
-            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* ── Header ── */
+        header {
+            background: linear-gradient(135deg, #0d1b35 0%, #1a1a2e 100%);
+            border-bottom: 1px solid var(--border);
+            padding: 18px 32px;
+            display: flex;
+            align-items: baseline;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--blue);
+            letter-spacing: -0.01em;
+        }
+        header p {
+            color: var(--muted);
+            font-size: 0.85rem;
+        }
+
+        /* ── Hoved-layout ── */
+        .layout {
+            display: grid;
+            grid-template-columns: 290px 1fr 350px;
+            gap: 18px;
+            padding: 20px 24px;
+            max-width: 1280px;
+            margin: 0 auto;
+            align-items: start;
+        }
+
+        /* ── Panel (kort) ── */
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
             padding: 20px;
+        }
+        .panel-title {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--blue);
+            margin-bottom: 18px;
+        }
+
+        /* ── Sliders ── */
+        .slider-group { margin-bottom: 22px; }
+
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 6px;
+        }
+        .slider-name {
+            font-size: 0.88rem;
+            font-weight: 500;
+            color: var(--text);
+        }
+        .slider-val {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--yellow);
+            min-width: 80px;
+            text-align: right;
+        }
+        .slider-range {
+            font-size: 0.7rem;
+            color: var(--muted);
+            display: flex;
+            justify-content: space-between;
+            margin-top: 4px;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 5px;
+            border-radius: 3px;
+            outline: none;
+            cursor: pointer;
+            transition: opacity 0.15s;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 17px;
+            height: 17px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+        input[type="range"]:hover::-webkit-slider-thumb {
+            transform: scale(1.2);
+        }
+        #sl-S0 { background: linear-gradient(to right, #1e3a5f, #f5c842); }
+        #sl-S0::-webkit-slider-thumb { background: var(--yellow); box-shadow: 0 0 8px rgba(245,200,66,0.5); }
+
+        #sl-alpha { background: linear-gradient(to right, #1e3a5f, #ffffff); }
+        #sl-alpha::-webkit-slider-thumb { background: #dde; box-shadow: 0 0 8px rgba(200,210,240,0.5); }
+
+        #sl-co2 { background: linear-gradient(to right, #1e3a5f, var(--red)); }
+        #sl-co2::-webkit-slider-thumb { background: var(--red); box-shadow: 0 0 8px rgba(233,69,96,0.5); }
+
+        /* ── Tooltip ── */
+        .tip {
+            position: relative;
+            display: inline-block;
+            border-bottom: 1px dashed var(--muted);
+            cursor: help;
+        }
+        .tip::after {
+            content: attr(data-tip);
+            position: absolute;
+            left: 50%;
+            bottom: calc(100% + 7px);
+            transform: translateX(-50%);
+            background: #0a1628;
+            color: var(--text);
+            font-size: 0.78rem;
+            line-height: 1.4;
+            font-weight: 400;
+            width: 220px;
+            padding: 9px 12px;
+            border-radius: 7px;
+            border: 1px solid var(--border);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.18s;
+            z-index: 100;
+            white-space: normal;
+        }
+        .tip:hover::after { opacity: 1; }
+
+        /* ── Scenario-knapper ── */
+        .scenario-grid { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
+
+        .btn-scenario {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 0.85rem;
+            font-family: inherit;
+            padding: 10px 14px;
+            cursor: pointer;
+            text-align: left;
+            transition: background 0.15s, border-color 0.15s;
+            width: 100%;
+        }
+        .btn-scenario:hover { background: #1c3157; border-color: var(--blue); }
+        .btn-scenario.active { border-color: var(--blue); background: #1c3157; }
+        .btn-scenario .sc-name { font-weight: 600; }
+
+        .scenario-desc {
+            display: none;
+            font-size: 0.78rem;
+            color: var(--muted);
+            line-height: 1.5;
+            padding: 10px 14px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            margin-top: -9px;
+        }
+        .scenario-desc.visible { display: block; }
+
+        .btn-reset {
+            width: 100%;
+            padding: 10px;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--muted);
+            font-family: inherit;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .btn-reset:hover { border-color: var(--blue); color: var(--blue); }
+
+        /* ── Midterpanel: temperatur ── */
+        .temp-panel {
             display: flex;
             flex-direction: column;
-            align-items: center;
+            gap: 18px;
         }
-        .container {
-            max-width: 1000px;
-            width: 100%;
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-        }
-        h1 { text-align: center; color: #0f172a; }
-        .controls {
-            background: #f1f5f9;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
+
+        .temp-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 28px 24px 22px;
             text-align: center;
         }
-        input[type=range] {
-            width: 80%;
-            max-width: 400px;
-            margin: 15px 0;
+
+        .temp-label {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--muted);
+            margin-bottom: 8px;
         }
-        .stats {
+
+        .temp-big {
+            font-size: 5.5rem;
+            font-weight: 800;
+            line-height: 1;
+            transition: color 0.4s;
+            letter-spacing: -0.03em;
+        }
+        .temp-deg {
+            font-size: 2.5rem;
+            font-weight: 300;
+            color: var(--muted);
+        }
+
+        .temp-delta-line {
+            margin-top: 10px;
+            font-size: 1.05rem;
+            font-weight: 500;
+        }
+        .temp-delta-ref {
+            font-size: 0.78rem;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+
+        /* ── Temperaturskala ── */
+        .scale-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px 24px;
+        }
+        .scale-title {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--blue);
+            margin-bottom: 14px;
+        }
+        .scale-wrapper {
             display: flex;
-            justify-content: center;
-            gap: 40px;
-            font-size: 1.1em;
-            font-weight: bold;
+            align-items: stretch;
+            gap: 14px;
         }
-        .temp-display { color: #dc2626; }
-        .co2-display { color: #4338ca; }
-        
-        svg {
+        .scale-bar-container {
+            position: relative;
+            width: 18px;
+            flex-shrink: 0;
+        }
+        .scale-gradient {
+            width: 100%;
+            height: 200px;
+            border-radius: 9px;
+            background: linear-gradient(to top,
+                #1e5799 0%,
+                #2989d8 20%,
+                #7ab648 40%,
+                #f5c842 65%,
+                #e94560 100%
+            );
+        }
+        /* Nuværende temp markør */
+        .scale-pointer {
+            position: absolute;
+            left: 22px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: white;
+            border: 2px solid var(--bg);
+            box-shadow: 0 0 0 2px white;
+            transform: translateY(50%);
+            transition: bottom 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .scale-labels {
+            flex: 1;
+            height: 200px;
+            position: relative;
+        }
+        .scale-mark {
+            position: absolute;
+            left: 0;
+            right: 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transform: translateY(50%);
+        }
+        .scale-mark-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .scale-mark-text {
+            font-size: 0.78rem;
+            white-space: nowrap;
+        }
+
+        /* ── Energidiagram (SVG) ── */
+        .diagram-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 18px;
+        }
+        .diagram-card .panel-title { margin-bottom: 12px; }
+
+        #energy-svg {
             width: 100%;
             height: auto;
-            border: 1px solid #e2e8f0;
+            display: block;
+        }
+
+        /* ── Energi-værdier tabel ── */
+        .energy-table {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 14px;
+        }
+        .energy-item {
+            background: var(--card);
+            border-radius: 7px;
+            padding: 9px 11px;
+        }
+        .energy-item-label {
+            font-size: 0.7rem;
+            color: var(--muted);
+            margin-bottom: 2px;
+        }
+        .energy-item-val {
+            font-size: 0.95rem;
+            font-weight: 700;
+        }
+
+        /* ── Formler info ── */
+        .formula-box {
+            background: var(--card);
+            border: 1px solid var(--border);
             border-radius: 8px;
-            background-color: #e0f2fe; /* Himmel */
+            padding: 12px 15px;
+            font-size: 0.78rem;
+            color: var(--muted);
+            line-height: 1.7;
+            margin-top: 10px;
         }
-        
-        /* Pilestyles */
-        .sw-arrow { stroke: #fca5a5; fill: none; transition: stroke-width 0.3s; } /* Kortbølget (Rødlig) */
-        .lw-arrow { stroke: #60a5fa; fill: none; transition: stroke-width 0.3s; } /* Langbølget (Blålig) */
-        .heat-arrow { stroke: #86efac; fill: none; transition: stroke-width 0.3s; } /* Varme (Grønlig) */
-        
-        text {
-            font-size: 14px;
-            fill: #1e293b;
-            font-family: sans-serif;
-            pointer-events: none;
-            transition: all 0.3s;
+        .formula-box em {
+            color: var(--blue);
+            font-style: normal;
         }
-        .label-bg {
-            fill: rgba(255,255,255,0.8);
+
+        /* ── Responsivt ── */
+        @media (max-width: 1050px) {
+            .layout {
+                grid-template-columns: 260px 1fr 300px;
+                gap: 14px;
+                padding: 14px 16px;
+            }
+            .temp-big { font-size: 4.5rem; }
         }
-        .bold { font-weight: bold; }
+        @media (max-width: 820px) {
+            .layout {
+                grid-template-columns: 1fr 1fr;
+                grid-template-rows: auto auto auto;
+            }
+            .layout > :nth-child(1) { grid-column: 1 / -1; }
+            .layout > :nth-child(2) { grid-column: 1 / 2; }
+            .layout > :nth-child(3) { grid-column: 2 / 3; }
+        }
+        @media (max-width: 560px) {
+            .layout { grid-template-columns: 1fr; }
+            .layout > * { grid-column: 1 / -1 !important; }
+            header { padding: 14px 16px; }
+            header h1 { font-size: 1.2rem; }
+        }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>Den Globale Strålingsbalance</h1>
-    
-    <div class="controls">
-        <label for="ghg-slider" class="bold">Mængde af Drivhusgasser i atmosfæren</label><br>
-        <input type="range" id="ghg-slider" min="0.7" max="1.5" step="0.01" value="1.0">
-        <div class="stats">
-            <span class="co2-display">Drivhusgaseffekt: <span id="ghg-val">100</span>%</span>
-            <span class="temp-display">Estimeret Overfladetemperatur: <span id="temp-val">15.0</span> °C</span>
+<header>
+    <h1>Strålingbalance-simulator</h1>
+    <p>Energibalance og drivhuseffekt &nbsp;·&nbsp; Naturgeografi, gymnasium</p>
+</header>
+
+<div class="layout">
+
+    <!-- ════════════════ VENSTRE: KONTROLLER ════════════════ -->
+    <aside class="panel">
+        <div class="panel-title">Justerbare parametre</div>
+
+        <!-- Slider: Solindstråling -->
+        <div class="slider-group">
+            <div class="slider-header">
+                <span class="slider-name">
+                    <span class="tip" data-tip="Solkonstanten S₀: den samlede mængde solenergi per m² øverst i atmosfæren. Standardværdi ~1361 W/m². Varierer svagt med solpletter og baneændringer.">
+                        Solindstråling S₀
+                    </span>
+                </span>
+                <span class="slider-val"><span id="val-S0">1361</span> <small style="font-size:0.65rem;color:var(--muted)">W/m²</small></span>
+            </div>
+            <input type="range" id="sl-S0" min="1200" max="1500" step="1" value="1361">
+            <div class="slider-range"><span>1200</span><span>1500 W/m²</span></div>
         </div>
-        <p style="font-size: 0.9em; color: #64748b; margin-top: 10px;">
-            Træk i skyderen for at se, hvordan ændringer i atmosfærens absorptionsevne påvirker varmeudstrålingen og den atmosfæriske modstråling. Balancen vedligeholdes matematisk.
-        </p>
+
+        <!-- Slider: Albedo -->
+        <div class="slider-group">
+            <div class="slider-header">
+                <span class="slider-name">
+                    <span class="tip" data-tip="Albedo α: andelen af indkommende solstråling der reflekteres tilbage til rummet. Sne og is: høj albedo (~0.8). Hav og skov: lav albedo (~0.1). Jordens gennemsnit: ~0.30.">
+                        Albedo α
+                    </span>
+                </span>
+                <span class="slider-val"><span id="val-alpha">0.30</span></span>
+            </div>
+            <input type="range" id="sl-alpha" min="0.05" max="0.95" step="0.01" value="0.30">
+            <div class="slider-range"><span>0.05 (mørk)</span><span>0.95 (hvid)</span></div>
+        </div>
+
+        <!-- Slider: CO₂ -->
+        <div class="slider-group">
+            <div class="slider-header">
+                <span class="slider-name">
+                    <span class="tip" data-tip="CO₂-koncentration i ppm (dele pr. million). Præ-industriel: 280 ppm. Nutidig: ~420 ppm. CO₂ absorberer og re-emitterer infrarød varmestråling – drivhuseffekten.">
+                        CO₂-koncentration
+                    </span>
+                </span>
+                <span class="slider-val"><span id="val-co2">420</span> <small style="font-size:0.65rem;color:var(--muted)">ppm</small></span>
+            </div>
+            <input type="range" id="sl-co2" min="200" max="1200" step="5" value="420">
+            <div class="slider-range"><span>200 ppm</span><span>1200 ppm</span></div>
+        </div>
+
+        <div style="height:1px;background:var(--border);margin:6px 0 18px"></div>
+
+        <!-- Scenarie-knapper -->
+        <div class="panel-title">Scenarier</div>
+        <div class="scenario-grid">
+            <button class="btn-scenario" id="sc-now" onclick="setScenario('now')">
+                <span class="sc-name">🌍 Nutidig</span>
+                <span style="float:right;color:var(--muted);font-size:0.78rem">CO₂ = 420 ppm</span>
+            </button>
+            <div class="scenario-desc" id="desc-now">
+                Nuværende atmosfæreforhold (2024). CO₂ er steget fra 280 ppm (præ-industrielt) til ~420 ppm siden industrialiseringen. Temperaturen er ca. 1-2°C over det præ-industrielle niveau i denne simple model.
+            </div>
+
+            <button class="btn-scenario" id="sc-ice" onclick="setScenario('ice')">
+                <span class="sc-name">🧊 Sidste istid</span>
+                <span style="float:right;color:var(--muted);font-size:0.78rem">CO₂ = 200 ppm</span>
+            </button>
+            <div class="scenario-desc" id="desc-ice">
+                For ~20.000 år siden dækkede store iskapper Nordamerika og Skandinavien. CO₂ var lavere (~200 ppm), og den forhøjede albedo (α=0.45) fra is og sne køler Jordens overflade markant.
+            </div>
+
+            <button class="btn-scenario" id="sc-rcp" onclick="setScenario('rcp')">
+                <span class="sc-name">🔥 År 2100 (RCP8.5)</span>
+                <span style="float:right;color:var(--muted);font-size:0.78rem">CO₂ = 900 ppm</span>
+            </button>
+            <div class="scenario-desc" id="desc-rcp">
+                IPCC's høj-udlednings-scenarie (RCP8.5): business-as-usual uden klimapolitik. CO₂ kan nå ~900 ppm i 2100. Kombineret med let faldende albedo fra smeltende is giver dette markant opvarmning.
+            </div>
+        </div>
+
+        <button class="btn-reset" onclick="resetAll()">↺ Nulstil til standardværdier</button>
+
+        <!-- Model-formler -->
+        <div class="formula-box">
+            <em>T<sub>eff</sub></em> = (S₀/4 · (1−α) / σ)<sup>0.25</sup><br>
+            <em>ΔT<sub>CO₂</sub></em> = k · ln(CO₂ / 280)<br>
+            <em>T<sub>overflade</sub></em> = T<sub>eff</sub> + 32.6 + ΔT<sub>CO₂</sub> − 273.15<br>
+            σ = 5.67×10⁻⁸ &nbsp;·&nbsp; k ≈ 5.35
+        </div>
+    </aside>
+
+    <!-- ════════════════ MIDT: TEMPERATUR ════════════════ -->
+    <div class="temp-panel">
+
+        <!-- Stor temperaturvisning -->
+        <div class="temp-card">
+            <div class="temp-label">Overfladetemperatur</div>
+            <div>
+                <span class="temp-big" id="temp-display">–</span><span class="temp-deg"> °C</span>
+            </div>
+            <div class="temp-delta-line">
+                Afvigelse fra præ-industriel:&nbsp;
+                <span id="temp-delta" style="font-weight:700">–</span>
+            </div>
+            <div class="temp-delta-ref">Reference: ~14 °C (CO₂ = 280 ppm, S₀ = 1361, α = 0.30)</div>
+        </div>
+
+        <!-- Temperaturskala -->
+        <div class="scale-card">
+            <div class="scale-title">Temperaturskala med referencepunkter</div>
+            <div class="scale-wrapper">
+                <div class="scale-bar-container">
+                    <div class="scale-gradient"></div>
+                    <div class="scale-pointer" id="scale-pointer"></div>
+                </div>
+                <div class="scale-labels" id="scale-labels">
+                    <!-- Referencemærker indsættes af JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Energi-tabel -->
+        <div class="panel" style="padding:16px">
+            <div class="panel-title">Energifluxer (W/m²)</div>
+            <div class="energy-table">
+                <div class="energy-item">
+                    <div class="energy-item-label">
+                        <span class="tip" data-tip="Gennemsnitlig indkommende solstråling fordelt over hele Jordens overflade: S₀ divideret med 4 (fordi Jorden er en kugle).">Indkommende sol</span>
+                    </div>
+                    <div class="energy-item-val" id="e-in" style="color:var(--yellow)">–</div>
+                </div>
+                <div class="energy-item">
+                    <div class="energy-item-label">
+                        <span class="tip" data-tip="Den mængde solstråling der reflekteres tilbage til rummet pga. albedo. Jo mere is og skyer, desto mere reflekteres.">Reflekteret (albedo)</span>
+                    </div>
+                    <div class="energy-item-val" id="e-ref" style="color:#aaccee">–</div>
+                </div>
+                <div class="energy-item">
+                    <div class="energy-item-label">
+                        <span class="tip" data-tip="Den mængde solenergi der faktisk absorberes af Jordens overflade og atmosfære. Danner grundlag for opvarmning.">Absorberet</span>
+                    </div>
+                    <div class="energy-item-val" id="e-abs" style="color:var(--green)">–</div>
+                </div>
+                <div class="energy-item">
+                    <div class="energy-item-label">
+                        <span class="tip" data-tip="Udgående langbølget varmestråling (infrarød) fra Jordens overflade. Afhænger af overfladetemperaturen via Stefan-Boltzmanns lov: σT⁴.">Udgående termisk</span>
+                    </div>
+                    <div class="energy-item-val" id="e-out" style="color:var(--red)">–</div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
-    <svg viewBox="0 0 1000 650" id="diagram">
-        <defs>
-            <marker id="arrow-sw" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                <path d="M 0 0 L 10 5 L 0 10 z" fill="#fca5a5" />
-            </marker>
-            <marker id="arrow-lw" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                <path d="M 0 0 L 10 5 L 0 10 z" fill="#60a5fa" />
-            </marker>
-            <marker id="arrow-heat" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                <path d="M 0 0 L 10 5 L 0 10 z" fill="#86efac" />
-            </marker>
-        </defs>
+    <!-- ════════════════ HØJRE: ENERGIDIAGRAM ════════════════ -->
+    <div class="diagram-card">
+        <div class="panel-title">Energiflow-diagram</div>
 
-        <rect x="0" y="0" width="1000" height="60" fill="#cbd5e1" /> <text x="20" y="35" class="bold">Verdensrummet / Atmosfærens ydergrænse</text>
-        
-        <rect x="0" y="550" width="1000" height="100" fill="#d6d3d1" /> <text x="20" y="600" class="bold">Jordens overflade</text>
+        <!-- SVG energidiagram – opdateres dynamisk af JS -->
+        <svg id="energy-svg" viewBox="0 0 310 370" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <marker id="arr-yellow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+                    <polygon points="0 0, 8 3, 0 6" fill="#f5c842"/>
+                </marker>
+                <marker id="arr-blue" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+                    <polygon points="0 0, 8 3, 0 6" fill="#4dc9f6"/>
+                </marker>
+                <marker id="arr-red" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+                    <polygon points="0 0, 8 3, 0 6" fill="#e94560"/>
+                </marker>
+                <marker id="arr-orange" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+                    <polygon points="0 0, 8 3, 0 6" fill="#ff8c42"/>
+                </marker>
+                <marker id="arr-cyan-up" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+                    <polygon points="0 0, 8 3, 0 6" fill="#4dc9f6"/>
+                </marker>
+            </defs>
 
-        <rect x="580" y="250" width="380" height="150" fill="#e2e8f0" rx="20" opacity="0.9" /> <text x="770" y="325" text-anchor="middle" class="bold" font-size="16px">Atmosfære / Skyer</text>
+            <!-- Rummet (top) -->
+            <rect x="0" y="0" width="310" height="75" fill="#06090f" rx="6"/>
+            <text x="155" y="16" text-anchor="middle" font-size="9" fill="#556677" font-family="sans-serif" letter-spacing="1">RUMMET</text>
+            <!-- Stjerner -->
+            <circle cx="20" cy="30" r="1" fill="white" opacity="0.6"/>
+            <circle cx="50" cy="15" r="1.2" fill="white" opacity="0.5"/>
+            <circle cx="85" cy="45" r="0.8" fill="white" opacity="0.7"/>
+            <circle cx="140" cy="20" r="1" fill="white" opacity="0.4"/>
+            <circle cx="200" cy="38" r="1.3" fill="white" opacity="0.6"/>
+            <circle cx="250" cy="12" r="0.9" fill="white" opacity="0.5"/>
+            <circle cx="290" cy="55" r="1" fill="white" opacity="0.6"/>
+            <circle cx="110" cy="60" r="0.8" fill="white" opacity="0.4"/>
+            <circle cx="270" cy="35" r="1.1" fill="white" opacity="0.5"/>
 
-        <path d="M 150 60 L 150 550" class="sw-arrow" stroke-width="40" marker-end="url(#arrow-sw)" />
-        <rect x="90" y="100" width="120" height="25" class="label-bg" rx="4"/>
-        <text x="150" y="118" text-anchor="middle">100 (Indstråling)</text>
-        
-        <rect x="90" y="520" width="120" height="25" class="label-bg" rx="4"/>
-        <text x="150" y="538" text-anchor="middle">47 (Ki Absorberet)</text>
+            <!-- Atmosfæren -->
+            <rect x="0" y="75" width="310" height="125" fill="#1a2840" rx="0"/>
+            <rect x="0" y="75" width="310" height="1" fill="rgba(77,201,246,0.25)"/>
+            <rect x="0" y="199" width="310" height="1" fill="rgba(77,201,246,0.25)"/>
+            <text x="155" y="93" text-anchor="middle" font-size="9" fill="#4dc9f6" font-family="sans-serif" letter-spacing="1" opacity="0.8">ATMOSFÆREN</text>
+            <!-- CO₂ molekyle-ikon -->
+            <text x="155" y="118" text-anchor="middle" font-size="9" fill="#8899aa" font-family="sans-serif" id="svg-co2-label">CO₂: 420 ppm</text>
+            <!-- Drivhus-illustration: vandret skravering -->
+            <line x1="10" y1="140" x2="300" y2="140" stroke="rgba(77,201,246,0.08)" stroke-width="1"/>
+            <line x1="10" y1="155" x2="300" y2="155" stroke="rgba(77,201,246,0.08)" stroke-width="1"/>
+            <line x1="10" y1="170" x2="300" y2="170" stroke="rgba(77,201,246,0.08)" stroke-width="1"/>
+            <line x1="10" y1="185" x2="300" y2="185" stroke="rgba(77,201,246,0.08)" stroke-width="1"/>
 
-        <path d="M 150 150 L 300 60" class="sw-arrow" stroke-width="15" marker-end="url(#arrow-sw)" />
-        <rect x="230" y="70" width="80" height="25" class="label-bg" rx="4"/>
-        <text x="270" y="88" text-anchor="middle">-34 (Albedo)</text>
+            <!-- Jordens overflade -->
+            <rect x="0" y="200" width="310" height="170" fill="#162510" rx="0"/>
+            <rect x="0" y="200" width="310" height="3" fill="#2d5a27"/>
+            <text x="155" y="218" text-anchor="middle" font-size="9" fill="#4caf87" font-family="sans-serif" letter-spacing="1">JORDENS OVERFLADE</text>
 
-        <path d="M 150 250 Q 580 250 580 280" class="sw-arrow" stroke-width="10" marker-end="url(#arrow-sw)" />
-        <rect x="300" y="235" width="180" height="25" class="label-bg" rx="4"/>
-        <text x="390" y="253" text-anchor="middle">19 (Absorberet i atmosfæren)</text>
+            <!-- PILE – opdateres af JS -->
 
-        <path d="M 420 550 L 420 400" class="heat-arrow" stroke-width="12" marker-end="url(#arrow-heat)" />
-        <rect x="360" y="450" width="120" height="25" class="label-bg" rx="4"/>
-        <text x="420" y="468" text-anchor="middle">-23 (Fordampning)</text>
+            <!-- 1: Indkommende solstråling (gul, ned fra top) -->
+            <line id="arr-solar-in" x1="65" y1="5" x2="65" y2="193"
+                  stroke="#f5c842" stroke-width="9" stroke-linecap="round"
+                  marker-end="url(#arr-yellow)" opacity="0.85"/>
 
-        <path d="M 500 550 L 500 400" class="heat-arrow" stroke-width="8" marker-end="url(#arrow-heat)" />
-        <rect x="440" y="420" width="120" height="25" class="label-bg" rx="4"/>
-        <text x="500" y="438" text-anchor="middle">-10 (Varmeledning)</text>
+            <!-- 2: Reflekteret solstråling (lys gul, op tilbage til rum) -->
+            <line id="arr-solar-ref" x1="90" y1="193" x2="90" y2="8"
+                  stroke="#aaddff" stroke-width="3" stroke-linecap="round"
+                  marker-end="url(#arr-blue)" opacity="0.7"/>
 
-        <path id="path-lu" d="M 640 550 L 640 400" class="lw-arrow" stroke-width="40" marker-end="url(#arrow-lw)"/>
-        <rect x="580" y="480" width="120" height="25" class="label-bg" rx="4"/>
-        <text id="val-lu" x="640" y="498" text-anchor="middle" class="bold">-119 (Lu Udstråling)</text>
+            <!-- 3: Udgående varmestråling fra overflade (rød, op) -->
+            <line id="arr-thermal-out" x1="200" y1="200" x2="200" y2="8"
+                  stroke="#e94560" stroke-width="7" stroke-linecap="round"
+                  marker-end="url(#arr-red)" opacity="0.85"/>
 
-        <path id="path-atmos-abs" d="M 640 400 Q 640 350 680 350" class="lw-arrow" stroke-width="35" marker-end="url(#arrow-lw)"/>
-        <rect x="510" y="335" width="130" height="25" class="label-bg" rx="4"/>
-        <text id="val-atmos-abs" x="575" y="353" text-anchor="middle">101 (Absorberet)</text>
+            <!-- 4: Drivhuseffekt – atmosfæren sender stråling tilbage (cyan, ned) -->
+            <line id="arr-greenhouse" x1="235" y1="198" x2="235" y2="108"
+                  stroke="#4dc9f6" stroke-width="4" stroke-linecap="round"
+                  marker-end="url(#arr-blue)" opacity="0.8"/>
 
-        <path id="path-direct" d="M 640 400 L 640 60" class="lw-arrow" stroke-width="8" marker-end="url(#arrow-lw)"/>
-        <rect x="530" y="100" width="105" height="25" class="label-bg" rx="4"/>
-        <text id="val-direct" x="582" y="118" text-anchor="middle">-18 (Direkte Lu)</text>
+            <!-- Etiketter -->
+            <text x="65" y="252" text-anchor="middle" font-size="8.5" fill="#f5c842" font-family="sans-serif">Indkommende</text>
+            <text x="65" y="263" text-anchor="middle" font-size="8.5" fill="#f5c842" font-family="sans-serif">sol</text>
+            <text x="65" y="278" text-anchor="middle" font-size="9" fill="#f5c842" font-family="sans-serif" font-weight="bold" id="lbl-solar-in">– W/m²</text>
 
-        <path id="path-atmos-up" d="M 850 250 L 850 60" class="lw-arrow" stroke-width="20" marker-end="url(#arrow-lw)"/>
-        <rect x="760" y="100" width="180" height="25" class="label-bg" rx="4"/>
-        <text id="val-atmos-up" x="850" y="118" text-anchor="middle">-48 (Langbølget udstråling)</text>
+            <text x="108" y="252" text-anchor="middle" font-size="8.5" fill="#aaddff" font-family="sans-serif">Reflekteret</text>
+            <text x="108" y="263" text-anchor="middle" font-size="8.5" fill="#aaddff" font-family="sans-serif">(albedo)</text>
+            <text x="108" y="278" text-anchor="middle" font-size="9" fill="#aaddff" font-family="sans-serif" font-weight="bold" id="lbl-solar-ref">– W/m²</text>
 
-        <path id="path-atmos-down" d="M 850 400 L 850 550" class="lw-arrow" stroke-width="38" marker-end="url(#arrow-lw)"/>
-        <rect x="750" y="480" width="200" height="25" class="label-bg" rx="4"/>
-        <text id="val-atmos-down" x="850" y="498" text-anchor="middle" class="bold">105 (Atmosfærisk modstråling)</text>
+            <text x="200" y="252" text-anchor="middle" font-size="8.5" fill="#e94560" font-family="sans-serif">Udgående</text>
+            <text x="200" y="263" text-anchor="middle" font-size="8.5" fill="#e94560" font-family="sans-serif">varme</text>
+            <text x="200" y="278" text-anchor="middle" font-size="9" fill="#e94560" font-family="sans-serif" font-weight="bold" id="lbl-thermal">– W/m²</text>
 
-    </svg>
+            <text x="248" y="252" text-anchor="middle" font-size="8.5" fill="#4dc9f6" font-family="sans-serif">Drivhus-</text>
+            <text x="248" y="263" text-anchor="middle" font-size="8.5" fill="#4dc9f6" font-family="sans-serif">effekt</text>
+            <text x="248" y="278" text-anchor="middle" font-size="9" fill="#4dc9f6" font-family="sans-serif" font-weight="bold" id="lbl-greenhouse">– W/m²</text>
+
+            <!-- Temperaturdisplay i SVG -->
+            <rect x="5" y="295" width="300" height="68" rx="6" fill="rgba(0,0,0,0.35)"/>
+            <text x="155" y="313" text-anchor="middle" font-size="8" fill="#8899aa" font-family="sans-serif" letter-spacing="0.5">OVERFLADETEMPERATUR</text>
+            <text id="svg-temp" x="155" y="348" text-anchor="middle" font-size="26" font-weight="800" fill="white" font-family="sans-serif">–</text>
+            <text x="155" y="362" text-anchor="middle" font-size="9" fill="#8899aa" font-family="sans-serif" id="svg-delta">–</text>
+        </svg>
+
+    </div>
+
 </div>
 
 <script>
-    const slider = document.getElementById('ghg-slider');
-    const ghgVal = document.getElementById('ghg-val');
-    const tempVal = document.getElementById('temp-val');
+    // ════════════════════════════════════════════════
+    // FYSISKE KONSTANTER OG MODEL
+    // ════════════════════════════════════════════════
 
-    // DOM Elementer for tekster
-    const txtLu = document.getElementById('val-lu');
-    const txtDirect = document.getElementById('val-direct');
-    const txtAtmosAbs = document.getElementById('val-atmos-abs');
-    const txtAtmosUp = document.getElementById('val-atmos-up');
-    const txtAtmosDown = document.getElementById('val-atmos-down');
+    // Stefan-Boltzmanns konstant (W m⁻² K⁻⁴)
+    const SIGMA = 5.67e-8;
 
-    // DOM Elementer for pile (stroke-width)
-    const pathLu = document.getElementById('path-lu');
-    const pathDirect = document.getElementById('path-direct');
-    const pathAtmosAbs = document.getElementById('path-atmos-abs');
-    const pathAtmosUp = document.getElementById('path-atmos-up');
-    const pathAtmosDown = document.getElementById('path-atmos-down');
+    // Klimafølsomhedskonstant: k = 3.7/ln(2) ≈ 5.35
+    // Giver ~3.7°C opvarmning per CO₂-fordobling (øvre ECS-estimat)
+    const K_GH = 5.35;
 
-    // Hjælpefunktion til udregning og opdatering
-    function updateSimulation() {
-        let G = parseFloat(slider.value); // Baseline er 1.0 (100%)
-        
-        ghgVal.textContent = Math.round(G * 100);
+    // Baseline-drivhuseffekt ved 280 ppm CO₂ (K)
+    // Jordens naturlige drivhuseffekt (H₂O, CH₄, N₂O m.fl.) varmer ca. 33 K
+    // Vi kalibrerer til at give ~14°C ved præ-industrielle betingelser
+    const GH_BASE = 32.55;
 
-        // Matematisk steady-state model for energibalancen
-        // Baseline brøker fra din figur:
-        // Fraction of Lu absorbed by atmos (f) = 101 / 119 = 0.8487
-        // Fraction of Atmos emission going down (k) = 105 / 153 = 0.686
-        
-        // G påvirker atmosfærens absorptionsevne (optisk tykkelse)
-        let f = 1 - (18 / 119) / G; 
-        let k = 1 - (48 / 153) / G; 
+    // Standardværdier (nutidig: CO₂ = 420 ppm)
+    const DEFAULTS = { S0: 1361, alpha: 0.30, co2: 420 };
 
-        // Undgå division med 0 eller negative værdier ved ekstreme inputs
-        if(f > 0.99) f = 0.99;
-        if(k > 0.95) k = 0.95;
+    // Præ-industriel reference (bruges til afvigelsesberegning)
+    const REF = { S0: 1361, alpha: 0.30, co2: 280 };
 
-        // Udregn nye balancer ud fra statiske varme-input til atmosfæren (52 enheder = 19 SW + 23 Latent + 10 Sensibel)
-        // og overfladen (14 = Ki(47) - Latent(23) - Sensibel(10))
-        let E_atmos_down = (k * (52 + 14 * f)) / (1 - k * f);
-        let Lu = 14 + E_atmos_down;
-        let Direct = Lu * (1 - f);
-        let Atmos_abs = Lu * f;
-        let E_atmos_total = 52 + Atmos_abs;
-        let E_atmos_up = E_atmos_total - E_atmos_down;
+    // Beregner overfladetemperaturen i °C ud fra Budyko-type model
+    function calcTemp(S0, alpha, co2) {
+        // Effektiv stråletemperatur (Jordens overfladetemperatur UDEN drivhuseffekt)
+        const absorbed = (S0 / 4) * (1 - alpha);      // W/m² absorberet
+        const T_eff = Math.pow(absorbed / SIGMA, 0.25); // Kelvin (Stefan-Boltzmann)
 
-        // Estimer temperatur (Grov omregning fra strålingsenheder til Kelvin -> Celsius)
-        // 100 enheder svarer til ca. 340 W/m2.
-        let W_m2 = Lu * 3.4; 
-        let Temp_K = Math.pow(W_m2 / 5.67e-8, 0.25);
-        let Temp_C = Temp_K - 273.15;
-        
-        // --- Opdater UI Tekster ---
-        tempVal.textContent = Temp_C.toFixed(1);
-        txtLu.textContent = `-${Lu.toFixed(0)} (Lu Udstråling)`;
-        txtDirect.textContent = `-${Direct.toFixed(0)} (Direkte Lu)`;
-        txtAtmosAbs.textContent = `${Atmos_abs.toFixed(0)} (Absorberet)`;
-        txtAtmosUp.textContent = `-${E_atmos_up.toFixed(0)} (Langbølget udstråling)`;
-        txtAtmosDown.textContent = `${E_atmos_down.toFixed(0)} (Atmosfærisk modstråling)`;
+        // CO₂-drevet temperaturændring relativt til præ-industrielt niveau (280 ppm)
+        const dT_co2 = K_GH * Math.log(co2 / 280);    // Kelvin
 
-        // --- Opdater Pilens Tykkelse (Visuel feedback) ---
-        // Basis tykkelser skaleres relativt til deres nye værdier
-        pathLu.setAttribute('stroke-width', Math.max(5, 40 * (Lu / 119)));
-        pathDirect.setAttribute('stroke-width', Math.max(2, 8 * (Direct / 18)));
-        pathAtmosAbs.setAttribute('stroke-width', Math.max(5, 35 * (Atmos_abs / 101)));
-        pathAtmosUp.setAttribute('stroke-width', Math.max(5, 20 * (E_atmos_up / 48)));
-        pathAtmosDown.setAttribute('stroke-width', Math.max(5, 38 * (E_atmos_down / 105)));
+        // Total overfladetemperatur med naturlig + antropogen drivhuseffekt
+        const T_surface_K = T_eff + GH_BASE + dT_co2;
+        return T_surface_K - 273.15; // Konverter til Celsius
     }
 
-    // Event listener
-    slider.addEventListener('input', updateSimulation);
-    
-    // Initial kørsel
-    updateSimulation();
-</script>
+    // Reference: præ-industriel temperatur ~14°C
+    const T_REF = calcTemp(REF.S0, REF.alpha, REF.co2);
 
+
+    // ════════════════════════════════════════════════
+    // SKALA-KONFIGURATION (°C-range for temperaturskala)
+    // ════════════════════════════════════════════════
+    const SCALE_MIN = -5;
+    const SCALE_MAX = 28;
+
+    // Referencepunkter på skalaen
+    const MARKERS = [
+        { t: 9,   label: '~9°C  Sidste istid',    color: '#7bb8ee' },
+        { t: 14,  label: '~14°C Præ-industriel',  color: '#f5c842' },
+        { t: 15,  label: '~15°C Nutidig',         color: '#4caf87' },
+    ];
+
+
+    // ════════════════════════════════════════════════
+    // HJÆLPEFUNKTIONER
+    // ════════════════════════════════════════════════
+
+    // Mappe temperatur til position på skala (0=bund, 1=top)
+    function tempToFrac(t) {
+        return Math.max(0, Math.min(1, (t - SCALE_MIN) / (SCALE_MAX - SCALE_MIN)));
+    }
+
+    // Temperatur til farve: blå → grøn → gul → rød
+    function tempToColor(t) {
+        const delta = t - T_REF;
+        if (delta < -3)       return '#5588cc';
+        if (delta < -1)       return '#6699cc';
+        if (delta < 0)        return '#88aacc';
+        if (delta < 0.5)      return '#aaccaa';
+        if (delta < 1.5)      return '#f5c842';
+        if (delta < 3)        return '#ff9933';
+        return '#e94560';
+    }
+
+    // Formater afvigelse med + eller −
+    function fmtDelta(d) {
+        const sign = d >= 0 ? '+' : '';
+        return sign + d.toFixed(2) + ' °C';
+    }
+
+
+    // ════════════════════════════════════════════════
+    // OPDATER UI
+    // ════════════════════════════════════════════════
+    function update() {
+        const S0    = parseFloat(document.getElementById('sl-S0').value);
+        const alpha = parseFloat(document.getElementById('sl-alpha').value);
+        const co2   = parseFloat(document.getElementById('sl-co2').value);
+
+        // Opdater slider-værdier vist i UI
+        document.getElementById('val-S0').textContent    = S0.toFixed(0);
+        document.getElementById('val-alpha').textContent = alpha.toFixed(2);
+        document.getElementById('val-co2').textContent   = co2.toFixed(0);
+
+        // Beregn temperaturen
+        const T   = calcTemp(S0, alpha, co2);
+        const dT  = T - T_REF;
+        const col = tempToColor(T);
+
+        // Stor temperaturvisning
+        const dispEl = document.getElementById('temp-display');
+        dispEl.textContent = T.toFixed(1);
+        dispEl.style.color = col;
+
+        const dEl = document.getElementById('temp-delta');
+        dEl.textContent = fmtDelta(dT);
+        dEl.style.color = dT >= 0 ? '#e94560' : '#4dc9f6';
+
+        // Energifluxer
+        const ein  = S0 / 4;
+        const eref = ein * alpha;
+        const eabs = ein * (1 - alpha);
+        const eout = SIGMA * Math.pow(T + 273.15, 4); // σT⁴
+        // Drivhuseffekts-flux: ekstra energi fra atmosfæren tilbage til overfladen
+        // Approksimeres som den totale drivhus-effekt: eout - eabs
+        const egh  = eout - eabs;
+
+        document.getElementById('e-in').textContent   = ein.toFixed(1)  + ' W/m²';
+        document.getElementById('e-ref').textContent  = eref.toFixed(1) + ' W/m²';
+        document.getElementById('e-abs').textContent  = eabs.toFixed(1) + ' W/m²';
+        document.getElementById('e-out').textContent  = eout.toFixed(1) + ' W/m²';
+
+        // Opdater temperaturskala-pointer
+        const frac = tempToFrac(T);
+        const barH = 200; // px (matcher .scale-gradient height)
+        const pct  = (1 - frac) * 100;
+        document.getElementById('scale-pointer').style.bottom = pct + '%';
+
+        // SVG-diagram: opdater pile-bredder og labels
+        updateSVG(S0, alpha, co2, T, ein, eref, eabs, eout, egh);
+    }
+
+
+    // ════════════════════════════════════════════════
+    // OPDATER SVG ENERGIDIAGRAM
+    // ════════════════════════════════════════════════
+    function updateSVG(S0, alpha, co2, T, ein, eref, eabs, eout, egh) {
+        // Normalisering: 340 W/m² = 9px bredde
+        const norm = 340;
+        const scale = (val, base) => Math.max(1.5, (val / base) * base / norm * 9);
+
+        const wIn  = Math.max(2, (ein  / norm) * 9);
+        const wRef = Math.max(1, (eref / norm) * 9);
+        const wOut = Math.max(2, (eout / norm) * 10);
+        const wGH  = Math.max(1, Math.min(16, (egh  / norm) * 10));
+
+        // Pil 1: Indkommende sol
+        const s = document.getElementById('arr-solar-in');
+        s.setAttribute('stroke-width', wIn.toFixed(1));
+
+        // Pil 2: Reflekteret
+        const r = document.getElementById('arr-solar-ref');
+        r.setAttribute('stroke-width', wRef.toFixed(1));
+
+        // Pil 3: Udgående varme
+        const o = document.getElementById('arr-thermal-out');
+        o.setAttribute('stroke-width', wOut.toFixed(1));
+
+        // Pil 4: Drivhuseffekt (ned fra atmosfæren)
+        const g = document.getElementById('arr-greenhouse');
+        g.setAttribute('stroke-width', wGH.toFixed(1));
+        // Pilen vises kun fra atmosfæren (y=198) til midten af atmosfæren
+        // Bredere pil = stærkere drivhus
+
+        // Labels i SVG
+        document.getElementById('lbl-solar-in').textContent  = ein.toFixed(0)  + ' W/m²';
+        document.getElementById('lbl-solar-ref').textContent = eref.toFixed(0) + ' W/m²';
+        document.getElementById('lbl-thermal').textContent   = eout.toFixed(0) + ' W/m²';
+        document.getElementById('lbl-greenhouse').textContent= egh.toFixed(0)  + ' W/m²';
+
+        // CO₂ label
+        document.getElementById('svg-co2-label').textContent = 'CO₂: ' + co2.toFixed(0) + ' ppm';
+
+        // Temperatur i SVG
+        const col = tempToColor(T);
+        const svgTemp = document.getElementById('svg-temp');
+        svgTemp.textContent = T.toFixed(1) + ' °C';
+        svgTemp.setAttribute('fill', col);
+
+        const dT = T - T_REF;
+        document.getElementById('svg-delta').textContent = 'Δ = ' + fmtDelta(dT) + ' ift. præ-industriel';
+    }
+
+
+    // ════════════════════════════════════════════════
+    // SKALA-MARKØRER (bygges én gang)
+    // ════════════════════════════════════════════════
+    function buildScaleMarkers() {
+        const container = document.getElementById('scale-labels');
+        container.innerHTML = '';
+        MARKERS.forEach(m => {
+            const frac = tempToFrac(m.t);
+            const pct  = (1 - frac) * 100;
+            const el = document.createElement('div');
+            el.className = 'scale-mark';
+            el.style.bottom = pct + '%';
+            el.innerHTML = `
+                <div class="scale-mark-dot" style="background:${m.color}"></div>
+                <span class="scale-mark-text" style="color:${m.color}">${m.label}</span>
+            `;
+            container.appendChild(el);
+        });
+    }
+
+
+    // ════════════════════════════════════════════════
+    // SCENARIER
+    // ════════════════════════════════════════════════
+    const SCENARIOS = {
+        now: { S0: 1361, alpha: 0.30, co2: 420 },
+        ice: { S0: 1361, alpha: 0.45, co2: 200 },
+        rcp: { S0: 1361, alpha: 0.28, co2: 900 },
+    };
+
+    let activeScenario = null;
+
+    function setScenario(name) {
+        const sc = SCENARIOS[name];
+        document.getElementById('sl-S0').value    = sc.S0;
+        document.getElementById('sl-alpha').value = sc.alpha;
+        document.getElementById('sl-co2').value   = sc.co2;
+
+        // Skift aktiv-markering og vis/skjul beskrivelse
+        ['now', 'ice', 'rcp'].forEach(id => {
+            document.getElementById('sc-' + id).classList.toggle('active', id === name);
+            document.getElementById('desc-' + id).classList.toggle('visible', id === name);
+        });
+        activeScenario = name;
+        update();
+    }
+
+    function resetAll() {
+        document.getElementById('sl-S0').value    = DEFAULTS.S0;
+        document.getElementById('sl-alpha').value = DEFAULTS.alpha;
+        document.getElementById('sl-co2').value   = DEFAULTS.co2;
+
+        ['now', 'ice', 'rcp'].forEach(id => {
+            document.getElementById('sc-' + id).classList.remove('active');
+            document.getElementById('desc-' + id).classList.remove('visible');
+        });
+        activeScenario = null;
+        update();
+    }
+
+
+    // ════════════════════════════════════════════════
+    // EVENT LISTENERS – realtidsopdatering
+    // ════════════════════════════════════════════════
+    ['sl-S0', 'sl-alpha', 'sl-co2'].forEach(id => {
+        document.getElementById(id).addEventListener('input', () => {
+            // Fjern scenarie-markering ved manuel justering
+            if (activeScenario) {
+                document.getElementById('sc-' + activeScenario).classList.remove('active');
+                document.getElementById('desc-' + activeScenario).classList.remove('visible');
+                activeScenario = null;
+            }
+            update();
+        });
+    });
+
+
+    // ════════════════════════════════════════════════
+    // INITIALISERING
+    // ════════════════════════════════════════════════
+    buildScaleMarkers();
+    update();
+</script>
 </body>
 </html>
