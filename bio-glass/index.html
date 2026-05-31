@@ -6,128 +6,134 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Bio-Glass | Biologisk Simulation</title>
     <link rel="stylesheet" href="style.css" />
-    <!-- Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
-
     <div class="app-container">
-        <!-- Sidebar Navigation -->
+
+        <!-- Sidebar -->
         <aside class="sidebar">
-            <h1>Bio-Glass</h1>
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <div class="logo-icon">🔬</div>
+                    <h1>Bio-Glass</h1>
+                </div>
+                <div class="sidebar-subtitle">Biologisk Simulation</div>
+            </div>
+
+            <div class="nav-section-label">Moduler</div>
 
             <nav class="nav-menu">
-                <button id="btn-digestion" class="active" onclick="loadModule('digestion')">
-                    1. Fordøjelse (C)
+                <button id="btn-digestion" class="module-btn active" onclick="loadModule('digestion')">
+                    <div class="module-icon">🧪</div>
+                    <div class="module-text">
+                        <span class="module-name">Fordøjelse</span>
+                        <span class="module-sub">Enzymatisk nedbrydning</span>
+                    </div>
+                    <span class="module-badge">C</span>
                 </button>
-                <button id="btn-kinetics" onclick="loadModule('kinetics')">
-                    2. Enzymkinetik (B)
+                <button id="btn-kinetics" class="module-btn" onclick="loadModule('kinetics')">
+                    <div class="module-icon">⚡</div>
+                    <div class="module-text">
+                        <span class="module-name">Enzymkinetik</span>
+                        <span class="module-sub">Temp &amp; pH effekter</span>
+                    </div>
+                    <span class="module-badge">B</span>
                 </button>
-                <button id="btn-glycolysis" onclick="loadModule('glycolysis')">
-                    3. Glykolyse (A)
+                <button id="btn-glycolysis" class="module-btn" onclick="loadModule('glycolysis')">
+                    <div class="module-icon">⚙️</div>
+                    <div class="module-text">
+                        <span class="module-name">Glykolyse</span>
+                        <span class="module-sub">ATP produktion</span>
+                    </div>
+                    <span class="module-badge">A</span>
                 </button>
             </nav>
 
-            <!-- Dynamic Controls Panel -->
             <div id="controls-panel" class="controls-panel">
-                <!-- Injected by modules -->
-                <p>Vælg et modul.</p>
+                <p style="color: var(--text-muted); font-size: 0.8rem; padding: 6px;">Vælg et modul.</p>
             </div>
 
-            <div style="margin-top: auto;">
-                <a href="../biologi.html" style="text-decoration:none; color:#666; font-size:0.8rem;">← Tilbage til
-                    Biologi</a>
+            <div class="sidebar-footer">
+                <a href="../biologi.html" class="back-link">← Tilbage til Biologi</a>
             </div>
         </aside>
 
-        <!-- Main Workspace -->
+        <!-- Main workspace -->
         <main class="main-view">
-            <!-- The Glass Vessel -->
-            <div id="canvas-container">
-                <div id="overlay-info" class="module-info">
+            <div class="module-header">
+                <div class="module-title-block">
                     <h2 id="module-title">Velkommen</h2>
                     <p id="module-desc">Vælg en simulation til venstre for at starte.</p>
                 </div>
             </div>
 
-            <!-- Graph Overlay -->
-            <div id="chart-container">
-                <canvas id="data-chart"></canvas>
+            <div id="canvas-container">
+                <div id="canvas-overlay"></div>
+                <div id="chart-container">
+                    <canvas id="data-chart"></canvas>
+                </div>
             </div>
-
         </main>
     </div>
 
-    <!-- Engine & Modules -->
     <script src="js/engine.js"></script>
-
-    <!-- Module scripts will be loaded dynamically or just included -->
     <script src="js/digestion.js"></script>
     <script src="js/kinetics.js"></script>
     <script src="js/glycolysis.js"></script>
 
     <script>
-        // Main App Controller
-        const bioEngine = new BioEngine('canvas-container');
-        bioEngine.start();
-
+        let bioEngine;
         let currentModule = null;
 
         const modules = {
             digestion: {
                 title: "Enzimatisk Nedbrydning",
-                desc: "Amylase (gul) klipper stivelse. Pepsin (rød) klipper protein.",
+                desc: "Amylase (gul) klipper stivelse · Pepsin (rød) klipper protein · Juster pH for at skifte aktivitet",
                 start: () => DigestionModule.init(bioEngine),
-                stop: () => DigestionModule.teardown()
+                stop:  () => DigestionModule.teardown()
             },
             kinetics: {
                 title: "Enzymkinetik",
-                desc: "Undersøg hvordan Temperatur og pH påvirker reaktionshastigheden.",
+                desc: "Undersøg hvordan temperatur og pH påvirker reaktionshastigheden",
                 start: () => KineticsModule.init(bioEngine),
-                stop: () => KineticsModule.teardown()
+                stop:  () => KineticsModule.teardown()
             },
             glycolysis: {
                 title: "Glykolyse",
-                desc: "Energi-investering og regulering af PFK-1 med ATP.",
+                desc: "Glukose → Pyruvat · Energi-investering og PFK-1 feedback-hæmning",
                 start: () => GlycolysisModule.init(bioEngine),
-                stop: () => GlycolysisModule.teardown()
+                stop:  () => GlycolysisModule.teardown()
             }
         };
 
         function loadModule(moduleId) {
-            // UI Updates
-            document.querySelectorAll('.nav-menu button').forEach(b => b.classList.remove('active'));
-            document.querySelector(`#btn-${moduleId}`).classList.add('active');
-
+            document.querySelectorAll('.module-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('btn-' + moduleId).classList.add('active');
             document.getElementById('module-title').textContent = modules[moduleId].title;
-            document.getElementById('module-desc').textContent = modules[moduleId].desc;
+            document.getElementById('module-desc').textContent  = modules[moduleId].desc;
 
-            // Stop previous
             if (currentModule && modules[currentModule].stop) {
                 modules[currentModule].stop();
             }
 
-            // Clear World
             bioEngine.clearWorld();
-            document.getElementById('controls-panel').innerHTML = ''; // Clear controls
+            document.getElementById('controls-panel').innerHTML = '';
             document.getElementById('chart-container').style.display = 'none';
+            document.getElementById('canvas-overlay').innerHTML = '';
 
-            // Start new
             currentModule = moduleId;
-            if (modules[moduleId] && modules[moduleId].start) {
-                modules[moduleId].start();
-            }
+            bioEngine.resize();
+            modules[moduleId].start();
         }
 
-        // Initialize with Digestion
         window.onload = () => {
-            // ensure scripts loaded
-            setTimeout(() => loadModule('digestion'), 100);
+            bioEngine = new BioEngine('canvas-container');
+            bioEngine.start();
+            setTimeout(() => loadModule('digestion'), 80);
         };
-
     </script>
 </body>
-
 </html>

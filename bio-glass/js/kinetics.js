@@ -3,22 +3,23 @@
 const KineticsModule = {
     engineRef: null,
     updateLoop: null,
+    graphInterval: null,
     chart: null,
-
-    // Simulation state
-    temp: 37, // Celsius
+    temp: 37,
     ph: 7.0,
     productCount: 0,
+    lastProductCount: 0,
     startTime: 0,
 
     init: function (bioEngine) {
-        this.engineRef = bioEngine;
-        this.setupControls();
-        this.setupChart();
-        this.startTime = Date.now();
+        this.engineRef   = bioEngine;
         this.productCount = 0;
+        this.lastProductCount = 0;
+        this.startTime   = Date.now();
 
-        // Spawn many small substrates + Limited enzymes
+        this.setupControls();
+        this.setupOverlay();
+        this.setupChart();
         this.spawnSystem();
 
         bioEngine.setFluidViscosity(0.01);
@@ -26,7 +27,6 @@ const KineticsModule = {
         this.updateLoop = () => this.simLoop();
         Events.on(bioEngine.engine, 'beforeUpdate', this.updateLoop);
 
-        // Periodically update graph (every 1s)
         this.graphInterval = setInterval(() => this.updateGraph(), 1000);
     },
 
@@ -35,40 +35,132 @@ const KineticsModule = {
             Events.off(this.engineRef.engine, 'beforeUpdate', this.updateLoop);
         }
         clearInterval(this.graphInterval);
-        if (this.chart) this.chart.destroy();
+        if (this.chart) { this.chart.destroy(); this.chart = null; }
         this.engineRef = null;
     },
 
     setupControls: function () {
-        const panel = document.getElementById('controls-panel');
-        panel.innerHTML = `
-            <h3>Kinetik Parametre</h3>
+        document.getElementById('controls-panel').innerHTML = `
+            <h3>Parametre</h3>
+
             <div class="control-group">
-                <label>Temperatur: <span id="temp-val">37</span>°C</label>
+                <div class="control-label">
+                    <span>Temperatur</span>
+                    <span class="control-value" id="temp-val">37°C</span>
+                </div>
                 <input type="range" id="temp-input" min="0" max="80" step="1" value="37">
             </div>
+
             <div class="control-group">
-                <label>pH: <span id="ph-val">7.0</span></label>
+                <div class="control-label">
+                    <span>pH Værdi</span>
+                    <span class="control-value" id="ph-val">7.0</span>
+                </div>
                 <input type="range" id="ph-input" min="1" max="14" step="0.1" value="7.0">
             </div>
+
             <div class="control-group">
-                <button onclick="KineticsModule.reset()">Start Forfra</button>
+                <button class="btn-reset" onclick="KineticsModule.reset()">↺ Start Forfra</button>
             </div>
-            <p style="font-size:0.8rem">Optimal temp: 37-40°C. <br>Denaturerer ved >50°C.<br>Optimal pH: 7.0</p>
+
+            <div class="info-card">
+                <div class="info-row">
+                    <span class="info-dot" style="background:#fb923c; color:#fb923c;"></span>
+                    <span><strong>Enzym</strong> — bevæger sig hurtigere ved høj temp</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-dot" style="background:#60a5fa; color:#60a5fa;"></span>
+                    <span><strong>Substrat</strong> → omdannes til produkt</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-dot" style="background:#34d399; color:#34d399;"></span>
+                    <span><strong>Produkt</strong> — viser reaktionshastighed</span>
+                </div>
+                <div style="margin-top:8px; font-size:0.72rem; color: var(--text-muted);">
+                    Optimal temp: 37–40°C<br>
+                    Denatureres ved &gt;55°C<br>
+                    Optimal pH: 7.0
+                </div>
+            </div>
         `;
 
         document.getElementById('temp-input').addEventListener('input', (e) => {
             this.temp = parseInt(e.target.value);
-            document.getElementById('temp-val').textContent = this.temp;
+            document.getElementById('temp-val').textContent = this.temp + '°C';
+            this.updateTempOverlay();
             this.updateEnzymeVisuals();
         });
+
         document.getElementById('ph-input').addEventListener('input', (e) => {
             this.ph = parseFloat(e.target.value);
             document.getElementById('ph-val').textContent = this.ph.toFixed(1);
+            this.updatePhOverlay();
         });
 
-        // Show graph container
         document.getElementById('chart-container').style.display = 'block';
+    },
+
+    setupOverlay: function () {
+        document.getElementById('canvas-overlay').innerHTML = `
+            <div class="temp-gauge">
+                <div class="overlay-label">Temperatur</div>
+                <div class="temp-bar">
+                    <div class="temp-marker" id="temp-marker" style="left: 46%;"></div>
+                </div>
+                <div class="temp-readout">
+                    <span>0°C</span>
+                    <span id="temp-readout-val">37°C</span>
+                    <span>80°C</span>
+                </div>
+            </div>
+
+            <div class="ph-indicator" style="top: 14px; right: 14px;">
+                <div class="overlay-label">pH Indikator</div>
+                <div class="ph-strip">
+                    <div class="ph-marker" id="ph-marker" style="left: 43%;"></div>
+                </div>
+                <div class="ph-readout">
+                    <span>Surt (1)</span>
+                    <span id="ph-readout-val">7.0</span>
+                    <span>Basisk (14)</span>
+                </div>
+            </div>
+
+            <div class="rate-chip" id="rate-chip">
+                Reaktionsrate: <span class="rate-val" id="rate-val">0</span> produkter/s
+            </div>
+
+            <div class="denatured-alert" id="denatured-alert">
+                <h3>⚠ Enzym Denatureret</h3>
+                <p>Temperaturen overstiger 55°C — enzymet er inaktivt</p>
+            </div>
+        `;
+
+        // Position pH indicator below temp gauge
+        const phEl = document.querySelector('#canvas-overlay .ph-indicator');
+        if (phEl) phEl.style.top = '110px';
+
+        this.updateTempOverlay();
+        this.updatePhOverlay();
+    },
+
+    updateTempOverlay: function () {
+        const pct = (this.temp / 80) * 100;
+        const marker = document.getElementById('temp-marker');
+        const readout = document.getElementById('temp-readout-val');
+        if (marker)  marker.style.left = pct + '%';
+        if (readout) readout.textContent = this.temp + '°C';
+
+        const alert = document.getElementById('denatured-alert');
+        if (alert) alert.classList.toggle('show', this.isDenatured());
+    },
+
+    updatePhOverlay: function () {
+        const pct = ((this.ph - 1) / 13) * 100;
+        const marker = document.getElementById('ph-marker');
+        const readout = document.getElementById('ph-readout-val');
+        if (marker)  marker.style.left = pct + '%';
+        if (readout) readout.textContent = this.ph.toFixed(1);
     },
 
     setupChart: function () {
@@ -76,52 +168,79 @@ const KineticsModule = {
         this.chart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: [], // Time
+                labels: [],
                 datasets: [{
-                    label: 'Produkt',
-                    borderColor: '#4CAF50',
+                    label: 'Produkter',
+                    borderColor: '#34d399',
+                    backgroundColor: 'rgba(52, 211, 153, 0.08)',
                     data: [],
-                    fill: false,
-                    tension: 0.4
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 2,
+                    borderWidth: 2
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 animation: false,
+                plugins: {
+                    legend: { labels: { color: '#94a3b8', font: { size: 11 } } }
+                },
                 scales: {
-                    x: { title: { display: true, text: 'Tid (s)' } },
-                    y: { title: { display: true, text: 'Koncentration' }, beginAtZero: true }
+                    x: {
+                        title: { display: true, text: 'Tid (s)', color: '#64748b' },
+                        ticks: { color: '#64748b', font: { size: 10 } },
+                        grid: { color: 'rgba(255,255,255,0.05)' }
+                    },
+                    y: {
+                        title: { display: true, text: 'Antal produkter', color: '#64748b' },
+                        ticks: { color: '#64748b', font: { size: 10 } },
+                        grid: { color: 'rgba(255,255,255,0.05)' },
+                        beginAtZero: true
+                    }
                 }
             }
         });
     },
 
     reset: function () {
-        this.engineRef.clearWorld();
-        this.teardown(); // clear intervals
-        this.init(this.engineRef); // restart
+        const engine = this.engineRef;
+        this.teardown();
+        document.getElementById('canvas-overlay').innerHTML = '';
+        engine.clearWorld();
+        this.init(engine);
     },
 
     spawnSystem: function () {
         const world = this.engineRef.world;
+        const w = this.engineRef.width;
+        const h = this.engineRef.height;
 
-        // 5 Enzymes
         for (let i = 0; i < 5; i++) {
-            const enzyme = Bodies.circle(Math.random() * 600 + 100, Math.random() * 400 + 100, 25, {
+            const enzyme = Bodies.circle(
+                Math.random() * (w - 100) + 50,
+                Math.random() * (h - 100) + 50,
+                24, {
                 label: 'enzyme',
-                render: { fillStyle: '#FF9800' }, // Orange
+                render: { fillStyle: '#fb923c', strokeStyle: '#ea580c', lineWidth: 2 },
                 restitution: 1
             });
-            Body.setVelocity(enzyme, { x: (Math.random() - 0.5) * 5, y: (Math.random() - 0.5) * 5 });
+            enzyme.glowColor = '#fb923c';
+            Body.setVelocity(enzyme, {
+                x: (Math.random() - 0.5) * 6,
+                y: (Math.random() - 0.5) * 6
+            });
             Composite.add(world, enzyme);
         }
 
-        // 50 Substrates
-        for (let i = 0; i < 50; i++) {
-            const sub = Bodies.circle(Math.random() * 600 + 100, Math.random() * 400 + 100, 8, {
+        for (let i = 0; i < 55; i++) {
+            const sub = Bodies.circle(
+                Math.random() * (w - 80) + 40,
+                Math.random() * (h - 80) + 40,
+                7, {
                 label: 'substrate',
-                render: { fillStyle: '#2196F3' }, // Blue
+                render: { fillStyle: '#60a5fa', strokeStyle: '#3b82f6', lineWidth: 1 },
                 restitution: 1,
                 frictionAir: 0
             });
@@ -130,26 +249,21 @@ const KineticsModule = {
     },
 
     simLoop: function () {
-        // Temp affects Speed (Kinetic Energy)
-        // But extremely high temp = denaturation (stop)
-        // We model denaturation as a probability Factor, not just speed.
+        const all      = Composite.allBodies(this.engineRef.world);
+        const enzymes  = all.filter(b => b.label === 'enzyme');
+        const substrates = all.filter(b => b.label === 'substrate');
+        const denatured = this.isDenatured();
 
-        const enzymes = Composite.allBodies(this.engineRef.world).filter(b => b.label === 'enzyme');
-        const substrates = Composite.allBodies(this.engineRef.world).filter(b => b.label === 'substrate');
-
-        // Speed regulation
-        const speedFactor = Math.max(0.5, this.temp / 20); // Higher temp = faster move
+        const speedFactor = denatured ? 0.5 : Math.max(0.8, this.temp / 20);
 
         enzymes.forEach(e => {
-            // Keep them moving
+            e.glowColor = denatured ? '#6b7280' : '#fb923c';
             if (e.speed < speedFactor) {
-                const currentVel = e.velocity;
-                const scale = speedFactor / (e.speed || 1);
-                Body.setVelocity(e, { x: currentVel.x * scale, y: currentVel.y * scale });
+                const s = speedFactor / (e.speed || 1);
+                Body.setVelocity(e, { x: e.velocity.x * s, y: e.velocity.y * s });
             }
         });
 
-        // Collision/Reaction Logic
         for (let enzyme of enzymes) {
             for (let sub of substrates) {
                 if (Matter.Bounds.overlaps(enzyme.bounds, sub.bounds)) {
@@ -162,58 +276,47 @@ const KineticsModule = {
     },
 
     tryReaction: function (enzyme, sub) {
-        if (this.isDenatured()) return; // Heat dead
+        if (this.isDenatured()) return;
 
-        // pH Probability (Gaussian)
-        // Activity = e^(-(pH - opt)^2 / (2*sigma^2))
-        const optPH = 7.0;
-        const sigma = 1.5;
-        const phActivity = Math.exp(-Math.pow(this.ph - optPH, 2) / (2 * sigma * sigma));
+        const optPH   = 7.0, sigma = 1.5;
+        const phAct   = Math.exp(-Math.pow(this.ph - optPH, 2) / (2 * sigma * sigma));
+        const tempAct = Math.min(2.0, this.temp / 37.0);
+        const prob    = phAct * tempAct * 0.12;
 
-        // Temp Activation (Chemistry speeds up with temp until denaturation)
-        // Simple multiplier: (Temp/37)
-        const tempActivity = Math.min(2.0, this.temp / 37.0);
-
-        const totalProb = phActivity * tempActivity * 0.1; // Base chance
-
-        if (Math.random() < totalProb) {
-            // Reaction!
-            // Convert substrate to product
+        if (Math.random() < prob) {
             sub.label = 'product';
-            sub.render.fillStyle = '#4CAF50'; // Green
+            sub.render.fillStyle  = '#34d399';
+            sub.render.strokeStyle = '#059669';
             this.productCount++;
         }
     },
 
-    isDenatured: function () {
-        return this.temp > 55;
-    },
+    isDenatured: function () { return this.temp > 55; },
 
     updateEnzymeVisuals: function () {
         const enzymes = Composite.allBodies(this.engineRef.world).filter(b => b.label === 'enzyme');
+        const dead = this.isDenatured();
         enzymes.forEach(e => {
-            if (this.isDenatured()) {
-                e.render.fillStyle = '#9E9E9E'; // Gray/Dead
-            } else {
-                e.render.fillStyle = '#FF9800'; // Alive
-            }
+            e.render.fillStyle = dead ? '#6b7280' : '#fb923c';
+            e.glowColor        = dead ? null       : '#fb923c';
         });
     },
 
     updateGraph: function () {
         if (!this.chart) return;
+        const t    = Math.floor((Date.now() - this.startTime) / 1000);
+        const rate = this.productCount - this.lastProductCount;
+        this.lastProductCount = this.productCount;
 
-        const time = Math.floor((Date.now() - this.startTime) / 1000);
+        const el = document.getElementById('rate-val');
+        if (el) el.textContent = rate;
 
-        this.chart.data.labels.push(time);
+        this.chart.data.labels.push(t);
         this.chart.data.datasets[0].data.push(this.productCount);
-
-        // Keep only last 20 points
-        if (this.chart.data.labels.length > 20) {
+        if (this.chart.data.labels.length > 22) {
             this.chart.data.labels.shift();
             this.chart.data.datasets[0].data.shift();
         }
-
         this.chart.update();
     }
 };
