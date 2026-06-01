@@ -1,0 +1,19 @@
+{
+  "name": "Tidsregistrering",
+  "short_name": "Tid",
+  "description": "Tidsregistrering til gymnasielærer",
+  "display": "standalone",
+  "orientation": "portrait",
+  "start_url": "/tid/",
+  "scope": "/tid/",
+  "background_color": "#f8fafc",
+  "theme_color": "#3b82f6",
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

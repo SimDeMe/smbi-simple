@@ -3,48 +3,74 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Kontakt</title>
+  <title>Kontakt – smbi.dk</title>
   <link rel="stylesheet" href="style.css" />
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
 <body>
-  <header class="topbar">
-    <div class="brand"><a href="index.html">← Forside</a></div>
-    <nav class="nav">
-      <a href="biologi.html">Biologi</a>
-      <a href="geografi.html">Geografi</a>
-      <a href="born.html">Børn</a>
-      <a class="active" href="contact.html">Kontakt</a>
-    </nav>
+
+  <nav class="site-nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-brand">smbi.dk</a>
+      <div class="nav-links">
+        <a href="index.html" class="nav-link"><i class="ph ph-house"></i> Forside</a>
+        <a href="biologi.html" class="nav-link"><i class="ph ph-dna"></i> Biologi</a>
+        <a href="geografi.html" class="nav-link"><i class="ph ph-globe-hemisphere-west"></i> Geografi</a>
+        <a href="born.html" class="nav-link"><i class="ph ph-star"></i> Børn</a>
+        <a href="contact.html" class="nav-link active"><i class="ph ph-envelope"></i> Kontakt</a>
+      </div>
+    </div>
+  </nav>
+
+  <header class="page-hero">
+    <div class="page-hero-inner">
+      <div>
+        <div class="page-hero-eyebrow">smbi.dk</div>
+        <h1 class="page-hero-title"><em>Kontakt</em></h1>
+        <p class="page-hero-sub">Send en besked via formularen herunder.</p>
+      </div>
+    </div>
   </header>
 
   <main class="container">
-    <h1>Kontakt</h1>
-    <p class="muted">Send en besked via formularen – den går til min Formspree-inbox.</p>
 
-    <section class="card">
-      <form class="contact-form" action="https://formspree.io/f/maqwwlzd" method="POST">
-        <label>
-          Din email
-          <input type="email" name="email" required placeholder="navn@email.dk" />
-        </label>
-        <label>
-          Besked
-          <textarea name="message" required placeholder="Hej …"></textarea>
-        </label>
-        <button type="submit">Send</button>
-      </form>
-      <div id="formStatus" class="alert" aria-live="polite" style="display:none"></div>
-      <p class="muted small" style="margin-top:10px;">Formspree håndterer afsendelsen – jeg ser ikke din adresse andre steder.</p>
-    </section>
+    <p class="section-label">Skriv til mig</p>
+
+    <div class="card">
+      <div class="card-header">
+        <i class="ph ph-envelope card-header-icon"></i>
+        <span class="card-header-title">Besked</span>
+      </div>
+      <div class="card-body">
+        <form class="contact-form" action="https://formspree.io/f/maqwwlzd" method="POST">
+          <label>
+            Din email
+            <input type="email" name="email" required placeholder="navn@email.dk" />
+          </label>
+          <label>
+            Besked
+            <textarea name="message" required placeholder="Hej …"></textarea>
+          </label>
+          <button type="submit"><i class="ph ph-paper-plane-tilt"></i> Send</button>
+        </form>
+        <div id="formStatus" class="alert" aria-live="polite" style="display:none"></div>
+        <p class="muted small" style="margin-top:1rem;">Formspree håndterer afsendelsen – jeg ser ikke din adresse andre steder.</p>
+      </div>
+    </div>
+
   </main>
 
   <footer class="footer">
-    <span>© <span id="year"></span></span>
+    <div class="footer-inner">
+      <div>
+        <div class="footer-brand">smbi.dk</div>
+        <div class="footer-meta">Naturgeografi &amp; Biologi · © <span id="year"></span></div>
+      </div>
+    </div>
   </footer>
 
   <script src="site.js"></script>
   <script>
-    // Håndter submit med tak-besked uden side-skift
     const form = document.querySelector(".contact-form");
     const statusBox = document.getElementById("formStatus");
 

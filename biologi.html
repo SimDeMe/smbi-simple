@@ -1,77 +1,107 @@
 <!doctype html>
 <html lang="da">
-
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Biologi – oversigt</title>
+  <title>Biologi – smbi.dk</title>
   <link rel="stylesheet" href="style.css" />
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
-
 <body>
-  <header class="topbar">
-    <div class="brand"><a href="index.html">← Forside</a></div>
-    <nav class="nav">
-      <a class="active" href="biologi.html">Biologi</a>
-      <a href="geografi.html">Geografi</a>
-      <a href="born.html">Børn</a>
-      <a href="contact.html">Kontakt</a>
-    </nav>
+
+  <nav class="site-nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-brand">smbi.dk</a>
+      <div class="nav-links">
+        <a href="index.html" class="nav-link"><i class="ph ph-house"></i> Forside</a>
+        <a href="biologi.html" class="nav-link active"><i class="ph ph-dna"></i> Biologi</a>
+        <a href="geografi.html" class="nav-link"><i class="ph ph-globe-hemisphere-west"></i> Geografi</a>
+        <a href="born.html" class="nav-link"><i class="ph ph-star"></i> Børn</a>
+        <a href="contact.html" class="nav-link"><i class="ph ph-envelope"></i> Kontakt</a>
+      </div>
+    </div>
+  </nav>
+
+  <header class="page-hero forest">
+    <div class="page-hero-inner">
+      <div>
+        <div class="page-hero-eyebrow">smbi.dk · Fag</div>
+        <h1 class="page-hero-title"><em>Biologi</em></h1>
+        <p class="page-hero-sub">Animationer og simuleringer til biologiundervisningen på gymnasieniveau.</p>
+      </div>
+    </div>
   </header>
 
   <main class="container">
-    <h1>Biologi</h1>
 
     <div class="search-container">
-      <input type="text" id="search-input" placeholder="Søg efter emne eller tag..." aria-label="Søg">
+      <input type="text" id="search-input" placeholder="Søg efter emne eller tag…" aria-label="Søg">
     </div>
 
-    <section class="card">
-      <h2>Forløb</h2>
-      <ul class="list">
-        <li>
-          <a href="BiologiC/NatureNurture/index.html">Nature vs. Nurture</a>
-          <span class="tag">C</span><span class="tag">genetik</span>
-        </li>
-      </ul>
-    </section>
+    <p class="section-label">Forløb</p>
 
-    <section class="card">
-      <h2>Animationer / Simulationer</h2>
+    <div class="card">
+      <div class="card-header forest">
+        <i class="ph ph-book-open card-header-icon"></i>
+        <span class="card-header-title">Forløb</span>
+      </div>
+      <div class="card-body">
+        <ul class="list">
+          <li>
+            <a href="BiologiC/NatureNurture/index.html">Nature vs. Nurture</a>
+            <span class="tag">C</span><span class="tag">genetik</span>
+          </li>
+        </ul>
+      </div>
+    </div>
 
-      <ul class="list">
-        <li>
-          <a href="biologi/osmose.html">Osmose</a>
-          <span class="tag">C</span><span class="tag">celle</span>
-        </li>
-        <li>
-          <a href="biologi/bio-blocks.html">Bio-Blocks: fra mono- til disakkarider</a>
-          <span class="tag">C</span><span class="tag">kulhydrat</span>
-        </li>
-        <li>
-          <a href="biologi/enzymhastighed.html">Enzymhastighed &amp; temperatur</a>
-          <span class="tag">C</span><span class="tag">enzym</span>
-        </li>
-        <li>
-          <a href="biologi/KvindensCyklus/FinalSim.html">Kvindens hormonelle regulering</a>
-          <span class="tag">hormon</span><span class="tag">cyklus</span>
-        </li>
-        <li>
-          <a href="bio-glass.html">Amylase & Stivelse</a>
-          <span class="tag">B</span><span class="tag">enzym</span>
-        </li>
-        <li>
-          <a href="https://simdeme.github.io/CellSpil/">Cellens Evolution</a>
-        </li>
-      </ul>
-    </section>
+    <p class="section-label">Animationer &amp; Simulationer</p>
+
+    <div class="card">
+      <div class="card-header forest">
+        <i class="ph ph-play-circle card-header-icon"></i>
+        <span class="card-header-title">Animationer &amp; Simulationer</span>
+      </div>
+      <div class="card-body">
+        <ul class="list">
+          <li>
+            <a href="biologi/osmose.html">Osmose</a>
+            <span class="tag">C</span><span class="tag">celle</span>
+          </li>
+          <li>
+            <a href="biologi/bio-blocks.html">Bio-Blocks: fra mono- til disakkarider</a>
+            <span class="tag">C</span><span class="tag">kulhydrat</span>
+          </li>
+          <li>
+            <a href="biologi/enzymhastighed.html">Enzymhastighed &amp; temperatur</a>
+            <span class="tag">C</span><span class="tag">enzym</span>
+          </li>
+          <li>
+            <a href="biologi/KvindensCyklus/FinalSim.html">Kvindens hormonelle regulering</a>
+            <span class="tag">hormon</span><span class="tag">cyklus</span>
+          </li>
+          <li>
+            <a href="bio-glass/index.html">Amylase &amp; Stivelse</a>
+            <span class="tag">B</span><span class="tag">enzym</span>
+          </li>
+          <li>
+            <a href="https://simdeme.github.io/CellSpil/" target="_blank" rel="noopener">Cellens Evolution</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+
   </main>
 
   <footer class="footer">
-    <span>© <span id="year"></span></span>
+    <div class="footer-inner">
+      <div>
+        <div class="footer-brand">smbi.dk</div>
+        <div class="footer-meta">Naturgeografi &amp; Biologi · © <span id="year"></span></div>
+      </div>
+    </div>
   </footer>
 
   <script src="site.js"></script>
 </body>
-
 </html>

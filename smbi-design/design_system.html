@@ -1,0 +1,1851 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>smbi.dk — Design System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+<style>
+/* ================================================================
+   SMBI.DK DESIGN SYSTEM
+   Vintage Scientific Illustration × Academic Web
+   ================================================================ */
+
+:root {
+  /* FARVEPALETTE — udledt fra nautilus-illustrationen og naturfotos */
+  --cream:        #F5F0E8;
+  --cream-dark:   #EDE5D4;
+  --cream-deeper: #E0D5C0;
+  --parchment:    #D4C9A8;
+
+  --navy:         #1C2E44;
+  --navy-mid:     #243650;
+  --navy-light:   #2E4A6A;
+
+  --forest:       #1A3028;
+  --forest-mid:   #234035;
+  --forest-light: #2E5444;
+  --moss:         #4A7060;
+
+  --bronze:       #8B6914;
+  --bronze-mid:   #A07820;
+  --bronze-light: #C49A30;
+  --gold:         #D4A840;
+  --gold-pale:    #E8C96A;
+
+  --ink:          #1A1610;
+  --sepia:        #4A3C28;
+  --sepia-mid:    #6B5840;
+  --sepia-light:  #8C7860;
+
+  /* TYPOGRAFI */
+  --font-display: 'Cormorant Garamond', 'EB Garamond', serif;
+  --font-body:    'Crimson Pro', 'EB Garamond', serif;
+  --font-mono:    'Courier New', monospace;
+
+  /* SKYGGER */
+  --shadow-sm:  0 1px 4px rgba(26,22,16,0.12);
+  --shadow-md:  0 4px 16px rgba(26,22,16,0.16);
+  --shadow-lg:  0 12px 40px rgba(26,22,16,0.22);
+  --shadow-ink: 0 2px 8px rgba(26,22,16,0.30);
+
+  /* BORDERS */
+  --border-fine:  1px solid var(--parchment);
+  --border-sepia: 1px solid var(--sepia-mid);
+  --border-bronze: 1px solid var(--bronze);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--cream);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 18px;
+  line-height: 1.7;
+  /* Subtle papir-tekstur via SVG noise */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+}
+
+/* ================================================================
+   NAVIGATION LAYOUT
+   ================================================================ */
+
+.ds-nav {
+  position: sticky;
+  top: 0;
+  background: var(--navy);
+  border-bottom: 2px solid var(--bronze);
+  z-index: 100;
+  padding: 0 2rem;
+}
+
+.ds-nav-inner {
+  max-width: 1300px;
+  margin: 0 auto;
+  display: flex;
+  gap: 0;
+  overflow-x: auto;
+}
+
+.ds-nav a {
+  color: var(--parchment);
+  text-decoration: none;
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.85rem 1.2rem;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: color 0.2s, border-color 0.2s;
+  white-space: nowrap;
+}
+
+.ds-nav a:hover {
+  color: var(--gold);
+  border-bottom-color: var(--gold);
+}
+
+/* ================================================================
+   WRAPPER & SECTIONS
+   ================================================================ */
+
+.ds-wrapper {
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 0 2rem 4rem;
+}
+
+.ds-section {
+  padding: 4rem 0 3rem;
+  border-bottom: var(--border-fine);
+}
+
+.ds-section:last-child { border-bottom: none; }
+
+.ds-section-label {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--bronze-mid);
+  margin-bottom: 0.4rem;
+}
+
+.ds-section-title {
+  font-family: var(--font-display);
+  font-size: 2.4rem;
+  font-weight: 400;
+  color: var(--navy);
+  line-height: 1.2;
+  margin-bottom: 0.3rem;
+}
+
+.ds-section-sub {
+  font-style: italic;
+  color: var(--sepia-mid);
+  margin-bottom: 2.5rem;
+  font-size: 1.05rem;
+}
+
+/* ================================================================
+   HEADER
+   ================================================================ */
+
+.ds-header {
+  background: var(--navy);
+  padding: 5rem 2rem 4rem;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Dekorativ ramme-linje */
+.ds-header::before {
+  content: '';
+  position: absolute;
+  inset: 16px;
+  border: 1px solid rgba(212,168,64,0.25);
+  pointer-events: none;
+}
+
+.ds-header::after {
+  content: '';
+  position: absolute;
+  inset: 20px;
+  border: 1px solid rgba(212,168,64,0.12);
+  pointer-events: none;
+}
+
+.ds-header-inner {
+  max-width: 1300px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  align-items: center;
+}
+
+.ds-header-eyebrow {
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--gold-pale);
+  opacity: 0.7;
+  margin-bottom: 1rem;
+}
+
+.ds-header-title {
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  font-weight: 300;
+  color: var(--cream);
+  line-height: 1.1;
+  margin-bottom: 0.5rem;
+}
+
+.ds-header-title em {
+  font-style: italic;
+  color: var(--gold-pale);
+}
+
+.ds-header-subtitle {
+  font-family: var(--font-body);
+  font-size: 1.15rem;
+  color: var(--parchment);
+  opacity: 0.75;
+  font-style: italic;
+  margin-bottom: 2rem;
+}
+
+.ds-header-meta {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--bronze-light);
+  letter-spacing: 0.08em;
+  opacity: 0.6;
+}
+
+/* Nautilus placeholder i header */
+.ds-header-illustration {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.ds-header-illustration svg {
+  width: min(300px, 100%);
+  opacity: 0.15;
+}
+
+/* ================================================================
+   FARVER
+   ================================================================ */
+
+.color-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 1rem;
+}
+
+.color-swatch {
+  border-radius: 2px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.color-swatch-block {
+  height: 80px;
+  transition: transform 0.2s;
+}
+
+.color-swatch:hover .color-swatch-block { transform: scaleY(1.05); transform-origin: bottom; }
+
+.color-swatch-info {
+  background: white;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--cream-deeper);
+  border-top: none;
+}
+
+.color-swatch-name {
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--sepia);
+  display: block;
+}
+
+.color-swatch-var {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--sepia-mid);
+  display: block;
+  margin-top: 0.1rem;
+}
+
+.color-group-label {
+  grid-column: 1 / -1;
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--bronze);
+  border-bottom: var(--border-bronze);
+  padding-bottom: 0.3rem;
+  margin-top: 1rem;
+}
+
+/* ================================================================
+   TYPOGRAFI
+   ================================================================ */
+
+.type-specimen {
+  display: grid;
+  gap: 2rem;
+}
+
+.type-row {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 2rem;
+  align-items: start;
+  padding: 1.5rem 0;
+  border-bottom: 1px dashed var(--cream-deeper);
+}
+
+.type-row:last-child { border-bottom: none; }
+
+.type-meta {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--sepia-light);
+  padding-top: 0.4rem;
+}
+
+.type-meta strong {
+  display: block;
+  color: var(--sepia);
+  font-size: 0.75rem;
+  margin-bottom: 0.3rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-family: var(--font-display);
+}
+
+/* TYPE STYLES */
+.t-display-xl {
+  font-family: var(--font-display);
+  font-size: 3.5rem;
+  font-weight: 300;
+  color: var(--navy);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+
+.t-display-lg {
+  font-family: var(--font-display);
+  font-size: 2.5rem;
+  font-weight: 400;
+  color: var(--navy);
+  line-height: 1.2;
+}
+
+.t-display-md {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  font-weight: 400;
+  color: var(--navy);
+  font-style: italic;
+}
+
+.t-heading {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--sepia);
+  letter-spacing: 0.02em;
+}
+
+.t-subheading {
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--bronze-mid);
+}
+
+.t-body {
+  font-family: var(--font-body);
+  font-size: 1.05rem;
+  color: var(--sepia);
+  line-height: 1.75;
+  max-width: 60ch;
+}
+
+.t-caption {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-style: italic;
+  color: var(--sepia-light);
+}
+
+.t-mono {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--forest-light);
+  background: var(--cream-deeper);
+  padding: 0.15em 0.4em;
+  border-radius: 2px;
+}
+
+/* ================================================================
+   KOMPONENTER
+   ================================================================ */
+
+.component-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+.component-demo {
+  background: var(--cream-dark);
+  border: var(--border-fine);
+  border-radius: 2px;
+  padding: 2rem;
+  position: relative;
+}
+
+.component-demo-label {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.8rem;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--sepia-light);
+  letter-spacing: 0.08em;
+}
+
+/* KNAPPER */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  border: none;
+}
+
+.btn-primary {
+  background: var(--navy);
+  color: var(--cream);
+  padding: 0.75rem 1.75rem;
+  border: 2px solid var(--navy);
+}
+
+.btn-primary:hover {
+  background: transparent;
+  color: var(--navy);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--bronze);
+  padding: 0.75rem 1.75rem;
+  border: 1px solid var(--bronze);
+}
+
+.btn-secondary:hover {
+  background: var(--bronze);
+  color: var(--cream);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--sepia);
+  padding: 0.75rem 1.75rem;
+  border: 1px solid var(--parchment);
+}
+
+.btn-ghost:hover {
+  border-color: var(--sepia);
+  color: var(--navy);
+}
+
+.btn-forest {
+  background: var(--forest);
+  color: var(--cream);
+  padding: 0.75rem 1.75rem;
+  border: 2px solid var(--forest);
+}
+
+.btn-forest:hover {
+  background: var(--forest-light);
+}
+
+.btn-stack { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+
+/* KORT */
+.card {
+  background: var(--cream);
+  border: var(--border-fine);
+  border-radius: 2px;
+  overflow: hidden;
+  transition: box-shadow 0.3s, transform 0.3s;
+  box-shadow: var(--shadow-sm);
+}
+
+.card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.card-header {
+  background: var(--navy);
+  padding: 1.2rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border-bottom: 2px solid var(--bronze);
+}
+
+.card-header-icon {
+  color: var(--gold-pale);
+  font-size: 1.3rem;
+}
+
+.card-header-title {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--cream);
+  letter-spacing: 0.04em;
+}
+
+.card-header-subtitle {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--bronze-light);
+  margin-top: 0.1rem;
+}
+
+.card-body {
+  padding: 1.5rem;
+}
+
+.card-body p {
+  font-size: 0.95rem;
+  color: var(--sepia);
+  line-height: 1.7;
+  margin-bottom: 1rem;
+}
+
+.card-body p:last-child { margin-bottom: 0; }
+
+.card-footer {
+  padding: 1rem 1.5rem;
+  border-top: var(--border-fine);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--cream-dark);
+}
+
+.card-tag {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: var(--cream-deeper);
+  color: var(--sepia-mid);
+  padding: 0.2em 0.6em;
+  border: var(--border-fine);
+  border-radius: 1px;
+}
+
+/* SIMULATION KORT (det primære use case) */
+.sim-card {
+  background: var(--cream);
+  border: 1px solid var(--cream-deeper);
+  border-top: 3px solid var(--bronze);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.3s, transform 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+
+.sim-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 80px;
+  background: linear-gradient(135deg, var(--navy) 0%, var(--navy-mid) 100%);
+  opacity: 0.04;
+  pointer-events: none;
+}
+
+.sim-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-3px);
+}
+
+.sim-card-icon-area {
+  padding: 1.5rem 1.5rem 0.75rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.sim-card-icon {
+  width: 48px;
+  height: 48px;
+  background: var(--navy);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.sim-card-icon i {
+  color: var(--gold-pale);
+  font-size: 1.5rem;
+}
+
+.sim-card-number {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--bronze);
+  margin-bottom: 0.2rem;
+}
+
+.sim-card-title {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: var(--navy);
+  line-height: 1.2;
+}
+
+.sim-card-body {
+  padding: 0 1.5rem 1.5rem;
+}
+
+.sim-card-description {
+  font-size: 0.9rem;
+  color: var(--sepia-mid);
+  line-height: 1.65;
+  margin-bottom: 1rem;
+  font-style: italic;
+}
+
+.sim-card-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--bronze);
+  text-decoration: none;
+  border-bottom: 1px solid currentColor;
+  padding-bottom: 0.1rem;
+  transition: color 0.2s, gap 0.2s;
+}
+
+.sim-card-link:hover {
+  color: var(--navy);
+  gap: 0.6rem;
+}
+
+/* BADGES */
+.badge-row { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+.badge {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.25em 0.7em;
+  border-radius: 1px;
+}
+
+.badge-navy    { background: var(--navy);    color: var(--cream); }
+.badge-bronze  { background: var(--bronze);  color: var(--cream); }
+.badge-forest  { background: var(--forest);  color: var(--cream); }
+.badge-cream   { background: var(--cream-deeper); color: var(--sepia); border: var(--border-fine); }
+.badge-outline { background: transparent; color: var(--sepia); border: 1px solid var(--sepia-light); }
+
+/* IKONER */
+.icon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 0.75rem;
+}
+
+.icon-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1.2rem 0.5rem;
+  border: var(--border-fine);
+  border-radius: 2px;
+  background: white;
+  transition: background 0.2s, border-color 0.2s;
+  cursor: default;
+}
+
+.icon-item:hover {
+  background: var(--navy);
+  border-color: var(--navy);
+}
+
+.icon-item:hover i { color: var(--gold-pale); }
+.icon-item:hover span { color: var(--parchment); }
+
+.icon-item i {
+  font-size: 1.6rem;
+  color: var(--sepia);
+  transition: color 0.2s;
+}
+
+.icon-item span {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--sepia-light);
+  text-align: center;
+  letter-spacing: 0.05em;
+  transition: color 0.2s;
+}
+
+/* INPUT / FORMULARER */
+.field-group { display: flex; flex-direction: column; gap: 1rem; }
+
+.field-label {
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sepia);
+  margin-bottom: 0.3rem;
+  display: block;
+}
+
+.field-input {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  color: var(--ink);
+  background: white;
+  border: 1px solid var(--parchment);
+  border-bottom: 2px solid var(--sepia-light);
+  padding: 0.6rem 0.9rem;
+  width: 100%;
+  outline: none;
+  transition: border-color 0.2s;
+  border-radius: 1px;
+}
+
+.field-input:focus {
+  border-color: var(--parchment);
+  border-bottom-color: var(--bronze);
+}
+
+.field-input::placeholder { color: var(--sepia-light); font-style: italic; }
+
+/* CITATER / CALLOUT */
+.callout {
+  border-left: 3px solid var(--bronze);
+  background: linear-gradient(to right, var(--cream-darker, #ddd6c0) 0%, transparent 100%);
+  background: color-mix(in srgb, var(--cream-dark) 60%, transparent);
+  padding: 1.2rem 1.5rem;
+  margin: 1.5rem 0;
+}
+
+.callout-text {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-style: italic;
+  color: var(--sepia);
+  line-height: 1.6;
+}
+
+.callout-source {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--bronze);
+  margin-top: 0.5rem;
+  letter-spacing: 0.08em;
+}
+
+/* DIVIDER / ORNAMENT */
+.ornament-divider {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 2rem 0;
+  color: var(--parchment);
+}
+
+.ornament-divider::before,
+.ornament-divider::after {
+  content: '';
+  flex: 1;
+  border-top: 1px solid var(--parchment);
+}
+
+.ornament-divider i { font-size: 1rem; color: var(--bronze-light); }
+
+/* ================================================================
+   FOTO-SEKTIONER (inspirationsbilleder)
+   ================================================================ */
+
+.photo-section { margin-top: 2rem; }
+
+.photo-usage-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+.photo-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 2px;
+  box-shadow: var(--shadow-md);
+  aspect-ratio: 4/3;
+  border: var(--border-fine);
+}
+
+.photo-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.4s ease;
+}
+
+.photo-card:hover img { transform: scale(1.03); }
+
+.photo-card-overlay {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  background: linear-gradient(to top, rgba(28,46,68,0.9) 0%, transparent 100%);
+  padding: 2rem 1.5rem 1.2rem;
+}
+
+.photo-card-use {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--gold-pale);
+  margin-bottom: 0.3rem;
+}
+
+.photo-card-desc {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  color: var(--cream);
+  font-style: italic;
+}
+
+/* ================================================================
+   HERO EKSEMPEL
+   ================================================================ */
+
+.hero-example {
+  background: var(--navy);
+  position: relative;
+  overflow: hidden;
+  padding: 4rem 3rem;
+  border-radius: 2px;
+}
+
+/* Dekorativ vintage ramme */
+.hero-example::before {
+  content: '';
+  position: absolute;
+  inset: 12px;
+  border: 1px solid rgba(212,168,64,0.2);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.hero-example-grid {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 3rem;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+}
+
+.hero-eyebrow {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--gold-pale);
+  opacity: 0.7;
+  margin-bottom: 0.75rem;
+}
+
+.hero-title {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-weight: 300;
+  color: var(--cream);
+  line-height: 1.15;
+  margin-bottom: 1rem;
+}
+
+.hero-title em {
+  font-style: italic;
+  color: var(--gold-pale);
+}
+
+.hero-body {
+  font-family: var(--font-body);
+  color: var(--parchment);
+  opacity: 0.8;
+  font-size: 1rem;
+  line-height: 1.75;
+  margin-bottom: 2rem;
+  max-width: 50ch;
+}
+
+.hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; }
+
+.hero-figure {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Nautil-illustration som SVG dekorativt element */
+.nautilus-svg {
+  width: 260px;
+  height: 260px;
+  opacity: 0.18;
+  color: var(--gold-pale);
+}
+
+/* Fibonacci spiral SVG */
+.spiral-container {
+  width: 260px;
+  height: 260px;
+  position: relative;
+}
+
+/* ================================================================
+   SPACING SYSTEM
+   ================================================================ */
+
+.spacing-demo {
+  display: grid;
+  gap: 1rem;
+}
+
+.spacing-row {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.spacing-bar-wrap {
+  flex: 1;
+  height: 24px;
+  background: var(--cream-dark);
+  border: var(--border-fine);
+  position: relative;
+  overflow: hidden;
+}
+
+.spacing-bar {
+  height: 100%;
+  background: linear-gradient(to right, var(--navy), var(--navy-light));
+}
+
+.spacing-label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--sepia);
+  width: 100px;
+  flex-shrink: 0;
+}
+
+.spacing-value {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--sepia-light);
+  width: 60px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* ================================================================
+   NAVIGATION KOMPONENT
+   ================================================================ */
+
+.nav-example {
+  background: var(--navy);
+  border-bottom: 2px solid var(--bronze);
+  padding: 0 1.5rem;
+  border-radius: 2px 2px 0 0;
+}
+
+.nav-example-inner {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.nav-brand {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-style: italic;
+  color: var(--cream);
+  padding: 0.9rem 1.5rem 0.9rem 0;
+  border-right: 1px solid rgba(255,255,255,0.1);
+  margin-right: 1rem;
+  text-decoration: none;
+}
+
+.nav-links { display: flex; gap: 0; }
+
+.nav-link {
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--parchment);
+  text-decoration: none;
+  padding: 1rem 1rem;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  opacity: 0.75;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.nav-link:hover, .nav-link.active {
+  opacity: 1;
+  color: var(--gold-pale);
+  border-bottom-color: var(--gold);
+}
+
+/* ================================================================
+   UTILITY KLASSER
+   ================================================================ */
+
+.mt-1 { margin-top: 0.5rem; }
+.mt-2 { margin-top: 1rem; }
+.mt-3 { margin-top: 1.5rem; }
+.mt-4 { margin-top: 2rem; }
+
+.flex { display: flex; }
+.flex-wrap { flex-wrap: wrap; }
+.gap-1 { gap: 0.5rem; }
+.gap-2 { gap: 1rem; }
+.items-center { align-items: center; }
+
+/* ================================================================
+   SIDEBAR LAYOUT
+   ================================================================ */
+
+.two-col {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+/* ================================================================
+   RESPONSIVE
+   ================================================================ */
+
+@media (max-width: 900px) {
+  .component-grid { grid-template-columns: 1fr; }
+  .photo-usage-grid { grid-template-columns: 1fr; }
+  .ds-header-inner { grid-template-columns: 1fr; }
+  .ds-header-illustration { display: none; }
+  .hero-example-grid { grid-template-columns: 1fr; }
+  .hero-figure { display: none; }
+  .two-col { grid-template-columns: 1fr; }
+  .type-row { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 600px) {
+  .ds-section-title { font-size: 1.8rem; }
+  .color-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); }
+  .icon-grid { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); }
+}
+
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="ds-header">
+  <div class="ds-header-inner">
+    <div>
+      <div class="ds-header-eyebrow">smbi.dk — Design System</div>
+      <h1 class="ds-header-title">
+        Scientia<br><em>& Forma</em>
+      </h1>
+      <p class="ds-header-subtitle">
+        Vintage naturvidenskab møder moderne pædagogisk web
+      </p>
+      <p class="ds-header-meta">Version 1.0 &nbsp;·&nbsp; Naturgeografi &amp; Biologi &nbsp;·&nbsp; 2025</p>
+    </div>
+    <div class="ds-header-illustration" aria-hidden="true">
+      <!-- Stiliseret Fibonacci-spiral som reference til nautilus -->
+      <svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" color="#C49A30">
+        <rect x="10" y="10" width="280" height="280" stroke-width="0.5" opacity="0.3"/>
+        <rect x="20" y="20" width="260" height="260" stroke-width="0.3" opacity="0.2"/>
+        <circle cx="150" cy="150" r="130" stroke-width="0.5" opacity="0.4"/>
+        <path d="M 150,150
+                 Q 150,80 220,80
+                 Q 290,80 290,150
+                 Q 290,260 180,260
+                 Q 20,260 20,110
+                 Q 20,10 140,10"
+              stroke-width="1.5" opacity="0.8" stroke-linecap="round"/>
+        <path d="M 150,150
+                 Q 150,110 185,110
+                 Q 220,110 220,150
+                 Q 220,205 170,205
+                 Q 95,205 95,140"
+              stroke-width="1" opacity="0.6" stroke-linecap="round"/>
+        <path d="M 150,150
+                 Q 150,130 165,130
+                 Q 182,130 182,150
+                 Q 182,173 160,173
+                 Q 133,173 133,148"
+              stroke-width="0.8" opacity="0.5" stroke-linecap="round"/>
+        <circle cx="150" cy="150" r="4" fill="currentColor" opacity="0.5"/>
+        <!-- Krydshår -->
+        <line x1="150" y1="10" x2="150" y2="290" stroke-width="0.3" stroke-dasharray="4,6" opacity="0.2"/>
+        <line x1="10" y1="150" x2="290" y2="150" stroke-width="0.3" stroke-dasharray="4,6" opacity="0.2"/>
+        <!-- Ticks -->
+        <text x="155" y="25" fill="currentColor" font-size="9" font-family="'Courier New'" opacity="0.5">φ</text>
+        <text x="155" y="295" fill="currentColor" font-size="9" font-family="'Courier New'" opacity="0.5">0</text>
+        <text x="14" y="154" fill="currentColor" font-size="9" font-family="'Courier New'" opacity="0.5">π</text>
+      </svg>
+    </div>
+  </div>
+</header>
+
+<!-- NAVIGATION (til design system) -->
+<nav class="ds-nav">
+  <div class="ds-nav-inner">
+    <a href="#farver">Farver</a>
+    <a href="#typografi">Typografi</a>
+    <a href="#ikoner">Ikoner</a>
+    <a href="#komponenter">Komponenter</a>
+    <a href="#foto">Fotografi</a>
+    <a href="#hero">Hero</a>
+    <a href="#navigation">Navigation</a>
+    <a href="#spacing">Spacing</a>
+  </div>
+</nav>
+
+<div class="ds-wrapper">
+
+  <!-- ============================================================
+       1. FARVER
+       ============================================================ -->
+  <section class="ds-section" id="farver">
+    <div class="ds-section-label">01 — Palette</div>
+    <h2 class="ds-section-title">Farver</h2>
+    <p class="ds-section-sub">Udledt fra nautilus-illustrationen, bladdårernes mørkegrønne og havets turkis</p>
+
+    <div class="color-grid">
+
+      <div class="color-group-label">Pergament & Creme</div>
+
+      <div class="color-swatch">
+        <div class="color-swatch-block" style="background:#F5F0E8;"></div>
+        <div class="color-swatch-info">
+          <span class="color-swatch-name">Cream</span>
+          <span class="color-swatch-var">--cream · #F5F0E8</span>
+        </div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-swatch-block" style="background:#EDE5D4;"></div>
+        <div class="color-swatch-info">
+          <span class="color-swatch-name">Cream Dark</span>
+          <span class="color-swatch-var">--cream-dark · #EDE5D4</span>
+        </div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-swatch-block" style="background:#D4C9A8;"></div>
+        <div class="color-swatch-info">
+          <span class="color-swatch-name">Parchment</span>
+          <span class="color-swatch-var">--parchment · #D4C9A8</span>
+        </div>
+      </div>
+
+      <div class="color-group-label">Marineblå</div>
+
+      <div class="color-swatch">
+        <div class="color-swatch-block" style="background:#1C2E44;"></div>
+        <div class="color-swatch-info">
+          <span class="color-swatch-name">Navy</span>
+          <span class="color-swatch-var">--navy · #1C2E44</span>
+        </div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-swatch-block" style="background:#243650;"></div>
+        <div class="color-swatch-info">
+          <span class="color-swatch-name">Navy Mid</span>
+          <span class="color-swatch-var">--navy-mid · #243650</span>
+        </div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-swatch-block" style="background:#2E4A6A;"></div>
+        <div class="color-swatch-info">
+          <span class="color-swatch-name">Navy Light</span>
+          <span class="color-swatch-var">--navy-light · #2E4A6A</span>
+        </div>
+      </div>
+
+      <div class="color-group-label">Skovgrøn</div>
+
+      <div class="color-swatch">
+        <div class="color-swatch-block" style="background:#1A3028;"></div>
+        <div class="color-swatch-info">
+          <span class="color-swatch-name">Forest</span>
+          <span class="color-swatch-var">--forest · #1A3028</span>
+        </div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-swatch-block" style="background:#2E5444;"></div>
+        <div class="color-swatch-info">
+          <span class="color-swatch-name">Forest Light</span>
+          <span class="color-swatch-var">--forest-light · #2E5444</span>
+        </div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-swatch-block" style="background:#4A7060;"></div>
+        <div class="color-swatch-info">
+          <span class="color-swatch-name">Moss</span>
+          <span class="color-swatch-var">--moss · #4A7060</span>
+        </div>
+      </div>
+
+      <div class="color-group-label">Bronze & Guld (accent)</div>
+
+      <div class="color-swatch">
+        <div class="color-swatch-block" style="background:#8B6914;"></div>
+        <div class="color-swatch-info">
+          <span class="color-swatch-name">Bronze</span>
+          <span class="color-swatch-var">--bronze · #8B6914</span>
+        </div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-swatch-block" style="background:#C49A30;"></div>
+        <div class="color-swatch-info">
+          <span class="color-swatch-name">Bronze Light</span>
+          <span class="color-swatch-var">--bronze-light · #C49A30</span>
+        </div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-swatch-block" style="background:#D4A840;"></div>
+        <div class="color-swatch-info">
+          <span class="color-swatch-name">Gold</span>
+          <span class="color-swatch-var">--gold · #D4A840</span>
+        </div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-swatch-block" style="background:#E8C96A;"></div>
+        <div class="color-swatch-info">
+          <span class="color-swatch-name">Gold Pale</span>
+          <span class="color-swatch-var">--gold-pale · #E8C96A</span>
+        </div>
+      </div>
+
+      <div class="color-group-label">Blæk & Sepia</div>
+
+      <div class="color-swatch">
+        <div class="color-swatch-block" style="background:#1A1610;"></div>
+        <div class="color-swatch-info">
+          <span class="color-swatch-name">Ink</span>
+          <span class="color-swatch-var">--ink · #1A1610</span>
+        </div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-swatch-block" style="background:#4A3C28;"></div>
+        <div class="color-swatch-info">
+          <span class="color-swatch-name">Sepia</span>
+          <span class="color-swatch-var">--sepia · #4A3C28</span>
+        </div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-swatch-block" style="background:#8C7860;"></div>
+        <div class="color-swatch-info">
+          <span class="color-swatch-name">Sepia Light</span>
+          <span class="color-swatch-var">--sepia-light · #8C7860</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Farvekombinationer -->
+    <div class="mt-4">
+      <p class="ds-section-label" style="margin-bottom:1rem;">Anbefalede kombinationer</p>
+      <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap:1rem;">
+
+        <div style="background:var(--navy); padding:1.5rem; border-radius:2px; border-top:3px solid var(--bronze);">
+          <div style="font-family:var(--font-display); font-size:0.7rem; letter-spacing:0.15em; text-transform:uppercase; color:var(--gold-pale); opacity:0.7; margin-bottom:0.4rem;">Primær</div>
+          <div style="font-family:var(--font-display); font-size:1.3rem; color:var(--cream);">Navy + Bronze</div>
+          <div style="font-size:0.8rem; color:var(--parchment); opacity:0.6; margin-top:0.3rem; font-style:italic;">Headers, hero, navigation</div>
+        </div>
+
+        <div style="background:var(--cream); padding:1.5rem; border-radius:2px; border-top:3px solid var(--forest); border:1px solid var(--cream-deeper);">
+          <div style="font-family:var(--font-display); font-size:0.7rem; letter-spacing:0.15em; text-transform:uppercase; color:var(--bronze); margin-bottom:0.4rem;">Sekundær</div>
+          <div style="font-family:var(--font-display); font-size:1.3rem; color:var(--forest);">Cream + Forest</div>
+          <div style="font-size:0.8rem; color:var(--sepia-mid); margin-top:0.3rem; font-style:italic;">Biologi-sider, indhold</div>
+        </div>
+
+        <div style="background:var(--cream-dark); padding:1.5rem; border-radius:2px; border-top:3px solid var(--navy); border:1px solid var(--cream-deeper);">
+          <div style="font-family:var(--font-display); font-size:0.7rem; letter-spacing:0.15em; text-transform:uppercase; color:var(--bronze); margin-bottom:0.4rem;">Accent</div>
+          <div style="font-family:var(--font-display); font-size:1.3rem; color:var(--sepia);">Parchment + Sepia</div>
+          <div style="font-size:0.8rem; color:var(--sepia-light); margin-top:0.3rem; font-style:italic;">Brødtekst, baggrunde</div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ============================================================
+       2. TYPOGRAFI
+       ============================================================ -->
+  <section class="ds-section" id="typografi">
+    <div class="ds-section-label">02 — Type</div>
+    <h2 class="ds-section-title">Typografi</h2>
+    <p class="ds-section-sub">Cormorant Garamond til display · Crimson Pro til brødtekst · Courier New til data</p>
+
+    <div class="type-specimen">
+
+      <div class="type-row">
+        <div class="type-meta">
+          <strong>Display XL</strong>
+          Cormorant Garamond<br>
+          300 / 3.5rem<br>
+          Forsideoverskrifter
+        </div>
+        <div class="t-display-xl">Termohalin cirkulation</div>
+      </div>
+
+      <div class="type-row">
+        <div class="type-meta">
+          <strong>Display LG</strong>
+          Cormorant Garamond<br>
+          400 / 2.5rem<br>
+          Sektion-titler
+        </div>
+        <div class="t-display-lg">Strålingbalancen på Jorden</div>
+      </div>
+
+      <div class="type-row">
+        <div class="type-meta">
+          <strong>Display MD</strong>
+          Cormorant Garamond<br>
+          400 italic / 1.8rem<br>
+          Undertitler, citater
+        </div>
+        <div class="t-display-md">Haven i Havet — et tværfagligt forløb</div>
+      </div>
+
+      <div class="type-row">
+        <div class="type-meta">
+          <strong>Heading</strong>
+          Cormorant Garamond<br>
+          600 / 1.3rem<br>
+          Kortoverskrifter
+        </div>
+        <div class="t-heading">Energibalance-simulator</div>
+      </div>
+
+      <div class="type-row">
+        <div class="type-meta">
+          <strong>Subheading</strong>
+          Cormorant Garamond<br>
+          spaced caps / 0.78rem<br>
+          Labels, kategorier
+        </div>
+        <div class="t-subheading">Naturgeografi · Simulation</div>
+      </div>
+
+      <div class="type-row">
+        <div class="type-meta">
+          <strong>Body</strong>
+          Crimson Pro<br>
+          400 / 1.05rem<br>
+          Brødtekst, beskrivelser
+        </div>
+        <div class="t-body">Denne simulation illustrerer, hvordan Jordens strålingsbalance fungerer. Energi fra solen absorberes og re-emitteres som varme. Du kan justere albedo, drivhusgaseffekten og Solens luminositet og se, hvad der sker med Jordens gennemsnitstemperatur.</div>
+      </div>
+
+      <div class="type-row">
+        <div class="type-meta">
+          <strong>Caption</strong>
+          Crimson Pro<br>
+          400 italic / 0.85rem<br>
+          Figurforklaringer
+        </div>
+        <div class="t-caption">Fig. 3 — Tværsnit af nautilus pompilius med anatomiske betegnelser efter Owen (1832)</div>
+      </div>
+
+      <div class="type-row">
+        <div class="type-meta">
+          <strong>Mono</strong>
+          Courier New<br>
+          0.8rem<br>
+          Data, variabler, kode
+        </div>
+        <div style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+          <span class="t-mono">T = 288 K</span>
+          <span class="t-mono">α = 0.30</span>
+          <span class="t-mono">ΔT = +2.4°C</span>
+          <span class="t-mono">σ = 5.67×10⁻⁸</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Callout eksempel -->
+    <div class="callout mt-4">
+      <p class="callout-text">"Videnskab handler om at forstå naturens mønstre — fra nautilussens logaritmiske spiral til havstrømmenes globale kredsløb."</p>
+      <p class="callout-source">— smbi.dk · Undervisningsmateriale</p>
+    </div>
+
+  </section>
+
+
+  <!-- ============================================================
+       3. IKONER
+       ============================================================ -->
+  <section class="ds-section" id="ikoner">
+    <div class="ds-section-label">03 — Icons</div>
+    <h2 class="ds-section-title">Phosphor Icons</h2>
+    <p class="ds-section-sub">Til naturgeografi, biologi og pædagogiske interfaces — <code style="font-size:0.8rem; background:var(--cream-deeper); padding:0.1em 0.4em;">ph ph-[navn]</code></p>
+
+    <div class="icon-grid">
+      <div class="icon-item"><i class="ph ph-globe-hemisphere-west"></i><span>globe-hemisphere-west</span></div>
+      <div class="icon-item"><i class="ph ph-tree"></i><span>tree</span></div>
+      <div class="icon-item"><i class="ph ph-thermometer"></i><span>thermometer</span></div>
+      <div class="icon-item"><i class="ph ph-drop"></i><span>drop</span></div>
+      <div class="icon-item"><i class="ph ph-sun"></i><span>sun</span></div>
+      <div class="icon-item"><i class="ph ph-wind"></i><span>wind</span></div>
+      <div class="icon-item"><i class="ph ph-waves"></i><span>waves</span></div>
+      <div class="icon-item"><i class="ph ph-mountains"></i><span>mountains</span></div>
+      <div class="icon-item"><i class="ph ph-leaf"></i><span>leaf</span></div>
+      <div class="icon-item"><i class="ph ph-atom"></i><span>atom</span></div>
+      <div class="icon-item"><i class="ph ph-dna"></i><span>dna</span></div>
+      <div class="icon-item"><i class="ph ph-microscope"></i><span>microscope</span></div>
+      <div class="icon-item"><i class="ph ph-flask"></i><span>flask</span></div>
+      <div class="icon-item"><i class="ph ph-chart-line-up"></i><span>chart-line-up</span></div>
+      <div class="icon-item"><i class="ph ph-calculator"></i><span>calculator</span></div>
+      <div class="icon-item"><i class="ph ph-student"></i><span>student</span></div>
+      <div class="icon-item"><i class="ph ph-book-open"></i><span>book-open</span></div>
+      <div class="icon-item"><i class="ph ph-graduation-cap"></i><span>graduation-cap</span></div>
+      <div class="icon-item"><i class="ph ph-file-text"></i><span>file-text</span></div>
+      <div class="icon-item"><i class="ph ph-question"></i><span>question</span></div>
+      <div class="icon-item"><i class="ph ph-arrow-right"></i><span>arrow-right</span></div>
+      <div class="icon-item"><i class="ph ph-play-circle"></i><span>play-circle</span></div>
+      <div class="icon-item"><i class="ph ph-sliders"></i><span>sliders</span></div>
+      <div class="icon-item"><i class="ph ph-clock-countdown"></i><span>clock-countdown</span></div>
+    </div>
+
+    <div class="mt-3">
+      <p class="ds-section-label" style="margin-bottom:0.75rem;">Ikonstørrelser</p>
+      <div class="flex items-center gap-2 flex-wrap" style="gap:1.5rem;">
+        <div style="text-align:center;">
+          <i class="ph ph-globe-hemisphere-west" style="font-size:1rem; color:var(--sepia);"></i>
+          <div style="font-family:var(--font-mono); font-size:0.65rem; color:var(--sepia-light); margin-top:0.3rem;">1rem · sm</div>
+        </div>
+        <div style="text-align:center;">
+          <i class="ph ph-globe-hemisphere-west" style="font-size:1.5rem; color:var(--sepia);"></i>
+          <div style="font-family:var(--font-mono); font-size:0.65rem; color:var(--sepia-light); margin-top:0.3rem;">1.5rem · md</div>
+        </div>
+        <div style="text-align:center;">
+          <i class="ph ph-globe-hemisphere-west" style="font-size:2rem; color:var(--sepia);"></i>
+          <div style="font-family:var(--font-mono); font-size:0.65rem; color:var(--sepia-light); margin-top:0.3rem;">2rem · lg</div>
+        </div>
+        <div style="text-align:center;">
+          <i class="ph ph-globe-hemisphere-west" style="font-size:3rem; color:var(--sepia);"></i>
+          <div style="font-family:var(--font-mono); font-size:0.65rem; color:var(--sepia-light); margin-top:0.3rem;">3rem · xl</div>
+        </div>
+        <div style="text-align:center;">
+          <i class="ph ph-globe-hemisphere-west" style="font-size:1.5rem; color:var(--cream); background:var(--navy); padding:0.5rem; border-radius:2px;"></i>
+          <div style="font-family:var(--font-mono); font-size:0.65rem; color:var(--sepia-light); margin-top:0.3rem;">Navy bg</div>
+        </div>
+        <div style="text-align:center;">
+          <i class="ph ph-globe-hemisphere-west" style="font-size:1.5rem; color:var(--cream); background:var(--forest); padding:0.5rem; border-radius:2px;"></i>
+          <div style="font-family:var(--font-mono); font-size:0.65rem; color:var(--sepia-light); margin-top:0.3rem;">Forest bg</div>
+        </div>
+        <div style="text-align:center;">
+          <i class="ph ph-globe-hemisphere-west" style="font-size:1.5rem; color:var(--cream); background:var(--bronze); padding:0.5rem; border-radius:2px;"></i>
+          <div style="font-family:var(--font-mono); font-size:0.65rem; color:var(--sepia-light); margin-top:0.3rem;">Bronze bg</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ============================================================
+       4. KOMPONENTER
+       ============================================================ -->
+  <section class="ds-section" id="komponenter">
+    <div class="ds-section-label">04 — Components</div>
+    <h2 class="ds-section-title">Komponenter</h2>
+    <p class="ds-section-sub">Genbrugbare byggeklodser til smbi.dk</p>
+
+    <!-- KNAPPER -->
+    <h3 style="font-family:var(--font-display); font-size:1.1rem; color:var(--sepia); letter-spacing:0.08em; margin-bottom:1rem; border-bottom: 1px dashed var(--parchment); padding-bottom:0.5rem;">Knapper</h3>
+    <div class="btn-stack" style="margin-bottom:2rem;">
+      <button class="btn btn-primary"><i class="ph ph-play-circle"></i> Start simulation</button>
+      <button class="btn btn-secondary"><i class="ph ph-book-open"></i> Læs mere</button>
+      <button class="btn btn-forest"><i class="ph ph-leaf"></i> Biologi</button>
+      <button class="btn btn-ghost"><i class="ph ph-arrow-right"></i> Se alle</button>
+    </div>
+
+    <!-- BADGES -->
+    <h3 style="font-family:var(--font-display); font-size:1.1rem; color:var(--sepia); letter-spacing:0.08em; margin-bottom:1rem; border-bottom: 1px dashed var(--parchment); padding-bottom:0.5rem;">Badges</h3>
+    <div class="badge-row" style="margin-bottom:2rem;">
+      <span class="badge badge-navy">Naturgeografi</span>
+      <span class="badge badge-forest">Biologi</span>
+      <span class="badge badge-bronze">Simulation</span>
+      <span class="badge badge-cream">HF niveau</span>
+      <span class="badge badge-outline">2025</span>
+    </div>
+
+    <!-- ORNAMENT -->
+    <div class="ornament-divider">
+      <i class="ph ph-flower-lotus"></i>
+    </div>
+
+    <!-- KORT -->
+    <h3 style="font-family:var(--font-display); font-size:1.1rem; color:var(--sepia); letter-spacing:0.08em; margin-bottom:1rem; border-bottom: 1px dashed var(--parchment); padding-bottom:0.5rem;">Indholdskort</h3>
+    <div class="component-grid" style="margin-bottom:2rem;">
+
+      <div class="card">
+        <div class="card-header">
+          <i class="ph ph-thermometer card-header-icon"></i>
+          <div>
+            <div class="card-header-title">Strålingbalance</div>
+            <div class="card-header-subtitle">Naturgeografi · Simulation</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <p>Interaktiv Budyko-model der viser sammenhængen mellem solindstråling, albedo og Jordens gennemsnitstemperatur. Baseret på energibalanceligningen.</p>
+        </div>
+        <div class="card-footer">
+          <span class="card-tag">Budyko EBM</span>
+          <button class="btn btn-secondary" style="padding:0.4rem 1rem; font-size:0.75rem;"><i class="ph ph-arrow-right"></i> Åbn</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header" style="background:var(--forest);">
+          <i class="ph ph-dna card-header-icon"></i>
+          <div>
+            <div class="card-header-title">DNA-replikation</div>
+            <div class="card-header-subtitle">Biologi · Animation</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <p>Visuel animation af DNA-replikationsprocessen med helicase, polymerase og ligase. Trinvis forklaring til HF-niveau.</p>
+        </div>
+        <div class="card-footer">
+          <span class="card-tag">Molekylærbiologi</span>
+          <button class="btn btn-forest" style="padding:0.4rem 1rem; font-size:0.75rem; background:var(--forest); color:var(--cream); border:none;"><i class="ph ph-arrow-right"></i> Åbn</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- SIMULATION KORT -->
+    <h3 style="font-family:var(--font-display); font-size:1.1rem; color:var(--sepia); letter-spacing:0.08em; margin-bottom:1rem; border-bottom: 1px dashed var(--parchment); padding-bottom:0.5rem;">Simulation-kort (primært format)</h3>
+    <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:1.5rem; margin-bottom:2rem;">
+
+      <div class="sim-card">
+        <div class="sim-card-icon-area">
+          <div class="sim-card-icon"><i class="ph ph-sun"></i></div>
+          <div>
+            <div class="sim-card-number">Sim. 01</div>
+            <h3 class="sim-card-title">Strålingbalance-simulator</h3>
+          </div>
+        </div>
+        <div class="sim-card-body">
+          <p class="sim-card-description">Udforsk Jordens energibalance ved at justere albedo og drivhusgaseffekten.</p>
+          <a href="#" class="sim-card-link">Åbn simulation <i class="ph ph-arrow-right"></i></a>
+        </div>
+      </div>
+
+      <div class="sim-card" style="border-top-color: var(--forest);">
+        <div class="sim-card-icon-area">
+          <div class="sim-card-icon" style="background:var(--forest);"><i class="ph ph-waves"></i></div>
+          <div>
+            <div class="sim-card-number">Sim. 02</div>
+            <h3 class="sim-card-title">Termohalin Cirkulation</h3>
+          </div>
+        </div>
+        <div class="sim-card-body">
+          <p class="sim-card-description">Visualiser den globale havvandscirkulation drevet af temperatur og saltindhold.</p>
+          <a href="#" class="sim-card-link" style="color:var(--forest);">Åbn simulation <i class="ph ph-arrow-right"></i></a>
+        </div>
+      </div>
+
+      <div class="sim-card" style="border-top-color: var(--sepia-mid);">
+        <div class="sim-card-icon-area">
+          <div class="sim-card-icon" style="background:var(--sepia);"><i class="ph ph-recycle"></i></div>
+          <div>
+            <div class="sim-card-number">Sim. 03</div>
+            <h3 class="sim-card-title">Kulstofkredsløbet</h3>
+          </div>
+        </div>
+        <div class="sim-card-body">
+          <p class="sim-card-description">Interaktivt flowdiagram over kulstoffets veje mellem atmosfære, hav og biota.</p>
+          <a href="#" class="sim-card-link" style="color:var(--sepia);">Åbn simulation <i class="ph ph-arrow-right"></i></a>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- FORM ELEMENTS -->
+    <h3 style="font-family:var(--font-display); font-size:1.1rem; color:var(--sepia); letter-spacing:0.08em; margin-bottom:1rem; border-bottom: 1px dashed var(--parchment); padding-bottom:0.5rem;">Formular-elementer</h3>
+    <div style="max-width:480px; margin-bottom:2rem;">
+      <div class="field-group">
+        <div>
+          <label class="field-label">Søg i materialer</label>
+          <input class="field-input" type="text" placeholder="fx termohalin, albedo, fotosyntese…">
+        </div>
+        <div>
+          <label class="field-label">Fag</label>
+          <select class="field-input" style="cursor:pointer;">
+            <option>Naturgeografi</option>
+            <option>Biologi</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+
+  <!-- ============================================================
+       5. FOTOGRAFI
+       ============================================================ -->
+  <section class="ds-section" id="foto">
+    <div class="ds-section-label">05 — Photography</div>
+    <h2 class="ds-section-title">Fotografi & Illustrationer</h2>
+    <p class="ds-section-sub">Dine uploadede billeder og deres anbefalede brug på smbi.dk</p>
+
+    <div class="photo-usage-grid">
+
+      <div class="photo-card" style="aspect-ratio:3/4; max-height:420px;">
+        <img src="7649748832_424acce5b5_o.jpg" alt="Nautilus illustration">
+        <div class="photo-card-overlay">
+          <div class="photo-card-use">Dekorativt element</div>
+          <div class="photo-card-desc">Vintage nautilus-illustration — hero, baggrund, sektion-ornament</div>
+        </div>
+      </div>
+
+      <div style="display:grid; gap:1rem;">
+
+        <div class="photo-card" style="aspect-ratio:16/9;">
+          <img src="timothy-dykes-eZWYSz-Fjdw-unsplash.jpg" alt="Blad nærbillede">
+          <div class="photo-card-overlay">
+            <div class="photo-card-use">Biologi-sektion</div>
+            <div class="photo-card-desc">Bladnerver som hero for biologiforløb</div>
+          </div>
+        </div>
+
+        <div class="photo-card" style="aspect-ratio:16/9;">
+          <img src="hugh-whyte-J8bU6-tAGy8-unsplash.jpg" alt="Luftfoto kyst">
+          <div class="photo-card-overlay">
+            <div class="photo-card-use">Naturgeografi-sektion</div>
+            <div class="photo-card-desc">Kyst og skov som baggrundsbillede for geografi-emner</div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="photo-usage-grid mt-3" style="grid-template-columns:1fr;">
+      <div class="photo-card" style="aspect-ratio:21/9; max-height:280px;">
+        <img src="ashraful-islam-pRt3JVYlJho-unsplash.jpg" alt="DNA dobbeltspiral">
+        <div class="photo-card-overlay">
+          <div class="photo-card-use">Biologi-hero (bred)</div>
+          <div class="photo-card-desc">DNA-dobbeltspiral — bred hero for molekylærbiologi og genetik</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Anbefalinger -->
+    <div class="mt-3" style="background:var(--cream-dark); border:var(--border-fine); padding:1.5rem; border-radius:2px; border-left:3px solid var(--bronze);">
+      <p class="ds-section-label" style="margin-bottom:0.75rem;">Brug-anbefalinger</p>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+        <div>
+          <p style="font-family:var(--font-display); font-size:0.9rem; font-weight:600; color:var(--navy); margin-bottom:0.3rem;"><i class="ph ph-check" style="color:var(--forest-light);"></i> Gør dette</p>
+          <ul style="font-size:0.88rem; color:var(--sepia); list-style:none; display:flex; flex-direction:column; gap:0.4rem;">
+            <li>Brug nautilus-illustrationen let gennemsigtig som baggrundsmønster</li>
+            <li>Overlay mørkt gradient over fotos for at sikre læsbar tekst</li>
+            <li>Brug bladbilledet til at introducere biologiafsnit</li>
+            <li>Luftfotoet fungerer som geografisk "atmosfære"</li>
+          </ul>
+        </div>
+        <div>
+          <p style="font-family:var(--font-display); font-size:0.9rem; font-weight:600; color:var(--navy); margin-bottom:0.3rem;"><i class="ph ph-x" style="color:#8B2020;"></i> Undgå</p>
+          <ul style="font-size:0.88rem; color:var(--sepia); list-style:none; display:flex; flex-direction:column; gap:0.4rem;">
+            <li>Stretch/crop nautilus-illustrationen ujævnt</li>
+            <li>Brug DNA-billedet (hvid baggrund) direkte som baggrund — crop eller vignettér det</li>
+            <li>For mange billeder på én side — ét stærkt billede er nok</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ============================================================
+       6. HERO EKSEMPEL
+       ============================================================ -->
+  <section class="ds-section" id="hero">
+    <div class="ds-section-label">06 — Layout</div>
+    <h2 class="ds-section-title">Hero-sektion</h2>
+    <p class="ds-section-sub">Komplet eksempel på en hero-komponent til forsiden af smbi.dk</p>
+
+    <div class="hero-example">
+      <div class="hero-example-grid">
+        <div>
+          <div class="hero-eyebrow">Naturgeografi & Biologi · smbi.dk</div>
+          <h2 class="hero-title">Interaktive <em>simuleringer</em> til din undervisning</h2>
+          <p class="hero-body">Udforsk Jordens systemer — fra strålingbalancen til kulstofkredsløbet — med digitale simuleringer designet til gymnasieniveau.</p>
+          <div class="hero-actions">
+            <button class="btn btn-primary" style="background:var(--bronze); border-color:var(--bronze); color:var(--cream); padding:0.9rem 2rem;"><i class="ph ph-play-circle"></i> Se simuleringer</button>
+            <button class="btn btn-ghost" style="color:var(--parchment); border-color:rgba(255,255,255,0.25); padding:0.9rem 2rem;"><i class="ph ph-book-open"></i> Undervisningsmaterialer</button>
+          </div>
+        </div>
+        <div class="hero-figure" aria-hidden="true">
+          <svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#C49A30" class="nautilus-svg" style="opacity:0.25; width:260px; height:260px;">
+            <circle cx="150" cy="150" r="128" stroke-width="0.5"/>
+            <path d="M 150,150 Q 150,80 220,80 Q 290,80 290,150 Q 290,260 180,260 Q 20,260 20,110 Q 20,10 140,10" stroke-width="2" stroke-linecap="round"/>
+            <path d="M 150,150 Q 150,110 185,110 Q 220,110 220,150 Q 220,205 170,205 Q 95,205 95,140" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M 150,150 Q 150,130 165,130 Q 182,130 182,150 Q 182,173 160,173 Q 133,173 133,148" stroke-width="1" stroke-linecap="round"/>
+            <circle cx="150" cy="150" r="6" fill="#C49A30"/>
+            <line x1="150" y1="22" x2="150" y2="278" stroke-width="0.3" stroke-dasharray="3,8"/>
+            <line x1="22" y1="150" x2="278" y2="150" stroke-width="0.3" stroke-dasharray="3,8"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ============================================================
+       7. NAVIGATION
+       ============================================================ -->
+  <section class="ds-section" id="navigation">
+    <div class="ds-section-label">07 — Navigation</div>
+    <h2 class="ds-section-title">Navigation</h2>
+    <p class="ds-section-sub">Top-navigation til smbi.dk med aktiv-tilstand</p>
+
+    <div class="nav-example">
+      <div class="nav-example-inner">
+        <a href="#" class="nav-brand">smbi.dk</a>
+        <nav class="nav-links">
+          <a href="#" class="nav-link active"><i class="ph ph-house"></i> Forside</a>
+          <a href="#" class="nav-link"><i class="ph ph-globe-hemisphere-west"></i> Geografi</a>
+          <a href="#" class="nav-link"><i class="ph ph-dna"></i> Biologi</a>
+          <a href="#" class="nav-link"><i class="ph ph-calculator"></i> Simuleringer</a>
+          <a href="#" class="nav-link"><i class="ph ph-book-open"></i> Materialer</a>
+        </nav>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ============================================================
+       8. SPACING
+       ============================================================ -->
+  <section class="ds-section" id="spacing">
+    <div class="ds-section-label">08 — Spacing</div>
+    <h2 class="ds-section-title">Spacing System</h2>
+    <p class="ds-section-sub">Konsekvent rytme baseret på 0.25rem-trin</p>
+
+    <div class="spacing-demo">
+      <div class="spacing-row"><span class="spacing-label">--space-1</span><div class="spacing-bar-wrap"><div class="spacing-bar" style="width:2%;"></div></div><span class="spacing-value">0.25rem</span></div>
+      <div class="spacing-row"><span class="spacing-label">--space-2</span><div class="spacing-bar-wrap"><div class="spacing-bar" style="width:4%;"></div></div><span class="spacing-value">0.5rem</span></div>
+      <div class="spacing-row"><span class="spacing-label">--space-3</span><div class="spacing-bar-wrap"><div class="spacing-bar" style="width:6%;"></div></div><span class="spacing-value">0.75rem</span></div>
+      <div class="spacing-row"><span class="spacing-label">--space-4</span><div class="spacing-bar-wrap"><div class="spacing-bar" style="width:8%;"></div></div><span class="spacing-value">1rem</span></div>
+      <div class="spacing-row"><span class="spacing-label">--space-6</span><div class="spacing-bar-wrap"><div class="spacing-bar" style="width:12%;"></div></div><span class="spacing-value">1.5rem</span></div>
+      <div class="spacing-row"><span class="spacing-label">--space-8</span><div class="spacing-bar-wrap"><div class="spacing-bar" style="width:18%;"></div></div><span class="spacing-value">2rem</span></div>
+      <div class="spacing-row"><span class="spacing-label">--space-12</span><div class="spacing-bar-wrap"><div class="spacing-bar" style="width:26%;"></div></div><span class="spacing-value">3rem</span></div>
+      <div class="spacing-row"><span class="spacing-label">--space-16</span><div class="spacing-bar-wrap"><div class="spacing-bar" style="width:36%;"></div></div><span class="spacing-value">4rem</span></div>
+      <div class="spacing-row"><span class="spacing-label">--space-24</span><div class="spacing-bar-wrap"><div class="spacing-bar" style="width:55%;"></div></div><span class="spacing-value">6rem</span></div>
+      <div class="spacing-row"><span class="spacing-label">--space-32</span><div class="spacing-bar-wrap"><div class="spacing-bar" style="width:75%;"></div></div><span class="spacing-value">8rem</span></div>
+    </div>
+
+    <!-- Border radius -->
+    <div class="mt-4">
+      <p class="ds-section-label" style="margin-bottom:0.75rem;">Border-radius</p>
+      <div style="display:flex; gap:1.5rem; flex-wrap:wrap; align-items:flex-end;">
+        <div style="text-align:center;">
+          <div style="width:60px; height:60px; background:var(--navy); border-radius:0;"></div>
+          <div style="font-family:var(--font-mono); font-size:0.65rem; color:var(--sepia-light); margin-top:0.4rem;">0 · Sharp</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="width:60px; height:60px; background:var(--navy); border-radius:2px;"></div>
+          <div style="font-family:var(--font-mono); font-size:0.65rem; color:var(--sepia-light); margin-top:0.4rem;">2px · Default</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="width:60px; height:60px; background:var(--navy); border-radius:4px;"></div>
+          <div style="font-family:var(--font-mono); font-size:0.65rem; color:var(--sepia-light); margin-top:0.4rem;">4px · Soft</div>
+        </div>
+      </div>
+      <p style="font-size:0.85rem; font-style:italic; color:var(--sepia-light); margin-top:0.75rem;">Anbefaling: brug <code style="font-size:0.8rem; background:var(--cream-deeper); padding:0.1em 0.4em;">border-radius: 2px</code> som standard — det giver et snarpent, akademisk udtryk.</p>
+    </div>
+  </section>
+
+</div>
+
+<!-- FOOTER -->
+<footer style="background:var(--navy); border-top:2px solid var(--bronze); padding:2rem; margin-top:2rem;">
+  <div style="max-width:1300px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+    <div>
+      <div style="font-family:var(--font-display); font-size:1.2rem; font-style:italic; color:var(--cream); margin-bottom:0.2rem;">smbi.dk</div>
+      <div style="font-family:var(--font-mono); font-size:0.65rem; color:var(--parchment); opacity:0.5; letter-spacing:0.1em;">Design System v1.0 · Naturgeografi & Biologi</div>
+    </div>
+    <div style="display:flex; gap:1rem;">
+      <span class="badge badge-cream">Cormorant Garamond</span>
+      <span class="badge badge-cream">Crimson Pro</span>
+      <span class="badge badge-cream">Phosphor Icons</span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

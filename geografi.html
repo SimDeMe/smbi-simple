@@ -3,98 +3,143 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Geografi – oversigt</title>
+  <title>Geografi – smbi.dk</title>
   <link rel="stylesheet" href="style.css" />
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
 <body>
-  <header class="topbar">
-    <div class="brand"><a href="index.html">← Forside</a></div>
-    <nav class="nav">
-      <a href="biologi.html">Biologi</a>
-      <a class="active" href="geografi.html">Geografi</a>
-      <a href="born.html">Børn</a>
-      <a href="contact.html">Kontakt</a>
-    </nav>
+
+  <nav class="site-nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-brand">smbi.dk</a>
+      <div class="nav-links">
+        <a href="index.html" class="nav-link"><i class="ph ph-house"></i> Forside</a>
+        <a href="biologi.html" class="nav-link"><i class="ph ph-dna"></i> Biologi</a>
+        <a href="geografi.html" class="nav-link active"><i class="ph ph-globe-hemisphere-west"></i> Geografi</a>
+        <a href="born.html" class="nav-link"><i class="ph ph-star"></i> Børn</a>
+        <a href="contact.html" class="nav-link"><i class="ph ph-envelope"></i> Kontakt</a>
+      </div>
+    </div>
+  </nav>
+
+  <header class="page-hero">
+    <div class="page-hero-inner">
+      <div>
+        <div class="page-hero-eyebrow">smbi.dk · Fag</div>
+        <h1 class="page-hero-title"><em>Geografi</em></h1>
+        <p class="page-hero-sub">Klimasimuleringer, vejledninger og opgaver til geografiundervisningen på gymnasieniveau.</p>
+      </div>
+    </div>
   </header>
 
   <main class="container">
-    <h1>Geografi</h1>
 
     <div class="search-container">
-      <input type="text" id="search-input" placeholder="Søg efter emne eller tag..." aria-label="Søg">
+      <input type="text" id="search-input" placeholder="Søg efter emne eller tag…" aria-label="Søg">
     </div>
 
-    <section class="card">
-      <h2>Animationer / Simulationer</h2>
+    <p class="section-label">Animationer &amp; Simulationer</p>
 
-      <h3 class="muted small">Klima</h3>
-      <ul class="list">
-        <li>
-          <a href="geografi/Stigningsregn.html">Stigningsregn &amp; Føhn-effekt</a>
-          <span class="tag">C</span><span class="tag">klima</span>
-          <div style="margin-left: 1em; font-size: 0.9em; margin-top: 4px;">
-            ↳ <a href="GeoOpgaver/stigningsregn-C-niv.html">Opgave (C-niveau)</a>
-            ↳ <a href="GeoOpgaver/stigningsregn-HF-niv.html">Opgave (HF-niveau)</a>
+    <div class="card">
+      <div class="card-header">
+        <i class="ph ph-cloud-rain card-header-icon"></i>
+        <span class="card-header-title">Klima</span>
+      </div>
+      <div class="card-body">
+        <ul class="list">
+          <li>
+            <a href="geografi/Stigningsregn.html">Stigningsregn &amp; Føhn-effekt</a>
+            <span class="tag">C</span><span class="tag">klima</span>
+            <div class="list-indent">
+              ↳ <a href="GeoOpgaver/stigningsregn-C-niv.html">Opgave (C-niveau)</a>
+              ↳ <a href="GeoOpgaver/stigningsregn-HF-niv.html">Opgave (HF-niveau)</a>
+            </div>
+          </li>
+          <li>
+            <a href="geografi/Dugpunkt.html">Dugpunkt – kondensation &amp; skydannelse</a>
+            <span class="tag">C</span><span class="tag">klima</span>
+          </li>
+          <li>
+            <a href="geografi/TermiskTryk.html">Termisk cirkulation – 2-trins flow</a>
+            <span class="tag">C</span><span class="tag">tryk</span>
+          </li>
+          <li>
+            <a href="geografi/TermiskTryk2.html">Termisk lavtryk (sol &amp; skyer)</a>
+            <span class="tag">C</span><span class="tag">tryk</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="section-label">Vejledninger</p>
+
+    <div class="card">
+      <div class="card-header">
+        <i class="ph ph-file-text card-header-icon"></i>
+        <span class="card-header-title">Vejledninger</span>
+      </div>
+      <div class="card-body">
+        <ul class="list">
+          <li>
+            <a href="GeoVejledninger/konvektionskammer/">Konvektionskammer-forsøg</a>
+          </li>
+          <li>
+            <a href="GeoVejledninger/JordUndersøgelse/">Jordundersøgelse – Porøsitet &amp; Permeabilitet</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="section-label">Opgaver NF</p>
+
+    <div class="card">
+      <div class="card-header">
+        <i class="ph ph-student card-header-icon"></i>
+        <span class="card-header-title">Opgaver NF</span>
+      </div>
+      <div class="card-body">
+        <ul class="list">
+          <li>
+            <a href="GeoOpgaver/Demografisk_transition_NF.html">Demografisk transition</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="section-label">Videoer</p>
+
+    <div class="card">
+      <div class="card-header">
+        <i class="ph ph-play-circle card-header-icon"></i>
+        <span class="card-header-title">Videoer</span>
+      </div>
+      <div class="card-body">
+        <div class="video-grid">
+          <div class="video-wrapper">
+            <iframe src="https://www.youtube.com/embed/bDnFoNb7jUQ" title="YouTube video 1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
           </div>
-        </li>
-        <li>
-          <a href="geografi/Dugpunkt.html">Dugpunkt – kondensation &amp; skydannelse</a>
-          <span class="tag">C</span><span class="tag">klima</span>
-        </li>
-        <li>
-          <a href="geografi/TermiskTryk.html">Termisk cirkulation – 2-trins flow</a>
-          <span class="tag">C</span><span class="tag">tryk</span>
-        </li>
-        <li>
-          <a href="geografi/TermiskTryk2.html">Termisk lavtryk (sol &amp; skyer)</a>
-          <span class="tag">C</span><span class="tag">tryk</span>
-        </li>
-      </ul>
-    </section>
-
-    <section class="card">
-      <h2>Vejledninger</h2>
-      <ul class="list">
-        <li>
-          <a href="GeoVejledninger/konvektionskammer/">Konvektionskammer-forsøg</a>
-        </li>
-        <li>
-          <a href="GeoVejledninger/JordUndersøgelse/">Jordundersøgelse – Porøsitet & Permeabilitet</a>
-        </li>
-      </ul>
-    </section>
-
-    <section class="card">
-      <h2>Opgaver NF</h2>
-      <ul class="list">
-        <li>
-          <a href="GeoOpgaver/Demografisk_transition_NF.html">Demografisk transition</a>
-        </li>
-      </ul>
-    </section>
-
-    <section class="card">
-      <h2>Videoer</h2>
-      <div class="video-grid">
-        <div class="video-wrapper">
-          <iframe src="https://www.youtube.com/embed/bDnFoNb7jUQ" title="YouTube video 1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-        </div>
-        <div class="video-wrapper">
-          <iframe src="https://www.youtube.com/embed/We5z5-lcsbw" title="YouTube video 2" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-        </div>
-        <div class="video-wrapper">
-          <iframe src="https://www.youtube.com/embed/wVSTvRJyolw" title="YouTube video 3" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-        </div>
-        <div class="video-wrapper">
-          <iframe src="https://www.youtube.com/embed/wWFZTrUmBqY" title="YouTube video 4" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+          <div class="video-wrapper">
+            <iframe src="https://www.youtube.com/embed/We5z5-lcsbw" title="YouTube video 2" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+          </div>
+          <div class="video-wrapper">
+            <iframe src="https://www.youtube.com/embed/wVSTvRJyolw" title="YouTube video 3" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+          </div>
+          <div class="video-wrapper">
+            <iframe src="https://www.youtube.com/embed/wWFZTrUmBqY" title="YouTube video 4" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+          </div>
         </div>
       </div>
-    </section>
+    </div>
 
   </main>
 
   <footer class="footer">
-    <span>© <span id="year"></span></span>
+    <div class="footer-inner">
+      <div>
+        <div class="footer-brand">smbi.dk</div>
+        <div class="footer-meta">Naturgeografi &amp; Biologi · © <span id="year"></span></div>
+      </div>
+    </div>
   </footer>
 
   <script src="site.js"></script>
