@@ -7,9 +7,11 @@
 
   <!-- PWA / iOS -->
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Tid">
-  <link rel="apple-touch-icon" href="icons/icon.svg">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png">
 
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="styles.css">
@@ -40,41 +42,240 @@
     </div>
   </div>
 
+  <!-- ── Onboarding ─────────────────────────────────────────── -->
+  <div id="onboarding" class="fullscreen-overlay hidden">
+    <div class="onboarding-card">
+
+      <h1 class="onboarding-title">Kom godt i gang</h1>
+      <p class="onboarding-intro">Du har endnu ingen aktiviteter. Opret din opgavefordeling for at begynde at registrere tid — her er hvad en typisk gymnasielærer har:</p>
+
+      <div class="onboarding-example">
+        <div class="example-group">
+          <div class="example-group-head">Hold</div>
+          <div class="example-chips">
+            <span class="chip chip-hold">1g klasse</span>
+            <span class="chip chip-hold">2g klasse</span>
+            <span class="chip chip-hold">3g klasse</span>
+          </div>
+        </div>
+        <div class="example-group">
+          <div class="example-group-head">Opgaver</div>
+          <div class="example-chips">
+            <span class="chip chip-opgave">Vejledning</span>
+            <span class="chip chip-opgave">Eksamen og prøver</span>
+            <span class="chip chip-opgave">Teamledelse</span>
+            <span class="chip chip-opgave">Pædagogisk råd</span>
+            <span class="chip chip-opgave">Fagudvalg</span>
+            <span class="chip chip-opgave">Efteruddannelse</span>
+            <span class="chip chip-opgave">Administration</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="onboarding-actions">
+        <button id="btn-onboarding-activities" class="btn btn-primary btn-full btn-large">
+          Opret mine aktiviteter
+        </button>
+        <button id="btn-onboarding-skip" class="btn btn-secondary btn-full">
+          Spring over
+        </button>
+      </div>
+
+    </div>
+  </div>
+
   <!-- ── App ─────────────────────────────────────────────── -->
   <div id="app" class="hidden">
 
-    <!-- Active timer banner — udfyldes i Trin 4 -->
-    <div id="active-timer-banner" class="hidden"></div>
+    <!-- Active timer banner (synlig fra alle faner) -->
+    <div id="active-timer-banner" class="hidden">
+      <div class="banner-pulse-dot"></div>
+      <div class="banner-info">
+        <div id="banner-act-name" class="banner-act-name"></div>
+        <div id="banner-elapsed" class="banner-elapsed">0:00</div>
+      </div>
+      <button id="banner-stop" class="banner-stop-btn">■ Stop</button>
+    </div>
 
     <!-- Page content -->
     <main id="main-content">
 
       <div id="view-hjem" class="view hidden">
-        <!-- Trin 4: Timer + hurtigstart -->
-        <div class="view-placeholder">Hjem — klar i Trin 4</div>
+
+        <!-- Aktiv timer-kort -->
+        <div id="timer-card" class="timer-card hidden">
+          <div class="timer-card-top">
+            <span class="timer-running-dot"></span>
+            <span id="timer-act-name" class="timer-act-name"></span>
+          </div>
+          <div id="timer-worktype" class="timer-worktype"></div>
+          <div id="timer-elapsed" class="timer-elapsed">0:00</div>
+          <button id="btn-stop-timer" class="btn btn-stop btn-full">■ Stop</button>
+        </div>
+
+        <!-- Hurtigstart -->
+        <div id="qs-section-label" class="section-label">Hurtigstart</div>
+        <div id="quickstart-grid" class="quickstart-grid"></div>
+
+        <!-- Tom tilstand -->
+        <div id="home-empty" class="home-empty hidden">
+          <p>Ingen aktiviteter for dette skoleår.<br>Gå til <strong>Aktiviteter</strong> for at oprette din opgavefordeling.</p>
+        </div>
+
+        <!-- Specialknapper — Trin 5 -->
+        <div class="special-btns">
+          <button id="btn-start-arbejde" class="btn btn-secondary btn-full">▷ Start arbejde</button>
+          <button id="btn-1-modul" class="btn btn-secondary btn-full">⏱ 1 modul</button>
+        </div>
+
       </div>
 
       <div id="view-historik" class="view hidden">
-        <!-- Trin 6: Historik med redigering -->
-        <div class="view-placeholder">Historik — klar i Trin 6</div>
+        <div class="view-header">
+          <h2 class="view-title">Historik</h2>
+          <button id="btn-new-entry" class="btn-icon" aria-label="Ny registrering">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+          </button>
+        </div>
+        <div class="hist-filters">
+          <select id="hist-period-select" class="select-pill">
+            <option value="dag">I dag</option>
+            <option value="uge" selected>Denne uge</option>
+            <option value="maaned">Denne måned</option>
+            <option value="alt">Alle</option>
+          </select>
+          <select id="hist-act-filter" class="select-pill">
+            <option value="">Alle aktiviteter</option>
+          </select>
+        </div>
+        <div id="hist-list" class="hist-list"></div>
       </div>
 
       <div id="view-rapporter" class="view hidden">
-        <!-- Trin 7: Rapporter + budget -->
-        <div class="view-placeholder">Rapporter — klar i Trin 7</div>
+        <div class="rapport-period-tabs" id="rapport-tabs">
+          <button class="rapport-tab" data-period="dag">I dag</button>
+          <button class="rapport-tab" data-period="uge">Uge</button>
+          <button class="rapport-tab" data-period="maaned">Måned</button>
+          <button class="rapport-tab rapport-tab-active" data-period="skolear">Skoleår</button>
+        </div>
+        <div id="rapport-content" class="rapport-content"></div>
+        <div class="view-footer" style="padding-top:8px">
+          <button id="btn-export-csv" class="btn btn-secondary btn-full">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Eksportér CSV
+          </button>
+        </div>
       </div>
 
       <div id="view-aktiviteter" class="view hidden">
-        <!-- Trin 3: CRUD aktiviteter -->
-        <div class="view-placeholder">Aktiviteter — klar i Trin 3</div>
+        <div class="view-header">
+          <h2 class="view-title">Aktiviteter</h2>
+          <select id="act-year-select" class="select-pill"></select>
+        </div>
+        <div id="act-list" class="act-list"></div>
+        <div class="view-footer">
+          <button id="btn-new-activity" class="btn btn-primary btn-full">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Ny aktivitet
+          </button>
+          <div class="btn-row">
+            <button id="btn-copy-year" class="btn btn-secondary btn-flex">Kopiér til næste år</button>
+            <button id="btn-import-text" class="btn btn-secondary btn-flex">Importer</button>
+          </div>
+        </div>
       </div>
 
       <div id="view-indstillinger" class="view hidden">
-        <!-- Trin 9: Fuld indstillingsside -->
         <h2 class="view-title">Indstillinger</h2>
+
+        <!-- Skoleår -->
         <div class="settings-section">
-          <button id="btn-logout" class="btn btn-danger btn-full">Log ud</button>
+          <div class="settings-section-title">Skoleår</div>
+          <div class="settings-row">
+            <label class="settings-label" for="cfg-school-year">Aktivt skoleår</label>
+            <input type="text" id="cfg-school-year" class="settings-input-sm" placeholder="2026/27" maxlength="7">
+          </div>
+          <div class="settings-row">
+            <label class="settings-label" for="cfg-start-month">Startmåned</label>
+            <select id="cfg-start-month" class="settings-select-sm">
+              <option value="1">Januar</option>
+              <option value="2">Februar</option>
+              <option value="3">Marts</option>
+              <option value="4">April</option>
+              <option value="5">Maj</option>
+              <option value="6">Juni</option>
+              <option value="7">Juli</option>
+              <option value="8">August</option>
+              <option value="9">September</option>
+              <option value="10">Oktober</option>
+              <option value="11">November</option>
+              <option value="12">December</option>
+            </select>
+          </div>
+          <div class="settings-row">
+            <label class="settings-label" for="cfg-start-day">Startdag</label>
+            <input type="number" id="cfg-start-day" class="settings-input-sm" min="1" max="31">
+          </div>
+          <div class="settings-row">
+            <label class="settings-label" for="cfg-norm-hours">Norm (timer/år)</label>
+            <div class="settings-row-right">
+              <input type="number" id="cfg-norm-hours" class="settings-input-sm" min="1" max="9999"> t
+            </div>
+          </div>
         </div>
+
+        <!-- Timer -->
+        <div class="settings-section">
+          <div class="settings-section-title">Timer</div>
+          <div class="settings-row">
+            <label class="settings-label" for="cfg-module-mins">Modul-længde</label>
+            <div class="settings-row-right">
+              <input type="number" id="cfg-module-mins" class="settings-input-sm" min="1" max="300"> min
+            </div>
+          </div>
+          <div class="settings-row">
+            <label class="settings-label" for="cfg-autostop-mins">Auto-stop</label>
+            <div class="settings-row-right">
+              <input type="number" id="cfg-autostop-mins" class="settings-input-sm" min="30" max="1440"> min
+            </div>
+          </div>
+        </div>
+
+        <!-- Uge -->
+        <div class="settings-section">
+          <div class="settings-section-title">Uge</div>
+          <div class="settings-row">
+            <label class="settings-label">Uge starter</label>
+            <div class="segmented settings-segmented">
+              <label class="seg-opt"><input type="radio" name="cfg-week-start" value="1"><span>Mandag</span></label>
+              <label class="seg-opt"><input type="radio" name="cfg-week-start" value="0"><span>Søndag</span></label>
+            </div>
+          </div>
+        </div>
+
+        <button id="cfg-save-btn" class="btn btn-primary btn-full" style="margin-bottom:16px">Gem indstillinger</button>
+
+        <!-- Data -->
+        <div class="settings-section">
+          <div class="settings-section-title">Data</div>
+          <div class="settings-row">
+            <button id="btn-export-json" class="btn btn-secondary" style="flex:1">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Eksportér alle data (JSON)
+            </button>
+          </div>
+        </div>
+
+        <!-- Konto -->
+        <div class="settings-section">
+          <div class="settings-section-title">Konto</div>
+          <div class="settings-row">
+            <button id="btn-logout" class="btn btn-danger" style="flex:1">Log ud</button>
+          </div>
+        </div>
+
       </div>
 
     </main>
@@ -132,6 +333,260 @@
   </div>
 
   <div id="toast" class="toast"></div>
+
+  <!-- ── Aktivitet opret/redigér sheet ───────────────────── -->
+  <div id="act-backdrop" class="sheet-backdrop hidden"></div>
+  <div id="act-sheet" class="sheet hidden">
+    <div class="sheet-handle-bar"></div>
+    <div class="sheet-inner">
+      <div class="sheet-head">
+        <h3 id="act-sheet-title">Ny aktivitet</h3>
+        <button id="act-sheet-close" class="btn-icon" aria-label="Luk">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <form id="act-form" novalidate>
+        <div class="form-group">
+          <label class="form-label" for="act-name">Navn</label>
+          <input class="form-input" type="text" id="act-name" placeholder="fx 3g Ng" autocomplete="off" required>
+        </div>
+        <div class="form-group" id="field-type">
+          <label class="form-label">Type</label>
+          <div class="segmented">
+            <label class="seg-opt"><input type="radio" name="act-type" value="hold"><span>Hold</span></label>
+            <label class="seg-opt"><input type="radio" name="act-type" value="opgave" checked><span>Opgave</span></label>
+          </div>
+        </div>
+        <div class="form-group" id="field-parent">
+          <label class="form-label" for="act-parent">Under-aktivitet af</label>
+          <select class="form-input" id="act-parent">
+            <option value="">— Ingen (top-niveau) —</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="act-budget">Budget (timer)</label>
+          <input class="form-input" type="number" id="act-budget" min="0" max="9999" step="1" placeholder="fx 288">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Farve</label>
+          <div class="color-picker" id="act-color-picker"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="act-year">Skoleår</label>
+          <input class="form-input" type="text" id="act-year" placeholder="2025/26">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="act-note">Note <span class="form-optional">(valgfri)</span></label>
+          <input class="form-input" type="text" id="act-note" placeholder="fx 5 stk">
+        </div>
+        <div class="form-actions">
+          <button type="submit" id="act-save-btn" class="btn btn-primary btn-full">Gem aktivitet</button>
+          <button type="button" id="act-delete-btn" class="btn btn-danger btn-full hidden">Slet aktivitet</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── Importer fra tekst sheet ────────────────────────── -->
+  <div id="import-backdrop" class="sheet-backdrop hidden"></div>
+  <div id="import-sheet" class="sheet hidden">
+    <div class="sheet-handle-bar"></div>
+    <div class="sheet-inner">
+      <div class="sheet-head">
+        <h3>Importer aktiviteter</h3>
+        <button id="import-sheet-close" class="btn-icon" aria-label="Luk">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <p class="sheet-desc">Én linje per aktivitet — format: <code>navn; type; budget; parent</code></p>
+      <div class="import-example">
+        <div class="import-example-code">3g Ng; hold; 288
+Eksamen og prøver; opgave; 80
+SRP; opgave; 20; Eksamen og prøver
+Vejledning; opgave; 40</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="import-year">Skoleår</label>
+        <input class="form-input" type="text" id="import-year" placeholder="2025/26">
+      </div>
+      <div class="form-group">
+        <textarea class="form-input form-textarea" id="import-text" rows="8" placeholder="Indsæt aktiviteter her..."></textarea>
+      </div>
+      <div class="form-actions">
+        <button id="btn-do-import" class="btn btn-primary btn-full">Importer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Arbejdstype-vælger sheet ───────────────────────────── -->
+  <div id="wt-backdrop" class="sheet-backdrop hidden"></div>
+  <div id="wt-sheet" class="sheet hidden">
+    <div class="sheet-handle-bar"></div>
+    <div class="sheet-inner">
+      <div class="sheet-head">
+        <h3 id="wt-sheet-title">Vælg arbejdstype</h3>
+        <button id="wt-close" class="btn-icon" aria-label="Luk">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="wt-list">
+        <button class="wt-btn" data-type="undervisning">
+          <div class="wt-icon">📖</div>
+          <div class="wt-label">Undervisning</div>
+        </button>
+        <button class="wt-btn" data-type="forberedelse">
+          <div class="wt-icon">✏️</div>
+          <div class="wt-label">Forberedelse</div>
+        </button>
+        <button class="wt-btn" data-type="retning">
+          <div class="wt-icon">✅</div>
+          <div class="wt-label">Retning</div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Under-aktivitet-vælger sheet ─────────────────────── -->
+  <div id="child-backdrop" class="sheet-backdrop hidden"></div>
+  <div id="child-sheet" class="sheet hidden">
+    <div class="sheet-handle-bar"></div>
+    <div class="sheet-inner">
+      <div class="sheet-head">
+        <h3 id="child-sheet-title">Vælg aktivitet</h3>
+        <button id="child-close" class="btn-icon" aria-label="Luk">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div id="child-list" class="child-list"></div>
+    </div>
+  </div>
+
+  <!-- ── Kopiér til næste år sheet ───────────────────────── -->
+  <div id="copy-backdrop" class="sheet-backdrop hidden"></div>
+  <div id="copy-sheet" class="sheet hidden">
+    <div class="sheet-handle-bar"></div>
+    <div class="sheet-inner">
+      <div class="sheet-head">
+        <h3>Kopiér til næste skoleår</h3>
+        <button id="copy-sheet-close" class="btn-icon" aria-label="Luk">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div id="copy-sheet-body"></div>
+      <div class="form-actions">
+        <button id="btn-do-copy" class="btn btn-primary btn-full">Kopiér aktiviteter</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Historik redigér/opret sheet ─────────────────── -->
+  <div id="hist-backdrop" class="sheet-backdrop hidden"></div>
+  <div id="hist-sheet" class="sheet hidden">
+    <div class="sheet-handle-bar"></div>
+    <div class="sheet-inner">
+      <div class="sheet-head">
+        <h3 id="hist-sheet-title">Redigér registrering</h3>
+        <button id="hist-sheet-close" class="btn-icon" aria-label="Luk">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <form id="hist-form" novalidate>
+        <div class="form-group">
+          <label class="form-label" for="hist-date">Dato</label>
+          <input class="form-input" type="date" id="hist-date" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="hist-start">Start</label>
+            <input class="form-input" type="time" id="hist-start" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="hist-end">Slut <span class="form-optional">(tom = aktiv)</span></label>
+            <input class="form-input" type="time" id="hist-end">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="hist-act-sel">Aktivitet</label>
+          <select class="form-input" id="hist-act-sel">
+            <option value="">— Ubundet tid —</option>
+          </select>
+        </div>
+        <div class="form-group" id="hist-wt-group" style="display:none">
+          <label class="form-label">Arbejdstype</label>
+          <div class="segmented">
+            <label class="seg-opt"><input type="radio" name="hist-wt" value="undervisning"><span>Undervisning</span></label>
+            <label class="seg-opt"><input type="radio" name="hist-wt" value="forberedelse"><span>Forberedelse</span></label>
+            <label class="seg-opt"><input type="radio" name="hist-wt" value="retning"><span>Retning</span></label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="hist-note">Note <span class="form-optional">(valgfri)</span></label>
+          <input class="form-input" type="text" id="hist-note" placeholder="Tilføj note...">
+        </div>
+        <div class="form-actions">
+          <button type="submit" id="hist-save-btn" class="btn btn-primary btn-full">Gem</button>
+          <button type="button" id="hist-delete-btn" class="btn btn-danger btn-full hidden">Slet registrering</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── 1 Modul sheet ────────────────────────────────── -->
+  <div id="modul-backdrop" class="sheet-backdrop hidden"></div>
+  <div id="modul-sheet" class="sheet hidden">
+    <div class="sheet-handle-bar"></div>
+    <div class="sheet-inner">
+      <div class="sheet-head">
+        <h3>1 modul</h3>
+        <button id="modul-close" class="btn-icon" aria-label="Luk">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <!-- Trin 1: Vælg hold -->
+      <div id="modul-step-hold">
+        <p class="sheet-desc">Vælg hold for dette modul</p>
+        <div id="modul-hold-list" class="modul-hold-list"></div>
+      </div>
+
+      <!-- Trin 2: Hvornår startede modulet? -->
+      <div id="modul-step-when" class="hidden">
+        <div id="modul-hold-name-label" class="modul-hold-name-label"></div>
+        <p class="sheet-desc">Hvornår startede modulet?</p>
+        <div class="modul-when-list">
+          <button class="modul-when-btn" data-when="nu">
+            <div class="modul-when-icon">▶</div>
+            <div class="modul-when-body">
+              <div class="modul-when-title">Nu</div>
+              <div class="modul-when-sub">Starter nu, stopper automatisk om <span id="modul-len-nu">90</span> min</div>
+            </div>
+          </button>
+          <button class="modul-when-btn" data-when="bagud">
+            <div class="modul-when-icon">↩</div>
+            <div class="modul-when-body">
+              <div class="modul-when-title">For <span id="modul-len-bagud">90</span> min siden</div>
+              <div class="modul-when-sub">Registrerer afsluttet modul fra nu</div>
+            </div>
+          </button>
+          <button class="modul-when-btn" data-when="andet">
+            <div class="modul-when-icon">🕐</div>
+            <div class="modul-when-body">
+              <div class="modul-when-title">Andet tidspunkt</div>
+              <div class="modul-when-sub">Vælg selv starttidspunkt</div>
+            </div>
+          </button>
+        </div>
+        <div id="modul-tid-row" class="modul-tid-row hidden">
+          <label class="form-label" for="modul-tid-input">Startede kl.</label>
+          <input class="form-input" type="time" id="modul-tid-input">
+        </div>
+        <div class="form-actions">
+          <button id="btn-do-modul" class="btn btn-primary btn-full">Registrér modul</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
 
   <script type="module" src="app.js"></script>
 </body>

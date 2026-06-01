@@ -198,7 +198,7 @@ Egen side:
 - Datoformat: DD-MM-YYYY hvor relevant; ellers dansk format
 - Tidsformat: 24-timers
 - Varighed: "1t 23m" / "23m" / "2t"
-- Skoleår: hvis startmåned er 8 (august), så er "2026/27" = 1. aug 2026 til 31. juli 2027
+- Skoleår: hvis startmåned er 6 (juni), så er "2026/27" = 1. juni 2026 til 31. maj 2027
 - Når et hold-aktivitet ikke har specificeret en farve: auto-tildel fra en defineret palet
 
 ## Hierarki-håndtering — vigtige regler

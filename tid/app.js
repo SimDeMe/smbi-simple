@@ -1,43 +1,78 @@
-import { initializeApp }          from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js';
-import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut }
-                                   from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js';
-import { initializeFirestore, persistentLocalCache }
-                                   from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js';
-import { firebaseConfig }          from './firebase-config.js';
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js';
+import {
+  getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut
+} from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js';
+import {
+  initializeFirestore, persistentLocalCache,
+  doc, getDoc, setDoc,
+  collection, getDocs, query, limit
+} from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js';
+import { firebaseConfig } from './firebase-config.js';
+import { initActivitiesView } from './activities.js';
+import { initTimerView, refreshQuickStart } from './timer.js';
+import { initHistorikView, refreshHistorik } from './historik.js';
+import { initRapporterView, refreshRapporter } from './rapporter.js';
+import { initIndstillingerView, refreshIndstillinger } from './indstillinger.js';
 
 // ─── Firebase init ────────────────────────────────────────
 const firebaseApp = initializeApp(firebaseConfig);
-
 export const auth = getAuth(firebaseApp);
 export const db   = initializeFirestore(firebaseApp, {
   localCache: persistentLocalCache()
 });
-
 const provider = new GoogleAuthProvider();
 
 // ─── Farvepalette til aktiviteter ─────────────────────────
 export const COLOR_PALETTE = [
-  '#3b82f6', // blå
-  '#10b981', // smaragd
-  '#f59e0b', // amber
-  '#ef4444', // rød
-  '#8b5cf6', // violet
-  '#06b6d4', // cyan
-  '#f97316', // orange
-  '#84cc16', // lime
-  '#ec4899', // pink
-  '#6366f1', // indigo
+  '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
+  '#06b6d4', '#f97316', '#84cc16', '#ec4899', '#6366f1'
 ];
 
+// ─── Eksport ─────────────────────────────────────────────
+let currentUserId = null;
+
+async function exportAllData() {
+  if (!currentUserId) return;
+  try {
+    const [actsSnap, entriesSnap] = await Promise.all([
+      getDocs(collection(db, `users/${currentUserId}/activities`)),
+      getDocs(collection(db, `users/${currentUserId}/entries`))
+    ]);
+    const tsToStr = (key, val) => val?.toDate ? val.toDate().toISOString() : val;
+    const payload = {
+      exportedAt:  new Date().toISOString(),
+      activities:  actsSnap.docs.map(d => ({ id: d.id, ...d.data() })),
+      entries:     entriesSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+    };
+    const json = JSON.stringify(payload, tsToStr, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url  = URL.createObjectURL(blob);
+    const a    = Object.assign(document.createElement('a'), {
+      href: url,
+      download: `tidsregistrering-backup-${new Date().toISOString().slice(0,10)}.json`
+    });
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Backup downloadet');
+  } catch (err) {
+    console.error('JSON eksport fejl:', err);
+    showToast('Eksport fejlede — prøv igen');
+  }
+}
+
 // ─── DOM-referencer ──────────────────────────────────────
-const $        = id => document.getElementById(id);
-const loadingScreen  = $('loading-screen');
-const loginScreen    = $('login-screen');
-const appEl          = $('app');
-const btnGoogleLogin = $('btn-google-login');
-const btnLogout      = $('btn-logout');
-const navBtns        = document.querySelectorAll('.nav-btn');
-const views          = document.querySelectorAll('.view');
+const $ = id => document.getElementById(id);
+
+const loadingScreen    = $('loading-screen');
+const loginScreen      = $('login-screen');
+const onboardingScreen = $('onboarding');
+const appEl            = $('app');
+const btnGoogleLogin   = $('btn-google-login');
+const btnLogout        = $('btn-logout');
+const btnOnbActs       = $('btn-onboarding-activities');
+const btnOnbSkip       = $('btn-onboarding-skip');
+const navBtns          = document.querySelectorAll('.nav-btn');
+const views            = document.querySelectorAll('.view');
 
 // ─── Login ───────────────────────────────────────────────
 btnGoogleLogin.addEventListener('click', async () => {
@@ -59,23 +94,80 @@ btnLogout.addEventListener('click', async () => {
 });
 
 // ─── Auth state ──────────────────────────────────────────
-onAuthStateChanged(auth, user => {
-  loadingScreen.classList.add('hidden');
+onAuthStateChanged(auth, async user => {
   if (user) {
+    currentUserId = user.uid;
     loginScreen.classList.add('hidden');
     appEl.classList.remove('hidden');
-    onUserSignedIn(user);
+    try {
+      await initSettings(user.uid);
+      initActivitiesView(user.uid);
+      initTimerView(user.uid);
+      initHistorikView(user.uid);
+      initRapporterView(user.uid);
+      initIndstillingerView(user.uid);
+      await checkFirstRun(user.uid);
+    } catch (err) {
+      console.error('Init fejl:', err);
+      navigateTo('hjem');
+    }
+    loadingScreen.classList.add('hidden');
   } else {
+    currentUserId = null;
+    loadingScreen.classList.add('hidden');
     appEl.classList.add('hidden');
     loginScreen.classList.remove('hidden');
   }
 });
 
-// ─── App init ────────────────────────────────────────────
-function onUserSignedIn(user) {
-  console.log('Logget ind:', user.email);
+$('btn-export-json')?.addEventListener('click', exportAllData);
+
+// ─── Settings: opret med standardværdier hvis de mangler ──
+async function initSettings(userId) {
+  const ref  = doc(db, `users/${userId}/settings/config`);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) {
+    await setDoc(ref, {
+      currentSchoolYear:    getCurrentSchoolYear(),
+      schoolYearStartMonth: 6,
+      schoolYearStartDay:   1,
+      normHours:            1650,
+      moduleLengthMinutes:  90,
+      autoStopAfterMinutes: 240,
+      weekStartsOn:         1
+    });
+  }
+}
+
+// ─── First-run: vis onboarding hvis ingen aktiviteter ─────
+async function checkFirstRun(userId) {
+  const ref  = collection(db, `users/${userId}/activities`);
+  const snap = await getDocs(query(ref, limit(1)));
+  if (snap.empty) {
+    onboardingScreen.classList.remove('hidden');
+  } else {
+    navigateTo('hjem');
+  }
+}
+
+btnOnbActs.addEventListener('click', () => {
+  onboardingScreen.classList.add('hidden');
+  navigateTo('aktiviteter');
+});
+
+btnOnbSkip.addEventListener('click', () => {
+  onboardingScreen.classList.add('hidden');
   navigateTo('hjem');
-  // TODO Trin 2: check first-run onboarding
+});
+
+// ─── Skoleår-hjælpere ────────────────────────────────────
+export function getCurrentSchoolYear(startMonth = 6) {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = now.getMonth() + 1;
+  return m >= startMonth
+    ? `${y}/${String(y + 1).slice(2)}`
+    : `${y - 1}/${String(y).slice(2)}`;
 }
 
 // ─── Navigation ──────────────────────────────────────────
@@ -93,7 +185,13 @@ export function navigateTo(viewName) {
 }
 
 navBtns.forEach(btn => {
-  btn.addEventListener('click', () => navigateTo(btn.dataset.view));
+  btn.addEventListener('click', () => {
+    navigateTo(btn.dataset.view);
+    if (btn.dataset.view === 'hjem')     refreshQuickStart();
+    if (btn.dataset.view === 'historik')  refreshHistorik();
+    if (btn.dataset.view === 'rapporter')      refreshRapporter();
+    if (btn.dataset.view === 'indstillinger')  refreshIndstillinger();
+  });
 });
 
 // ─── Toast ───────────────────────────────────────────────

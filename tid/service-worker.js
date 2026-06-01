@@ -1,12 +1,20 @@
-const CACHE = 'tid-v1';
+const CACHE = 'tid-v2';
 const SHELL = [
   '/tid/',
   '/tid/index.html',
-  '/tid/app.js',
   '/tid/styles.css',
+  '/tid/app.js',
+  '/tid/activities.js',
+  '/tid/timer.js',
+  '/tid/historik.js',
+  '/tid/rapporter.js',
+  '/tid/indstillinger.js',
   '/tid/firebase-config.js',
   '/tid/manifest.json',
   '/tid/icons/icon.svg',
+  '/tid/icons/icon-180.png',
+  '/tid/icons/icon-192.png',
+  '/tid/icons/icon-512.png',
 ];
 
 self.addEventListener('install', e => {
@@ -39,17 +47,17 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // App shell: cache-first
+  // App shell: cache-first, update in background
   e.respondWith(
     caches.match(e.request).then(cached => {
-      if (cached) return cached;
-      return fetch(e.request).then(res => {
+      const network = fetch(e.request).then(res => {
         if (res.ok) {
           const clone = res.clone();
           caches.open(CACHE).then(c => c.put(e.request, clone));
         }
         return res;
       });
+      return cached || network;
     })
   );
 });
