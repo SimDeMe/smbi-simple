@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arbejdstidskalender 2026–27 · Middelfart Gymnasium & HF</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,500&family=Crimson+Pro:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#f5f0e6; --paper2:#efe8da; --card:#fbf8f1; --ink:#22312f;
+  --ink-soft:#5b6b64; --line:#d8cdb8; --line2:#e6ddca;
+  --accent:#2f5d62; --accent2:#3c7378; --gold:#b08d3e;
+  --work:#fbf8f1; --work-ink:#22312f;
+  --weekend:#ece4d4; --weekend-ink:#9a9281;
+  --holiday:#f0d7c6; --holiday-ink:#9a4f2c;
+  --ferie:#d6e3ca; --ferie-ink:#42693a;
+  --fridag:#f2e6c2; --fridag-ink:#8a6d23;
+  --shadow:0 1px 2px rgba(34,49,47,.06),0 8px 24px rgba(34,49,47,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--paper);
+  background-image:radial-gradient(circle at 50% 0,rgba(255,255,255,.5),transparent 60%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.025'/%3E%3C/svg%3E");
+  color:var(--ink); font-family:'Crimson Pro',Georgia,serif; font-size:17px; line-height:1.5;
+  padding:0 0 80px;
+}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+header.masthead{
+  border-bottom:2px solid var(--ink); padding:42px 0 22px; margin-bottom:6px;
+  display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:18px;
+}
+.title-block .eyebrow{
+  font-family:'Crimson Pro';text-transform:uppercase;letter-spacing:.32em;font-size:12px;
+  color:var(--accent);font-weight:600;margin-bottom:6px;
+}
+.title-block h1{
+  font-family:'Cormorant Garamond';font-weight:600;font-size:clamp(34px,5vw,54px);
+  line-height:1.02;letter-spacing:.01em;
+}
+.title-block h1 em{font-style:italic;color:var(--accent)}
+.title-block .sub{font-style:italic;color:var(--ink-soft);margin-top:4px;font-size:18px}
+.seal{
+  font-family:'Cormorant Garamond';font-size:15px;text-align:right;color:var(--ink-soft);
+  border-left:1px solid var(--line);padding-left:18px;font-style:italic;
+}
+.seal b{font-style:normal;color:var(--ink);display:block;font-size:17px}
+
+/* Control bar */
+.controls{
+  display:flex;flex-wrap:wrap;align-items:center;gap:26px;
+  background:var(--card);border:1px solid var(--line);border-radius:10px;
+  padding:20px 26px;margin:24px 0 28px;box-shadow:var(--shadow);position:sticky;top:12px;z-index:30;
+  backdrop-filter:blur(3px);
+}
+.grade-ctrl{display:flex;align-items:center;gap:18px;flex:1;min-width:280px}
+.grade-ctrl label{font-family:'Cormorant Garamond';font-size:21px;font-weight:600;white-space:nowrap}
+.grade-ctrl label small{display:block;font-family:'Crimson Pro';font-size:12px;font-weight:400;
+  text-transform:uppercase;letter-spacing:.18em;color:var(--ink-soft)}
+input[type=range]{-webkit-appearance:none;appearance:none;height:3px;background:var(--line);
+  border-radius:3px;flex:1;min-width:120px;outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;
+  background:var(--accent);border:3px solid var(--card);box-shadow:0 0 0 1px var(--accent);cursor:pointer;transition:transform .15s}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
+input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--accent);
+  border:3px solid var(--card);box-shadow:0 0 0 1px var(--accent);cursor:pointer}
+.grade-num{display:flex;align-items:baseline;gap:3px;font-family:'Cormorant Garamond'}
+.grade-num input{width:62px;font-family:'Cormorant Garamond';font-size:30px;font-weight:600;color:var(--accent);
+  border:none;border-bottom:2px solid var(--line);background:transparent;text-align:right;outline:none}
+.grade-num input:focus{border-color:var(--accent)}
+.grade-num .pct{font-size:24px;color:var(--accent);font-weight:500}
+.presets{display:flex;gap:6px}
+.presets button{font-family:'Crimson Pro';font-size:13px;color:var(--ink-soft);background:transparent;
+  border:1px solid var(--line);border-radius:20px;padding:3px 11px;cursor:pointer;transition:all .15s}
+.presets button:hover,.presets button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.exports{display:flex;gap:10px}
+.exports button{font-family:'Crimson Pro';font-weight:600;font-size:14px;letter-spacing:.02em;
+  display:flex;align-items:center;gap:7px;background:var(--ink);color:var(--paper);border:none;
+  padding:9px 16px;border-radius:7px;cursor:pointer;transition:all .18s}
+.exports button:hover{background:var(--accent);transform:translateY(-1px)}
+.exports button svg{width:15px;height:15px}
+
+/* Summary cards */
+.summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;
+  background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:14px;box-shadow:var(--shadow)}
+.stat{background:var(--card);padding:16px 18px}
+.stat .k{font-family:'Crimson Pro';text-transform:uppercase;letter-spacing:.14em;font-size:11px;color:var(--ink-soft);margin-bottom:5px}
+.stat .v{font-family:'Cormorant Garamond';font-size:30px;font-weight:600;line-height:1;color:var(--ink)}
+.stat .v small{font-size:15px;color:var(--ink-soft);font-weight:500}
+.stat.accent .v{color:var(--accent)}
+.stat.gold .v{color:var(--gold)}
+.note-bar{font-style:italic;color:var(--ink-soft);font-size:14.5px;border-left:3px solid var(--gold);
+  padding:8px 0 8px 14px;margin:0 0 30px;background:linear-gradient(90deg,rgba(176,141,62,.07),transparent)}
+
+/* Legend */
+.legend{display:flex;flex-wrap:wrap;gap:16px;margin:0 0 26px;font-size:14px;color:var(--ink-soft)}
+.legend span{display:flex;align-items:center;gap:7px}
+.legend i{width:14px;height:14px;border-radius:3px;display:inline-block;border:1px solid rgba(0,0,0,.08)}
+
+/* Calendar months */
+.months{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:26px}
+.month{background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;box-shadow:var(--shadow)}
+.month h2{font-family:'Cormorant Garamond';font-weight:600;font-size:25px;padding:14px 18px 8px;
+  display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--line2)}
+.month h2 .yr{color:var(--ink-soft);font-style:italic;font-size:18px;font-weight:500}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;padding:10px}
+.dow{font-family:'Crimson Pro';text-transform:uppercase;letter-spacing:.08em;font-size:10.5px;
+  color:var(--ink-soft);text-align:center;padding:2px 0 5px}
+.dow.we{color:var(--holiday-ink);opacity:.7}
+.cell{aspect-ratio:1;border-radius:5px;padding:5px 4px 3px;display:flex;flex-direction:column;
+  justify-content:space-between;position:relative;cursor:default;transition:transform .12s,box-shadow .12s;min-height:46px}
+.cell:hover{transform:scale(1.07);box-shadow:0 4px 12px rgba(34,49,47,.18);z-index:5}
+.cell .dn{font-family:'Cormorant Garamond';font-size:15px;font-weight:600;line-height:1}
+.cell .hr{font-family:'Crimson Pro';font-size:12.5px;font-weight:600;align-self:flex-end}
+.cell .lbl{font-family:'Crimson Pro';font-size:9px;line-height:1.05;text-transform:uppercase;letter-spacing:.03em;font-weight:600;opacity:.85}
+.cell.empty{background:transparent;cursor:default}
+.cell.empty:hover{transform:none;box-shadow:none}
+.work{background:var(--work);color:var(--work-ink);border:1px solid var(--line2)}
+.work .hr{color:var(--accent)}
+.weekend{background:var(--weekend);color:var(--weekend-ink)}
+.holiday{background:var(--holiday);color:var(--holiday-ink)}
+.ferie{background:var(--ferie);color:var(--ferie-ink)}
+.fridag{background:var(--fridag);color:var(--fridag-ink)}
+.cell.elev::after{content:"";position:absolute;top:4px;right:4px;width:5px;height:5px;border-radius:50%;
+  background:var(--gold);box-shadow:0 0 0 1.5px var(--card)}
+.mfoot{display:flex;justify-content:space-between;font-family:'Crimson Pro';font-size:13px;
+  padding:8px 18px 13px;color:var(--ink-soft);border-top:1px solid var(--line2)}
+.mfoot b{font-family:'Cormorant Garamond';font-size:17px;color:var(--ink);font-weight:600}
+.mfoot .acc b{color:var(--accent)}
+
+/* Tooltip */
+#tip{position:fixed;pointer-events:none;background:var(--ink);color:var(--paper);font-family:'Crimson Pro';
+  font-size:13.5px;line-height:1.4;padding:9px 13px;border-radius:7px;max-width:260px;opacity:0;
+  transition:opacity .12s;z-index:100;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+#tip b{font-family:'Cormorant Garamond';font-size:15px;display:block;margin-bottom:2px}
+#tip .tt{color:#cfe0db}
+footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-size:13.5px;
+  color:var(--ink-soft);font-style:italic;line-height:1.6}
+@media(max-width:600px){.controls{position:static}.grade-ctrl{min-width:100%}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead">
+    <div class="title-block">
+      <div class="eyebrow">Lovpligtig tidsregistrering · Normperiode 1. juni 2026 – 31. maj 2027</div>
+      <h1>Arbejdstids&shy;kalender <em>2026&ndash;27</em></h1>
+      <div class="sub">Forventet arbejdstid pr. dag &middot; 7,4 t/dag ved fuld tid</div>
+    </div>
+    <div class="seal">Middelfart<br><b>Gymnasium &amp; HF</b></div>
+  </header>
+
+  <div class="controls">
+    <div class="grade-ctrl">
+      <label>Ansættelsesgrad<small>justér &middot; beregnes automatisk</small></label>
+      <input type="range" id="slider" min="5" max="100" step="1" value="100">
+      <div class="grade-num"><input type="number" id="grade" min="1" max="100" step="1" value="100"><span class="pct">%</span></div>
+    </div>
+    <div class="presets" id="presets">
+      <button data-g="100">100</button><button data-g="80">80</button>
+      <button data-g="75">75</button><button data-g="50">50</button>
+    </div>
+    <div class="exports">
+      <button id="csvBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>CSV</button>
+      <button id="jsonBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>JSON</button>
+    </div>
+  </div>
+
+  <div class="summary" id="summary"></div>
+  <div class="note-bar">Feriedagenes præcise placering (16 dage juli/august + 9 dage i skoleåret) er antagelser jf. håndbogen — de fastlægges endeligt i Samarbejdsudvalget. Elevernes efterårs- og vinterferie er markeret med en <span style="color:var(--gold)">&#9679;</span>, men tæller som arbejdsdage for læreren.</div>
+
+  <div class="legend">
+    <span><i style="background:var(--work);border-color:var(--line2)"></i>Arbejdsdag</span>
+    <span><i style="background:var(--ferie)"></i>Ferie (lærer)</span>
+    <span><i style="background:var(--holiday)"></i>Helligdag</span>
+    <span><i style="background:var(--fridag)"></i>Lukkedag</span>
+    <span><i style="background:var(--weekend)"></i>Weekend</span>
+    <span><span style="color:var(--gold);font-size:15px">&#9679;</span>Elevferie (lærer arbejder)</span>
+  </div>
+
+  <div class="months" id="months"></div>
+
+  <footer>
+    Daglig norm 7,4 t og årsnorm 1690 t gælder fuld tid; ved lavere ansættelsesgrad skaleres alt proportionalt (jf. tidsregistreringsbilaget). Den skemalagte sum lander lidt under årsnormen — forskellen svarer til 6. ferieuge (ferie-fridage), der er lagt i opgaveporteføljen. Tallene er planlægningstal, ikke et facit, du skal ramme dag for dag.
+  </footer>
+</div>
+<div id="tip"></div>
+
+<script>
+const DATA = [{"d": "2026-06-01", "w": "Man", "u": 23, "t": "Arbejdsdag", "n": ""}, {"d": "2026-06-02", "w": "Tir", "u": 23, "t": "Arbejdsdag", "n": ""}, {"d": "2026-06-03", "w": "Ons", "u": 23, "t": "Arbejdsdag", "n": ""}, {"d": "2026-06-04", "w": "Tor", "u": 23, "t": "Arbejdsdag", "n": ""}, {"d": "2026-06-05", "w": "Fre", "u": 23, "t": "Fridag", "n": "Grundlovsdag (skolen lukket)"}, {"d": "2026-06-06", "w": "Loer", "u": 23, "t": "Weekend", "n": ""}, {"d": "2026-06-07", "w": "Soen", "u": 23, "t": "Weekend", "n": ""}, {"d": "2026-06-08", "w": "Man", "u": 24, "t": "Arbejdsdag", "n": ""}, {"d": "2026-06-09", "w": "Tir", "u": 24, "t": "Arbejdsdag", "n": ""}, {"d": "2026-06-10", "w": "Ons", "u": 24, "t": "Arbejdsdag", "n": ""}, {"d": "2026-06-11", "w": "Tor", "u": 24, "t": "Arbejdsdag", "n": ""}, {"d": "2026-06-12", "w": "Fre", "u": 24, "t": "Arbejdsdag", "n": ""}, {"d": "2026-06-13", "w": "Loer", "u": 24, "t": "Weekend", "n": ""}, {"d": "2026-06-14", "w": "Soen", "u": 24, "t": "Weekend", "n": ""}, {"d": "2026-06-15", "w": "Man", "u": 25, "t": "Arbejdsdag", "n": ""}, {"d": "2026-06-16", "w": "Tir", "u": 25, "t": "Arbejdsdag", "n": ""}, {"d": "2026-06-17", "w": "Ons", "u": 25, "t": "Arbejdsdag", "n": ""}, {"d": "2026-06-18", "w": "Tor", "u": 25, "t": "Arbejdsdag", "n": ""}, {"d": "2026-06-19", "w": "Fre", "u": 25, "t": "Arbejdsdag", "n": ""}, {"d": "2026-06-20", "w": "Loer", "u": 25, "t": "Weekend", "n": ""}, {"d": "2026-06-21", "w": "Soen", "u": 25, "t": "Weekend", "n": ""}, {"d": "2026-06-22", "w": "Man", "u": 26, "t": "Arbejdsdag", "n": ""}, {"d": "2026-06-23", "w": "Tir", "u": 26, "t": "Arbejdsdag", "n": ""}, {"d": "2026-06-24", "w": "Ons", "u": 26, "t": "Arbejdsdag", "n": ""}, {"d": "2026-06-25", "w": "Tor", "u": 26, "t": "Arbejdsdag", "n": ""}, {"d": "2026-06-26", "w": "Fre", "u": 26, "t": "Arbejdsdag", "n": ""}, {"d": "2026-06-27", "w": "Loer", "u": 26, "t": "Weekend", "n": ""}, {"d": "2026-06-28", "w": "Soen", "u": 26, "t": "Weekend", "n": ""}, {"d": "2026-06-29", "w": "Man", "u": 27, "t": "Arbejdsdag", "n": ""}, {"d": "2026-06-30", "w": "Tir", "u": 27, "t": "Arbejdsdag", "n": ""}, {"d": "2026-07-01", "w": "Ons", "u": 27, "t": "Arbejdsdag", "n": ""}, {"d": "2026-07-02", "w": "Tor", "u": 27, "t": "Arbejdsdag", "n": ""}, {"d": "2026-07-03", "w": "Fre", "u": 27, "t": "Arbejdsdag", "n": ""}, {"d": "2026-07-04", "w": "Loer", "u": 27, "t": "Weekend", "n": ""}, {"d": "2026-07-05", "w": "Soen", "u": 27, "t": "Weekend", "n": ""}, {"d": "2026-07-06", "w": "Man", "u": 28, "t": "Arbejdsdag", "n": ""}, {"d": "2026-07-07", "w": "Tir", "u": 28, "t": "Arbejdsdag", "n": ""}, {"d": "2026-07-08", "w": "Ons", "u": 28, "t": "Arbejdsdag", "n": ""}, {"d": "2026-07-09", "w": "Tor", "u": 28, "t": "Arbejdsdag", "n": ""}, {"d": "2026-07-10", "w": "Fre", "u": 28, "t": "Arbejdsdag", "n": ""}, {"d": "2026-07-11", "w": "Loer", "u": 28, "t": "Weekend", "n": ""}, {"d": "2026-07-12", "w": "Soen", "u": 28, "t": "Weekend", "n": ""}, {"d": "2026-07-13", "w": "Man", "u": 29, "t": "Arbejdsdag", "n": ""}, {"d": "2026-07-14", "w": "Tir", "u": 29, "t": "Arbejdsdag", "n": ""}, {"d": "2026-07-15", "w": "Ons", "u": 29, "t": "Arbejdsdag", "n": ""}, {"d": "2026-07-16", "w": "Tor", "u": 29, "t": "Arbejdsdag", "n": ""}, {"d": "2026-07-17", "w": "Fre", "u": 29, "t": "Ferie", "n": "Sommerferie (antaget)"}, {"d": "2026-07-18", "w": "Loer", "u": 29, "t": "Weekend", "n": ""}, {"d": "2026-07-19", "w": "Soen", "u": 29, "t": "Weekend", "n": ""}, {"d": "2026-07-20", "w": "Man", "u": 30, "t": "Ferie", "n": "Sommerferie (antaget)"}, {"d": "2026-07-21", "w": "Tir", "u": 30, "t": "Ferie", "n": "Sommerferie (antaget)"}, {"d": "2026-07-22", "w": "Ons", "u": 30, "t": "Ferie", "n": "Sommerferie (antaget)"}, {"d": "2026-07-23", "w": "Tor", "u": 30, "t": "Ferie", "n": "Sommerferie (antaget)"}, {"d": "2026-07-24", "w": "Fre", "u": 30, "t": "Ferie", "n": "Sommerferie (antaget)"}, {"d": "2026-07-25", "w": "Loer", "u": 30, "t": "Weekend", "n": ""}, {"d": "2026-07-26", "w": "Soen", "u": 30, "t": "Weekend", "n": ""}, {"d": "2026-07-27", "w": "Man", "u": 31, "t": "Ferie", "n": "Sommerferie (antaget)"}, {"d": "2026-07-28", "w": "Tir", "u": 31, "t": "Ferie", "n": "Sommerferie (antaget)"}, {"d": "2026-07-29", "w": "Ons", "u": 31, "t": "Ferie", "n": "Sommerferie (antaget)"}, {"d": "2026-07-30", "w": "Tor", "u": 31, "t": "Ferie", "n": "Sommerferie (antaget)"}, {"d": "2026-07-31", "w": "Fre", "u": 31, "t": "Ferie", "n": "Sommerferie (antaget)"}, {"d": "2026-08-01", "w": "Loer", "u": 31, "t": "Weekend", "n": ""}, {"d": "2026-08-02", "w": "Soen", "u": 31, "t": "Weekend", "n": ""}, {"d": "2026-08-03", "w": "Man", "u": 32, "t": "Ferie", "n": "Sommerferie (antaget)"}, {"d": "2026-08-04", "w": "Tir", "u": 32, "t": "Ferie", "n": "Sommerferie (antaget)"}, {"d": "2026-08-05", "w": "Ons", "u": 32, "t": "Ferie", "n": "Sommerferie (antaget)"}, {"d": "2026-08-06", "w": "Tor", "u": 32, "t": "Ferie", "n": "Sommerferie (antaget)"}, {"d": "2026-08-07", "w": "Fre", "u": 32, "t": "Ferie", "n": "Sommerferie (antaget)"}, {"d": "2026-08-08", "w": "Loer", "u": 32, "t": "Weekend", "n": ""}, {"d": "2026-08-09", "w": "Soen", "u": 32, "t": "Weekend", "n": ""}, {"d": "2026-08-10", "w": "Man", "u": 33, "t": "Arbejdsdag", "n": ""}, {"d": "2026-08-11", "w": "Tir", "u": 33, "t": "Arbejdsdag", "n": ""}, {"d": "2026-08-12", "w": "Ons", "u": 33, "t": "Arbejdsdag", "n": ""}, {"d": "2026-08-13", "w": "Tor", "u": 33, "t": "Arbejdsdag", "n": ""}, {"d": "2026-08-14", "w": "Fre", "u": 33, "t": "Arbejdsdag", "n": ""}, {"d": "2026-08-15", "w": "Loer", "u": 33, "t": "Weekend", "n": ""}, {"d": "2026-08-16", "w": "Soen", "u": 33, "t": "Weekend", "n": ""}, {"d": "2026-08-17", "w": "Man", "u": 34, "t": "Arbejdsdag", "n": ""}, {"d": "2026-08-18", "w": "Tir", "u": 34, "t": "Arbejdsdag", "n": ""}, {"d": "2026-08-19", "w": "Ons", "u": 34, "t": "Arbejdsdag", "n": ""}, {"d": "2026-08-20", "w": "Tor", "u": 34, "t": "Arbejdsdag", "n": ""}, {"d": "2026-08-21", "w": "Fre", "u": 34, "t": "Arbejdsdag", "n": ""}, {"d": "2026-08-22", "w": "Loer", "u": 34, "t": "Weekend", "n": ""}, {"d": "2026-08-23", "w": "Soen", "u": 34, "t": "Weekend", "n": ""}, {"d": "2026-08-24", "w": "Man", "u": 35, "t": "Arbejdsdag", "n": ""}, {"d": "2026-08-25", "w": "Tir", "u": 35, "t": "Arbejdsdag", "n": ""}, {"d": "2026-08-26", "w": "Ons", "u": 35, "t": "Arbejdsdag", "n": ""}, {"d": "2026-08-27", "w": "Tor", "u": 35, "t": "Arbejdsdag", "n": ""}, {"d": "2026-08-28", "w": "Fre", "u": 35, "t": "Arbejdsdag", "n": ""}, {"d": "2026-08-29", "w": "Loer", "u": 35, "t": "Weekend", "n": ""}, {"d": "2026-08-30", "w": "Soen", "u": 35, "t": "Weekend", "n": ""}, {"d": "2026-08-31", "w": "Man", "u": 36, "t": "Arbejdsdag", "n": ""}, {"d": "2026-09-01", "w": "Tir", "u": 36, "t": "Arbejdsdag", "n": ""}, {"d": "2026-09-02", "w": "Ons", "u": 36, "t": "Arbejdsdag", "n": ""}, {"d": "2026-09-03", "w": "Tor", "u": 36, "t": "Arbejdsdag", "n": ""}, {"d": "2026-09-04", "w": "Fre", "u": 36, "t": "Arbejdsdag", "n": ""}, {"d": "2026-09-05", "w": "Loer", "u": 36, "t": "Weekend", "n": ""}, {"d": "2026-09-06", "w": "Soen", "u": 36, "t": "Weekend", "n": ""}, {"d": "2026-09-07", "w": "Man", "u": 37, "t": "Arbejdsdag", "n": ""}, {"d": "2026-09-08", "w": "Tir", "u": 37, "t": "Arbejdsdag", "n": ""}, {"d": "2026-09-09", "w": "Ons", "u": 37, "t": "Arbejdsdag", "n": ""}, {"d": "2026-09-10", "w": "Tor", "u": 37, "t": "Arbejdsdag", "n": ""}, {"d": "2026-09-11", "w": "Fre", "u": 37, "t": "Arbejdsdag", "n": ""}, {"d": "2026-09-12", "w": "Loer", "u": 37, "t": "Weekend", "n": ""}, {"d": "2026-09-13", "w": "Soen", "u": 37, "t": "Weekend", "n": ""}, {"d": "2026-09-14", "w": "Man", "u": 38, "t": "Arbejdsdag", "n": ""}, {"d": "2026-09-15", "w": "Tir", "u": 38, "t": "Arbejdsdag", "n": ""}, {"d": "2026-09-16", "w": "Ons", "u": 38, "t": "Arbejdsdag", "n": ""}, {"d": "2026-09-17", "w": "Tor", "u": 38, "t": "Arbejdsdag", "n": ""}, {"d": "2026-09-18", "w": "Fre", "u": 38, "t": "Arbejdsdag", "n": ""}, {"d": "2026-09-19", "w": "Loer", "u": 38, "t": "Weekend", "n": ""}, {"d": "2026-09-20", "w": "Soen", "u": 38, "t": "Weekend", "n": ""}, {"d": "2026-09-21", "w": "Man", "u": 39, "t": "Arbejdsdag", "n": ""}, {"d": "2026-09-22", "w": "Tir", "u": 39, "t": "Arbejdsdag", "n": ""}, {"d": "2026-09-23", "w": "Ons", "u": 39, "t": "Arbejdsdag", "n": ""}, {"d": "2026-09-24", "w": "Tor", "u": 39, "t": "Arbejdsdag", "n": ""}, {"d": "2026-09-25", "w": "Fre", "u": 39, "t": "Arbejdsdag", "n": ""}, {"d": "2026-09-26", "w": "Loer", "u": 39, "t": "Weekend", "n": ""}, {"d": "2026-09-27", "w": "Soen", "u": 39, "t": "Weekend", "n": ""}, {"d": "2026-09-28", "w": "Man", "u": 40, "t": "Arbejdsdag", "n": ""}, {"d": "2026-09-29", "w": "Tir", "u": 40, "t": "Arbejdsdag", "n": ""}, {"d": "2026-09-30", "w": "Ons", "u": 40, "t": "Arbejdsdag", "n": ""}, {"d": "2026-10-01", "w": "Tor", "u": 40, "t": "Arbejdsdag", "n": ""}, {"d": "2026-10-02", "w": "Fre", "u": 40, "t": "Arbejdsdag", "n": ""}, {"d": "2026-10-03", "w": "Loer", "u": 40, "t": "Weekend", "n": ""}, {"d": "2026-10-04", "w": "Soen", "u": 40, "t": "Weekend", "n": ""}, {"d": "2026-10-05", "w": "Man", "u": 41, "t": "Arbejdsdag", "n": ""}, {"d": "2026-10-06", "w": "Tir", "u": 41, "t": "Arbejdsdag", "n": ""}, {"d": "2026-10-07", "w": "Ons", "u": 41, "t": "Arbejdsdag", "n": ""}, {"d": "2026-10-08", "w": "Tor", "u": 41, "t": "Arbejdsdag", "n": ""}, {"d": "2026-10-09", "w": "Fre", "u": 41, "t": "Arbejdsdag", "n": ""}, {"d": "2026-10-10", "w": "Loer", "u": 41, "t": "Weekend", "n": ""}, {"d": "2026-10-11", "w": "Soen", "u": 41, "t": "Weekend", "n": ""}, {"d": "2026-10-12", "w": "Man", "u": 42, "t": "Arbejdsdag", "n": "Efteraarsferie (elever) - laerer: arbejdsdag"}, {"d": "2026-10-13", "w": "Tir", "u": 42, "t": "Arbejdsdag", "n": "Efteraarsferie (elever) - laerer: arbejdsdag"}, {"d": "2026-10-14", "w": "Ons", "u": 42, "t": "Arbejdsdag", "n": "Efteraarsferie (elever) - laerer: arbejdsdag"}, {"d": "2026-10-15", "w": "Tor", "u": 42, "t": "Arbejdsdag", "n": "Efteraarsferie (elever) - laerer: arbejdsdag"}, {"d": "2026-10-16", "w": "Fre", "u": 42, "t": "Arbejdsdag", "n": "Efteraarsferie (elever) - laerer: arbejdsdag"}, {"d": "2026-10-17", "w": "Loer", "u": 42, "t": "Weekend", "n": ""}, {"d": "2026-10-18", "w": "Soen", "u": 42, "t": "Weekend", "n": ""}, {"d": "2026-10-19", "w": "Man", "u": 43, "t": "Arbejdsdag", "n": ""}, {"d": "2026-10-20", "w": "Tir", "u": 43, "t": "Arbejdsdag", "n": ""}, {"d": "2026-10-21", "w": "Ons", "u": 43, "t": "Arbejdsdag", "n": ""}, {"d": "2026-10-22", "w": "Tor", "u": 43, "t": "Arbejdsdag", "n": ""}, {"d": "2026-10-23", "w": "Fre", "u": 43, "t": "Arbejdsdag", "n": ""}, {"d": "2026-10-24", "w": "Loer", "u": 43, "t": "Weekend", "n": ""}, {"d": "2026-10-25", "w": "Soen", "u": 43, "t": "Weekend", "n": ""}, {"d": "2026-10-26", "w": "Man", "u": 44, "t": "Arbejdsdag", "n": ""}, {"d": "2026-10-27", "w": "Tir", "u": 44, "t": "Arbejdsdag", "n": ""}, {"d": "2026-10-28", "w": "Ons", "u": 44, "t": "Arbejdsdag", "n": ""}, {"d": "2026-10-29", "w": "Tor", "u": 44, "t": "Arbejdsdag", "n": ""}, {"d": "2026-10-30", "w": "Fre", "u": 44, "t": "Arbejdsdag", "n": ""}, {"d": "2026-10-31", "w": "Loer", "u": 44, "t": "Weekend", "n": ""}, {"d": "2026-11-01", "w": "Soen", "u": 44, "t": "Weekend", "n": ""}, {"d": "2026-11-02", "w": "Man", "u": 45, "t": "Arbejdsdag", "n": ""}, {"d": "2026-11-03", "w": "Tir", "u": 45, "t": "Arbejdsdag", "n": ""}, {"d": "2026-11-04", "w": "Ons", "u": 45, "t": "Arbejdsdag", "n": ""}, {"d": "2026-11-05", "w": "Tor", "u": 45, "t": "Arbejdsdag", "n": ""}, {"d": "2026-11-06", "w": "Fre", "u": 45, "t": "Arbejdsdag", "n": ""}, {"d": "2026-11-07", "w": "Loer", "u": 45, "t": "Weekend", "n": ""}, {"d": "2026-11-08", "w": "Soen", "u": 45, "t": "Weekend", "n": ""}, {"d": "2026-11-09", "w": "Man", "u": 46, "t": "Arbejdsdag", "n": ""}, {"d": "2026-11-10", "w": "Tir", "u": 46, "t": "Arbejdsdag", "n": ""}, {"d": "2026-11-11", "w": "Ons", "u": 46, "t": "Arbejdsdag", "n": ""}, {"d": "2026-11-12", "w": "Tor", "u": 46, "t": "Arbejdsdag", "n": ""}, {"d": "2026-11-13", "w": "Fre", "u": 46, "t": "Arbejdsdag", "n": ""}, {"d": "2026-11-14", "w": "Loer", "u": 46, "t": "Weekend", "n": ""}, {"d": "2026-11-15", "w": "Soen", "u": 46, "t": "Weekend", "n": ""}, {"d": "2026-11-16", "w": "Man", "u": 47, "t": "Arbejdsdag", "n": ""}, {"d": "2026-11-17", "w": "Tir", "u": 47, "t": "Arbejdsdag", "n": ""}, {"d": "2026-11-18", "w": "Ons", "u": 47, "t": "Arbejdsdag", "n": ""}, {"d": "2026-11-19", "w": "Tor", "u": 47, "t": "Arbejdsdag", "n": ""}, {"d": "2026-11-20", "w": "Fre", "u": 47, "t": "Arbejdsdag", "n": ""}, {"d": "2026-11-21", "w": "Loer", "u": 47, "t": "Weekend", "n": ""}, {"d": "2026-11-22", "w": "Soen", "u": 47, "t": "Weekend", "n": ""}, {"d": "2026-11-23", "w": "Man", "u": 48, "t": "Arbejdsdag", "n": ""}, {"d": "2026-11-24", "w": "Tir", "u": 48, "t": "Arbejdsdag", "n": ""}, {"d": "2026-11-25", "w": "Ons", "u": 48, "t": "Arbejdsdag", "n": ""}, {"d": "2026-11-26", "w": "Tor", "u": 48, "t": "Arbejdsdag", "n": ""}, {"d": "2026-11-27", "w": "Fre", "u": 48, "t": "Arbejdsdag", "n": ""}, {"d": "2026-11-28", "w": "Loer", "u": 48, "t": "Weekend", "n": ""}, {"d": "2026-11-29", "w": "Soen", "u": 48, "t": "Weekend", "n": ""}, {"d": "2026-11-30", "w": "Man", "u": 49, "t": "Arbejdsdag", "n": ""}, {"d": "2026-12-01", "w": "Tir", "u": 49, "t": "Arbejdsdag", "n": ""}, {"d": "2026-12-02", "w": "Ons", "u": 49, "t": "Arbejdsdag", "n": ""}, {"d": "2026-12-03", "w": "Tor", "u": 49, "t": "Arbejdsdag", "n": ""}, {"d": "2026-12-04", "w": "Fre", "u": 49, "t": "Arbejdsdag", "n": ""}, {"d": "2026-12-05", "w": "Loer", "u": 49, "t": "Weekend", "n": ""}, {"d": "2026-12-06", "w": "Soen", "u": 49, "t": "Weekend", "n": ""}, {"d": "2026-12-07", "w": "Man", "u": 50, "t": "Arbejdsdag", "n": ""}, {"d": "2026-12-08", "w": "Tir", "u": 50, "t": "Arbejdsdag", "n": ""}, {"d": "2026-12-09", "w": "Ons", "u": 50, "t": "Arbejdsdag", "n": ""}, {"d": "2026-12-10", "w": "Tor", "u": 50, "t": "Arbejdsdag", "n": ""}, {"d": "2026-12-11", "w": "Fre", "u": 50, "t": "Arbejdsdag", "n": ""}, {"d": "2026-12-12", "w": "Loer", "u": 50, "t": "Weekend", "n": ""}, {"d": "2026-12-13", "w": "Soen", "u": 50, "t": "Weekend", "n": ""}, {"d": "2026-12-14", "w": "Man", "u": 51, "t": "Arbejdsdag", "n": ""}, {"d": "2026-12-15", "w": "Tir", "u": 51, "t": "Arbejdsdag", "n": ""}, {"d": "2026-12-16", "w": "Ons", "u": 51, "t": "Arbejdsdag", "n": ""}, {"d": "2026-12-17", "w": "Tor", "u": 51, "t": "Arbejdsdag", "n": ""}, {"d": "2026-12-18", "w": "Fre", "u": 51, "t": "Arbejdsdag", "n": ""}, {"d": "2026-12-19", "w": "Loer", "u": 51, "t": "Weekend", "n": ""}, {"d": "2026-12-20", "w": "Soen", "u": 51, "t": "Weekend", "n": ""}, {"d": "2026-12-21", "w": "Man", "u": 52, "t": "Ferie", "n": "Feriedag (antaget)"}, {"d": "2026-12-22", "w": "Tir", "u": 52, "t": "Ferie", "n": "Feriedag (antaget)"}, {"d": "2026-12-23", "w": "Ons", "u": 52, "t": "Ferie", "n": "Feriedag (antaget)"}, {"d": "2026-12-24", "w": "Tor", "u": 52, "t": "Fridag", "n": "Juleaftensdag (skolen lukket)"}, {"d": "2026-12-25", "w": "Fre", "u": 52, "t": "Helligdag", "n": "1. juledag"}, {"d": "2026-12-26", "w": "Loer", "u": 52, "t": "Weekend", "n": ""}, {"d": "2026-12-27", "w": "Soen", "u": 52, "t": "Weekend", "n": ""}, {"d": "2026-12-28", "w": "Man", "u": 53, "t": "Ferie", "n": "Feriedag (antaget)"}, {"d": "2026-12-29", "w": "Tir", "u": 53, "t": "Ferie", "n": "Feriedag (antaget)"}, {"d": "2026-12-30", "w": "Ons", "u": 53, "t": "Ferie", "n": "Feriedag (antaget)"}, {"d": "2026-12-31", "w": "Tor", "u": 53, "t": "Fridag", "n": "Nytaarsaftensdag (skolen lukket)"}, {"d": "2027-01-01", "w": "Fre", "u": 53, "t": "Helligdag", "n": "Nytaarsdag"}, {"d": "2027-01-02", "w": "Loer", "u": 53, "t": "Weekend", "n": ""}, {"d": "2027-01-03", "w": "Soen", "u": 53, "t": "Weekend", "n": ""}, {"d": "2027-01-04", "w": "Man", "u": 1, "t": "Arbejdsdag", "n": ""}, {"d": "2027-01-05", "w": "Tir", "u": 1, "t": "Arbejdsdag", "n": ""}, {"d": "2027-01-06", "w": "Ons", "u": 1, "t": "Arbejdsdag", "n": ""}, {"d": "2027-01-07", "w": "Tor", "u": 1, "t": "Arbejdsdag", "n": ""}, {"d": "2027-01-08", "w": "Fre", "u": 1, "t": "Arbejdsdag", "n": ""}, {"d": "2027-01-09", "w": "Loer", "u": 1, "t": "Weekend", "n": ""}, {"d": "2027-01-10", "w": "Soen", "u": 1, "t": "Weekend", "n": ""}, {"d": "2027-01-11", "w": "Man", "u": 2, "t": "Arbejdsdag", "n": ""}, {"d": "2027-01-12", "w": "Tir", "u": 2, "t": "Arbejdsdag", "n": ""}, {"d": "2027-01-13", "w": "Ons", "u": 2, "t": "Arbejdsdag", "n": ""}, {"d": "2027-01-14", "w": "Tor", "u": 2, "t": "Arbejdsdag", "n": ""}, {"d": "2027-01-15", "w": "Fre", "u": 2, "t": "Arbejdsdag", "n": ""}, {"d": "2027-01-16", "w": "Loer", "u": 2, "t": "Weekend", "n": ""}, {"d": "2027-01-17", "w": "Soen", "u": 2, "t": "Weekend", "n": ""}, {"d": "2027-01-18", "w": "Man", "u": 3, "t": "Arbejdsdag", "n": ""}, {"d": "2027-01-19", "w": "Tir", "u": 3, "t": "Arbejdsdag", "n": ""}, {"d": "2027-01-20", "w": "Ons", "u": 3, "t": "Arbejdsdag", "n": ""}, {"d": "2027-01-21", "w": "Tor", "u": 3, "t": "Arbejdsdag", "n": ""}, {"d": "2027-01-22", "w": "Fre", "u": 3, "t": "Arbejdsdag", "n": ""}, {"d": "2027-01-23", "w": "Loer", "u": 3, "t": "Weekend", "n": ""}, {"d": "2027-01-24", "w": "Soen", "u": 3, "t": "Weekend", "n": ""}, {"d": "2027-01-25", "w": "Man", "u": 4, "t": "Arbejdsdag", "n": ""}, {"d": "2027-01-26", "w": "Tir", "u": 4, "t": "Arbejdsdag", "n": ""}, {"d": "2027-01-27", "w": "Ons", "u": 4, "t": "Arbejdsdag", "n": ""}, {"d": "2027-01-28", "w": "Tor", "u": 4, "t": "Arbejdsdag", "n": ""}, {"d": "2027-01-29", "w": "Fre", "u": 4, "t": "Arbejdsdag", "n": ""}, {"d": "2027-01-30", "w": "Loer", "u": 4, "t": "Weekend", "n": ""}, {"d": "2027-01-31", "w": "Soen", "u": 4, "t": "Weekend", "n": ""}, {"d": "2027-02-01", "w": "Man", "u": 5, "t": "Arbejdsdag", "n": ""}, {"d": "2027-02-02", "w": "Tir", "u": 5, "t": "Arbejdsdag", "n": ""}, {"d": "2027-02-03", "w": "Ons", "u": 5, "t": "Arbejdsdag", "n": ""}, {"d": "2027-02-04", "w": "Tor", "u": 5, "t": "Arbejdsdag", "n": ""}, {"d": "2027-02-05", "w": "Fre", "u": 5, "t": "Arbejdsdag", "n": ""}, {"d": "2027-02-06", "w": "Loer", "u": 5, "t": "Weekend", "n": ""}, {"d": "2027-02-07", "w": "Soen", "u": 5, "t": "Weekend", "n": ""}, {"d": "2027-02-08", "w": "Man", "u": 6, "t": "Arbejdsdag", "n": ""}, {"d": "2027-02-09", "w": "Tir", "u": 6, "t": "Arbejdsdag", "n": ""}, {"d": "2027-02-10", "w": "Ons", "u": 6, "t": "Arbejdsdag", "n": ""}, {"d": "2027-02-11", "w": "Tor", "u": 6, "t": "Arbejdsdag", "n": ""}, {"d": "2027-02-12", "w": "Fre", "u": 6, "t": "Arbejdsdag", "n": ""}, {"d": "2027-02-13", "w": "Loer", "u": 6, "t": "Weekend", "n": ""}, {"d": "2027-02-14", "w": "Soen", "u": 6, "t": "Weekend", "n": ""}, {"d": "2027-02-15", "w": "Man", "u": 7, "t": "Arbejdsdag", "n": "Vinterferie (elever) - laerer: arbejdsdag"}, {"d": "2027-02-16", "w": "Tir", "u": 7, "t": "Arbejdsdag", "n": "Vinterferie (elever) - laerer: arbejdsdag"}, {"d": "2027-02-17", "w": "Ons", "u": 7, "t": "Arbejdsdag", "n": "Vinterferie (elever) - laerer: arbejdsdag"}, {"d": "2027-02-18", "w": "Tor", "u": 7, "t": "Arbejdsdag", "n": "Vinterferie (elever) - laerer: arbejdsdag"}, {"d": "2027-02-19", "w": "Fre", "u": 7, "t": "Arbejdsdag", "n": "Vinterferie (elever) - laerer: arbejdsdag"}, {"d": "2027-02-20", "w": "Loer", "u": 7, "t": "Weekend", "n": ""}, {"d": "2027-02-21", "w": "Soen", "u": 7, "t": "Weekend", "n": ""}, {"d": "2027-02-22", "w": "Man", "u": 8, "t": "Arbejdsdag", "n": ""}, {"d": "2027-02-23", "w": "Tir", "u": 8, "t": "Arbejdsdag", "n": ""}, {"d": "2027-02-24", "w": "Ons", "u": 8, "t": "Arbejdsdag", "n": ""}, {"d": "2027-02-25", "w": "Tor", "u": 8, "t": "Arbejdsdag", "n": ""}, {"d": "2027-02-26", "w": "Fre", "u": 8, "t": "Arbejdsdag", "n": ""}, {"d": "2027-02-27", "w": "Loer", "u": 8, "t": "Weekend", "n": ""}, {"d": "2027-02-28", "w": "Soen", "u": 8, "t": "Weekend", "n": ""}, {"d": "2027-03-01", "w": "Man", "u": 9, "t": "Arbejdsdag", "n": ""}, {"d": "2027-03-02", "w": "Tir", "u": 9, "t": "Arbejdsdag", "n": ""}, {"d": "2027-03-03", "w": "Ons", "u": 9, "t": "Arbejdsdag", "n": ""}, {"d": "2027-03-04", "w": "Tor", "u": 9, "t": "Arbejdsdag", "n": ""}, {"d": "2027-03-05", "w": "Fre", "u": 9, "t": "Arbejdsdag", "n": ""}, {"d": "2027-03-06", "w": "Loer", "u": 9, "t": "Weekend", "n": ""}, {"d": "2027-03-07", "w": "Soen", "u": 9, "t": "Weekend", "n": ""}, {"d": "2027-03-08", "w": "Man", "u": 10, "t": "Arbejdsdag", "n": ""}, {"d": "2027-03-09", "w": "Tir", "u": 10, "t": "Arbejdsdag", "n": ""}, {"d": "2027-03-10", "w": "Ons", "u": 10, "t": "Arbejdsdag", "n": ""}, {"d": "2027-03-11", "w": "Tor", "u": 10, "t": "Arbejdsdag", "n": ""}, {"d": "2027-03-12", "w": "Fre", "u": 10, "t": "Arbejdsdag", "n": ""}, {"d": "2027-03-13", "w": "Loer", "u": 10, "t": "Weekend", "n": ""}, {"d": "2027-03-14", "w": "Soen", "u": 10, "t": "Weekend", "n": ""}, {"d": "2027-03-15", "w": "Man", "u": 11, "t": "Arbejdsdag", "n": ""}, {"d": "2027-03-16", "w": "Tir", "u": 11, "t": "Arbejdsdag", "n": ""}, {"d": "2027-03-17", "w": "Ons", "u": 11, "t": "Arbejdsdag", "n": ""}, {"d": "2027-03-18", "w": "Tor", "u": 11, "t": "Arbejdsdag", "n": ""}, {"d": "2027-03-19", "w": "Fre", "u": 11, "t": "Arbejdsdag", "n": ""}, {"d": "2027-03-20", "w": "Loer", "u": 11, "t": "Weekend", "n": ""}, {"d": "2027-03-21", "w": "Soen", "u": 11, "t": "Weekend", "n": ""}, {"d": "2027-03-22", "w": "Man", "u": 12, "t": "Ferie", "n": "Feriedag (antaget)"}, {"d": "2027-03-23", "w": "Tir", "u": 12, "t": "Ferie", "n": "Feriedag (antaget)"}, {"d": "2027-03-24", "w": "Ons", "u": 12, "t": "Ferie", "n": "Feriedag (antaget)"}, {"d": "2027-03-25", "w": "Tor", "u": 12, "t": "Helligdag", "n": "Skaertorsdag"}, {"d": "2027-03-26", "w": "Fre", "u": 12, "t": "Helligdag", "n": "Langfredag"}, {"d": "2027-03-27", "w": "Loer", "u": 12, "t": "Weekend", "n": ""}, {"d": "2027-03-28", "w": "Soen", "u": 12, "t": "Weekend", "n": ""}, {"d": "2027-03-29", "w": "Man", "u": 13, "t": "Helligdag", "n": "2. paaskedag"}, {"d": "2027-03-30", "w": "Tir", "u": 13, "t": "Arbejdsdag", "n": ""}, {"d": "2027-03-31", "w": "Ons", "u": 13, "t": "Arbejdsdag", "n": ""}, {"d": "2027-04-01", "w": "Tor", "u": 13, "t": "Arbejdsdag", "n": ""}, {"d": "2027-04-02", "w": "Fre", "u": 13, "t": "Arbejdsdag", "n": ""}, {"d": "2027-04-03", "w": "Loer", "u": 13, "t": "Weekend", "n": ""}, {"d": "2027-04-04", "w": "Soen", "u": 13, "t": "Weekend", "n": ""}, {"d": "2027-04-05", "w": "Man", "u": 14, "t": "Arbejdsdag", "n": ""}, {"d": "2027-04-06", "w": "Tir", "u": 14, "t": "Arbejdsdag", "n": ""}, {"d": "2027-04-07", "w": "Ons", "u": 14, "t": "Arbejdsdag", "n": ""}, {"d": "2027-04-08", "w": "Tor", "u": 14, "t": "Arbejdsdag", "n": ""}, {"d": "2027-04-09", "w": "Fre", "u": 14, "t": "Arbejdsdag", "n": ""}, {"d": "2027-04-10", "w": "Loer", "u": 14, "t": "Weekend", "n": ""}, {"d": "2027-04-11", "w": "Soen", "u": 14, "t": "Weekend", "n": ""}, {"d": "2027-04-12", "w": "Man", "u": 15, "t": "Arbejdsdag", "n": ""}, {"d": "2027-04-13", "w": "Tir", "u": 15, "t": "Arbejdsdag", "n": ""}, {"d": "2027-04-14", "w": "Ons", "u": 15, "t": "Arbejdsdag", "n": ""}, {"d": "2027-04-15", "w": "Tor", "u": 15, "t": "Arbejdsdag", "n": ""}, {"d": "2027-04-16", "w": "Fre", "u": 15, "t": "Arbejdsdag", "n": ""}, {"d": "2027-04-17", "w": "Loer", "u": 15, "t": "Weekend", "n": ""}, {"d": "2027-04-18", "w": "Soen", "u": 15, "t": "Weekend", "n": ""}, {"d": "2027-04-19", "w": "Man", "u": 16, "t": "Arbejdsdag", "n": ""}, {"d": "2027-04-20", "w": "Tir", "u": 16, "t": "Arbejdsdag", "n": ""}, {"d": "2027-04-21", "w": "Ons", "u": 16, "t": "Arbejdsdag", "n": ""}, {"d": "2027-04-22", "w": "Tor", "u": 16, "t": "Arbejdsdag", "n": ""}, {"d": "2027-04-23", "w": "Fre", "u": 16, "t": "Arbejdsdag", "n": ""}, {"d": "2027-04-24", "w": "Loer", "u": 16, "t": "Weekend", "n": ""}, {"d": "2027-04-25", "w": "Soen", "u": 16, "t": "Weekend", "n": ""}, {"d": "2027-04-26", "w": "Man", "u": 17, "t": "Arbejdsdag", "n": ""}, {"d": "2027-04-27", "w": "Tir", "u": 17, "t": "Arbejdsdag", "n": ""}, {"d": "2027-04-28", "w": "Ons", "u": 17, "t": "Arbejdsdag", "n": ""}, {"d": "2027-04-29", "w": "Tor", "u": 17, "t": "Arbejdsdag", "n": ""}, {"d": "2027-04-30", "w": "Fre", "u": 17, "t": "Arbejdsdag", "n": ""}, {"d": "2027-05-01", "w": "Loer", "u": 17, "t": "Weekend", "n": ""}, {"d": "2027-05-02", "w": "Soen", "u": 17, "t": "Weekend", "n": ""}, {"d": "2027-05-03", "w": "Man", "u": 18, "t": "Arbejdsdag", "n": ""}, {"d": "2027-05-04", "w": "Tir", "u": 18, "t": "Arbejdsdag", "n": ""}, {"d": "2027-05-05", "w": "Ons", "u": 18, "t": "Arbejdsdag", "n": ""}, {"d": "2027-05-06", "w": "Tor", "u": 18, "t": "Helligdag", "n": "Kristi himmelfartsdag"}, {"d": "2027-05-07", "w": "Fre", "u": 18, "t": "Arbejdsdag", "n": ""}, {"d": "2027-05-08", "w": "Loer", "u": 18, "t": "Weekend", "n": ""}, {"d": "2027-05-09", "w": "Soen", "u": 18, "t": "Weekend", "n": ""}, {"d": "2027-05-10", "w": "Man", "u": 19, "t": "Arbejdsdag", "n": ""}, {"d": "2027-05-11", "w": "Tir", "u": 19, "t": "Arbejdsdag", "n": ""}, {"d": "2027-05-12", "w": "Ons", "u": 19, "t": "Arbejdsdag", "n": ""}, {"d": "2027-05-13", "w": "Tor", "u": 19, "t": "Arbejdsdag", "n": ""}, {"d": "2027-05-14", "w": "Fre", "u": 19, "t": "Arbejdsdag", "n": ""}, {"d": "2027-05-15", "w": "Loer", "u": 19, "t": "Weekend", "n": ""}, {"d": "2027-05-16", "w": "Soen", "u": 19, "t": "Weekend", "n": ""}, {"d": "2027-05-17", "w": "Man", "u": 20, "t": "Helligdag", "n": "2. pinsedag"}, {"d": "2027-05-18", "w": "Tir", "u": 20, "t": "Arbejdsdag", "n": ""}, {"d": "2027-05-19", "w": "Ons", "u": 20, "t": "Arbejdsdag", "n": ""}, {"d": "2027-05-20", "w": "Tor", "u": 20, "t": "Arbejdsdag", "n": ""}, {"d": "2027-05-21", "w": "Fre", "u": 20, "t": "Arbejdsdag", "n": ""}, {"d": "2027-05-22", "w": "Loer", "u": 20, "t": "Weekend", "n": ""}, {"d": "2027-05-23", "w": "Soen", "u": 20, "t": "Weekend", "n": ""}, {"d": "2027-05-24", "w": "Man", "u": 21, "t": "Arbejdsdag", "n": ""}, {"d": "2027-05-25", "w": "Tir", "u": 21, "t": "Arbejdsdag", "n": ""}, {"d": "2027-05-26", "w": "Ons", "u": 21, "t": "Arbejdsdag", "n": ""}, {"d": "2027-05-27", "w": "Tor", "u": 21, "t": "Arbejdsdag", "n": ""}, {"d": "2027-05-28", "w": "Fre", "u": 21, "t": "Arbejdsdag", "n": ""}, {"d": "2027-05-29", "w": "Loer", "u": 21, "t": "Weekend", "n": ""}, {"d": "2027-05-30", "w": "Soen", "u": 21, "t": "Weekend", "n": ""}, {"d": "2027-05-31", "w": "Man", "u": 22, "t": "Arbejdsdag", "n": ""}];
+const FULL_DAY = 7.4, FULL_YEAR = 1690;
+const MONTHS = ["januar","februar","marts","april","maj","juni","juli","august","september","oktober","november","december"];
+const DOW = ["Man","Tir","Ons","Tor","Fre","Lør","Søn"];
+const TYPE_CLASS = {Arbejdsdag:"work",Weekend:"weekend",Helligdag:"holiday",Ferie:"ferie",Fridag:"fridag"};
+const fmt = n => n.toLocaleString('da-DK',{minimumFractionDigits:1,maximumFractionDigits:1});
+const fmt0 = n => n.toLocaleString('da-DK',{maximumFractionDigits:0});
+
+let grade = 100;
+
+function dayHours(t){ return t==="Arbejdsdag" ? FULL_DAY*grade/100 : 0; }
+
+// precompute month buckets + cumulative
+function compute(){
+  let cum=0; const rows=[];
+  for(const r of DATA){
+    const h = dayHours(r.t);
+    cum += h;
+    rows.push({...r, h, cum:Math.round(cum*100)/100});
+  }
+  return rows;
+}
+
+function renderSummary(rows){
+  const work = rows.filter(r=>r.t==="Arbejdsdag");
+  const total = work.reduce((a,r)=>a+r.h,0);
+  const norm = FULL_YEAR*grade/100;
+  const daily = FULL_DAY*grade/100;
+  const ferie = DATA.filter(r=>r.t==="Ferie").length;
+  const band = 42*grade/100;
+  const cards=[
+    ["Daglig norm",fmt(daily),"t/dag","accent"],
+    ["Årsnorm (norm)",fmt0(norm),"t","accent"],
+    ["Arbejdsdage",work.length,"",""],
+    ["Skemalagte timer",fmt(total),"t",""],
+    ["Forskel til årsnorm",(total-norm>=0?"+":"")+fmt(total-norm),"t","gold"],
+    ["Fleksbånd (+)",fmt(band),"t","gold"],
+    ["Feriedage (lærer)",ferie,"dage",""],
+  ];
+  document.getElementById('summary').innerHTML = cards.map(([k,v,u,c])=>
+    `<div class="stat ${c}"><div class="k">${k}</div><div class="v">${v}${u?` <small>${u}</small>`:""}</div></div>`).join('');
+}
+
+function renderMonths(rows){
+  // group by year-month preserving order June26..May27
+  const order=[]; const map={};
+  for(const r of rows){
+    const [y,m]=r.d.split('-'); const key=y+'-'+m;
+    if(!map[key]){map[key]=[];order.push(key);}
+    map[key].push(r);
+  }
+  let html='';
+  for(const key of order){
+    const [y,m]=key.split('-'); const mi=parseInt(m)-1;
+    const days=map[key];
+    const first=days[0]; const fd=new Date(first.d+'T00:00').getDay(); // 0 Sun..6 Sat
+    const offset=(fd===0?6:fd-1); // Monday-based
+    let cells='';
+    cells+=DOW.map((d,i)=>`<div class="dow ${i>=5?'we':''}">${d}</div>`).join('');
+    for(let i=0;i<offset;i++) cells+='<div class="cell empty"></div>';
+    for(const r of days){
+      const cls=TYPE_CLASS[r.t]||'work';
+      const dn=parseInt(r.d.split('-')[2]);
+      const elev=r.n && r.n.indexOf('Elev')===0 || (r.n&&r.n.toLowerCase().indexOf('elever')>-1);
+      let inner=`<span class="dn">${dn}</span>`;
+      if(r.t==="Arbejdsdag") inner+=`<span class="hr">${fmt(r.h)}</span>`;
+      else if(r.t==="Ferie") inner+=`<span class="lbl">Ferie</span>`;
+      else if(r.t==="Helligdag") inner+=`<span class="lbl">Fri</span>`;
+      else if(r.t==="Fridag") inner+=`<span class="lbl">Lukket</span>`;
+      cells+=`<div class="cell ${cls}${elev?' elev':''}" data-i="${rows.indexOf(r)}">${inner}</div>`;
+    }
+    const msum=days.reduce((a,r)=>a+r.h,0);
+    const endcum=days[days.length-1].cum;
+    html+=`<div class="month"><h2>${MONTHS[mi].replace(/^./,c=>c.toUpperCase())} <span class="yr">${y}</span></h2>
+      <div class="grid">${cells}</div>
+      <div class="mfoot"><span>Måned: <b>${fmt(msum)} t</b></span><span class="acc">Akkumuleret: <b>${fmt(endcum)} t</b></span></div></div>`;
+  }
+  document.getElementById('months').innerHTML=html;
+}
+
+let CURRENT=[];
+function rerender(){
+  CURRENT=compute();
+  renderSummary(CURRENT);
+  renderMonths(CURRENT);
+}
+
+// tooltip
+const tip=document.getElementById('tip');
+document.getElementById('months').addEventListener('mouseover',e=>{
+  const c=e.target.closest('.cell'); if(!c||c.classList.contains('empty'))return;
+  const r=CURRENT[+c.dataset.i]; if(!r)return;
+  const dt=new Date(r.d+'T00:00');
+  const txt=`<b>${r.w}. ${dt.getDate()}. ${MONTHS[dt.getMonth()]} ${dt.getFullYear()}</b>`+
+    `<span class="tt">Uge ${r.u} &middot; ${r.t}</span><br>`+
+    `Forventet: <b style="display:inline">${fmt(r.h)} t</b> &middot; akk. ${fmt(r.cum)} t`+
+    (r.n?`<br><span class="tt">${r.n}</span>`:'');
+  tip.innerHTML=txt; tip.style.opacity='1';
+});
+document.getElementById('months').addEventListener('mousemove',e=>{
+  let x=e.clientX+14,y=e.clientY+14;
+  if(x+270>innerWidth)x=e.clientX-270; if(y+90>innerHeight)y=e.clientY-90;
+  tip.style.left=x+'px'; tip.style.top=y+'px';
+});
+document.getElementById('months').addEventListener('mouseout',e=>{
+  if(!e.relatedTarget||!e.relatedTarget.closest('.cell'))tip.style.opacity='0';
+});
+
+// controls
+const slider=document.getElementById('slider'), gnum=document.getElementById('grade');
+function setGrade(g,from){
+  g=Math.max(1,Math.min(100,Math.round(g)));
+  grade=g;
+  if(from!=='slider')slider.value=g;
+  if(from!=='num')gnum.value=g;
+  document.querySelectorAll('#presets button').forEach(b=>b.classList.toggle('active',+b.dataset.g===g));
+  rerender();
+}
+slider.addEventListener('input',e=>setGrade(+e.target.value,'slider'));
+gnum.addEventListener('input',e=>setGrade(+e.target.value||0,'num'));
+document.getElementById('presets').addEventListener('click',e=>{
+  if(e.target.dataset.g)setGrade(+e.target.dataset.g,'preset');
+});
+
+// export
+function exportRows(){
+  return CURRENT.map(r=>({
+    dato:r.d, ugedag:r.w, uge:r.u, dagstype:r.t,
+    forventede_timer:Math.round(r.h*100)/100,
+    akkumuleret_timer:Math.round(r.cum*100)/100,
+    noter:r.n, ansaettelsesgrad_pct:grade
+  }));
+}
+function download(name,content,mime){
+  const b=new Blob([content],{type:mime}); const u=URL.createObjectURL(b);
+  const a=document.createElement('a'); a.href=u; a.download=name; a.click(); URL.revokeObjectURL(u);
+}
+document.getElementById('csvBtn').addEventListener('click',()=>{
+  const rows=exportRows(); const cols=Object.keys(rows[0]);
+  const esc=v=>{v=String(v); return /[",;\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;};
+  const csv='\uFEFF'+cols.join(';')+'\n'+rows.map(r=>cols.map(c=>esc(r[c])).join(';')).join('\n');
+  download(`Arbejdstidskalender_2026-27_${grade}pct.csv`,csv,'text/csv;charset=utf-8');
+});
+document.getElementById('jsonBtn').addEventListener('click',()=>{
+  const out={normperiode:{start:"2026-06-01",slut:"2027-05-31"},
+    ansaettelsesgrad_pct:grade, daglig_norm_timer:Math.round(FULL_DAY*grade/100*100)/100,
+    aarsnorm_timer:Math.round(FULL_YEAR*grade/100*100)/100, dage:exportRows()};
+  download(`Arbejdstidskalender_2026-27_${grade}pct.json`,JSON.stringify(out,null,2),'application/json');
+});
+
+setGrade(100,'init');
+</script>
+</body>
+</html>
