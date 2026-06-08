@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#3b82f6">
+  <link rel="stylesheet" href="styles.css">
+  <title>Sådan bruger du Tid-appen</title>
+  <style>
+    .guide {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: max(24px, var(--safe-t)) 20px 64px;
+    }
+    .guide-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+    .guide-header img {
+      width: 48px; height: 48px;
+      border-radius: var(--r-md);
+      box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
+    }
+    .guide-header h1 {
+      font-size: 22px;
+      font-weight: 700;
+    }
+    .guide-intro {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 18px 20px;
+      margin-bottom: 28px;
+      color: var(--text-2);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+    .guide-intro strong { color: var(--text); }
+    .guide-section {
+      margin-bottom: 30px;
+    }
+    .guide-section h2 {
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .guide-section h2 .num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      background: var(--accent-light);
+      color: var(--accent-dark);
+      font-size: 13px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .guide-section p {
+      color: var(--text-2);
+      font-size: 15px;
+      line-height: 1.65;
+      margin-bottom: 8px;
+    }
+    .guide-section ul, .guide-section ol {
+      color: var(--text-2);
+      font-size: 15px;
+      line-height: 1.65;
+      padding-left: 22px;
+      margin-bottom: 8px;
+    }
+    .guide-section li { margin-bottom: 6px; }
+    .guide-section li strong { color: var(--text); }
+    .guide-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 16px 18px;
+      margin-top: 10px;
+    }
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 10px 0;
+    }
+    .badge {
+      display: inline-block;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 5px 12px;
+      border-radius: 999px;
+      background: var(--surface-2);
+      color: var(--text-2);
+      border: 1px solid var(--border);
+    }
+    .guide-footer {
+      margin-top: 36px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .guide-footer a.btn {
+      text-decoration: none;
+      flex: 1;
+      min-width: 200px;
+      text-align: center;
+    }
+    .privacy-note {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      background: var(--accent-light);
+      border-radius: var(--r-lg);
+      padding: 16px 18px;
+      margin-top: 6px;
+    }
+    .privacy-note svg { flex-shrink: 0; color: var(--accent-dark); margin-top: 2px; }
+    .privacy-note p { color: var(--accent-dark); margin: 0; font-size: 14px; line-height: 1.6; }
+  </style>
+</head>
+<body>
+  <div class="guide">
+
+    <div class="guide-header">
+      <img src="icons/icon.svg" alt="Tid">
+      <h1>Sådan bruger du Tid-appen</h1>
+    </div>
+
+    <div class="guide-intro">
+      <strong>Tid</strong> er en lille app til at registrere, hvor du bruger din arbejdstid — på dine hold, dine opgaver og resten af din opgavefordeling — og se hvordan det står i forhold til dit timebudget for skoleåret.
+    </div>
+
+    <div class="privacy-note">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      <p>Du logger ind med din egen Google-konto, og dine registreringer er kun dine egne — ingen andre kan se eller redigere dem.</p>
+    </div>
+
+    <div class="guide-section">
+      <h2><span class="num">1</span> Kom i gang</h2>
+      <ol>
+        <li>Åbn appen på <strong>smbi.dk/tid</strong> (eller via genvejen på din hjemmeskærm — se den anden vejledning om at få appen på telefonen).</li>
+        <li>Tryk <strong>"Log ind med Google"</strong> og vælg din konto.</li>
+        <li>Første gang du logger ind, bliver du bedt om at oprette dine <strong>aktiviteter</strong> — altså de hold og opgaver fra din opgavefordeling, du vil registrere tid på. Du kan også springe det over og gøre det senere under fanen "Aktiviteter".</li>
+      </ol>
+    </div>
+
+    <div class="guide-section">
+      <h2><span class="num">2</span> Hjem — start og stop en timer</h2>
+      <p>På forsiden finder du dine mest brugte aktiviteter som genvejsknapper ("Hurtigstart"), så du sjældent behøver at lede efter den rigtige.</p>
+      <ul>
+        <li>Tryk på et <strong>hold</strong> → du bliver spurgt om arbejdstype (<em>undervisning / forberedelse / retning</em>) → timeren starter.</li>
+        <li>Tryk på en <strong>opgave</strong> → timeren starter med det samme.</li>
+        <li>Skifter du til en anden aktivitet, mens en timer kører, stopper den gamle automatisk, og en ny starter — ingen bekræftelse nødvendig.</li>
+        <li><strong>"Start arbejde"</strong> — brug den, hvis du ikke ved præcis hvilken aktivitet det er endnu. Du kan koble den til den rigtige aktivitet bagefter under Historik.</li>
+        <li><strong>"1 modul"</strong> — kun for hold. Registrér hurtigt et 90-minutters modul, enten med start nu eller et tidspunkt tilbage i tiden.</li>
+      </ul>
+      <div class="badge-row">
+        <span class="badge">■ Stop stopper den aktive timer</span>
+        <span class="badge">Pulserende prik = timer kører</span>
+      </div>
+      <p>Kører en timer i mere end 4 timer, stopper den automatisk, og du får besked om det, næste gang du åbner appen.</p>
+    </div>
+
+    <div class="guide-section">
+      <h2><span class="num">3</span> Historik</h2>
+      <p>Her ser du alle dine registreringer, nyeste først. Du kan:</p>
+      <ul>
+        <li>Filtrere på dato-interval og aktivitet</li>
+        <li>Redigere en post (start, slut, aktivitet, arbejdstype, note) — fx koble en "Start arbejde"-post til den rigtige aktivitet</li>
+        <li>Slette en post</li>
+        <li>Oprette en post manuelt, hvis du glemte at trykke start</li>
+      </ul>
+    </div>
+
+    <div class="guide-section">
+      <h2><span class="num">4</span> Rapporter</h2>
+      <p>Vælg en periode — dag, uge, måned eller skoleår — og se:</p>
+      <ul>
+        <li>Hvor meget tid du samlet har brugt, og hvor det står i forhold til din norm for skoleåret</li>
+        <li>Forbrug og budget pr. aktivitet, med en visuel bjælke i aktivitetens farve</li>
+        <li>Fordelingen mellem undervisning / forberedelse / retning for dine hold</li>
+      </ul>
+      <p>Tryk <strong>"Eksportér CSV"</strong> for at få perioden som en fil, du kan åbne i Excel.</p>
+    </div>
+
+    <div class="guide-section">
+      <h2><span class="num">5</span> Aktiviteter</h2>
+      <p>Her administrerer du dine hold og opgaver — grupperet efter type og skoleår.</p>
+      <ul>
+        <li>Opret en ny aktivitet med navn, type, timebudget og farve</li>
+        <li>Opgaver kan have under-aktiviteter (fx "SRP" under "Eksamen og årsprøver") — tid registreret på en under-aktivitet tæller automatisk med på forælderen</li>
+        <li><strong>"Importer fra tekst"</strong> — indsæt en linje pr. aktivitet (<code>navn; type; budget; parent</code>) for hurtig opsætning</li>
+        <li><strong>"Kopiér til næste skoleår"</strong> — genskaber din liste af aktiviteter (uden tidsdata) når et nyt skoleår starter</li>
+      </ul>
+    </div>
+
+    <div class="guide-section">
+      <h2><span class="num">6</span> Indstillinger</h2>
+      <p>Her justerer du skoleår, modul-længde, hvornår timeren stopper automatisk, ugestart og din samlede norm-timetal. Du kan også eksportere alle dine data som en JSON-fil (fuld backup), og logge ud.</p>
+    </div>
+
+    <div class="guide-footer">
+      <a class="btn btn-secondary" href="installer.html">📲 Sådan får du appen på telefonen</a>
+      <a class="btn btn-primary" href="index.html">Åbn Tid-appen</a>
+    </div>
+
+  </div>
+</body>
+</html>

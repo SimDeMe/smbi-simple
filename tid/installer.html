@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#3b82f6">
+  <link rel="stylesheet" href="styles.css">
+  <title>Sådan får du appen på din telefon</title>
+  <style>
+    .guide {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: max(24px, var(--safe-t)) 20px 64px;
+    }
+    .guide-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+    .guide-header img {
+      width: 48px; height: 48px;
+      border-radius: var(--r-md);
+      box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
+    }
+    .guide-header h1 {
+      font-size: 22px;
+      font-weight: 700;
+    }
+    .guide-intro {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 18px 20px;
+      margin-bottom: 28px;
+      color: var(--text-2);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+    .guide-intro strong { color: var(--text); }
+    .link-box {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--accent-light);
+      border-radius: var(--r-lg);
+      padding: 14px 18px;
+      margin-bottom: 28px;
+    }
+    .link-box svg { color: var(--accent-dark); flex-shrink: 0; }
+    .link-box a {
+      color: var(--accent-dark);
+      font-weight: 700;
+      font-size: 16px;
+      text-decoration: none;
+      word-break: break-all;
+    }
+    .platform-section {
+      margin-bottom: 32px;
+    }
+    .platform-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+    .platform-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px; height: 34px;
+      border-radius: var(--r-md);
+      background: var(--surface-2);
+      flex-shrink: 0;
+      font-size: 18px;
+    }
+    .step-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .step-list li {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 14px 16px;
+    }
+    .step-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .step-list p {
+      margin: 0;
+      font-size: 15px;
+      line-height: 1.55;
+      color: var(--text);
+    }
+    .step-list .hint {
+      display: block;
+      margin-top: 4px;
+      font-size: 13px;
+      color: var(--text-3);
+    }
+    .why-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 16px 18px;
+      margin-bottom: 28px;
+    }
+    .why-card h2 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .why-card ul {
+      color: var(--text-2);
+      font-size: 15px;
+      line-height: 1.65;
+      padding-left: 20px;
+    }
+    .why-card li { margin-bottom: 6px; }
+    .guide-footer {
+      margin-top: 8px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .guide-footer a.btn {
+      text-decoration: none;
+      flex: 1;
+      min-width: 200px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="guide">
+
+    <div class="guide-header">
+      <img src="icons/icon.svg" alt="Tid">
+      <h1>Sådan får du appen på din telefon</h1>
+    </div>
+
+    <div class="guide-intro">
+      <strong>Tid</strong> er en webapp, men den kan installeres, så den ligger på din hjemmeskærm og opfører sig som en almindelig app — fuld skærm, eget ikon og fungerer selv uden internet. Det kræver ikke noget fra App Store eller Google Play.
+    </div>
+
+    <div class="link-box">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 007.07 0l1.93-1.93a5 5 0 00-7.07-7.07L10.5 5.5"/><path d="M14 11a5 5 0 00-7.07 0L4.93 12.93a5 5 0 007.07 7.07L13.5 18.5"/></svg>
+      <a href="https://smbi.dk/tid/" target="_blank" rel="noopener">smbi.dk/tid</a>
+    </div>
+
+    <div class="platform-section">
+      <div class="platform-title">
+        <span class="platform-icon">📱</span>
+        iPhone / iPad (Safari)
+      </div>
+      <ul class="step-list">
+        <li>
+          <span class="step-num">1</span>
+          <p>Åbn linket ovenfor i <strong>Safari</strong> (det skal være Safari — det virker ikke fra Chrome eller andre browsere på iPhone).</p>
+        </li>
+        <li>
+          <span class="step-num">2</span>
+          <p>Tryk på <strong>del-ikonet</strong> nederst på skærmen (en firkant med en pil, der peger opad).<span class="hint">Sidder midt i bjælken nederst i Safari.</span></p>
+        </li>
+        <li>
+          <span class="step-num">3</span>
+          <p>Scroll ned i menuen, og vælg <strong>"Føj til hjemmeskærm"</strong>.</p>
+        </li>
+        <li>
+          <span class="step-num">4</span>
+          <p>Tryk <strong>"Tilføj"</strong> øverst til højre.</p>
+        </li>
+        <li>
+          <span class="step-num">5</span>
+          <p>Færdig! Ikonet "Tid" ligger nu på din hjemmeskærm, og åbner appen i fuld skærm — uden Safaris adresselinje.</p>
+        </li>
+      </ul>
+    </div>
+
+    <div class="platform-section">
+      <div class="platform-title">
+        <span class="platform-icon">🤖</span>
+        Android (Chrome)
+      </div>
+      <ul class="step-list">
+        <li>
+          <span class="step-num">1</span>
+          <p>Åbn linket ovenfor i <strong>Chrome</strong>.</p>
+        </li>
+        <li>
+          <span class="step-num">2</span>
+          <p>Tryk på <strong>menuen</strong> (de tre prikker) øverst til højre.</p>
+        </li>
+        <li>
+          <span class="step-num">3</span>
+          <p>Vælg <strong>"Installer app"</strong> eller <strong>"Føj til startskærm"</strong> (teksten kan variere lidt afhængigt af telefon og Chrome-version).</p>
+        </li>
+        <li>
+          <span class="step-num">4</span>
+          <p>Bekræft, og appen "Tid" lægger sig på din startskærm.</p>
+        </li>
+      </ul>
+    </div>
+
+    <div class="platform-section">
+      <div class="platform-title">
+        <span class="platform-icon">💻</span>
+        Computer (Chrome / Edge)
+      </div>
+      <ul class="step-list">
+        <li>
+          <span class="step-num">1</span>
+          <p>Åbn linket ovenfor i Chrome eller Edge.</p>
+        </li>
+        <li>
+          <span class="step-num">2</span>
+          <p>Klik på <strong>installér-ikonet</strong> i adresselinjen (eller find "Installer Tid…" i browserens menu).</p>
+        </li>
+      </ul>
+    </div>
+
+    <div class="why-card">
+      <h2>Når du har installeret appen</h2>
+      <ul>
+        <li>Åbn den fra ikonet på din hjemmeskærm — log ind med din egen <strong>Google-konto</strong></li>
+        <li>Dine registreringer er private og kun dine egne</li>
+        <li>Appen virker også uden netforbindelse, og synkroniserer igen, når du er online</li>
+        <li>Brug for en gennemgang af selve appen? Se den anden vejledning</li>
+      </ul>
+    </div>
+
+    <div class="guide-footer">
+      <a class="btn btn-secondary" href="hjaelp.html">📘 Sådan bruger du Tid-appen</a>
+      <a class="btn btn-primary" href="https://smbi.dk/tid/">Åbn appen</a>
+    </div>
+
+  </div>
+</body>
+</html>
