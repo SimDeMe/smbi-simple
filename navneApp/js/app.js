@@ -624,6 +624,7 @@ async function renderGroupPractice(app, classId, groupIdx, groups, phases, allSt
   async function showNext() {
     if (idx >= students.length) { await showRoundResult(); return; }
     const student = students[idx];
+    app.innerHTML = '';
     const startTime = Date.now();
 
     const hintBtn = el('button', { class: 'hint-btn' }, 'Hjælp');
