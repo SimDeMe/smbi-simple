@@ -2,10 +2,10 @@ import { doc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/1
 import { db } from "./firebase-config.js";
 
 export async function analyzeConfusion(uid, results) {
-  // Build a map: studentId -> list of studentIds they were confused with
+  const knownIds = new Set(results.map(r => r.studentId));
   const confusionMap = {};
   for (const r of results) {
-    if (!r.correct && r.answeredWith && r.answeredWith !== r.studentId) {
+    if (!r.correct && r.answeredWith && r.answeredWith !== r.studentId && knownIds.has(r.answeredWith)) {
       if (!confusionMap[r.studentId]) confusionMap[r.studentId] = [];
       confusionMap[r.studentId].push(r.answeredWith);
     }

@@ -339,7 +339,11 @@ async function renderQuiz(app, classId) {
 
   async function showCard() {
     if (idx >= sessionStudents.length) {
-      await saveSession(state.uid, classId, sessionResults);
+      try {
+        await saveSession(state.uid, classId, sessionResults);
+      } catch (e) {
+        console.error('saveSession fejlede:', e);
+      }
       renderQuizDone(app, classId, sessionResults);
       return;
     }
