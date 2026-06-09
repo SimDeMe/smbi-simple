@@ -543,8 +543,10 @@ async function loadPracticeData(uid, classId, withPhotos) {
     if (snap.exists()) {
       const data = snap.data();
       const studentMap = Object.fromEntries(withPhotos.map(s => [s.id, s]));
-      const groups = (data.groupIds || [])
-        .map(ids => ids.map(id => studentMap[id]).filter(Boolean))
+      const groupIds = data.groupIds || {};
+      const groups = Object.keys(groupIds)
+        .sort((a, b) => Number(a) - Number(b))
+        .map(k => groupIds[k].map(id => studentMap[id]).filter(Boolean))
         .filter(g => g.length > 0);
       if (groups.length > 0) {
         return { groups, phases: data.phases || groups.map((_, i) => i === 0 ? 1 : 0) };
@@ -558,10 +560,8 @@ async function loadPracticeData(uid, classId, withPhotos) {
 }
 
 async function savePracticeData(uid, classId, groups, phases) {
-  await setDoc(doc(db, `teachers/${uid}/practiceProgress/${classId}`), {
-    groupIds: groups.map(g => g.map(s => s.id)),
-    phases
-  });
+  const groupIds = Object.fromEntries(groups.map((g, i) => [String(i), g.map(s => s.id)]));
+  await setDoc(doc(db, `teachers/${uid}/practiceProgress/${classId}`), { groupIds, phases });
 }
 
 async function renderPracticeGroups(app, classId, allStudents) {
