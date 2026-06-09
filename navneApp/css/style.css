@@ -435,6 +435,72 @@ textarea.input { min-height: 90px; resize: vertical; }
 .toast-error { background: var(--wrong); }
 .toast-visible { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+/* ── Group practice ────────────────────────────────────────────────────── */
+
+.group-list {
+  display: flex;
+  flex-direction: column;
+  gap: .85rem;
+  margin-top: 1.5rem;
+}
+
+.group-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+  border-radius: var(--r);
+  padding: 1rem 1.25rem;
+  box-shadow: var(--shadow);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.group-card--locked {
+  border-left-color: var(--border);
+  opacity: .55;
+}
+
+.group-card--done {
+  border-left-color: var(--correct);
+}
+
+.group-card-info { flex: 1; }
+
+.group-card-top {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  margin-bottom: .2rem;
+}
+
+.group-number {
+  font-family: var(--font-d);
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--primary);
+}
+
+.phase-badge {
+  font-size: .7rem;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  padding: .2em .65em;
+  border-radius: 20px;
+}
+
+.phase-active  { background: rgba(46,123,196,.14); color: var(--accent); }
+.phase-locked  { background: var(--border); color: var(--muted); }
+.phase-done    { background: rgba(39,174,96,.14); color: var(--correct); }
+
+.group-names {
+  font-size: .88rem;
+  color: var(--muted);
+  font-style: italic;
+}
+
+.quiz-quit { margin-top: .25rem; }
+
 /* ── Mix & Match ───────────────────────────────────────────────────────── */
 
 .view-match {

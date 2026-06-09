@@ -6,6 +6,8 @@ import {
 import { importFiles } from "./import.js";
 import { buildSession, getDistractors, pickStimulus, checkAnswer, processResult, saveSession } from "./quiz.js";
 import { el, showToast, renderProgressBar, spinner, renderStudentCard } from "./ui.js";
+import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import { db } from "./firebase-config.js";
 
 let state = { uid: null, view: null, classId: null, studentId: null };
 
@@ -327,69 +329,8 @@ async function renderQuiz(app, classId) {
     getStudentsByClass(state.uid, classId)
   ]);
 
-  async function runPractice(students) {
-    let idx = 0;
-    const practiceResults = [];
-
-    function renderPracticeDone(results) {
-      const correct = results.filter(r => r.correct).length;
-      app.innerHTML = '';
-      app.appendChild(
-        el('div', { class: 'view view-narrow view-center' },
-          el('h2', {}, 'Øvelse færdig!'),
-          el('p', {}, `${correct} af ${results.length} korrekte.`),
-          el('button', { class: 'btn btn-primary', onclick: () => runPractice(shuffle([...students])) }, 'Øv igen'),
-          el('button', { class: 'btn btn-ghost-sm', onclick: () => navigate(`#/classes/${classId}`) }, 'Tilbage til klassen')
-        )
-      );
-    }
-
-    async function showNext() {
-      if (idx >= students.length) {
-        renderPracticeDone(practiceResults);
-        return;
-      }
-      const student = students[idx];
-      app.innerHTML = '';
-      const total = students.length;
-      const startTime = Date.now();
-
-      const hintBtn = el('button', { class: 'hint-btn' }, 'Hjælp');
-      let hintUsed = false;
-      let hintRevealed = false;
-      hintBtn.addEventListener('click', () => {
-        if (!hintRevealed) {
-          hintRevealed = true;
-          hintUsed = true;
-          hintBtn.textContent = student.name[0] + '...';
-          hintBtn.classList.add('hint-revealed');
-        }
-      });
-
-      const stimulusEl = el('img', { src: student.photoUrls[0], class: 'quiz-photo', alt: '' });
-      await showLevel1(app, student, 'photo', stimulusEl, students, hintBtn, startTime, hintUsed, idx, total, result => {
-        practiceResults.push(result);
-        idx++;
-        showNext();
-      }, () => navigate(`#/classes/${classId}`));
-    }
-
-    showNext();
-  }
-
   if (!sessionStudents.length) {
-    app.innerHTML = '';
-    const practiceStudents = shuffle(allClassStudents.filter(s => s.photoUrls?.length > 0));
-    app.appendChild(
-      el('div', { class: 'view view-narrow view-center' },
-        el('h2', {}, 'Ingen elever til review'),
-        el('p', { class: 'muted' }, 'Alle elever er opdaterede. Kom tilbage senere.'),
-        practiceStudents.length >= 2
-          ? el('button', { class: 'btn btn-sm', onclick: () => runPractice(practiceStudents) }, 'Øv alle elever')
-          : null,
-        el('button', { class: 'btn btn-ghost-sm', onclick: () => navigate(`#/classes/${classId}`) }, 'Tilbage')
-      )
-    );
+    renderPracticeGroups(app, classId, allClassStudents);
     return;
   }
 
@@ -575,6 +516,188 @@ function renderQuizDone(app, classId, results) {
       el('button', { class: 'btn btn-primary', onclick: () => navigate(`#/classes/${classId}`) }, 'Tilbage til klassen')
     )
   );
+}
+
+// ── Group practice ────────────────────────────────────────────────────────────
+
+function makeGroups(students) {
+  const male = [], female = [], other = [];
+  for (const s of students) {
+    if (s.gender === 'male') male.push(s);
+    else if (s.gender === 'female') female.push(s);
+    else other.push(s);
+  }
+  const result = [];
+  for (const bucket of [male, female, other]) {
+    const shuffled = shuffle([...bucket]);
+    for (let i = 0; i < shuffled.length; i += 5) result.push(shuffled.slice(i, i + 5));
+  }
+  return result;
+}
+
+async function loadPracticeData(uid, classId, withPhotos) {
+  try {
+    const snap = await getDoc(doc(db, `teachers/${uid}/practiceProgress/${classId}`));
+    if (snap.exists()) {
+      const data = snap.data();
+      const studentMap = Object.fromEntries(withPhotos.map(s => [s.id, s]));
+      const groups = (data.groupIds || [])
+        .map(ids => ids.map(id => studentMap[id]).filter(Boolean))
+        .filter(g => g.length > 0);
+      if (groups.length > 0) {
+        return { groups, phases: data.phases || groups.map((_, i) => i === 0 ? 1 : 0) };
+      }
+    }
+  } catch {}
+  const groups = makeGroups(withPhotos);
+  const phases = Array(groups.length).fill(0);
+  if (phases.length > 0) phases[0] = 1;
+  return { groups, phases };
+}
+
+async function savePracticeData(uid, classId, groups, phases) {
+  await setDoc(doc(db, `teachers/${uid}/practiceProgress/${classId}`), {
+    groupIds: groups.map(g => g.map(s => s.id)),
+    phases
+  });
+}
+
+async function renderPracticeGroups(app, classId, allStudents) {
+  const withPhotos = allStudents.filter(s => s.photoUrls?.length > 0);
+
+  if (withPhotos.length < 2) {
+    app.innerHTML = '';
+    app.appendChild(
+      el('div', { class: 'view view-narrow view-center' },
+        el('h2', {}, 'Ingen elever til review'),
+        el('p', { class: 'muted' }, 'Alle elever er opdaterede. Kom tilbage senere.'),
+        el('button', { class: 'btn btn-ghost-sm', onclick: () => navigate(`#/classes/${classId}`) }, 'Tilbage')
+      )
+    );
+    return;
+  }
+
+  app.innerHTML = '';
+  app.appendChild(spinner());
+
+  const { groups, phases } = await loadPracticeData(state.uid, classId, withPhotos);
+
+  const phaseLabel = p => ['Låst', 'Vælg navn', 'Skriv navn', 'Gennemført'][p] || 'Låst';
+  const phaseClass = p => p === 0 ? 'phase-locked' : p === 3 ? 'phase-done' : 'phase-active';
+
+  const groupCards = groups.map((group, i) => {
+    const phase = phases[i];
+    return el('div', { class: `group-card${phase === 0 ? ' group-card--locked' : ''}${phase === 3 ? ' group-card--done' : ''}` },
+      el('div', { class: 'group-card-info' },
+        el('div', { class: 'group-card-top' },
+          el('span', { class: 'group-number' }, `Gruppe ${i + 1}`),
+          el('span', { class: `phase-badge ${phaseClass(phase)}` }, phaseLabel(phase))
+        ),
+        el('div', { class: 'group-names' }, group.map(s => s.name.split(' ')[0]).join(', '))
+      ),
+      phase >= 1 && phase <= 2
+        ? el('button', { class: 'btn btn-sm', onclick: () => renderGroupPractice(app, classId, i, groups, phases, withPhotos) }, 'Øv')
+        : null
+    );
+  });
+
+  app.innerHTML = '';
+  app.appendChild(
+    el('div', { class: 'view view-narrow' },
+      el('a', { class: 'back-link', onclick: () => navigate(`#/classes/${classId}`) }, '← Tilbage'),
+      el('h1', {}, 'Øv navne'),
+      el('p', { class: 'muted' }, 'Klarer du en gruppe, låses den næste op.'),
+      el('div', { class: 'group-list' }, ...groupCards)
+    )
+  );
+}
+
+async function renderGroupPractice(app, classId, groupIdx, groups, phases, allStudents) {
+  const group = groups[groupIdx];
+  const phase = phases[groupIdx];
+  const students = shuffle([...group]);
+
+  let idx = 0;
+  const results = [];
+  const quit = () => renderPracticeGroups(app, classId, allStudents);
+
+  async function showNext() {
+    if (idx >= students.length) { await showRoundResult(); return; }
+    const student = students[idx];
+    const startTime = Date.now();
+
+    const hintBtn = el('button', { class: 'hint-btn' }, 'Hjælp');
+    let hintUsed = false;
+    let hintRevealed = false;
+    hintBtn.addEventListener('click', () => {
+      if (!hintRevealed) {
+        hintRevealed = true;
+        hintUsed = true;
+        hintBtn.textContent = student.name[0] + '...';
+        hintBtn.classList.add('hint-revealed');
+      }
+    });
+
+    const stimulusEl = el('img', { src: student.photoUrls[0], class: 'quiz-photo', alt: '' });
+
+    if (phase === 1) {
+      await showLevel1(app, student, 'photo', stimulusEl, allStudents, hintBtn, startTime, hintUsed, idx, students.length, result => {
+        results.push(result); idx++; showNext();
+      }, quit);
+    } else {
+      await showLevel2(app, student, 'photo', stimulusEl, hintBtn, startTime, hintUsed, idx, students.length, result => {
+        results.push(result); idx++; showNext();
+      }, quit);
+    }
+  }
+
+  async function showRoundResult() {
+    const allCorrect = results.every(r => r.correct);
+    const correct = results.filter(r => r.correct).length;
+    app.innerHTML = '';
+
+    if (allCorrect) {
+      const newPhases = [...phases];
+      if (phase === 1) {
+        newPhases[groupIdx] = 2;
+        await savePracticeData(state.uid, classId, groups, newPhases);
+        app.appendChild(
+          el('div', { class: 'view view-narrow view-center' },
+            el('h2', {}, `${correct} af ${students.length} — perfekt!`),
+            el('p', {}, 'Nu skal du skrive navnene selv.'),
+            el('button', { class: 'btn btn-primary', onclick: () => renderGroupPractice(app, classId, groupIdx, groups, newPhases, allStudents) }, 'Fortsæt til skriv-fase'),
+            el('button', { class: 'btn btn-ghost-sm', onclick: quit }, 'Afslut')
+          )
+        );
+      } else {
+        newPhases[groupIdx] = 3;
+        if (groupIdx + 1 < groups.length && newPhases[groupIdx + 1] === 0) {
+          newPhases[groupIdx + 1] = 1;
+        }
+        await savePracticeData(state.uid, classId, groups, newPhases);
+        app.appendChild(
+          el('div', { class: 'view view-narrow view-center' },
+            el('h2', {}, `Gruppe ${groupIdx + 1} klaret!`),
+            groupIdx + 1 < groups.length
+              ? el('p', {}, 'Næste gruppe er nu låst op.')
+              : el('p', {}, 'Du har øvet alle grupper — godt gået!'),
+            el('button', { class: 'btn btn-primary', onclick: quit }, 'Se grupper')
+          )
+        );
+      }
+    } else {
+      app.appendChild(
+        el('div', { class: 'view view-narrow view-center' },
+          el('h2', {}, `${correct} af ${students.length} korrekte`),
+          el('p', { class: 'muted' }, 'Du skal have alle rigtige for at komme videre. Prøv igen!'),
+          el('button', { class: 'btn btn-primary', onclick: () => renderGroupPractice(app, classId, groupIdx, groups, phases, allStudents) }, 'Prøv igen'),
+          el('button', { class: 'btn btn-ghost-sm', onclick: quit }, 'Tilbage til grupper')
+        )
+      );
+    }
+  }
+
+  showNext();
 }
 
 // ── Mix & Match ───────────────────────────────────────────────────────────────
