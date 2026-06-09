@@ -371,7 +371,7 @@ async function renderQuiz(app, classId) {
         practiceResults.push(result);
         idx++;
         showNext();
-      });
+      }, () => navigate(`#/classes/${classId}`));
     }
 
     showNext();
@@ -437,25 +437,26 @@ async function renderQuiz(app, classId) {
       ? el('img', { src: student.photoUrls[Math.floor(Math.random() * student.photoUrls.length)], class: 'quiz-photo', alt: '' })
       : el('div', { class: 'quiz-hint-card' }, student.hints);
 
+    const quit = () => navigate(`#/classes/${classId}`);
     if (student.level === 1) {
       await showLevel1(app, student, stimulus, stimulusEl, allClassStudents, hintBtn, startTime, hintUsed, idx, total, result => {
         sessionResults.push(result);
         idx++;
         showCard();
-      });
+      }, quit);
     } else {
       await showLevel2(app, student, stimulus, stimulusEl, hintBtn, startTime, hintUsed, idx, total, result => {
         sessionResults.push(result);
         idx++;
         showCard();
-      });
+      }, quit);
     }
   }
 
   showCard();
 }
 
-async function showLevel1(app, student, stimulus, stimulusEl, allClassStudents, hintBtn, startTime, hintUsed, idx, total, onDone) {
+async function showLevel1(app, student, stimulus, stimulusEl, allClassStudents, hintBtn, startTime, hintUsed, idx, total, onDone, onQuit) {
   const distractors = await getDistractors(state.uid, student, allClassStudents);
   const options = shuffle([student, ...distractors]);
 
@@ -496,17 +497,20 @@ async function showLevel1(app, student, stimulus, stimulusEl, allClassStudents, 
     }
   }
 
+  const quitBtn = onQuit ? el('button', { class: 'btn btn-ghost-sm quiz-quit', onclick: onQuit }, 'Afslut') : null;
+
   app.appendChild(
     el('div', { class: 'quiz-view' },
       renderProgressBar(idx, total),
       el('div', { class: 'quiz-stimulus' }, stimulusEl),
       el('div', { class: 'quiz-answers' }, ...answerBtns),
-      hintBtn
+      hintBtn,
+      quitBtn
     )
   );
 }
 
-async function showLevel2(app, student, stimulus, stimulusEl, hintBtn, startTime, hintUsed, idx, total, onDone) {
+async function showLevel2(app, student, stimulus, stimulusEl, hintBtn, startTime, hintUsed, idx, total, onDone, onQuit) {
   let answered = false;
   const input = el('input', { type: 'text', class: 'quiz-input', placeholder: 'Skriv elevens navn...',
     autocomplete: 'off', autocorrect: 'off', spellcheck: 'false'
@@ -546,13 +550,16 @@ async function showLevel2(app, student, stimulus, stimulusEl, hintBtn, startTime
   input.addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
   submitBtn.addEventListener('click', submit);
 
+  const quitBtn = onQuit ? el('button', { class: 'btn btn-ghost-sm quiz-quit', onclick: onQuit }, 'Afslut') : null;
+
   app.appendChild(
     el('div', { class: 'quiz-view' },
       renderProgressBar(idx, total),
       el('div', { class: 'quiz-stimulus' }, stimulusEl),
       el('div', { class: 'quiz-input-wrap' }, input, submitBtn),
       feedback,
-      hintBtn
+      hintBtn,
+      quitBtn
     )
   );
   input.focus();
