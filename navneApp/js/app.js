@@ -440,6 +440,7 @@ async function showLevel1(app, student, stimulus, stimulusEl, allClassStudents, 
 
   const quitBtn = onQuit ? el('button', { class: 'btn btn-ghost-sm quiz-quit', onclick: onQuit }, 'Afslut') : null;
 
+  app.innerHTML = '';
   app.appendChild(
     el('div', { class: 'quiz-view' },
       renderProgressBar(idx, total),
@@ -493,6 +494,7 @@ async function showLevel2(app, student, stimulus, stimulusEl, hintBtn, startTime
 
   const quitBtn = onQuit ? el('button', { class: 'btn btn-ghost-sm quiz-quit', onclick: onQuit }, 'Afslut') : null;
 
+  app.innerHTML = '';
   app.appendChild(
     el('div', { class: 'quiz-view' },
       renderProgressBar(idx, total),
