@@ -34,6 +34,7 @@ function route() {
   else if (view === 'classes' && parts[1]) renderClassDetail(app, parts[1]);
   else if (view === 'import') renderImport(app, parts[1]);
   else if (view === 'quiz') renderQuiz(app, parts[1]);
+  else if (view === 'match') renderMatch(app, parts[1]);
   else if (view === 'students') renderStudentEdit(app, parts[1]);
   else renderClasses(app);
 }
@@ -158,6 +159,7 @@ async function renderClassDetail(app, classId) {
   const lvl2 = students.filter(s => s.level === 2).length;
   const mastered = students.filter(s => (s.interval || 1) > 21).length;
   const due = students.filter(s => s.nextReview && s.nextReview.toDate && s.nextReview.toDate() <= now).length;
+  const withPhotosCount = students.filter(s => s.photoUrls?.length > 0).length;
 
   app.innerHTML = '';
   app.appendChild(
@@ -167,6 +169,9 @@ async function renderClassDetail(app, classId) {
         el('h1', {}, cls.name),
         el('div', { class: 'header-actions' },
           el('button', { class: 'btn btn-sm', onclick: () => navigate(`#/import/${classId}`) }, '+ Importer elever'),
+          withPhotosCount >= 2
+            ? el('button', { class: 'btn btn-sm', onclick: () => navigate(`#/match/${classId}`) }, 'Mix & Match')
+            : null,
           students.length > 0
             ? el('button', { class: 'btn btn-primary', onclick: () => navigate(`#/quiz/${classId}`) }, 'Start quiz')
             : null
@@ -322,13 +327,67 @@ async function renderQuiz(app, classId) {
     getStudentsByClass(state.uid, classId)
   ]);
 
+  async function runPractice(students) {
+    let idx = 0;
+    const practiceResults = [];
+
+    function renderPracticeDone(results) {
+      const correct = results.filter(r => r.correct).length;
+      app.innerHTML = '';
+      app.appendChild(
+        el('div', { class: 'view view-narrow view-center' },
+          el('h2', {}, 'Øvelse færdig!'),
+          el('p', {}, `${correct} af ${results.length} korrekte.`),
+          el('button', { class: 'btn btn-primary', onclick: () => runPractice(shuffle([...students])) }, 'Øv igen'),
+          el('button', { class: 'btn btn-ghost-sm', onclick: () => navigate(`#/classes/${classId}`) }, 'Tilbage til klassen')
+        )
+      );
+    }
+
+    async function showNext() {
+      if (idx >= students.length) {
+        renderPracticeDone(practiceResults);
+        return;
+      }
+      const student = students[idx];
+      app.innerHTML = '';
+      const total = students.length;
+      const startTime = Date.now();
+
+      const hintBtn = el('button', { class: 'hint-btn' }, 'Hjælp');
+      let hintUsed = false;
+      let hintRevealed = false;
+      hintBtn.addEventListener('click', () => {
+        if (!hintRevealed) {
+          hintRevealed = true;
+          hintUsed = true;
+          hintBtn.textContent = student.name[0] + '...';
+          hintBtn.classList.add('hint-revealed');
+        }
+      });
+
+      const stimulusEl = el('img', { src: student.photoUrls[0], class: 'quiz-photo', alt: '' });
+      await showLevel1(app, student, 'photo', stimulusEl, students, hintBtn, startTime, hintUsed, idx, total, result => {
+        practiceResults.push(result);
+        idx++;
+        showNext();
+      });
+    }
+
+    showNext();
+  }
+
   if (!sessionStudents.length) {
     app.innerHTML = '';
+    const practiceStudents = shuffle(allClassStudents.filter(s => s.photoUrls?.length > 0));
     app.appendChild(
       el('div', { class: 'view view-narrow view-center' },
         el('h2', {}, 'Ingen elever til review'),
         el('p', { class: 'muted' }, 'Alle elever er opdaterede. Kom tilbage senere.'),
-        el('button', { class: 'btn btn-primary', onclick: () => navigate(`#/classes/${classId}`) }, 'Tilbage')
+        practiceStudents.length >= 2
+          ? el('button', { class: 'btn btn-sm', onclick: () => runPractice(practiceStudents) }, 'Øv alle elever')
+          : null,
+        el('button', { class: 'btn btn-ghost-sm', onclick: () => navigate(`#/classes/${classId}`) }, 'Tilbage')
       )
     );
     return;
@@ -509,6 +568,123 @@ function renderQuizDone(app, classId, results) {
       el('button', { class: 'btn btn-primary', onclick: () => navigate(`#/classes/${classId}`) }, 'Tilbage til klassen')
     )
   );
+}
+
+// ── Mix & Match ───────────────────────────────────────────────────────────────
+
+async function renderMatch(app, classId) {
+  app.innerHTML = '';
+  app.appendChild(spinner());
+
+  const students = await getStudentsByClass(state.uid, classId);
+  const withPhotos = students.filter(s => s.photoUrls?.length > 0);
+
+  app.innerHTML = '';
+
+  if (withPhotos.length < 2) {
+    app.appendChild(
+      el('div', { class: 'view view-narrow view-center' },
+        el('h2', {}, 'Ikke nok billeder'),
+        el('p', { class: 'muted' }, 'Tilføj billeder til mindst 2 elever for at spille Mix & Match.'),
+        el('button', { class: 'btn btn-primary', onclick: () => navigate(`#/classes/${classId}`) }, 'Tilbage')
+      )
+    );
+    return;
+  }
+
+  const pool = shuffle([...withPhotos]).slice(0, 9);
+  const shuffledNames = shuffle(pool.map(s => s.name));
+
+  let selected = null;
+  const assignments = new Map();
+
+  function render() {
+    app.innerHTML = '';
+    const placed = assignments.size;
+    const total = pool.length;
+    const assignedSet = new Set(assignments.values());
+    const remaining = shuffledNames.filter(n => !assignedSet.has(n));
+
+    const slots = pool.map(s => {
+      const assigned = assignments.get(s.id);
+      return el('div', {
+        class: 'match-slot' + (selected && !assigned ? ' match-slot--droppable' : ''),
+        onclick: () => {
+          if (selected) {
+            assignments.set(s.id, selected);
+            selected = null;
+          } else if (assigned) {
+            assignments.delete(s.id);
+          }
+          render();
+        }
+      },
+        el('img', { src: s.photoUrls[0], class: 'match-photo', alt: '' }),
+        el('div', { class: 'match-label' + (assigned ? '' : ' match-label--empty') }, assigned || '?')
+      );
+    });
+
+    const chips = remaining.map(name =>
+      el('button', {
+        class: 'match-chip' + (name === selected ? ' match-chip--selected' : ''),
+        onclick: () => { selected = selected === name ? null : name; render(); }
+      }, name)
+    );
+
+    const checkBtn = el('button', { class: 'btn btn-primary', onclick: showResults }, 'Tjek svar');
+    if (placed < total) checkBtn.disabled = true;
+
+    app.appendChild(
+      el('div', { class: 'view view-match' },
+        el('a', { class: 'back-link', onclick: () => navigate(`#/classes/${classId}`) }, '← Tilbage'),
+        el('div', { class: 'match-header' },
+          el('h1', {}, 'Mix & Match'),
+          el('span', { class: 'match-count muted' }, `${placed} / ${total}`)
+        ),
+        el('div', { class: 'match-banner' + (selected ? '' : ' match-banner--empty') },
+          selected ? `Valgt: ${selected} — klik på et foto` : 'Vælg et navn herunder, klik derefter på et foto'
+        ),
+        el('div', { class: 'match-grid' }, ...slots),
+        el('div', { class: 'match-pool' }, ...chips),
+        el('div', { class: 'match-actions' },
+          checkBtn,
+          el('button', {
+            class: 'btn btn-ghost-sm',
+            onclick: () => { assignments.clear(); selected = null; render(); }
+          }, 'Nulstil')
+        )
+      )
+    );
+  }
+
+  function showResults() {
+    app.innerHTML = '';
+    let correct = 0;
+    const resultSlots = pool.map(s => {
+      const assigned = assignments.get(s.id);
+      const ok = assigned === s.name;
+      if (ok) correct++;
+      return el('div', { class: 'match-slot match-slot--' + (ok ? 'correct' : 'wrong') },
+        el('img', { src: s.photoUrls[0], class: 'match-photo', alt: '' }),
+        el('div', { class: 'match-label' }, assigned || '?'),
+        ok ? null : el('div', { class: 'match-correct-label' }, s.name)
+      );
+    });
+
+    app.appendChild(
+      el('div', { class: 'view view-match' },
+        el('h1', {}, 'Resultat'),
+        el('p', { class: 'match-score' }, `${correct} af ${pool.length} korrekte`),
+        el('div', { class: 'match-grid' }, ...resultSlots),
+        el('div', { class: 'match-actions' },
+          el('button', { class: 'btn btn-primary', onclick: () => renderMatch(app, classId) }, 'Prøv igen'),
+          el('button', { class: 'btn btn-ghost-sm', onclick: () => navigate(`#/classes/${classId}`) }, 'Tilbage')
+        )
+      )
+    );
+  }
+
+  render();
 }
 
 // ── Student edit ─────────────────────────────────────────────────────────────
