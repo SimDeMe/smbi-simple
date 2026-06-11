@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Censorur — mundtlig eksamen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#13161b;
+    --panel:#1a1e25;
+    --panel-2:#232832;
+    --ink:#f3f0e9;
+    --ink-60:#a8afbd;
+    --ink-40:#727a8a;
+    --hair:rgba(255,255,255,.09);
+    --green:#7fd0a6;
+    --blue:#83b6e6;
+    --amber:#f0bd72;
+    --neutral:#8b93a3;
+    --accent:var(--neutral);
+  }
+  [data-phase="oplaeg"]{--accent:var(--green);}
+  [data-phase="dialog"]{--accent:var(--blue);}
+  [data-phase="votering"]{--accent:var(--amber);}
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;}
+  body{
+    background:
+      radial-gradient(1200px 600px at 50% -10%, rgba(255,255,255,.04), transparent 60%),
+      var(--bg);
+    color:var(--ink);
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    display:flex;justify-content:center;
+    padding:clamp(12px,3vw,28px);
+  }
+  .wrap{width:100%;max-width:760px;}
+
+  /* top bar */
+  .top{
+    display:flex;align-items:center;gap:14px;
+    padding-bottom:18px;border-bottom:1px solid var(--hair);
+  }
+  .brand{flex:1;min-width:0;}
+  .brand h1{
+    font-family:"Cormorant Garamond",serif;font-weight:600;
+    font-size:clamp(22px,3.6vw,30px);margin:0;letter-spacing:.3px;
+  }
+  .brand p{margin:1px 0 0;color:var(--ink-40);font-size:12.5px;letter-spacing:.4px;}
+  .clock{
+    font-family:"IBM Plex Mono",monospace;font-weight:500;
+    font-size:clamp(15px,2.4vw,19px);font-variant-numeric:tabular-nums;
+    color:var(--ink-60);white-space:nowrap;
+  }
+  .iconbtn{
+    background:var(--panel-2);border:1px solid var(--hair);color:var(--ink-60);
+    width:38px;height:38px;border-radius:10px;cursor:pointer;font-size:16px;
+    display:grid;place-items:center;transition:.15s;
+  }
+  .iconbtn:hover{color:var(--ink);border-color:rgba(255,255,255,.2);}
+  .iconbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+
+  /* main stage */
+  .stage{
+    margin-top:22px;background:var(--panel);
+    border:1px solid var(--hair);border-radius:20px;
+    padding:clamp(22px,4vw,40px) clamp(18px,4vw,40px);
+    text-align:center;position:relative;overflow:hidden;
+    box-shadow:0 1px 0 rgba(255,255,255,.04) inset, 0 24px 60px -30px rgba(0,0,0,.7);
+  }
+  .stage::before{
+    content:"";position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(120% 80% at 50% 0%, color-mix(in srgb,var(--accent) 14%, transparent), transparent 60%);
+    opacity:.9;transition:background .4s;
+  }
+  .phase{
+    font-family:"Cormorant Garamond",serif;font-weight:600;
+    font-size:clamp(26px,5vw,40px);color:var(--accent);
+    letter-spacing:.5px;line-height:1;position:relative;
+  }
+  .instruct{
+    margin-top:8px;color:var(--ink-60);font-size:clamp(13px,2.3vw,15.5px);
+    letter-spacing:.2px;position:relative;min-height:1.2em;
+  }
+  .count{
+    font-family:"IBM Plex Mono",monospace;font-weight:500;
+    font-size:clamp(76px,21vw,168px);line-height:.95;
+    font-variant-numeric:tabular-nums;letter-spacing:-.02em;
+    margin:clamp(10px,2vw,18px) 0 2px;position:relative;
+    color:var(--ink);text-shadow:0 0 38px color-mix(in srgb,var(--accent) 22%, transparent);
+  }
+  .countsub{color:var(--ink-40);font-size:13px;letter-spacing:.3px;position:relative;}
+
+  /* phase progress */
+  .bar{
+    position:relative;height:6px;border-radius:99px;background:var(--panel-2);
+    margin:clamp(16px,3vw,24px) auto 0;max-width:520px;overflow:hidden;
+  }
+  .bar > i{
+    display:block;height:100%;border-radius:99px;background:var(--accent);
+    width:0%;transition:width .25s linear;
+  }
+
+  .next{
+    position:relative;margin-top:18px;padding-top:16px;border-top:1px solid var(--hair);
+    display:flex;flex-direction:column;gap:3px;
+  }
+  .next .lbl{color:var(--ink-40);font-size:11px;letter-spacing:1.4px;text-transform:uppercase;}
+  .next .msg{font-size:clamp(14px,2.6vw,17px);color:var(--ink);}
+  .next .at{
+    font-family:"IBM Plex Mono",monospace;color:var(--accent);
+    font-size:14px;font-variant-numeric:tabular-nums;
+  }
+
+  /* live adjust */
+  .adjust{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:18px;position:relative;}
+  .adjust span{color:var(--ink-40);font-size:12px;letter-spacing:.4px;}
+  .step{
+    background:var(--panel-2);border:1px solid var(--hair);color:var(--ink);
+    border-radius:9px;padding:7px 13px;cursor:pointer;font-size:13px;
+    font-family:"IBM Plex Mono",monospace;transition:.15s;
+  }
+  .step:hover{border-color:rgba(255,255,255,.25);}
+  .step:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+
+  /* controls */
+  .controls{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap;}
+  .controls button{
+    flex:1 1 120px;border:1px solid var(--hair);background:var(--panel-2);
+    color:var(--ink);padding:14px 12px;border-radius:12px;cursor:pointer;
+    font-size:15px;font-weight:500;transition:.15s;letter-spacing:.2px;
+  }
+  .controls button:hover{border-color:rgba(255,255,255,.22);}
+  .controls button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+  .controls .primary{
+    background:var(--accent);color:#11151a;border-color:transparent;font-weight:600;
+    flex:1 1 180px;
+  }
+  .controls .primary:hover{filter:brightness(1.06);}
+  button:disabled{opacity:.4;cursor:not-allowed;}
+
+  /* timeline */
+  .timeline{margin-top:26px;}
+  .timeline h2{
+    font-family:"Cormorant Garamond",serif;font-weight:600;font-size:19px;
+    margin:0 0 10px;color:var(--ink-60);letter-spacing:.4px;
+  }
+  .row{
+    display:flex;align-items:center;gap:14px;padding:11px 14px;
+    border:1px solid var(--hair);border-radius:12px;margin-bottom:8px;
+    background:var(--panel);transition:.2s;
+  }
+  .row.active{border-color:color-mix(in srgb,var(--rowc) 60%, transparent);
+    background:color-mix(in srgb,var(--rowc) 9%, var(--panel));}
+  .row.done{opacity:.5;}
+  .dot{width:11px;height:11px;border-radius:99px;background:var(--rowc);flex:none;}
+  .row.active .dot{box-shadow:0 0 0 4px color-mix(in srgb,var(--rowc) 22%, transparent);}
+  .rname{flex:1;font-size:15px;}
+  .rdur{font-family:"IBM Plex Mono",monospace;color:var(--ink-60);font-size:13px;white-space:nowrap;}
+  .rwin{font-family:"IBM Plex Mono",monospace;color:var(--ink-40);font-size:12.5px;
+    white-space:nowrap;font-variant-numeric:tabular-nums;min-width:104px;text-align:right;}
+
+  .hint{text-align:center;color:var(--ink-40);font-size:12px;margin-top:18px;}
+
+  /* settings */
+  .scrim{
+    position:fixed;inset:0;background:rgba(8,10,13,.72);backdrop-filter:blur(3px);
+    display:none;place-items:center;padding:20px;z-index:20;
+  }
+  .scrim.open{display:grid;}
+  .sheet{
+    width:100%;max-width:420px;background:var(--panel);
+    border:1px solid var(--hair);border-radius:18px;padding:24px;
+  }
+  .sheet h2{font-family:"Cormorant Garamond",serif;font-weight:600;font-size:24px;margin:0 0 4px;}
+  .sheet .note{color:var(--ink-40);font-size:12.5px;margin:0 0 18px;line-height:1.5;}
+  .field{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;}
+  .field label{font-size:14.5px;}
+  .field .ctr{display:flex;align-items:center;gap:8px;}
+  .field input{
+    width:74px;background:var(--panel-2);border:1px solid var(--hair);color:var(--ink);
+    border-radius:9px;padding:9px;font-size:15px;text-align:center;
+    font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;
+  }
+  .field input:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
+  .field .unit{color:var(--ink-40);font-size:12px;width:28px;}
+  .derived{
+    background:var(--panel-2);border-radius:10px;padding:11px 14px;margin:4px 0 18px;
+    font-size:13px;color:var(--ink-60);display:flex;justify-content:space-between;
+  }
+  .derived b{color:var(--ink);font-family:"IBM Plex Mono",monospace;}
+  .sheet .acts{display:flex;gap:10px;margin-top:4px;}
+  .sheet .acts button{
+    flex:1;padding:12px;border-radius:11px;font-size:15px;cursor:pointer;border:1px solid var(--hair);
+    background:var(--panel-2);color:var(--ink);transition:.15s;
+  }
+  .sheet .acts .save{background:var(--ink);color:#13161b;border-color:transparent;font-weight:600;}
+  .sheet .acts button:focus-visible{outline:2px solid var(--green);outline-offset:2px;}
+  .invalid{color:#f08a8a;font-size:12.5px;min-height:1.2em;margin:-8px 0 12px;}
+
+  /* urgent pulse */
+  @keyframes pulse{50%{text-shadow:0 0 64px color-mix(in srgb,var(--accent) 60%, transparent);}}
+  .urgent .count{animation:pulse 1s ease-in-out infinite;color:var(--accent);}
+  @media (prefers-reduced-motion:reduce){
+    .urgent .count{animation:none;color:var(--accent);}
+    .bar > i{transition:none;}
+  }
+  @media (max-width:430px){
+    .rwin{display:none;}
+    .controls .primary{flex:1 1 100%;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap" id="root" data-phase="idle">
+
+  <div class="top">
+    <div class="brand">
+      <h1>Censorur</h1>
+      <p>MUNDTLIG EKSAMEN</p>
+    </div>
+    <div class="clock" id="clock">kl. --.--.--</div>
+    <button class="iconbtn" id="muteBtn" aria-label="Lyd til/fra" title="Lyd">🔊</button>
+    <button class="iconbtn" id="fsBtn" aria-label="Fuld skærm" title="Fuld skærm">⤢</button>
+    <button class="iconbtn" id="setBtn" aria-label="Indstillinger" title="Indstillinger">⚙</button>
+  </div>
+
+  <div class="stage">
+    <div class="phase" id="phaseName">Klar</div>
+    <div class="instruct" id="instruct">Tryk start, når eleven er klar</div>
+    <div class="count" id="count">24:00</div>
+    <div class="countsub" id="countsub">samlet eksamenstid</div>
+
+    <div class="bar"><i id="phaseBar"></i></div>
+
+    <div class="next">
+      <div class="lbl">Når uret rammer 0</div>
+      <div class="msg" id="nextMsg">Eleven starter sit oplæg</div>
+      <div class="at" id="nextAt"></div>
+    </div>
+
+    <div class="adjust">
+      <span>Juster fasen:</span>
+      <button class="step" id="minus" title="Et minut mindre">− 1 min</button>
+      <button class="step" id="plus" title="Et minut mere">+ 1 min</button>
+    </div>
+
+    <div class="controls">
+      <button class="primary" id="startBtn">Start</button>
+      <button id="skipBtn" disabled>Næste fase</button>
+      <button id="resetBtn" disabled>Nulstil</button>
+    </div>
+  </div>
+
+  <div class="timeline">
+    <h2>Forløb</h2>
+    <div id="rows"></div>
+  </div>
+
+  <p class="hint">Mellemrumstast = start / pause</p>
+</div>
+
+<!-- settings -->
+<div class="scrim" id="scrim">
+  <div class="sheet" role="dialog" aria-modal="true" aria-label="Indstillinger">
+    <h2>Indstillinger</h2>
+    <p class="note">Eksamenstiden er hele forløbet og dækker oplæg, samtale og votering.</p>
+
+    <div class="field">
+      <label for="inOplaeg">Elevoplæg</label>
+      <div class="ctr"><input id="inOplaeg" type="number" min="0" step="0.5" inputmode="decimal"><span class="unit">min</span></div>
+    </div>
+    <div class="field">
+      <label for="inExam">Samlet eksamenstid</label>
+      <div class="ctr"><input id="inExam" type="number" min="0" step="0.5" inputmode="decimal"><span class="unit">min</span></div>
+    </div>
+    <div class="field">
+      <label for="inVote">Votering</label>
+      <div class="ctr"><input id="inVote" type="number" min="0" step="0.5" inputmode="decimal"><span class="unit">min</span></div>
+    </div>
+
+    <div class="derived">
+      <span>Heraf samtale</span><b id="derivedDialog">10:00</b>
+    </div>
+    <div class="invalid" id="invalid"></div>
+
+    <div class="acts">
+      <button id="cancelBtn">Annullér</button>
+      <button class="save" id="saveBtn">Gem og nulstil</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  "use strict";
+
+  // ---- configuration (minutes) ----
+  const cfg = { oplaeg: 8, exam: 24, votering: 6 };
+
+  // phase definitions, built from cfg
+  function buildPhases(){
+    const dialog = Math.max(0, cfg.exam - cfg.oplaeg - cfg.votering);
+    const defs = [
+      { key:"oplaeg",   name:"Elevoplæg",    min:cfg.oplaeg, color:"var(--green)",
+        instruct:"Eleven har ordet — afbryd ikke",
+        end:"Oplæg slut — du må nu afbryde og spørge" },
+      { key:"dialog",   name:"Samtale",      min:dialog, color:"var(--blue)",
+        instruct:"Dialog og uddybende spørgsmål",
+        end:"Samtale slut — send eleven ud" },
+      { key:"votering", name:"Votering",     min:cfg.votering, color:"var(--amber)",
+        instruct:"Eleven er ude — votering og karakter",
+        end:"Votering slut — kald næste elev ind" },
+    ];
+    return defs.filter(p => p.min > 0).map(p => ({ ...p, dur: Math.round(p.min*60) }));
+  }
+
+  let phases = buildPhases();
+
+  // boundaries[i] = cumulative seconds at the END of phase i
+  function boundaries(){
+    const b = []; let acc = 0;
+    for (const p of phases){ acc += p.dur; b.push(acc); }
+    return b;
+  }
+  const totalDur = () => phases.reduce((s,p)=>s+p.dur,0);
+
+  // ---- runtime state ----
+  // state: "idle" | "running" | "paused" | "done"
+  let state = "idle";
+  let startEpoch = 0;       // effective start (Date.now ms) such that elapsed = (now-startEpoch)/1000
+  let pausedElapsed = 0;    // frozen elapsed while paused
+  let lastPhaseIdx = -1;    // for transition detection
+  let lastSecsLeft = Infinity;
+
+  // ---- audio ----
+  let audioCtx = null, muted = false;
+  function ensureAudio(){
+    if (!audioCtx){
+      try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+      catch(e){ audioCtx = null; }
+    }
+    if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+  }
+  function tone(freq, dur, when=0, vol=0.28){
+    if (muted || !audioCtx) return;
+    const t = audioCtx.currentTime + when;
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.type = "sine"; osc.frequency.value = freq;
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(vol, t+0.012);
+    g.gain.setValueAtTime(vol, t+dur-0.04);
+    g.gain.linearRampToValueAtTime(0, t+dur);
+    osc.connect(g).connect(audioCtx.destination);
+    osc.start(t); osc.stop(t+dur+0.02);
+  }
+  const warnSoft = () => tone(660,0.13,0,0.22);
+  const warnTwice = () => { tone(660,0.12); tone(660,0.12,0.18); };
+  function transitionChime(){ tone(740,0.16); tone(988,0.16,0.18); tone(1319,0.34,0.36,0.32); }
+  function finishChime(){ tone(880,0.18); tone(660,0.18,0.2); tone(880,0.4,0.4,0.32); }
+
+  // ---- elements ----
+  const $ = id => document.getElementById(id);
+  const root=$("root"), clockEl=$("clock"), phaseEl=$("phaseName"), instrEl=$("instruct"),
+        countEl=$("count"), subEl=$("countsub"), barEl=$("phaseBar"),
+        nextMsgEl=$("nextMsg"), nextAtEl=$("nextAt"), rowsEl=$("rows"),
+        startBtn=$("startBtn"), skipBtn=$("skipBtn"), resetBtn=$("resetBtn"),
+        plusBtn=$("plus"), minusBtn=$("minus");
+
+  // ---- helpers ----
+  const pad = n => String(n).padStart(2,"0");
+  function fmt(sec){
+    sec = Math.max(0, Math.ceil(sec));
+    const m = Math.floor(sec/60), s = sec%60;
+    return pad(m)+":"+pad(s);
+  }
+  function clockStr(d){ return "kl. " + d.toLocaleTimeString("da-DK"); }
+  function atClock(secFromNow){
+    return new Date(Date.now()+secFromNow*1000).toLocaleTimeString("da-DK",{hour:"2-digit",minute:"2-digit"});
+  }
+
+  function currentElapsed(){
+    if (state === "running") return (Date.now()-startEpoch)/1000;
+    if (state === "paused")  return pausedElapsed;
+    if (state === "done")    return totalDur();
+    return 0;
+  }
+  // which phase is elapsed in -> index, plus remaining-in-phase, and next boundary
+  function locate(elapsed){
+    const b = boundaries();
+    for (let i=0;i<phases.length;i++){
+      if (elapsed < b[i]) return { idx:i, remaining:b[i]-elapsed, boundary:b[i], prevB: i?b[i-1]:0 };
+    }
+    return { idx:phases.length-1, remaining:0, boundary:b[b.length-1]||0, prevB: b.length>1?b[b.length-2]:0 };
+  }
+
+  // ---- timeline render (static structure; windows updated each tick) ----
+  function renderRows(){
+    rowsEl.innerHTML = "";
+    phases.forEach((p,i) => {
+      const row = document.createElement("div");
+      row.className = "row"; row.dataset.idx = i;
+      row.style.setProperty("--rowc", p.color);
+      row.innerHTML =
+        '<span class="dot"></span>'+
+        '<span class="rname">'+p.name+'</span>'+
+        '<span class="rdur">'+fmt(p.dur)+'</span>'+
+        '<span class="rwin" data-win></span>';
+      rowsEl.appendChild(row);
+    });
+  }
+
+  function setPhaseTheme(key){ root.dataset.phase = key; }
+
+  // ---- main render loop ----
+  function tick(){
+    const now = new Date();
+    clockEl.textContent = clockStr(now);
+
+    const elapsed = currentElapsed();
+    const b = boundaries();
+
+    if (state === "idle"){
+      const first = phases[0];
+      setPhaseTheme("idle");
+      phaseEl.textContent = "Klar";
+      instrEl.textContent = "Tryk start, når eleven er klar";
+      countEl.textContent = fmt(totalDur());
+      subEl.textContent = "samlet eksamenstid · "+phases.length+" faser";
+      barEl.style.width = "0%";
+      nextMsgEl.textContent = first ? "Eleven starter sit "+(first.key==="oplaeg"?"oplæg":first.name.toLowerCase()) : "—";
+      nextAtEl.textContent = "";
+      root.classList.remove("urgent");
+      paintRows(-1, []);
+      return;
+    }
+
+    if (state === "done"){
+      setPhaseTheme("idle");
+      phaseEl.textContent = "Færdig";
+      instrEl.textContent = "Kald næste elev ind";
+      countEl.textContent = "00:00";
+      subEl.textContent = "tryk nulstil til næste elev";
+      barEl.style.width = "100%";
+      nextMsgEl.textContent = "Klar til en ny elev";
+      nextAtEl.textContent = "";
+      root.classList.remove("urgent");
+      paintRows(phases.length, b);
+      return;
+    }
+
+    // running or paused
+    const loc = locate(elapsed);
+    const p = phases[loc.idx];
+
+    // transition / warning detection (only while running)
+    if (state === "running"){
+      if (loc.idx !== lastPhaseIdx){
+        if (lastPhaseIdx !== -1){           // a real phase change happened
+          (loc.idx >= phases.length-1 && elapsed >= b[b.length-1]) ? null : transitionChime();
+        }
+        lastPhaseIdx = loc.idx;
+        lastSecsLeft = Infinity;
+      }
+      const secsLeft = Math.ceil(loc.remaining);
+      if (secsLeft <= 30 && lastSecsLeft > 30) warnSoft();
+      if (secsLeft <= 10 && lastSecsLeft > 10) warnTwice();
+      lastSecsLeft = secsLeft;
+
+      // reached the very end?
+      if (elapsed >= b[b.length-1]){
+        state = "done";
+        finishChime();
+        syncButtons();
+      }
+    }
+
+    setPhaseTheme(p.key);
+    phaseEl.textContent = p.name;
+    instrEl.textContent = p.instruct + (state==="paused" ? " · på pause" : "");
+    countEl.textContent = fmt(loc.remaining);
+    subEl.textContent = "tilbage af " + (p.key==="oplaeg"?"oplægget":p.name.toLowerCase());
+
+    const phaseLen = loc.boundary - loc.prevB;
+    const phaseDone = phaseLen>0 ? (elapsed - loc.prevB)/phaseLen : 1;
+    barEl.style.width = Math.min(100, Math.max(0, phaseDone*100)) + "%";
+
+    nextMsgEl.textContent = p.end;
+    nextAtEl.textContent = (state==="running")
+      ? "ca. " + atClock(loc.remaining)
+      : "— sat på pause —";
+
+    root.classList.toggle("urgent", state==="running" && loc.remaining <= 10);
+
+    paintRows(loc.idx, b);
+  }
+
+  // update timeline highlight + clock windows
+  function paintRows(activeIdx, b){
+    [...rowsEl.children].forEach((row,i) => {
+      row.classList.toggle("active", i===activeIdx);
+      row.classList.toggle("done", i<activeIdx);
+      const win = row.querySelector("[data-win]");
+      if (state==="running" || state==="paused"){
+        const elapsed = currentElapsed();
+        const startSec = (i? b[i-1]:0) - elapsed;
+        const endSec   = b[i] - elapsed;
+        win.textContent = atClock(startSec) + " → " + atClock(endSec);
+      } else {
+        win.textContent = "";
+      }
+    });
+  }
+
+  // ---- controls ----
+  function syncButtons(){
+    if (state==="idle"){ startBtn.textContent="Start"; skipBtn.disabled=true; resetBtn.disabled=true; }
+    else if (state==="running"){ startBtn.textContent="Pause"; skipBtn.disabled=false; resetBtn.disabled=false; }
+    else if (state==="paused"){ startBtn.textContent="Fortsæt"; skipBtn.disabled=false; resetBtn.disabled=false; }
+    else if (state==="done"){ startBtn.textContent="Start"; skipBtn.disabled=true; resetBtn.disabled=false; }
+  }
+
+  function start(){
+    ensureAudio();
+    if (state==="idle" || state==="done"){
+      if (state==="done") reset(false);
+      startEpoch = Date.now();
+      state="running"; lastPhaseIdx=-1; lastSecsLeft=Infinity;
+    } else if (state==="running"){
+      pausedElapsed = currentElapsed(); state="paused";
+    } else if (state==="paused"){
+      startEpoch = Date.now() - pausedElapsed*1000; state="running";
+    }
+    syncButtons(); tick();
+  }
+  function skip(){
+    if (state!=="running" && state!=="paused") return;
+    ensureAudio();
+    const b = boundaries();
+    const loc = locate(currentElapsed());
+    const target = b[loc.idx];                  // jump to end of current phase
+    if (state==="paused"){ pausedElapsed = target; }
+    else { startEpoch = Date.now() - target*1000; }
+    lastSecsLeft = Infinity;
+    tick();
+  }
+  function reset(repaint=true){
+    state="idle"; startEpoch=0; pausedElapsed=0; lastPhaseIdx=-1; lastSecsLeft=Infinity;
+    syncButtons(); if (repaint) tick();
+  }
+  // live adjust current phase length
+  function nudge(deltaSec){
+    if (state==="idle"||state==="done"){
+      // adjust whole config's exam time when idle (via dialog), simplest: adjust first phase
+      return;
+    }
+    const loc = locate(currentElapsed());
+    const p = phases[loc.idx];
+    const newDur = Math.max(0, p.dur + deltaSec);
+    p.dur = newDur;
+    // keep elapsed where it is; boundaries recompute automatically
+    renderRows();
+    tick();
+  }
+
+  startBtn.addEventListener("click", start);
+  skipBtn.addEventListener("click", skip);
+  resetBtn.addEventListener("click", ()=>reset());
+  plusBtn.addEventListener("click", ()=>nudge(60));
+  minusBtn.addEventListener("click", ()=>nudge(-60));
+
+  // spacebar = start/pause
+  document.addEventListener("keydown", e => {
+    if (e.code==="Space" && !/input|textarea/i.test(e.target.tagName)){
+      e.preventDefault(); start();
+    }
+  });
+
+  // ---- mute & fullscreen ----
+  $("muteBtn").addEventListener("click", e => {
+    muted = !muted; e.currentTarget.textContent = muted ? "🔇" : "🔊";
+    if (!muted) ensureAudio();
+  });
+  $("fsBtn").addEventListener("click", () => {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
+    else document.exitFullscreen?.();
+  });
+
+  // ---- settings ----
+  const scrim=$("scrim"), inOplaeg=$("inOplaeg"), inExam=$("inExam"), inVote=$("inVote"),
+        derivedDialog=$("derivedDialog"), invalidEl=$("invalid");
+  function openSettings(){
+    inOplaeg.value=cfg.oplaeg; inExam.value=cfg.exam; inVote.value=cfg.votering;
+    validate(); scrim.classList.add("open"); inOplaeg.focus();
+  }
+  function closeSettings(){ scrim.classList.remove("open"); }
+  function readVals(){
+    return {
+      oplaeg:Math.max(0, parseFloat(inOplaeg.value)||0),
+      exam:Math.max(0, parseFloat(inExam.value)||0),
+      votering:Math.max(0, parseFloat(inVote.value)||0),
+    };
+  }
+  function validate(){
+    const v=readVals();
+    const dialog=v.exam - v.oplaeg - v.votering;
+    derivedDialog.textContent = fmt(Math.max(0,dialog)*60);
+    let msg="";
+    if (v.exam<=0) msg="Eksamenstiden skal være over 0 minutter.";
+    else if (dialog<0) msg="Oplæg + votering fylder mere end hele eksamenstiden.";
+    $("saveBtn").disabled = (v.exam<=0 || dialog<0);
+    invalidEl.textContent = msg;
+    return v;
+  }
+  [inOplaeg,inExam,inVote].forEach(el=>el.addEventListener("input",validate));
+  $("setBtn").addEventListener("click",openSettings);
+  $("cancelBtn").addEventListener("click",closeSettings);
+  scrim.addEventListener("click",e=>{ if(e.target===scrim) closeSettings(); });
+  document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeSettings(); });
+  $("saveBtn").addEventListener("click",()=>{
+    const v=validate(); if (v.exam+v.votering<=0) return;
+    cfg.oplaeg=v.oplaeg; cfg.exam=v.exam; cfg.votering=v.votering;
+    phases=buildPhases(); renderRows(); reset(); closeSettings();
+  });
+
+  // ---- boot ----
+  renderRows();
+  syncButtons();
+  tick();
+  setInterval(tick, 250);
+})();
+</script>
+</body>
+</html>
