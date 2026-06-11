@@ -337,6 +337,23 @@
   let lastPhaseIdx = -1;    // for transition detection
   let lastSecsLeft = Infinity;
 
+  // ---- wake lock ----
+  let wakeLock = null;
+  async function acquireWakeLock(){
+    if (!("wakeLock" in navigator)) return;
+    try {
+      wakeLock = await navigator.wakeLock.request("screen");
+      wakeLock.addEventListener("release", () => { wakeLock = null; });
+    } catch(e) {}
+  }
+  function releaseWakeLock(){
+    if (wakeLock){ wakeLock.release(); wakeLock = null; }
+  }
+  // re-acquire if tab comes back into focus while running
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible" && state === "running") acquireWakeLock();
+  });
+
   // ---- audio ----
   let audioCtx = null, muted = false;
   function ensureAudio(){
@@ -476,6 +493,7 @@
       if (elapsed >= b[b.length-1]){
         state = "done";
         finishChime();
+        releaseWakeLock();
         syncButtons();
       }
     }
@@ -531,10 +549,13 @@
       if (state==="done") reset(false);
       startEpoch = Date.now();
       state="running"; lastPhaseIdx=-1; lastSecsLeft=Infinity;
+      acquireWakeLock();
     } else if (state==="running"){
       pausedElapsed = currentElapsed(); state="paused";
+      releaseWakeLock();
     } else if (state==="paused"){
       startEpoch = Date.now() - pausedElapsed*1000; state="running";
+      acquireWakeLock();
     }
     syncButtons(); tick();
   }
@@ -551,6 +572,7 @@
   }
   function reset(repaint=true){
     state="idle"; startEpoch=0; pausedElapsed=0; lastPhaseIdx=-1; lastSecsLeft=Infinity;
+    releaseWakeLock();
     syncButtons(); if (repaint) tick();
   }
   // live adjust current phase length
