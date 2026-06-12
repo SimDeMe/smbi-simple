@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="da">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Studiekort – smbi.dk</title>
+  <link rel="stylesheet" href="../style.css" />
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <style>
+    /* ── Studiekort-specifikke styles ─────────────────────────────── */
+
+    .sk-view { display: none; }
+    .sk-view.active { display: block; }
+
+    .sk-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin: 1.5rem 0;
+    }
+
+    .sk-user {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.95rem;
+      color: var(--sepia-mid);
+    }
+
+    .btn-row { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+
+    .sk-alert {
+      background: #FBEFE3;
+      border: 1px solid var(--bronze);
+      border-left: 4px solid var(--bronze);
+      padding: 1rem 1.2rem;
+      margin: 1rem 0;
+      font-size: 0.95rem;
+    }
+    .sk-alert pre {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      line-height: 1.5;
+      background: var(--cream-dark);
+      padding: 0.8rem;
+      margin-top: 0.6rem;
+      overflow-x: auto;
+    }
+
+    .sk-empty {
+      text-align: center;
+      color: var(--sepia-light);
+      padding: 3rem 1rem;
+      font-style: italic;
+    }
+
+    /* Sæt-kort i oversigten */
+    .sk-set-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1.2rem;
+      margin: 1.5rem 0 3rem;
+    }
+    .sk-set-card {
+      background: #FFFDF8;
+      border: var(--border-fine);
+      border-top: 3px solid var(--navy-light);
+      box-shadow: var(--shadow-sm);
+      padding: 1.2rem 1.3rem;
+      cursor: pointer;
+      transition: box-shadow 0.2s, transform 0.2s;
+    }
+    .sk-set-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+    .sk-set-card h3 {
+      font-family: var(--font-display);
+      font-size: 1.35rem;
+      font-weight: 600;
+      color: var(--navy);
+      margin-bottom: 0.2rem;
+    }
+    .sk-set-card .sk-set-meta {
+      font-size: 0.82rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--bronze-mid);
+      margin-bottom: 0.4rem;
+    }
+    .sk-set-card p { font-size: 0.95rem; color: var(--sepia-mid); }
+
+    /* Editor */
+    .sk-field { margin-bottom: 1rem; }
+    .sk-field label {
+      display: block;
+      font-family: var(--font-display);
+      font-size: 0.85rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--sepia-mid);
+      margin-bottom: 0.3rem;
+    }
+    .sk-input, .sk-textarea {
+      width: 100%;
+      font-family: var(--font-body);
+      font-size: 1rem;
+      padding: 0.55rem 0.75rem;
+      border: var(--border-fine);
+      background: #FFFDF8;
+      color: var(--ink);
+    }
+    .sk-input:focus, .sk-textarea:focus { outline: 2px solid var(--gold); }
+
+    .sk-card-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 0.6rem;
+      align-items: center;
+      margin-bottom: 0.6rem;
+    }
+    .sk-row-del {
+      background: none;
+      border: none;
+      color: var(--sepia-light);
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 0.4rem;
+    }
+    .sk-row-del:hover { color: #8B2914; }
+
+    .sk-import-details {
+      margin: 1rem 0;
+      border: var(--border-fine);
+      background: var(--cream-dark);
+      padding: 0.7rem 1rem;
+    }
+    .sk-import-details summary {
+      cursor: pointer;
+      font-family: var(--font-display);
+      font-size: 0.9rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--sepia-mid);
+    }
+
+    /* Sæt-visning */
+    .sk-mode-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+      gap: 0.8rem;
+      margin: 1.2rem 0 2rem;
+    }
+    .sk-mode-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 1.1rem 0.8rem;
+      background: var(--navy);
+      color: var(--cream);
+      border: none;
+      cursor: pointer;
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+      letter-spacing: 0.05em;
+      transition: background 0.2s;
+    }
+    .sk-mode-btn:hover { background: var(--navy-light); }
+    .sk-mode-btn i { font-size: 1.7rem; color: var(--gold-pale); }
+
+    .sk-term-list { margin-top: 1rem; }
+    .sk-term-item {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      padding: 0.7rem 1rem;
+      background: #FFFDF8;
+      border: var(--border-fine);
+      margin-bottom: 0.5rem;
+    }
+    .sk-term-item .term { font-weight: 600; color: var(--navy); }
+    .sk-term-item .def { color: var(--sepia); }
+
+    /* Studievisninger (fælles) */
+    .sk-study-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin: 1.2rem 0;
+    }
+    .sk-progress {
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      color: var(--sepia-mid);
+    }
+
+    /* Flashcards */
+    .sk-flip-scene {
+      perspective: 1200px;
+      max-width: 640px;
+      margin: 0 auto;
+      height: 320px;
+    }
+    .sk-flip-card {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+      transition: transform 0.45s;
+      cursor: pointer;
+    }
+    .sk-flip-card.flipped { transform: rotateX(180deg); }
+    .sk-flip-face {
+      position: absolute;
+      inset: 0;
+      backface-visibility: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2rem;
+      background: #FFFDF8;
+      border: var(--border-fine);
+      border-top: 3px solid var(--gold);
+      box-shadow: var(--shadow-md);
+      font-family: var(--font-display);
+      font-size: 1.9rem;
+      color: var(--ink);
+      overflow-y: auto;
+    }
+    .sk-flip-face.back { transform: rotateX(180deg); border-top-color: var(--forest-light); }
+    .sk-flip-hint {
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--sepia-light);
+      margin-top: 0.6rem;
+      font-style: italic;
+    }
+    .sk-flip-nav {
+      display: flex;
+      justify-content: center;
+      gap: 0.8rem;
+      margin-top: 1.4rem;
+    }
+
+    /* Quiz & skriv */
+    .sk-question-card {
+      max-width: 640px;
+      margin: 0 auto;
+      background: #FFFDF8;
+      border: var(--border-fine);
+      border-top: 3px solid var(--navy-light);
+      box-shadow: var(--shadow-md);
+      padding: 2rem;
+    }
+    .sk-question {
+      font-family: var(--font-display);
+      font-size: 1.6rem;
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+    .sk-options { display: grid; gap: 0.7rem; }
+    .sk-option {
+      text-align: left;
+      font-family: var(--font-body);
+      font-size: 1.05rem;
+      padding: 0.8rem 1rem;
+      background: var(--cream);
+      border: var(--border-fine);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .sk-option:hover:not(:disabled) { background: var(--cream-dark); }
+    .sk-option:disabled { cursor: default; }
+    .sk-option.correct { background: #DCE8D8; border-color: var(--forest-light); }
+    .sk-option.wrong { background: #F2DCD3; border-color: #8B2914; }
+
+    .sk-feedback {
+      text-align: center;
+      margin-top: 1.2rem;
+      font-size: 1.05rem;
+      min-height: 1.8rem;
+    }
+    .sk-feedback.ok { color: var(--forest-light); }
+    .sk-feedback.fejl { color: #8B2914; }
+
+    /* Match */
+    .sk-match-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 0.7rem;
+      margin-top: 1.2rem;
+    }
+    .sk-match-tile {
+      min-height: 100px;
+      padding: 0.7rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-size: 0.95rem;
+      background: #FFFDF8;
+      border: var(--border-fine);
+      box-shadow: var(--shadow-sm);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .sk-match-tile:hover { box-shadow: var(--shadow-md); }
+    .sk-match-tile.selected { outline: 2px solid var(--gold); background: var(--cream-dark); }
+    .sk-match-tile.error { outline: 2px solid #8B2914; background: #F2DCD3; }
+    .sk-match-tile.done { visibility: hidden; }
+
+    /* Resultat */
+    .sk-result {
+      max-width: 540px;
+      margin: 2rem auto;
+      text-align: center;
+      background: #FFFDF8;
+      border: var(--border-fine);
+      border-top: 3px solid var(--gold);
+      box-shadow: var(--shadow-md);
+      padding: 2.5rem 2rem;
+    }
+    .sk-result .score {
+      font-family: var(--font-display);
+      font-size: 3rem;
+      color: var(--navy);
+    }
+    .sk-result .sk-wrong-list {
+      text-align: left;
+      margin-top: 1.5rem;
+    }
+
+    @media (max-width: 640px) {
+      .sk-card-row { grid-template-columns: 1fr; }
+      .sk-card-row .sk-row-del { justify-self: end; }
+      .sk-flip-scene { height: 260px; }
+      .sk-flip-face { font-size: 1.4rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="site-nav">
+    <div class="nav-inner">
+      <a href="../index.html" class="nav-brand">smbi.dk</a>
+      <div class="nav-links">
+        <a href="../index.html" class="nav-link"><i class="ph ph-house"></i> Forside</a>
+        <a href="../biologi.html" class="nav-link"><i class="ph ph-dna"></i> Biologi</a>
+        <a href="../geografi.html" class="nav-link"><i class="ph ph-globe-hemisphere-west"></i> Geografi</a>
+        <a href="index.html" class="nav-link active"><i class="ph ph-cards"></i> Studiekort</a>
+        <a href="../contact.html" class="nav-link"><i class="ph ph-envelope"></i> Kontakt</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container">
+
+    <!-- ── Oversigt ──────────────────────────────────────────────── -->
+    <section id="view-list" class="sk-view active">
+      <div class="sk-toolbar">
+        <h1 style="font-family: var(--font-display); font-weight: 600;">Studiekort</h1>
+        <div class="btn-row">
+          <span class="sk-user" id="user-info" hidden></span>
+          <button class="btn btn-bronze" id="btn-new-set"><i class="ph ph-plus"></i> Nyt sæt</button>
+          <button class="btn btn-ghost" id="btn-auth">Log ind</button>
+        </div>
+      </div>
+      <div id="list-alert"></div>
+      <div class="sk-set-grid" id="set-grid"></div>
+    </section>
+
+    <!-- ── Editor ────────────────────────────────────────────────── -->
+    <section id="view-editor" class="sk-view">
+      <div class="sk-toolbar">
+        <h1 style="font-family: var(--font-display); font-weight: 600;" id="editor-heading">Nyt sæt</h1>
+        <button class="btn btn-ghost" id="btn-editor-back"><i class="ph ph-arrow-left"></i> Tilbage</button>
+      </div>
+
+      <div class="sk-field">
+        <label for="set-title">Titel</label>
+        <input class="sk-input" id="set-title" placeholder="fx Kulstofkredsløbet" />
+      </div>
+      <div class="sk-field">
+        <label for="set-desc">Beskrivelse (valgfri)</label>
+        <input class="sk-input" id="set-desc" placeholder="fx Begreber til NF-forløbet" />
+      </div>
+
+      <details class="sk-import-details">
+        <summary>Importér fra tekst</summary>
+        <p style="font-size: 0.9rem; color: var(--sepia-mid); margin: 0.5rem 0;">
+          Én linje pr. kort. Adskil begreb og definition med tabulator eller semikolon.
+        </p>
+        <textarea class="sk-textarea" id="import-text" rows="5" placeholder="fotosyntese; planters omdannelse af lysenergi til kemisk energi"></textarea>
+        <button class="btn btn-ghost" id="btn-import" style="margin-top: 0.6rem;">Tilføj kort fra tekst</button>
+      </details>
+
+      <div class="sk-field"><label>Kort (begreb · definition)</label></div>
+      <div id="card-rows"></div>
+
+      <div class="btn-row" style="margin: 1.2rem 0 3rem;">
+        <button class="btn btn-ghost" id="btn-add-row"><i class="ph ph-plus"></i> Tilføj kort</button>
+        <button class="btn btn-bronze" id="btn-save-set"><i class="ph ph-floppy-disk"></i> Gem sæt</button>
+        <button class="btn btn-ghost" id="btn-delete-set" hidden style="color: #8B2914;"><i class="ph ph-trash"></i> Slet sæt</button>
+      </div>
+      <div id="editor-alert"></div>
+    </section>
+
+    <!-- ── Sæt-visning ───────────────────────────────────────────── -->
+    <section id="view-set" class="sk-view">
+      <div class="sk-toolbar">
+        <div>
+          <h1 style="font-family: var(--font-display); font-weight: 600;" id="set-heading"></h1>
+          <p id="set-sub" style="color: var(--sepia-mid);"></p>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-ghost" id="btn-edit-set" hidden><i class="ph ph-pencil-simple"></i> Redigér</button>
+          <button class="btn btn-ghost" id="btn-set-back"><i class="ph ph-arrow-left"></i> Oversigt</button>
+        </div>
+      </div>
+
+      <p class="section-label">Studietilstande</p>
+      <div class="sk-mode-grid">
+        <button class="sk-mode-btn" data-mode="flashcards"><i class="ph ph-cards"></i> Flashcards</button>
+        <button class="sk-mode-btn" data-mode="quiz"><i class="ph ph-list-checks"></i> Quiz</button>
+        <button class="sk-mode-btn" data-mode="write"><i class="ph ph-pencil-line"></i> Skriv</button>
+        <button class="sk-mode-btn" data-mode="match"><i class="ph ph-puzzle-piece"></i> Match</button>
+      </div>
+
+      <label style="display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.95rem; color: var(--sepia-mid); cursor: pointer;">
+        <input type="checkbox" id="chk-reverse" />
+        Byt om: spørg med definitionen, svar med begrebet
+      </label>
+
+      <p class="section-label" style="margin-top: 2rem;">Kort i sættet</p>
+      <div class="sk-term-list" id="term-list"></div>
+    </section>
+
+    <!-- ── Flashcards ────────────────────────────────────────────── -->
+    <section id="view-flashcards" class="sk-view">
+      <div class="sk-study-head">
+        <span class="sk-progress" id="fc-progress"></span>
+        <div class="btn-row">
+          <button class="btn btn-ghost" id="btn-fc-shuffle"><i class="ph ph-shuffle"></i> Bland</button>
+          <button class="btn btn-ghost" id="btn-fc-back"><i class="ph ph-arrow-left"></i> Tilbage</button>
+        </div>
+      </div>
+      <div class="sk-flip-scene">
+        <div class="sk-flip-card" id="fc-card">
+          <div class="sk-flip-face front" id="fc-front"></div>
+          <div class="sk-flip-face back" id="fc-back"></div>
+        </div>
+      </div>
+      <p class="sk-flip-hint">Klik på kortet (eller tryk mellemrum) for at vende det · piletaster skifter kort</p>
+      <div class="sk-flip-nav">
+        <button class="btn btn-ghost" id="btn-fc-prev"><i class="ph ph-arrow-left"></i> Forrige</button>
+        <button class="btn btn-bronze" id="btn-fc-next">Næste <i class="ph ph-arrow-right"></i></button>
+      </div>
+    </section>
+
+    <!-- ── Quiz ──────────────────────────────────────────────────── -->
+    <section id="view-quiz" class="sk-view">
+      <div class="sk-study-head">
+        <span class="sk-progress" id="quiz-progress"></span>
+        <button class="btn btn-ghost" id="btn-quiz-back"><i class="ph ph-arrow-left"></i> Tilbage</button>
+      </div>
+      <div class="sk-question-card" id="quiz-card">
+        <div class="sk-question" id="quiz-question"></div>
+        <div class="sk-options" id="quiz-options"></div>
+        <div class="sk-feedback" id="quiz-feedback"></div>
+      </div>
+      <div id="quiz-result"></div>
+    </section>
+
+    <!-- ── Skriv ─────────────────────────────────────────────────── -->
+    <section id="view-write" class="sk-view">
+      <div class="sk-study-head">
+        <span class="sk-progress" id="write-progress"></span>
+        <button class="btn btn-ghost" id="btn-write-back"><i class="ph ph-arrow-left"></i> Tilbage</button>
+      </div>
+      <div class="sk-question-card" id="write-card">
+        <div class="sk-question" id="write-question"></div>
+        <input class="sk-input" id="write-input" placeholder="Skriv dit svar og tryk Enter" autocomplete="off" />
+        <div class="sk-feedback" id="write-feedback"></div>
+        <div class="btn-row" style="justify-content: center; margin-top: 1rem;">
+          <button class="btn btn-bronze" id="btn-write-check">Tjek svar</button>
+          <button class="btn btn-ghost" id="btn-write-next" hidden>Næste <i class="ph ph-arrow-right"></i></button>
+        </div>
+      </div>
+      <div id="write-result"></div>
+    </section>
+
+    <!-- ── Match ─────────────────────────────────────────────────── -->
+    <section id="view-match" class="sk-view">
+      <div class="sk-study-head">
+        <span class="sk-progress" id="match-timer">0,0 s</span>
+        <div class="btn-row">
+          <button class="btn btn-ghost" id="btn-match-restart"><i class="ph ph-arrow-counter-clockwise"></i> Forfra</button>
+          <button class="btn btn-ghost" id="btn-match-back"><i class="ph ph-arrow-left"></i> Tilbage</button>
+        </div>
+      </div>
+      <p style="color: var(--sepia-mid);">Klik på et begreb og dets definition for at parre dem.</p>
+      <div class="sk-match-grid" id="match-grid"></div>
+      <div id="match-result"></div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div>
+        <div class="footer-brand">smbi.dk</div>
+        <div class="footer-meta">Studiekort · © <span id="year"></span></div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../site.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
