@@ -489,6 +489,20 @@ html, body {
   color: var(--text-2);
 }
 
+.act-row-stats {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  margin-top: 4px;
+  font-size: 12px;
+}
+.act-stat-used   { font-weight: 600; color: var(--text); }
+.act-stat-budget { color: var(--text-3); }
+.act-stat-remain { color: var(--text-2); }
+.act-stat-remain::before { content: "·"; margin-right: 8px; color: var(--text-3); }
+.act-stat-over   { color: var(--danger, #d23); font-weight: 600; }
+
 .act-row-archived { opacity: .6; }
 
 .act-row-archived-badge {
@@ -506,6 +520,28 @@ html, body {
   font-size: 13px;
   color: var(--text-3);
 }
+
+.rapport-archived-net {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  background: var(--surface-2);
+  border-radius: var(--r-md);
+}
+.rapport-archived-net-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+.rapport-archived-net-val {
+  font-size: 15px;
+  font-weight: 700;
+}
+.rapport-archived-net-val.is-pos { color: var(--success); }
+.rapport-archived-net-val.is-neg { color: var(--danger); }
 
 .act-chevron {
   width: 16px; height: 16px;

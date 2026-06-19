@@ -1,17 +1,20 @@
 // activities.js — Trin 3: Aktiviteter CRUD
 
 import { db, COLOR_PALETTE, getCurrentSchoolYear, showToast } from './app.js';
+import { fmtMins } from './timer.js';
 import {
   collection, doc, addDoc, updateDoc, deleteDoc,
-  onSnapshot, query, orderBy, writeBatch, serverTimestamp
+  onSnapshot, query, orderBy, limit, writeBatch, serverTimestamp
 } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js';
 
 // ─── State ────────────────────────────────────────────────
 let userId       = null;
 let activities   = [];
+let entries      = [];
 let selectedYear = '';
 let editingId    = null;
 let unsub        = null;
+let unsubEntries = null;
 let listenersOk  = false;
 
 // ─── Eksportér aktiviteter til andre moduler ──────────────
@@ -41,6 +44,37 @@ function startListener() {
     },
     err => { console.error('Activities listener:', err); showToast('Fejl ved indlæsning'); }
   );
+
+  // Tidsregistreringer — bruges til at vise forbrug/tid tilbage pr. opgave
+  if (unsubEntries) unsubEntries();
+  unsubEntries = onSnapshot(
+    query(collection(db, `users/${userId}/entries`), limit(5000)),
+    snap => {
+      entries = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderList();
+    },
+    err => console.error('Activities entries listener:', err)
+  );
+}
+
+// ─── Tidsforbrug pr. aktivitet ────────────────────────────
+// Summér registrerede minutter pr. activityId.
+function spentByActivity() {
+  const m = {};
+  entries.forEach(e => {
+    if (!e.activityId || e.durationMinutes == null) return;
+    m[e.activityId] = (m[e.activityId] || 0) + e.durationMinutes;
+  });
+  return m;
+}
+
+// Forbrug for én række: egen tid + (for topopgaver) underopgavernes tid.
+function rowSpent(a, spent) {
+  let total = spent[a.id] || 0;
+  if (!a.parentId) {
+    activities.forEach(c => { if (c.parentId === a.id) total += spent[c.id] || 0; });
+  }
+  return total;
 }
 
 // ─── Year selector ────────────────────────────────────────
@@ -68,6 +102,7 @@ function renderList() {
   const el = document.getElementById('act-list');
   if (!el) return;
 
+  const spent  = spentByActivity();
   const yr     = activities.filter(a => a.schoolYear === selectedYear && !a.isArchived);
   const hold   = yr.filter(a => a.type === 'hold');
   const topOpg = yr.filter(a => a.type === 'opgave' && !a.parentId);
@@ -75,23 +110,24 @@ function renderList() {
 
   if (hold.length) {
     html += sectionHead('Hold');
-    hold.forEach(a => { html += actRow(a); });
+    hold.forEach(a => { html += actRow(a, false, rowSpent(a, spent)); });
   }
 
   html += sectionHead('Opgaver');
   if (topOpg.length) {
     topOpg.forEach(a => {
-      html += actRow(a);
-      yr.filter(c => c.parentId === a.id).forEach(c => { html += actRow(c, true); });
+      html += actRow(a, false, rowSpent(a, spent));
+      yr.filter(c => c.parentId === a.id).forEach(c => { html += actRow(c, true, rowSpent(c, spent)); });
     });
   }
 
-  // Afsluttede (arkiverede) aktiviteter — vis nederst, kan genåbnes
+  // Afsluttede (arkiverede) aktiviteter — vis nederst, kan genåbnes.
+  // Inkludér også arkiverede underopgaver, så de ikke forsvinder helt.
   const archived = activities
-    .filter(a => a.schoolYear === selectedYear && a.isArchived && !a.parentId);
+    .filter(a => a.schoolYear === selectedYear && a.isArchived);
   if (archived.length) {
     html += sectionHead('Afsluttet');
-    archived.forEach(a => { html += actRow(a); });
+    archived.forEach(a => { html += actRow(a, !!a.parentId, rowSpent(a, spent)); });
   }
 
   if (!yr.length && !archived.length) {
@@ -107,20 +143,32 @@ function renderList() {
 const sectionHead = label =>
   `<div class="act-section-head">${label}</div>`;
 
-function actRow(a, child = false) {
+function actRow(a, child = false, spentMins = 0) {
   const color  = a.color || COLOR_PALETTE[0];
-  const budget = a.budgetHours != null ? `${a.budgetHours}t` : '—';
-  const meta   = a.isArchived
-    ? `<span class="act-row-archived-badge">Afsluttet</span>`
-    : `<span class="act-row-budget">${budget}</span>`;
+  const budgetMins = a.budgetHours != null ? a.budgetHours * 60 : null;
+
+  let stats;
+  if (budgetMins != null) {
+    const remain = budgetMins - spentMins;
+    const remainTxt = remain >= 0
+      ? `<span class="act-stat-remain">${fmtMins(remain)} tilbage</span>`
+      : `<span class="act-stat-remain act-stat-over">${fmtMins(-remain)} over</span>`;
+    stats = `<span class="act-stat-used">${fmtMins(spentMins)}</span>` +
+            `<span class="act-stat-budget">/ ${a.budgetHours}t</span>` +
+            remainTxt;
+  } else {
+    stats = `<span class="act-stat-used">${fmtMins(spentMins)} brugt</span>`;
+  }
+
   return `<div class="act-row${child ? ' act-row-child' : ''}${a.isArchived ? ' act-row-archived' : ''}" data-id="${a.id}">
     <div class="act-color-dot" style="background:${color}"></div>
     <div class="act-row-body">
       <div class="act-row-name">${esc(a.name)}</div>
       ${a.note ? `<div class="act-row-note">${esc(a.note)}</div>` : ''}
+      <div class="act-row-stats">${stats}</div>
     </div>
     <div class="act-row-meta">
-      ${meta}
+      ${a.isArchived ? `<span class="act-row-archived-badge">Afsluttet</span>` : ''}
       <svg class="act-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
   </div>`;

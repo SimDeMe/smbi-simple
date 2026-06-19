@@ -94,13 +94,15 @@ function aggregate(acts) {
 
   const showAll = periodFilter === 'skolear';
   const topActs = acts.filter(a => a.schoolYear === year && !a.isArchived && !a.parentId);
-  // Under-opgaver medregnes hos forælderen uanset arkiv-status, så tid ikke
-  // forsvinder hvis en enkelt under-opgave afsluttes mens forælderen kører videre.
-  const kids    = acts.filter(a => a.schoolYear === year && a.parentId);
+  // Kun aktive under-opgaver medregnes hos forælderen. En afsluttet under-opgave
+  // tæller som sin egen afsluttede opgave (se archivedRows) og trækkes dermed ud
+  // af forælderens total, så ingen tid tælles to gange.
+  const liveKids = id =>
+    acts.filter(c => c.schoolYear === year && c.parentId === id && !c.isArchived);
 
   const rows = topActs
     .map(act => {
-      const cs        = kids.filter(c => c.parentId === act.id);
+      const cs        = liveKids(act.id);
       const childMins = cs.reduce((s, c) => s + (direct[c.id] || 0), 0);
       const totalMins = (direct[act.id] || 0) + childMins;
       return {
@@ -117,17 +119,19 @@ function aggregate(acts) {
     .filter(r => showAll || r.totalMins > 0)
     .sort((a, b) => b.totalMins - a.totalMins);
 
-  // Afsluttede opgaver — kun i skoleårs-rapporten
+  // Afsluttede opgaver — kun i skoleårs-rapporten. Inkluderer både afsluttede
+  // topopgaver og afsluttede under-opgaver (hver som sin egen post).
   const archivedRows = (showAll
-    ? acts.filter(a => a.schoolYear === year && a.isArchived && !a.parentId)
+    ? acts.filter(a => a.schoolYear === year && a.isArchived)
     : []
   ).map(act => {
-    const cs         = acts.filter(c => c.parentId === act.id && c.schoolYear === year);
+    // Topopgave: rul kun de aktive under-opgaver ind. Under-opgave: står alene.
+    const cs         = act.parentId ? [] : liveKids(act.id);
     const childMins  = cs.reduce((s, c) => s + (direct[c.id] || 0), 0);
     const totalMins  = (direct[act.id] || 0) + childMins;
     const budgetMins = act.budgetHours != null ? act.budgetHours * 60 : null;
     return {
-      act, totalMins, budgetMins,
+      act, totalMins, budgetMins, isChild: !!act.parentId,
       diffMins: budgetMins != null ? budgetMins - totalMins : null
     };
   }).sort((a, b) => b.totalMins - a.totalMins);
@@ -306,14 +310,28 @@ function actRow(act, totalMins, ownMins, wt, isChild) {
 function renderArchivedList(rows) {
   if (!rows.length) return '';
 
+  // Netto ubrugt budget på tværs af afsluttede opgaver — overforbrug på én
+  // opgave trækkes fra det sparede på de øvrige.
+  const budgeted = rows.filter(r => r.diffMins != null);
+  const netDiff  = budgeted.reduce((s, r) => s + r.diffMins, 0);
+  const netLine  = budgeted.length
+    ? `<div class="rapport-archived-net">
+         <span class="rapport-archived-net-label">Ubrugt tid i alt</span>
+         <span class="rapport-archived-net-val ${netDiff >= 0 ? 'is-pos' : 'is-neg'}">
+           ${netDiff >= 0 ? `${fmtMins(netDiff)} tilbage` : `${fmtMins(-netDiff)} over budget`}
+         </span>
+       </div>`
+    : '';
+
   let html = `<div class="rapport-act-section rapport-archived-section">
-    <div class="rapport-act-head">Afsluttede opgaver</div>`;
+    <div class="rapport-act-head">Afsluttede opgaver</div>
+    ${netLine}`;
   rows.forEach(r => { html += archivedRow(r); });
   return html + '</div>';
 }
 
 function archivedRow(r) {
-  const { act, totalMins, budgetMins, diffMins } = r;
+  const { act, totalMins, budgetMins, diffMins, isChild } = r;
   const color = act.color || 'var(--accent)';
 
   let bar = '';
@@ -339,7 +357,7 @@ function archivedRow(r) {
     chip = `<div class="rapport-archived-nobudget">Intet budget · ${fmtMins(totalMins)} brugt</div>`;
   }
 
-  return `<div class="rapport-act-row rapport-act-row-archived">
+  return `<div class="rapport-act-row rapport-act-row-archived${isChild ? ' rapport-act-row-child' : ''}">
     <div class="rapport-act-top">
       <div class="act-color-dot" style="background:${color}"></div>
       <div class="rapport-act-name">${esc(act.name)}</div>
