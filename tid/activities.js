@@ -3,7 +3,7 @@
 import { db, COLOR_PALETTE, getCurrentSchoolYear, showToast } from './app.js';
 import {
   collection, doc, addDoc, updateDoc, deleteDoc,
-  onSnapshot, query, orderBy, writeBatch
+  onSnapshot, query, orderBy, writeBatch, serverTimestamp
 } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js';
 
 // ─── State ────────────────────────────────────────────────
@@ -86,7 +86,15 @@ function renderList() {
     });
   }
 
-  if (!yr.length) {
+  // Afsluttede (arkiverede) aktiviteter — vis nederst, kan genåbnes
+  const archived = activities
+    .filter(a => a.schoolYear === selectedYear && a.isArchived && !a.parentId);
+  if (archived.length) {
+    html += sectionHead('Afsluttet');
+    archived.forEach(a => { html += actRow(a); });
+  }
+
+  if (!yr.length && !archived.length) {
     html = `<div class="act-empty">Ingen aktiviteter for <strong>${selectedYear}</strong><br>Tryk "+ Ny aktivitet" for at begynde</div>`;
   }
 
@@ -102,14 +110,17 @@ const sectionHead = label =>
 function actRow(a, child = false) {
   const color  = a.color || COLOR_PALETTE[0];
   const budget = a.budgetHours != null ? `${a.budgetHours}t` : '—';
-  return `<div class="act-row${child ? ' act-row-child' : ''}" data-id="${a.id}">
+  const meta   = a.isArchived
+    ? `<span class="act-row-archived-badge">Afsluttet</span>`
+    : `<span class="act-row-budget">${budget}</span>`;
+  return `<div class="act-row${child ? ' act-row-child' : ''}${a.isArchived ? ' act-row-archived' : ''}" data-id="${a.id}">
     <div class="act-color-dot" style="background:${color}"></div>
     <div class="act-row-body">
       <div class="act-row-name">${esc(a.name)}</div>
       ${a.note ? `<div class="act-row-note">${esc(a.note)}</div>` : ''}
     </div>
     <div class="act-row-meta">
-      <span class="act-row-budget">${budget}</span>
+      ${meta}
       <svg class="act-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
   </div>`;
@@ -136,6 +147,11 @@ function openActSheet(actId) {
   renderColorPicker(a?.color || '');
 
   document.getElementById('act-delete-btn').classList.toggle('hidden', !a);
+
+  const archiveBtn = document.getElementById('act-archive-btn');
+  archiveBtn.classList.toggle('hidden', !a);
+  if (a) archiveBtn.textContent = a.isArchived ? 'Genåbn opgave' : 'Afslut opgave';
+
   openSheet('act-sheet', 'act-backdrop');
 }
 
@@ -238,6 +254,37 @@ async function deleteActivity() {
   } catch (err) {
     console.error('Slet fejl:', err);
     showToast('Kunne ikke slette — prøv igen');
+  } finally { btn.disabled = false; }
+}
+
+// ─── Arkivér / genåbn ─────────────────────────────────────
+async function toggleArchive() {
+  if (!editingId) return;
+  const a = activities.find(x => x.id === editingId);
+  if (!a) return;
+
+  const archiving = !a.isArchived;
+  const children  = activities.filter(c => c.parentId === editingId);
+
+  const fields = archiving
+    ? { isArchived: true,  archivedAt: serverTimestamp() }
+    : { isArchived: false, archivedAt: null };
+
+  const btn = document.getElementById('act-archive-btn');
+  btn.disabled = true;
+  try {
+    const batch = writeBatch(db);
+    batch.update(doc(db, `users/${userId}/activities/${editingId}`), fields);
+    // Under-aktiviteter følger med, så de heller ikke kan tidsregistreres
+    children.forEach(c =>
+      batch.update(doc(db, `users/${userId}/activities/${c.id}`), fields)
+    );
+    await batch.commit();
+    showToast(archiving ? 'Opgave afsluttet' : 'Opgave genåbnet');
+    closeSheet('act-sheet', 'act-backdrop');
+  } catch (err) {
+    console.error('Arkiv fejl:', err);
+    showToast('Kunne ikke opdatere — prøv igen');
   } finally { btn.disabled = false; }
 }
 
@@ -383,6 +430,8 @@ function bindListeners() {
     .addEventListener('submit', saveActivity);
   document.getElementById('act-delete-btn')
     .addEventListener('click', deleteActivity);
+  document.getElementById('act-archive-btn')
+    .addEventListener('click', toggleArchive);
 
   document.querySelectorAll('input[name="act-type"]').forEach(r =>
     r.addEventListener('change', e => {

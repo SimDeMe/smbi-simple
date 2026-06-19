@@ -489,6 +489,24 @@ html, body {
   color: var(--text-2);
 }
 
+.act-row-archived { opacity: .6; }
+
+.act-row-archived-badge {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-3);
+  background: var(--border);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.rapport-act-row-archived .rapport-act-name { color: var(--text-2); }
+
+.rapport-archived-nobudget {
+  font-size: 13px;
+  color: var(--text-3);
+}
+
 .act-chevron {
   width: 16px; height: 16px;
   color: var(--text-3);
@@ -912,8 +930,9 @@ html, body {
   font-weight: 600;
   margin-top: 10px;
 }
-.forecast-ahead  { background: #dcfce7; color: #15803d; }
-.forecast-behind { background: #fee2e2; color: #dc2626; }
+.forecast-ahead   { background: #dcfce7; color: #15803d; }
+.forecast-behind  { background: #fee2e2; color: #dc2626; }
+.forecast-neutral { background: var(--border); color: var(--text-2); }
 
 /* Donut */
 .rapport-chart-section {

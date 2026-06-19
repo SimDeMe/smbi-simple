@@ -48,7 +48,7 @@ function setupActiveListener() {
       autoStopTimerId = null;
 
       if (activeEntry?.startTime) {
-        const limitMs = (getSettings().autoStopAfterMinutes ?? 240) * 60 * 1000;
+        const limitMs = (getSettings().autoStopAfterMinutes ?? 600) * 60 * 1000;
         const elapsed = Date.now() - activeEntry.startTime.toDate().getTime();
         if (elapsed >= limitMs) {
           autoStopEntry(activeEntry);

@@ -10,7 +10,7 @@ const DEFAULTS = {
   schoolYearStartDay:   1,
   normHours:            1650,
   moduleLengthMinutes:  90,
-  autoStopAfterMinutes: 240,
+  autoStopAfterMinutes: 600,
   weekStartsOn:         1
 };
 
@@ -71,7 +71,7 @@ async function saveSettings() {
     schoolYearStartDay:   parseInt(document.getElementById('cfg-start-day').value)    || 1,
     normHours:            parseInt(document.getElementById('cfg-norm-hours').value)   || 1650,
     moduleLengthMinutes:  parseInt(document.getElementById('cfg-module-mins').value)  || 90,
-    autoStopAfterMinutes: parseInt(document.getElementById('cfg-autostop-mins').value)|| 240,
+    autoStopAfterMinutes: parseInt(document.getElementById('cfg-autostop-mins').value)|| 600,
     weekStartsOn: parseInt(
       document.querySelector('input[name="cfg-week-start"]:checked')?.value ?? '1'
     )

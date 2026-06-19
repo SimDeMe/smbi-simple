@@ -94,7 +94,9 @@ function aggregate(acts) {
 
   const showAll = periodFilter === 'skolear';
   const topActs = acts.filter(a => a.schoolYear === year && !a.isArchived && !a.parentId);
-  const kids    = acts.filter(a => a.schoolYear === year && !a.isArchived && a.parentId);
+  // Under-opgaver medregnes hos forælderen uanset arkiv-status, så tid ikke
+  // forsvinder hvis en enkelt under-opgave afsluttes mens forælderen kører videre.
+  const kids    = acts.filter(a => a.schoolYear === year && a.parentId);
 
   const rows = topActs
     .map(act => {
@@ -115,8 +117,25 @@ function aggregate(acts) {
     .filter(r => showAll || r.totalMins > 0)
     .sort((a, b) => b.totalMins - a.totalMins);
 
-  const totalMins = rows.reduce((s, r) => s + r.totalMins, 0) + uboundMins;
-  return { rows, uboundMins, totalMins };
+  // Afsluttede opgaver — kun i skoleårs-rapporten
+  const archivedRows = (showAll
+    ? acts.filter(a => a.schoolYear === year && a.isArchived && !a.parentId)
+    : []
+  ).map(act => {
+    const cs         = acts.filter(c => c.parentId === act.id && c.schoolYear === year);
+    const childMins  = cs.reduce((s, c) => s + (direct[c.id] || 0), 0);
+    const totalMins  = (direct[act.id] || 0) + childMins;
+    const budgetMins = act.budgetHours != null ? act.budgetHours * 60 : null;
+    return {
+      act, totalMins, budgetMins,
+      diffMins: budgetMins != null ? budgetMins - totalMins : null
+    };
+  }).sort((a, b) => b.totalMins - a.totalMins);
+
+  const archivedMins = archivedRows.reduce((s, r) => s + r.totalMins, 0);
+
+  const totalMins = rows.reduce((s, r) => s + r.totalMins, 0) + uboundMins + archivedMins;
+  return { rows, uboundMins, totalMins, archivedRows, archivedMins };
 }
 
 // ─── Main render ──────────────────────────────────────────
@@ -124,11 +143,12 @@ function renderReport() {
   const el = document.getElementById('rapport-content');
   if (!el) return;
   const acts = getLoadedActivities();
-  const { rows, uboundMins, totalMins } = aggregate(acts);
+  const { rows, uboundMins, totalMins, archivedRows, archivedMins } = aggregate(acts);
   el.innerHTML =
     renderSummary(totalMins) +
-    renderDonut(rows, uboundMins, totalMins) +
-    renderActList(rows, uboundMins);
+    renderDonut(rows, uboundMins, totalMins, archivedMins) +
+    renderActList(rows, uboundMins) +
+    renderArchivedList(archivedRows);
 }
 
 // ─── Summary card ─────────────────────────────────────────
@@ -176,7 +196,7 @@ function renderSummary(totalMins) {
 // ─── Donut chart ──────────────────────────────────────────
 const PERIOD_LABELS = { dag: 'I dag', uge: 'Uge', maaned: 'Måned', skolear: 'Skoleår' };
 
-function renderDonut(rows, uboundMins, totalMins) {
+function renderDonut(rows, uboundMins, totalMins, archivedMins = 0) {
   if (totalMins === 0) return '';
   const R    = 72;
   const CIRC = 2 * Math.PI * R;
@@ -185,6 +205,7 @@ function renderDonut(rows, uboundMins, totalMins) {
     ...rows.filter(r => r.totalMins > 0).slice(0, 6)
       .map(r => ({ name: r.act.name, mins: r.totalMins, color: r.act.color || 'var(--accent)' })),
     ...(uboundMins > 0 ? [{ name: 'Ubundet', mins: uboundMins, color: 'var(--text-3)' }] : []),
+    ...(archivedMins > 0 ? [{ name: 'Afsluttet', mins: archivedMins, color: 'var(--border)' }] : []),
   ];
   const restMins = rows.slice(6).reduce((s, r) => s + r.totalMins, 0);
   if (restMins > 0) segs.push({ name: 'Andre', mins: restMins, color: 'var(--border)' });
@@ -278,6 +299,53 @@ function actRow(act, totalMins, ownMins, wt, isChild) {
       <div class="rapport-act-time">${totalMins > 0 ? fmtMins(totalMins) : '—'}</div>
     </div>
     ${progressHtml}${wtHtml}
+  </div>`;
+}
+
+// ─── Afsluttede opgaver ───────────────────────────────────
+function renderArchivedList(rows) {
+  if (!rows.length) return '';
+
+  let html = `<div class="rapport-act-section rapport-archived-section">
+    <div class="rapport-act-head">Afsluttede opgaver</div>`;
+  rows.forEach(r => { html += archivedRow(r); });
+  return html + '</div>';
+}
+
+function archivedRow(r) {
+  const { act, totalMins, budgetMins, diffMins } = r;
+  const color = act.color || 'var(--accent)';
+
+  let bar = '';
+  let chip = '';
+
+  if (budgetMins != null) {
+    const pct  = budgetMins > 0 ? Math.min(100, Math.round(totalMins / budgetMins * 100)) : 0;
+    const over = diffMins < 0;
+    bar = `
+      <div class="rapport-progress-bg">
+        <div class="rapport-progress-fill" style="width:${pct}%;background:${over ? 'var(--danger)' : color}"></div>
+      </div>
+      <div class="rapport-act-budget-row">
+        <span>${fmtMins(totalMins)} / ${act.budgetHours}t</span>
+        <span>${pct}%</span>
+      </div>`;
+    chip = diffMins > 0
+      ? `<span class="forecast-chip forecast-ahead">✓ Sparet ${fmtMins(diffMins)}</span>`
+      : diffMins < 0
+        ? `<span class="forecast-chip forecast-behind">▲ ${fmtMins(-diffMins)} for meget</span>`
+        : `<span class="forecast-chip forecast-neutral">Præcis på budget</span>`;
+  } else {
+    chip = `<div class="rapport-archived-nobudget">Intet budget · ${fmtMins(totalMins)} brugt</div>`;
+  }
+
+  return `<div class="rapport-act-row rapport-act-row-archived">
+    <div class="rapport-act-top">
+      <div class="act-color-dot" style="background:${color}"></div>
+      <div class="rapport-act-name">${esc(act.name)}</div>
+      <div class="rapport-act-time">${totalMins > 0 ? fmtMins(totalMins) : '—'}</div>
+    </div>
+    ${bar}${chip}
   </div>`;
 }
 
