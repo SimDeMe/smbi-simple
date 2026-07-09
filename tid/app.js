@@ -12,7 +12,7 @@ import { initActivitiesView } from './activities.js';
 import { initTimerView, refreshQuickStart } from './timer.js';
 import { initHistorikView, refreshHistorik } from './historik.js';
 import { initRapporterView, refreshRapporter } from './rapporter.js';
-import { initIndstillingerView, refreshIndstillinger } from './indstillinger.js';
+import { initIndstillingerView, refreshIndstillinger, getSettings } from './indstillinger.js';
 
 // ─── Firebase init ────────────────────────────────────────
 const firebaseApp = initializeApp(firebaseConfig);
@@ -38,13 +38,22 @@ async function exportAllData() {
       getDocs(collection(db, `users/${currentUserId}/activities`)),
       getDocs(collection(db, `users/${currentUserId}/entries`))
     ]);
-    const tsToStr = (key, val) => val?.toDate ? val.toDate().toISOString() : val;
-    const payload = {
+    // Firestore Timestamp har sin egen toJSON, som JSON.stringify kalder før
+    // en replacer — derfor konverteres rekursivt inden serialisering.
+    const tsToIso = v => {
+      if (v?.toDate) return v.toDate().toISOString();
+      if (Array.isArray(v)) return v.map(tsToIso);
+      if (v && typeof v === 'object') return Object.fromEntries(
+        Object.entries(v).map(([k, x]) => [k, tsToIso(x)])
+      );
+      return v;
+    };
+    const payload = tsToIso({
       exportedAt:  new Date().toISOString(),
       activities:  actsSnap.docs.map(d => ({ id: d.id, ...d.data() })),
       entries:     entriesSnap.docs.map(d => ({ id: d.id, ...d.data() }))
-    };
-    const json = JSON.stringify(payload, tsToStr, 2);
+    });
+    const json = JSON.stringify(payload, null, 2);
     const blob = new Blob([json], { type: 'application/json' });
     const url  = URL.createObjectURL(blob);
     const a    = Object.assign(document.createElement('a'), {
@@ -101,11 +110,13 @@ onAuthStateChanged(auth, async user => {
     appEl.classList.remove('hidden');
     try {
       await initSettings(user.uid);
+      // Indstillinger skal være indlæst før de andre views, da de bruger
+      // getCurrentSchoolYear(), som læser fra indstillingerne
+      await initIndstillingerView(user.uid);
       initActivitiesView(user.uid);
       initTimerView(user.uid);
       initHistorikView(user.uid);
       initRapporterView(user.uid);
-      initIndstillingerView(user.uid);
       await checkFirstRun(user.uid);
     } catch (err) {
       console.error('Init fejl:', err);
@@ -117,6 +128,7 @@ onAuthStateChanged(auth, async user => {
     loadingScreen.classList.add('hidden');
     appEl.classList.add('hidden');
     loginScreen.classList.remove('hidden');
+    btnGoogleLogin.disabled = false;
   }
 });
 
@@ -133,8 +145,7 @@ async function initSettings(userId) {
       schoolYearStartDay:   1,
       normHours:            1650,
       moduleLengthMinutes:  90,
-      autoStopAfterMinutes: 240,
-      weekStartsOn:         1
+      autoStopAfterMinutes: 600
     });
   }
 }
@@ -161,7 +172,10 @@ btnOnbSkip.addEventListener('click', () => {
 });
 
 // ─── Skoleår-hjælpere ────────────────────────────────────
-export function getCurrentSchoolYear(startMonth = 6) {
+export function getCurrentSchoolYear() {
+  const s = getSettings();
+  if (/^\d{4}\/\d{2}$/.test(s.currentSchoolYear ?? '')) return s.currentSchoolYear;
+  const startMonth = s.schoolYearStartMonth ?? 6;
   const now = new Date();
   const y = now.getFullYear();
   const m = now.getMonth() + 1;

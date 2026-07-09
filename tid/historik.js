@@ -219,7 +219,8 @@ async function saveEntry(ev) {
   if (endVal) {
     endDate = parseDateTime(dateVal, endVal);
     if (!endDate) { showToast('Ugyldig sluttid'); return; }
-    if (endDate < startDate) { showToast('Sluttid skal være efter starttid'); return; }
+    // Sluttid før starttid tolkes som næste dag (arbejde hen over midnat)
+    if (endDate < startDate) endDate = new Date(endDate.getTime() + 24 * 60 * 60 * 1000);
     durationMinutes = Math.round((endDate - startDate) / 60000);
   }
 
@@ -247,15 +248,15 @@ async function saveEntry(ev) {
       startTime:       Timestamp.fromDate(startDate),
       endTime:         endDate ? Timestamp.fromDate(endDate) : null,
       durationMinutes,
-      note,
-      isModule:        false,
-      autoStopped:     false
+      note
     };
     if (editingId) {
+      // Kun de redigérbare felter opdateres — isModule/autoStopped bevares
       await updateDoc(doc(db, `users/${userId}/entries/${editingId}`), data);
       showToast('Registrering opdateret');
     } else {
-      await addDoc(collection(db, `users/${userId}/entries`), data);
+      await addDoc(collection(db, `users/${userId}/entries`),
+        { ...data, isModule: false, autoStopped: false });
       showToast('Registrering oprettet');
     }
     closeSheet('hist-sheet', 'hist-backdrop');

@@ -1,17 +1,18 @@
 // indstillinger.js — Trin 9: Indstillinger
 
-import { db, showToast } from './app.js';
+import { db, showToast, getCurrentSchoolYear } from './app.js';
 import { doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js';
 
 // ─── Defaults ─────────────────────────────────────────────
+// currentSchoolYear er tom som default, så getCurrentSchoolYear() falder
+// tilbage til dato-baseret beregning, indtil brugerens indstilling er indlæst.
 const DEFAULTS = {
-  currentSchoolYear:    '2026/27',
+  currentSchoolYear:    '',
   schoolYearStartMonth: 6,
   schoolYearStartDay:   1,
   normHours:            1650,
   moduleLengthMinutes:  90,
-  autoStopAfterMinutes: 600,
-  weekStartsOn:         1
+  autoStopAfterMinutes: 600
 };
 
 let userId      = null;
@@ -21,11 +22,11 @@ let listenersOk = false;
 export const getSettings = () => ({ ...settings });
 
 // ─── Init ─────────────────────────────────────────────────
-export function initIndstillingerView(uid) {
+export async function initIndstillingerView(uid) {
   if (userId === uid) return;
   userId = uid;
-  loadSettings();
   bindListeners();
+  await loadSettings();
 }
 
 export function refreshIndstillinger() {
@@ -46,16 +47,12 @@ async function loadSettings() {
 // ─── Populate form ────────────────────────────────────────
 function populateForm() {
   const s = settings;
-  set('cfg-school-year',   s.currentSchoolYear    ?? DEFAULTS.currentSchoolYear);
+  set('cfg-school-year',   s.currentSchoolYear    || getCurrentSchoolYear());
   set('cfg-start-month',   s.schoolYearStartMonth ?? DEFAULTS.schoolYearStartMonth);
   set('cfg-start-day',     s.schoolYearStartDay   ?? DEFAULTS.schoolYearStartDay);
   set('cfg-norm-hours',    s.normHours            ?? DEFAULTS.normHours);
   set('cfg-module-mins',   s.moduleLengthMinutes  ?? DEFAULTS.moduleLengthMinutes);
   set('cfg-autostop-mins', s.autoStopAfterMinutes ?? DEFAULTS.autoStopAfterMinutes);
-
-  const ws = s.weekStartsOn ?? DEFAULTS.weekStartsOn;
-  document.querySelectorAll('input[name="cfg-week-start"]')
-    .forEach(r => { r.checked = parseInt(r.value) === ws; });
 }
 
 const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
@@ -63,7 +60,7 @@ const set = (id, val) => { const el = document.getElementById(id); if (el) el.va
 // ─── Save ─────────────────────────────────────────────────
 async function saveSettings() {
   const yearVal = document.getElementById('cfg-school-year').value.trim();
-  if (!yearVal) { showToast('Angiv et gyldigt skoleår (fx 2026/27)'); return; }
+  if (!/^\d{4}\/\d{2}$/.test(yearVal)) { showToast('Angiv et gyldigt skoleår (fx 2026/27)'); return; }
 
   const updated = {
     currentSchoolYear:    yearVal,
@@ -71,10 +68,7 @@ async function saveSettings() {
     schoolYearStartDay:   parseInt(document.getElementById('cfg-start-day').value)    || 1,
     normHours:            parseInt(document.getElementById('cfg-norm-hours').value)   || 1650,
     moduleLengthMinutes:  parseInt(document.getElementById('cfg-module-mins').value)  || 90,
-    autoStopAfterMinutes: parseInt(document.getElementById('cfg-autostop-mins').value)|| 600,
-    weekStartsOn: parseInt(
-      document.querySelector('input[name="cfg-week-start"]:checked')?.value ?? '1'
-    )
+    autoStopAfterMinutes: parseInt(document.getElementById('cfg-autostop-mins').value)|| 600
   };
 
   const btn = document.getElementById('cfg-save-btn');

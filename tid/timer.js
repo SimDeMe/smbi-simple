@@ -48,13 +48,19 @@ function setupActiveListener() {
       autoStopTimerId = null;
 
       if (activeEntry?.startTime) {
-        const limitMs = (getSettings().autoStopAfterMinutes ?? 600) * 60 * 1000;
+        // Et modul har en planlagt varighed; håndhæves her (og ikke med et løst
+        // setTimeout), så stoppet også sker efter genindlæsning af appen
+        const settingsMins = getSettings().autoStopAfterMinutes ?? 600;
+        const planned      = activeEntry.plannedDurationMinutes ?? null;
+        const isPlanned    = planned != null && planned <= settingsMins;
+        const limitMins    = isPlanned ? planned : settingsMins;
+        const limitMs      = limitMins * 60 * 1000;
         const elapsed = Date.now() - activeEntry.startTime.toDate().getTime();
         if (elapsed >= limitMs) {
-          autoStopEntry(activeEntry);
+          autoStopEntry(activeEntry, limitMins, isPlanned);
         } else {
           autoStopTimerId = setTimeout(() => {
-            if (activeEntry) autoStopEntry(activeEntry);
+            if (activeEntry) autoStopEntry(activeEntry, limitMins, isPlanned);
           }, limitMs - elapsed);
         }
       } else if (!sessionAutoStopWarned) {
@@ -69,16 +75,24 @@ function setupActiveListener() {
 }
 
 // ─── Auto-stop ────────────────────────────────────────────
-async function autoStopEntry(entry) {
+// capMins begrænser varigheden (og sluttiden), så et modul der først opdages
+// efter planlagt sluttid — fx fordi appen var lukket — ikke registrerer for meget.
+async function autoStopEntry(entry, capMins, isPlanned = false) {
   try {
-    const now      = Timestamp.fromDate(new Date());
-    const startMs  = entry.startTime?.toDate()?.getTime() ?? Date.now();
-    const duration = Math.max(0, Math.round((Date.now() - startMs) / 60000));
+    const startMs = entry.startTime?.toDate()?.getTime() ?? Date.now();
+    let duration  = Math.max(0, Math.round((Date.now() - startMs) / 60000));
+    let endMs     = Date.now();
+    if (capMins != null && duration >= capMins) {
+      duration = capMins;
+      endMs    = startMs + capMins * 60000;
+    }
     await updateDoc(doc(db, `users/${userId}/entries/${entry.id}`), {
-      endTime: now, durationMinutes: duration, autoStopped: true
+      endTime: Timestamp.fromMillis(endMs), durationMinutes: duration, autoStopped: !isPlanned
     });
     sessionAutoStopWarned = true;
-    showToast(`Timer stoppet automatisk · ${fmtMins(duration)}`, 5000);
+    showToast(isPlanned
+      ? `Modul afsluttet · ${fmtMins(duration)}`
+      : `Timer stoppet automatisk · ${fmtMins(duration)}`, 5000);
   } catch (err) {
     console.error('Auto-stop fejl:', err);
   }
@@ -86,18 +100,19 @@ async function autoStopEntry(entry) {
 
 async function checkRecentAutoStop() {
   try {
-    // Query recent entries, filter client-side to avoid composite index
-    const since = Timestamp.fromMillis(Date.now() - 24 * 60 * 60 * 1000);
+    // Hent seneste entries og filtrér client-side — undgår composite index,
+    // og orderBy sikrer at det faktisk er de nyeste der tjekkes
+    const since = Date.now() - 24 * 60 * 60 * 1000;
     const snap  = await getDocs(
       query(
         collection(db, `users/${userId}/entries`),
-        where('autoStopped', '==', true),
-        limit(5)
+        orderBy('startTime', 'desc'),
+        limit(50)
       )
     );
     const recent = snap.docs
       .map(d => ({ id: d.id, ...d.data() }))
-      .filter(e => e.endTime && e.endTime.toDate() >= since.toDate())
+      .filter(e => e.autoStopped && e.endTime && e.endTime.toDate().getTime() >= since)
       .sort((a, b) => b.endTime.toDate() - a.endTime.toDate());
 
     if (!recent.length) return;
@@ -333,15 +348,15 @@ async function confirmModul() {
   try {
     if (modulWhen === 'nu') {
       if (activeEntry) await stopEntry(activeEntry, false);
-      const ref = await addDoc(collection(db, `users/${userId}/entries`), {
+      // plannedDurationMinutes håndhæves af active-entry-lytteren, så modulet
+      // også stoppes til tiden efter en genindlæsning af appen
+      await addDoc(collection(db, `users/${userId}/entries`), {
         activityId: modulHoldId, workType: 'undervisning',
         startTime: serverTimestamp(), endTime: null,
-        durationMinutes: null, note: '', isModule: true, autoStopped: false
+        durationMinutes: null, note: '', isModule: true, autoStopped: false,
+        plannedDurationMinutes: mins
       });
       showToast(`Modul startet · stopper om ${mins}m`);
-      setTimeout(async () => {
-        if (activeEntry?.id === ref.id) await stopActiveTimer();
-      }, mins * 60 * 1000);
 
     } else if (modulWhen === 'bagud') {
       const endMs   = Date.now();

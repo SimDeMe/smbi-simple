@@ -1,7 +1,9 @@
-const CACHE = 'tid-v2';
+const CACHE = 'tid-v3';
 const SHELL = [
   '/tid/',
   '/tid/index.html',
+  '/tid/hjaelp.html',
+  '/tid/installer.html',
   '/tid/styles.css',
   '/tid/app.js',
   '/tid/activities.js',
@@ -39,10 +41,21 @@ self.addEventListener('fetch', e => {
   // Don't intercept Firebase / Google CDN requests
   if (url.origin !== self.location.origin) return;
 
-  // Navigation requests → serve cached index.html (SPA fallback)
+  // Navigation: netværk først (så hjaelp.html m.fl. rammer den rigtige side),
+  // ved offline falder vi tilbage til cachen og til sidst index.html
   if (e.request.mode === 'navigate') {
     e.respondWith(
-      caches.match('/tid/index.html').then(r => r || fetch(e.request))
+      fetch(e.request)
+        .then(res => {
+          if (res.ok) {
+            const clone = res.clone();
+            caches.open(CACHE).then(c => c.put(e.request, clone));
+          }
+          return res;
+        })
+        .catch(() =>
+          caches.match(e.request).then(r => r || caches.match('/tid/index.html'))
+        )
     );
     return;
   }

@@ -69,10 +69,14 @@ function spentByActivity() {
 }
 
 // Forbrug for én række: egen tid + (for topopgaver) underopgavernes tid.
+// Arkiverede underopgaver vises som egne rækker under "Afsluttet" og holdes
+// derfor ude af forælderens total — samme regel som i rapporter.js.
 function rowSpent(a, spent) {
   let total = spent[a.id] || 0;
   if (!a.parentId) {
-    activities.forEach(c => { if (c.parentId === a.id) total += spent[c.id] || 0; });
+    activities.forEach(c => {
+      if (c.parentId === a.id && !c.isArchived) total += spent[c.id] || 0;
+    });
   }
   return total;
 }

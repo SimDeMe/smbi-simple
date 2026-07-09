@@ -25,14 +25,19 @@ export function initRapporterView(uid) {
 
 export function refreshRapporter() {
   if (!userId) return;
-  if (!unsubEntries) setupEntriesListener();
+  // Genstart lytteren hvis skoleårets start har ændret sig (nye indstillinger)
+  const yStart = schoolYearStart(getCurrentSchoolYear());
+  if (!unsubEntries || yStart.getTime() !== listenerYearStartMs) setupEntriesListener();
   else renderReport();
 }
 
 // ─── Firestore listener ───────────────────────────────────
+let listenerYearStartMs = null;
+
 function setupEntriesListener() {
   if (unsubEntries) unsubEntries();
   const yStart = schoolYearStart(getCurrentSchoolYear());
+  listenerYearStartMs = yStart.getTime();
   unsubEntries = onSnapshot(
     query(
       collection(db, `users/${userId}/entries`),
@@ -49,7 +54,13 @@ function setupEntriesListener() {
 }
 
 function schoolYearStart(year) {
-  return new Date(parseInt(year), 5, 1); // 1. juni
+  const s = getSettings();
+  return new Date(parseInt(year), (s.schoolYearStartMonth ?? 6) - 1, s.schoolYearStartDay ?? 1);
+}
+
+function schoolYearEnd(year) {
+  const s = schoolYearStart(year);
+  return new Date(s.getFullYear() + 1, s.getMonth(), s.getDate());
 }
 
 // ─── Period filtering ─────────────────────────────────────
@@ -162,7 +173,7 @@ function renderSummary(totalMins) {
 
   if (periodFilter === 'skolear') {
     const yStart  = schoolYearStart(year);
-    const yEnd    = new Date(parseInt(year) + 1, 4, 31, 23, 59, 59);
+    const yEnd    = schoolYearEnd(year);
     const total   = Math.max(1, (yEnd - yStart) / 86400000);
     const elapsed = Math.min(1, Math.max(0, (Date.now() - yStart.getTime()) / 86400000 / total));
     const NORM    = normHours();
