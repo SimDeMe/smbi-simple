@@ -1025,8 +1025,8 @@ function frame(now) {
     gates[g] += (t - gates[g]) * Math.min(1, 3.2 * dtReal);
   });
 
-  // Auto-gennemgang af kausalkæden (fri tilstand)
-  if (state.mode === 'fri' && state.tour) {
+  // Auto-gennemgang af kausalkæden (fri tilstand) — står stille ved pause
+  if (state.mode === 'fri' && state.tour && state.running) {
     state.focusT += dtReal;
     if (state.focusT > 4.5) {
       state.focusT = 0;
@@ -1035,7 +1035,7 @@ function frame(now) {
     }
   }
 
-  // Partikler
+  // Partikler — flyder videre også under pause
   if (state.layers.parcels || state.layers.tracer) stepParcels(dtReal, d.s);
 
   // ── Tegn ──
