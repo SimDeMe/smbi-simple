@@ -2,464 +2,870 @@
 <html lang="da">
 <head>
     <meta charset="UTF-8">
-    <title>Bio-Blocks: Byg med Former</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bio-Blocks: fra monosakkarider til disakkarider</title>
+    <script defer src="https://3Dmol.org/build/3Dmol-min.js"></script>
     <style>
-        body { 
-            font-family: 'Verdana', sans-serif; 
-            background-color: #ecf0f1; 
-            display: flex; 
-            flex-direction: column; 
-            height: 100vh; 
-            margin: 0; 
-            overflow: hidden; 
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Verdana', sans-serif;
+            background-color: #ecf0f1;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
             user-select: none;
+            color: #2c3e50;
         }
 
-        /* Top Bar */
+        /* ---------- Top bar ---------- */
         header {
             background: #fff;
-            padding: 10px 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            padding: 10px 16px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
             display: flex;
-            gap: 12px;
+            gap: 10px;
             align-items: center;
             justify-content: center;
             flex-wrap: wrap;
+            z-index: 10;
         }
 
-        .control-group {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .spawner, .btn-view {
+        .spawner, .btn-flat {
             border: none;
             padding: 10px 14px;
             border-radius: 8px;
+            font-family: inherit;
             font-weight: bold;
             color: white;
             cursor: pointer;
             font-size: 14px;
             box-shadow: 0 4px 0 rgba(0,0,0,0.2);
-            transition: transform 0.1s, box-shadow 0.1s;
+            transition: transform 0.08s, box-shadow 0.08s;
         }
-        .spawner:active, .btn-view:active { transform: translateY(4px); box-shadow: 0 0 0; }
+        .spawner:active, .btn-flat:active { transform: translateY(4px); box-shadow: 0 0 0; }
 
-        .btn-glu { background-color: #2ecc71; } /* Grøn */
-        .btn-fru { background-color: #e74c3c; } /* Rød */
-        .btn-gal { background-color: #f1c40f; } /* Gul */
-        .btn-view { background: #2980b9; padding: 10px 10px; }
-        .btn-reset { background-color: #34495e; margin-left: 30px; }
+        .btn-glu { background-color: #27ae60; }
+        .btn-fru { background-color: #e74c3c; }
+        .btn-gal { background-color: #e6a700; }
+        .btn-reset { background-color: #34495e; }
 
-        /* Game Area */
+        .counter {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #eaf4fb;
+            border: 1px solid #d3e6f3;
+            color: #2471a3;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .counter b { font-size: 16px; }
+
+        /* ---------- Game area ---------- */
         #game-area {
             flex-grow: 1;
             position: relative;
-            background-image: radial-gradient(#bdc3c7 1px, transparent 1px);
-            background-size: 20px 20px;
+            background-image: radial-gradient(#c6cdd1 1px, transparent 1px);
+            background-size: 22px 22px;
+            overflow: hidden;
+        }
+        #svg-space { display: block; touch-action: none; }
+
+        #status {
+            position: absolute;
+            left: 50%;
+            bottom: 16px;
+            transform: translateX(-50%);
+            background: rgba(255,255,255,0.95);
+            border: 1px solid #dfe6e9;
+            border-left: 5px solid #7f8c8d;
+            border-radius: 8px;
+            padding: 9px 16px;
+            font-size: 14px;
+            max-width: min(92%, 640px);
+            text-align: center;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+            transition: border-color 0.2s, background 0.2s;
+        }
+        #status.ok    { border-left-color: #27ae60; }
+        #status.error { border-left-color: #e74c3c; }
+        #status.info  { border-left-color: #2980b9; }
+
+        /* ---------- Molecules ---------- */
+        .molecule { cursor: grab; }
+        .molecule.dragging { cursor: grabbing; }
+        .mol-inner {
+            transition: transform 0.12s ease-out;
+            transform-box: fill-box;
+            transform-origin: center;
+        }
+        .molecule.dragging .mol-inner { transform: scale(1.04); }
+
+        .shape-body {
+            stroke: rgba(0,0,0,0.22);
+            stroke-width: 2px;
+        }
+        .molecule.candidate .shape-body {
+            stroke: #2c3e50;
+            stroke-width: 4px;
+            stroke-dasharray: 8 5;
         }
 
-        /* Shapes */
-        .shape-group { 
-            cursor: grab; 
-            transition: transform 0.1s ease-out;
+        .label-abbr {
+            font-size: 22px;
+            font-weight: 900;
+            fill: white;
+            text-anchor: middle;
+            pointer-events: none;
+            letter-spacing: 1px;
         }
-        .shape-group:active { cursor: grabbing; scale: 1.05; }
-        
-        .shape-body { stroke: rgba(0,0,0,0.2); stroke-width: 2px; }
-        .shape-label { 
-            font-size: 12px; 
-            font-weight: bold; 
-            fill: white; 
-            text-anchor: middle; 
-            pointer-events: none; 
-            text-shadow: 0px 1px 2px rgba(0,0,0,0.3);
-        }
-
-        /* Bond Line */
-        .bond-line {
-            stroke: #7f8c8d;
-            stroke-width: 8;
-            stroke-linecap: round;
+        .label-name {
+            font-size: 11px;
+            font-weight: bold;
+            fill: rgba(255,255,255,0.9);
+            text-anchor: middle;
+            pointer-events: none;
         }
 
-        /* Product Label */
+        .bond-line { stroke: #566573; stroke-width: 7; stroke-linecap: round; }
+        .bond-atom { fill: #ffffff; stroke: #566573; stroke-width: 3; }
+        .bond-atom-text {
+            font-size: 13px; font-weight: 900; fill: #566573;
+            text-anchor: middle; pointer-events: none;
+        }
+        .bond-note {
+            font-size: 11px; fill: #566573; text-anchor: middle;
+            pointer-events: none; font-style: italic;
+        }
+
+        .product-bg { fill: #ffffff; stroke: #d5dbdb; stroke-width: 1.5; }
         .product-label {
             font-size: 16px;
             font-weight: 900;
             fill: #2c3e50;
             text-anchor: middle;
+            pointer-events: none;
             text-transform: uppercase;
-            animation: popIn 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
-            background: white; /* Only works in HTML, for SVG we rely on fill */
-        }
-        .product-bg {
-            fill: white;
-            opacity: 0.8;
-            rx: 5;
+            letter-spacing: 0.5px;
         }
 
-        /* 3D Viewer */
-        .btn-3d { background-color: #3498db; }
+        /* Small round action buttons drawn inside the SVG */
+        .badge { cursor: pointer; }
+        .badge circle { fill: #ffffff; stroke: #b2bec3; stroke-width: 2; transition: fill 0.15s; }
+        .badge text {
+            font-size: 15px; text-anchor: middle; pointer-events: none;
+            fill: #2c3e50; font-weight: bold;
+        }
+        .badge:hover circle { fill: #dfe6e9; }
+        .badge-3d circle { stroke: #2980b9; }
+        .badge-3d text  { fill: #2980b9; }
+        .badge-cut circle { stroke: #c0392b; }
+        .badge-cut text  { fill: #c0392b; }
+
+        /* ---------- Effects ---------- */
+        .fx-water text {
+            font-size: 15px; font-weight: bold; fill: #2980b9;
+            text-anchor: middle; pointer-events: none;
+        }
+        .fx-out .fx-anim { animation: floatUp 1.4s ease-out forwards; }
+        .fx-in  .fx-anim { animation: floatIn 1.0s ease-in forwards; }
+        @keyframes floatUp {
+            0%   { opacity: 0; transform: translateY(0) scale(0.6); }
+            25%  { opacity: 1; transform: translateY(-14px) scale(1.1); }
+            100% { opacity: 0; transform: translateY(-70px) scale(1); }
+        }
+        @keyframes floatIn {
+            0%   { opacity: 0; transform: translateY(-60px) scale(1); }
+            35%  { opacity: 1; transform: translateY(-20px) scale(1.1); }
+            100% { opacity: 0; transform: translateY(0) scale(0.6); }
+        }
+
+        .molecule.shake .mol-inner { animation: shake 0.4s; }
+        @keyframes shake {
+            0%,100% { transform: translateX(0); }
+            20% { transform: translateX(-9px); }
+            40% { transform: translateX(9px); }
+            60% { transform: translateX(-6px); }
+            80% { transform: translateX(6px); }
+        }
+
+        .molecule.appear .mol-inner { animation: popIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        @keyframes popIn {
+            0%   { transform: scale(0.4); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* ---------- 3D viewer ---------- */
         #viewer-modal {
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.45);
+            background: rgba(0,0,0,0.5);
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 200;
+            padding: 16px;
         }
         #viewer-modal.hidden { display: none; }
         .viewer-box {
             background: #fff;
-            border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-            padding: 14px;
-            width: min(90vw, 780px);
+            border-radius: 12px;
+            box-shadow: 0 12px 34px rgba(0,0,0,0.3);
+            padding: 16px;
+            width: min(94vw, 800px);
         }
         .viewer-bar {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 10px;
-            margin-bottom: 8px;
-            font-weight: 700;
-            color: #2c3e50;
+            gap: 12px;
+            margin-bottom: 10px;
         }
+        #viewer-title { font-weight: 900; font-size: 18px; }
+        #viewer-sub { font-weight: normal; font-size: 13px; color: #7f8c8d; display: block; margin-top: 2px; }
+        .viewer-actions { display: flex; gap: 8px; align-items: center; }
+        .btn-small {
+            border: 1px solid #dfe6e9;
+            background: #f7f9fa;
+            color: #2c3e50;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: bold;
+            font-size: 13px;
+        }
+        .btn-small:hover { background: #eef2f4; }
+        .btn-small.active { background: #2980b9; border-color: #2980b9; color: #fff; }
+        .btn-close { border: none; background: #e74c3c; color: white; }
+        .btn-close:hover { background: #c0392b; }
+
         .viewer-container {
             position: relative;
             width: 100%;
-            height: 460px;
+            height: min(58vh, 470px);
             border: 1px solid #ecf0f1;
             border-radius: 8px;
             background: linear-gradient(180deg, #f8fbff 0%, #eef3f7 100%);
             overflow: hidden;
         }
-        .viewer-container canvas {
-            width: 100% !important;
-            height: 100% !important;
-            display: block;
+        .viewer-container canvas { display: block; }
+        .viewer-msg {
+            position: absolute; inset: 0;
+            display: flex; align-items: center; justify-content: center;
+            text-align: center; padding: 24px; font-size: 14px; line-height: 1.5;
         }
-        .viewer-tip {
-            margin: 8px 0 0;
-            font-size: 13px;
-            color: #7f8c8d;
-            text-align: right;
-        }
-        .btn-close {
-            border: none;
-            background: #e74c3c;
-            color: white;
-            padding: 8px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 700;
-        }
-
-        @keyframes popIn {
-            0% { transform: scale(0); }
-            100% { transform: scale(1); }
-        }
-
+        .viewer-msg.err { color: #c0392b; }
+        .viewer-tip { margin: 10px 0 0; font-size: 12.5px; color: #7f8c8d; text-align: right; }
     </style>
 </head>
 <body>
 
 <header>
-    <div class="control-group">
-        <button class="spawner btn-glu" onclick="spawn('glucose')">⬢ Glukose</button>
-        <button class="btn-view" data-view="glucose">👁️ 3D</button>
-    </div>
-    <div class="control-group">
-        <button class="spawner btn-fru" onclick="spawn('fructose')">⬟ Fruktose</button>
-        <button class="btn-view" data-view="fructose">👁️ 3D</button>
-    </div>
-    <div class="control-group">
-        <button class="spawner btn-gal" onclick="spawn('galactose')">⬢ Galaktose</button>
-        <button class="btn-view" data-view="galactose">👁️ 3D</button>
-    </div>
-    <button class="spawner btn-reset" onclick="resetGame()">Ryd</button>
+    <button class="spawner btn-glu" onclick="spawn('glucose')">⬢ Glukose</button>
+    <button class="spawner btn-fru" onclick="spawn('fructose')">⬟ Fruktose</button>
+    <button class="spawner btn-gal" onclick="spawn('galactose')">⬢ Galaktose</button>
+    <div class="counter">💧 Vand dannet: <b id="water-count">0</b></div>
+    <button class="spawner btn-reset" onclick="resetGame()">Ryd bordet</button>
 </header>
 
 <div id="game-area">
     <svg id="svg-space" width="100%" height="100%">
         <defs>
-            <path id="shape-hex" d="M30 0 L90 0 L120 52 L90 104 L30 104 L0 52 Z" />
-            <path id="shape-pent" d="M60 0 L117 42 L95 110 L25 110 L3 42 Z" />
+            <linearGradient id="grad-glucose" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#2ecc71"/><stop offset="100%" stop-color="#1e8449"/>
+            </linearGradient>
+            <linearGradient id="grad-fructose" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#ec7063"/><stop offset="100%" stop-color="#b03a2e"/>
+            </linearGradient>
+            <linearGradient id="grad-galactose" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#f4d03f"/><stop offset="100%" stop-color="#b7950b"/>
+            </linearGradient>
+            <filter id="soft-shadow" x="-30%" y="-30%" width="180%" height="180%">
+                <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#000" flood-opacity="0.28"/>
+            </filter>
         </defs>
+        <g id="layer-molecules"></g>
+        <g id="layer-fx"></g>
     </svg>
+    <div id="status">Træk to sukkerarter oven i hinanden for at danne et disakkarid. Klik på 👁 for at se molekylet i 3D.</div>
 </div>
 
 <div id="viewer-modal" class="hidden">
     <div class="viewer-box">
         <div class="viewer-bar">
-            <span id="viewer-title">Molekyle (SDF)</span>
-            <button class="btn-close" id="viewer-close">Luk</button>
+            <div>
+                <span id="viewer-title">Molekyle</span>
+                <span id="viewer-sub"></span>
+            </div>
+            <div class="viewer-actions">
+                <button class="btn-small active" id="btn-spin">↻ Rotation</button>
+                <button class="btn-small btn-close" id="viewer-close">Luk</button>
+            </div>
         </div>
         <div id="viewer-container" class="viewer-container"></div>
-        <p class="viewer-tip">Viser ball-and-stick via 3Dmol.js (SDF).</p>
+        <p class="viewer-tip">Træk for at dreje · scroll for at zoome · rigtige 3D-koordinater fra PubChem</p>
     </div>
 </div>
 
 <script>
-    const svgSpace = document.getElementById('svg-space');
-    const svgNS = "http://www.w3.org/2000/svg";
-    
-    let elements = [];
-    let idCounter = 0;
-    
-    // Dragging logic vars
-    let draggedItem = null;
-    let offset = { x: 0, y: 0 };
+/* =====================================================================
+   Bio-Blocks — monosakkarider → disakkarider
+   ===================================================================== */
 
-    const configs = {
-        glucose:   { type: 'hex', color: '#2ecc71', text: 'GLU', width: 120 },
-        fructose:  { type: 'pent', color: '#e74c3c', text: 'FRU', width: 120 },
-        galactose: { type: 'hex', color: '#f1c40f', text: 'GAL', width: 120 }
-    };
+const SVG_NS = "http://www.w3.org/2000/svg";
+const svgSpace  = document.getElementById('svg-space');
+const molLayer  = document.getElementById('layer-molecules');
+const fxLayer   = document.getElementById('layer-fx');
+const statusBar = document.getElementById('status');
+const waterOut  = document.getElementById('water-count');
 
-    function spawn(name) {
-        idCounter++;
-        const cfg = configs[name];
-        
-        const g = document.createElementNS(svgNS, "g");
-        g.setAttribute("class", "shape-group");
-        g.dataset.id = idCounter;
-        g.dataset.name = name;
-        g.dataset.bonded = "false"; // Simple boolean for this version
+/* --- Geometry: every monomer sits in a 120 × 104 box, centre (60, 52) --- */
+const UNIT_W = 120, UNIT_H = 104, UNIT_CX = 60, UNIT_CY = 52;
+const GAP    = 50;                    // space for the glycosidic oxygen
+const STEP   = UNIT_W + GAP;          // distance between two bonded units
+const BOND_NOTE_Y = UNIT_H + 20;      // caption under the rings
+const BADGE_Y     = UNIT_H + 48;      // round action buttons under that
+const MOL_BOTTOM  = BADGE_Y + 17;     // lowest painted pixel, relative to origin
+const MOL_TOP     = -40;              // highest (the product label)
+const WATER_Y     = MOL_TOP - 14;     // water is emitted clear of the label
 
-        // Random Pos
-        const x = 100 + Math.random() * 400;
-        const y = 100 + Math.random() * 300;
-        setPos(g, x, y);
+const SHAPES = {
+    hex:  "M30 0 L90 0 L120 52 L90 104 L30 104 L0 52 Z",
+    pent: "M60 0 L114 39 L93 104 L27 104 L6 39 Z"
+};
 
-        // Draw Shape
-        const use = document.createElementNS(svgNS, "use");
-        use.setAttribute("href", cfg.type === 'hex' ? "#shape-hex" : "#shape-pent");
-        use.setAttribute("fill", cfg.color);
-        use.setAttribute("class", "shape-body");
-        g.appendChild(use);
+/* --- Molecule catalogue --------------------------------------------- */
+const MOL = {
+    glucose:   { da: 'Glukose',   abbr: 'GLU', shape: 'hex',  formula: 'C₆H₁₂O₆',   sdf: '../Molecules/glucose.sdf'   },
+    fructose:  { da: 'Fruktose',  abbr: 'FRU', shape: 'pent', formula: 'C₆H₁₂O₆',   sdf: '../Molecules/fructose.sdf'  },
+    galactose: { da: 'Galaktose', abbr: 'GAL', shape: 'hex',  formula: 'C₆H₁₂O₆',   sdf: '../Molecules/galactose.sdf' },
 
-        // Draw Text
-        const text = document.createElementNS(svgNS, "text");
-        text.textContent = cfg.text;
-        text.setAttribute("x", 60);
-        text.setAttribute("y", 65); // Centered roughly
-        text.setAttribute("class", "shape-label");
-        g.appendChild(text);
+    maltose:   { da: 'Maltose',   formula: 'C₁₂H₂₂O₁₁', sdf: '../Molecules/maltose.sdf', bond: 'α-1,4-glykosidbinding' },
+    sucrose:   { da: 'Sakkarose', formula: 'C₁₂H₂₂O₁₁', sdf: '../Molecules/sucrose.sdf', bond: 'α-1,β-2-glykosidbinding' },
+    lactose:   { da: 'Laktose',   formula: 'C₁₂H₂₂O₁₁', sdf: '../Molecules/lactose.sdf', bond: 'β-1,4-glykosidbinding' }
+};
 
-        // Add events
-        g.addEventListener("mousedown", startDrag);
-        
-        svgSpace.appendChild(g);
-        elements.push(g);
+/* Only these three combinations are real, common disaccharides.
+   `order` fixes which monomer is drawn to the left, so the picture
+   matches the way the disaccharide is normally written.             */
+const RECIPES = {
+    'glucose+glucose':   { key: 'maltose', order: ['glucose', 'glucose'] },
+    'fructose+glucose':  { key: 'sucrose', order: ['glucose', 'fructose'] },
+    'galactose+glucose': { key: 'lactose', order: ['galactose', 'glucose'] }
+};
+
+const SNAP_DISTANCE = 150;
+
+let molecules = [];
+let idCounter = 0;
+let waterCount = 0;
+
+/* =====================================================================
+   Building molecules
+   ===================================================================== */
+
+function makeMolecule(units, x, y) {
+    const g = document.createElementNS(SVG_NS, 'g');
+    g.setAttribute('class', 'molecule appear');
+    g.setAttribute('filter', 'url(#soft-shadow)');
+    g.dataset.id = ++idCounter;
+    g.dataset.units = units.join(',');
+    setPos(g, x, y);
+
+    const inner = document.createElementNS(SVG_NS, 'g');
+    inner.setAttribute('class', 'mol-inner');
+    g.appendChild(inner);
+
+    // Attach before drawing: getComputedTextLength() only works once rendered
+    molLayer.appendChild(g);
+
+    const width = moleculeWidth(units);
+    const isDi  = units.length === 2;
+    const product = isDi ? RECIPES[recipeKey(units)] : null;
+    if (product) g.dataset.product = product.key;
+
+    // Invisible hit area so the whole molecule — gaps included — can be grabbed
+    const hit = document.createElementNS(SVG_NS, 'rect');
+    hit.setAttribute('x', 0);
+    hit.setAttribute('y', 0);
+    hit.setAttribute('width', width);
+    hit.setAttribute('height', UNIT_H);
+    hit.setAttribute('fill', 'transparent');
+    hit.setAttribute('pointer-events', 'all');
+    inner.appendChild(hit);
+
+    // Bridge first, so the rings paint over its ends
+    if (isDi) drawBridge(inner);
+
+    units.forEach((name, i) => drawUnit(inner, name, i * STEP));
+
+    if (isDi) {
+        drawBondNote(inner, width, MOL[product.key].bond);
+        drawProductLabel(inner, width, MOL[product.key]);
     }
 
-    // --- Drag System ---
-    function startDrag(e) {
-        let target = e.target;
-        while (!target.classList.contains("shape-group")) {
-            target = target.parentNode;
-            if (target === svgSpace) return;
-        }
-        
-        // If already bonded, don't move individually (simple rule for this demo)
-        if (target.dataset.bonded === "true") return;
+    drawBadges(inner, width, isDi);
 
-        draggedItem = target;
-        // Bring to front
-        svgSpace.appendChild(draggedItem);
+    g.addEventListener('pointerdown', startDrag);
+    g.addEventListener('animationend', () => g.classList.remove('appear', 'shake'));
 
-        const pt = getMousePos(e);
-        const tf = getPos(draggedItem);
-        offset.x = pt.x - tf.x;
-        offset.y = pt.y - tf.y;
+    molecules.push(g);
+    return g;
+}
 
-        window.addEventListener("mousemove", doDrag);
-        window.addEventListener("mouseup", endDrag);
+function drawUnit(parent, name, offsetX) {
+    const cfg = MOL[name];
+    const unit = document.createElementNS(SVG_NS, 'g');
+    unit.setAttribute('transform', `translate(${offsetX}, 0)`);
+
+    const path = document.createElementNS(SVG_NS, 'path');
+    path.setAttribute('d', SHAPES[cfg.shape]);
+    path.setAttribute('fill', `url(#grad-${name})`);
+    path.setAttribute('class', 'shape-body');
+    unit.appendChild(path);
+
+    // The pentagon's visual centre sits a little lower than the hexagon's
+    const baseY = cfg.shape === 'pent' ? 58 : 52;
+
+    unit.appendChild(text(cfg.abbr, UNIT_CX, baseY, 'label-abbr'));
+    unit.appendChild(text(cfg.da, UNIT_CX, baseY + 17, 'label-name'));
+
+    parent.appendChild(unit);
+}
+
+function drawBridge(parent) {
+    const g = document.createElementNS(SVG_NS, 'g');
+    const midX = UNIT_W + GAP / 2;
+
+    const line = document.createElementNS(SVG_NS, 'line');
+    line.setAttribute('x1', UNIT_W - 6);  line.setAttribute('y1', UNIT_CY);
+    line.setAttribute('x2', UNIT_W + GAP + 6); line.setAttribute('y2', UNIT_CY);
+    line.setAttribute('class', 'bond-line');
+    g.appendChild(line);
+
+    const atom = document.createElementNS(SVG_NS, 'circle');
+    atom.setAttribute('cx', midX); atom.setAttribute('cy', UNIT_CY);
+    atom.setAttribute('r', 13);
+    atom.setAttribute('class', 'bond-atom');
+    g.appendChild(atom);
+
+    g.appendChild(text('O', midX, UNIT_CY + 5, 'bond-atom-text'));
+    parent.appendChild(g);
+}
+
+/* Drawn after the rings so it is never painted over */
+function drawBondNote(parent, width, note) {
+    parent.appendChild(text(note, width / 2, BOND_NOTE_Y, 'bond-note'));
+}
+
+function drawProductLabel(parent, width, cfg) {
+    const g = document.createElementNS(SVG_NS, 'g');
+    parent.appendChild(g);
+
+    const label = text(`${cfg.da} · ${cfg.formula}`, width / 2, MOL_TOP + 21, 'product-label');
+    g.appendChild(label);
+
+    // Size the pill from the rendered text rather than a character-count guess
+    const w = label.getComputedTextLength() + 28;
+    const rect = document.createElementNS(SVG_NS, 'rect');
+    rect.setAttribute('class', 'product-bg');
+    rect.setAttribute('x', width / 2 - w / 2);
+    rect.setAttribute('y', MOL_TOP);
+    rect.setAttribute('width', w);
+    rect.setAttribute('height', 30);
+    rect.setAttribute('rx', 8);
+    g.insertBefore(rect, label);
+}
+
+function drawBadges(parent, width, isDi) {
+    const y = BADGE_Y;
+    if (isDi) {
+        parent.appendChild(badge(width / 2 - 24, y, '👁', 'badge-3d', 'view'));
+        parent.appendChild(badge(width / 2 + 24, y, '✂', 'badge-cut', 'split'));
+    } else {
+        parent.appendChild(badge(width / 2, y, '👁', 'badge-3d', 'view'));
     }
+}
 
-    function doDrag(e) {
-        if (!draggedItem) return;
+function badge(cx, cy, glyph, cls, action) {
+    const g = document.createElementNS(SVG_NS, 'g');
+    g.setAttribute('class', `badge ${cls}`);
+    g.dataset.action = action;
+
+    const c = document.createElementNS(SVG_NS, 'circle');
+    c.setAttribute('cx', cx); c.setAttribute('cy', cy); c.setAttribute('r', 15);
+    g.appendChild(c);
+    g.appendChild(text(glyph, cx, cy + 5, ''));
+
+    const title = document.createElementNS(SVG_NS, 'title');
+    title.textContent = action === 'view' ? 'Se molekylet i 3D' : 'Hydrolyse: bryd bindingen';
+    g.appendChild(title);
+    return g;
+}
+
+function text(str, x, y, cls) {
+    const t = document.createElementNS(SVG_NS, 'text');
+    t.textContent = str;
+    t.setAttribute('x', x);
+    t.setAttribute('y', y);
+    if (cls) t.setAttribute('class', cls);
+    return t;
+}
+
+/* =====================================================================
+   Spawning, dragging
+   ===================================================================== */
+
+function spawn(name) {
+    const area = svgSpace.getBoundingClientRect();
+    const x = 40 + Math.random() * Math.max(40, area.width - UNIT_W - 120);
+    const y = 50 + Math.random() * Math.max(40, area.height - MOL_BOTTOM - 140);
+    const mol = makeMolecule([name], Math.round(x), Math.round(y));
+    clampIntoView(mol);
+    setStatus(`${MOL[name].da} lagt på bordet.`, 'info');
+}
+
+let dragged = null;
+let dragOffset = { x: 0, y: 0 };
+let activePointer = null;
+
+function startDrag(e) {
+    if (e.button !== undefined && e.button !== 0) return;
+
+    const mol = e.currentTarget;
+
+    // Badges are buttons, not drag handles
+    const hitBadge = e.target.closest ? e.target.closest('.badge') : null;
+    if (hitBadge) {
         e.preventDefault();
-        const pt = getMousePos(e);
-        setPos(draggedItem, pt.x - offset.x, pt.y - offset.y);
-    }
-
-    function endDrag(e) {
-        if(draggedItem) {
-            checkProximity(draggedItem);
+        if (hitBadge.dataset.action === 'view') {
+            openViewer(mol.dataset.product || mol.dataset.units);
+        } else {
+            hydrolyse(mol);
         }
-        draggedItem = null;
-        window.removeEventListener("mousemove", doDrag);
-        window.removeEventListener("mouseup", endDrag);
+        return;
     }
 
-    // --- Game Logic ---
-    function checkProximity(activeEl) {
-        const activePos = getPos(activeEl);
-        const activeName = activeEl.dataset.name;
+    e.preventDefault();
+    dragged = mol;
+    activePointer = e.pointerId;
+    mol.classList.add('dragging');
+    molLayer.appendChild(mol);                    // bring to front
 
-        elements.forEach(target => {
-            if (target === activeEl) return;
-            if (target.dataset.bonded === "true") return;
+    const pt = toSvgPoint(e);
+    const pos = getPos(mol);
+    dragOffset.x = pt.x - pos.x;
+    dragOffset.y = pt.y - pos.y;
 
-            const targetPos = getPos(target);
-            const dist = Math.hypot(activePos.x - targetPos.x, activePos.y - targetPos.y);
+    window.addEventListener('pointermove', doDrag);
+    window.addEventListener('pointerup', endDrag);
+    window.addEventListener('pointercancel', endDrag);
+}
 
-            // Threshold for snapping
-            if (dist < 100) {
-                fuse(target, activeEl);
-            }
-        });
+function doDrag(e) {
+    if (!dragged || e.pointerId !== activePointer) return;
+    e.preventDefault();
+    const pt = toSvgPoint(e);
+    setPos(dragged, pt.x - dragOffset.x, pt.y - dragOffset.y);
+    highlightCandidate(dragged);
+}
+
+function endDrag(e) {
+    if (!dragged || (e.pointerId !== undefined && e.pointerId !== activePointer)) return;
+
+    const mol = dragged;
+    dragged = null;
+    activePointer = null;
+    mol.classList.remove('dragging');
+    window.removeEventListener('pointermove', doDrag);
+    window.removeEventListener('pointerup', endDrag);
+    window.removeEventListener('pointercancel', endDrag);
+
+    molecules.forEach(m => m.classList.remove('candidate'));
+    clampIntoView(mol);
+    tryFuse(mol);
+}
+
+/* Outline the molecule that would be bonded if the user let go now */
+function highlightCandidate(mol) {
+    const near = nearestNeighbour(mol);
+    molecules.forEach(m => m.classList.remove('candidate'));
+    if (near && isMonomer(mol) && isMonomer(near) && recipeFor(mol, near)) {
+        near.classList.add('candidate');
+    }
+}
+
+/* =====================================================================
+   Chemistry
+   ===================================================================== */
+
+function tryFuse(mol) {
+    const other = nearestNeighbour(mol);
+    if (!other) return;
+
+    if (!isMonomer(mol) || !isMonomer(other)) {
+        setStatus('Et disakkarid kan ikke binde mere her. Klik på ✂ for at hydrolysere det først.', 'info');
+        nudgeApart(mol, other);
+        return;
     }
 
-    function fuse(el1, el2) {
-        // Mark as bonded
-        el1.dataset.bonded = "true";
-        el2.dataset.bonded = "true";
-
-        // 1. Position them nicely side-by-side
-        const p1 = getPos(el1);
-        const p2_new_x = p1.x + 140; // Fixed spacing
-        const p2_new_y = p1.y; 
-        
-        setPos(el2, p2_new_x, p2_new_y);
-
-        // 2. Determine Product Name
-        const n1 = el1.dataset.name;
-        const n2 = el2.dataset.name;
-        let product = "Polysakkarid";
-
-        // Logic table
-        if (n1 === 'glucose' && n2 === 'glucose') product = "MALTOSE";
-        
-        else if ((n1 === 'glucose' && n2 === 'fructose') || (n1 === 'fructose' && n2 === 'glucose')) product = "SAKKAROSE";
-        
-        else if ((n1 === 'galactose' && n2 === 'glucose') || (n1 === 'glucose' && n2 === 'galactose')) product = "LAKTOSE";
-        
-        else if (n1 === 'galactose' && n2 === 'galactose') product = "Gal-Gal?"; // Rare, but logic handles it
-
-        // 3. Draw Connection (The Bond)
-        drawBond(p1.x + 110, p1.y + 52, p2_new_x + 10, p2_new_y + 52, product);
+    const recipe = recipeFor(mol, other);
+    if (!recipe) {
+        const a = MOL[unitsOf(mol)[0]].da, b = MOL[unitsOf(other)[0]].da;
+        setStatus(`${a} + ${b} danner ikke et af de tre almindelige disakkarider. Prøv med glukose.`, 'error');
+        mol.classList.add('shake');
+        nudgeApart(mol, other);
+        return;
     }
 
-    function drawBond(x1, y1, x2, y2, labelText) {
-        const g = document.createElementNS(svgNS, "g");
-        
-        // Line
-        const line = document.createElementNS(svgNS, "line");
-        line.setAttribute("x1", x1);
-        line.setAttribute("y1", y1);
-        line.setAttribute("x2", x2);
-        line.setAttribute("y2", y2);
-        line.setAttribute("class", "bond-line");
-        g.appendChild(line);
+    fuse(mol, other, recipe);
+}
 
-        // Background box for text
-        const rect = document.createElementNS(svgNS, "rect");
-        rect.setAttribute("class", "product-bg");
-        rect.setAttribute("width", 110);
-        rect.setAttribute("height", 24);
-        rect.setAttribute("x", (x1+x2)/2 - 55);
-        rect.setAttribute("y", y1 - 35);
-        g.appendChild(rect);
+function fuse(a, b, recipe) {
+    const ca = centreOf(a), cb = centreOf(b);
+    const midX = (ca.x + cb.x) / 2;
+    const midY = (ca.y + cb.y) / 2;
 
-        // Text
-        const text = document.createElementNS(svgNS, "text");
-        text.textContent = labelText;
-        text.setAttribute("class", "product-label");
-        text.setAttribute("x", (x1+x2)/2); // Center of bond
-        text.setAttribute("y", y1 - 18);
-        g.appendChild(text);
+    removeMolecule(a);
+    removeMolecule(b);
 
-        svgSpace.appendChild(g);
+    const width = moleculeWidth(recipe.order);
+    const x = Math.round(midX - width / 2);
+    const y = Math.round(midY - UNIT_CY);
+    const di = makeMolecule(recipe.order, x, y);
+    clampIntoView(di);
+
+    const pos = getPos(di);
+    waterFx(pos.x + width / 2, pos.y + WATER_Y, 'out');
+
+    waterCount++;
+    waterOut.textContent = waterCount;
+
+    const cfg = MOL[recipe.key];
+    setStatus(`Kondensation: ${cfg.da} (${cfg.formula}) dannet via en ${cfg.bond} — og der fraspaltes ét molekyle vand.`, 'ok');
+}
+
+function hydrolyse(mol) {
+    const units = unitsOf(mol);
+    if (units.length < 2) return;
+
+    const pos = getPos(mol);
+    const productName = MOL[mol.dataset.product].da;
+    removeMolecule(mol);
+
+    waterFx(pos.x + moleculeWidth(units) / 2, pos.y + WATER_Y, 'in');
+
+    const left  = makeMolecule([units[0]], pos.x - 60, pos.y);
+    const right = makeMolecule([units[1]], pos.x + STEP + 60, pos.y + 20);
+    clampIntoView(left);
+    clampIntoView(right);
+
+    waterCount = Math.max(0, waterCount - 1);
+    waterOut.textContent = waterCount;
+
+    setStatus(`Hydrolyse: ${productName} spaltet til ${MOL[units[0]].da} + ${MOL[units[1]].da} — det kræver ét molekyle vand.`, 'ok');
+}
+
+function recipeKey(units) {
+    return [...units].sort().join('+');
+}
+
+function recipeFor(a, b) {
+    return RECIPES[recipeKey([unitsOf(a)[0], unitsOf(b)[0]])] || null;
+}
+
+/* =====================================================================
+   Helpers
+   ===================================================================== */
+
+function unitsOf(mol)        { return mol.dataset.units.split(','); }
+function isMonomer(mol)      { return unitsOf(mol).length === 1; }
+function moleculeWidth(units){ return UNIT_W + (units.length - 1) * STEP; }
+
+function centreOf(mol) {
+    const p = getPos(mol);
+    return { x: p.x + moleculeWidth(unitsOf(mol)) / 2, y: p.y + UNIT_CY };
+}
+
+function nearestNeighbour(mol) {
+    const c = centreOf(mol);
+    let best = null, bestDist = SNAP_DISTANCE;
+    molecules.forEach(other => {
+        if (other === mol) return;
+        const o = centreOf(other);
+        const d = Math.hypot(c.x - o.x, c.y - o.y);
+        if (d < bestDist) { bestDist = d; best = other; }
+    });
+    return best;
+}
+
+function nudgeApart(mol, other) {
+    const c = centreOf(mol), o = centreOf(other);
+    let dx = c.x - o.x, dy = c.y - o.y;
+    const d = Math.hypot(dx, dy) || 1;
+    if (d < 1) { dx = 1; dy = 0; }
+    const push = (SNAP_DISTANCE + 20 - d) / d;
+    const p = getPos(mol);
+    setPos(mol, Math.round(p.x + dx * push), Math.round(p.y + dy * push));
+    clampIntoView(mol);
+}
+
+function clampIntoView(mol) {
+    const area = svgSpace.getBoundingClientRect();
+    const w = moleculeWidth(unitsOf(mol));
+    const minY = 8 - WATER_Y + 58;    // room for the H₂O animation above the label
+    const maxY = Math.max(minY, area.height - MOL_BOTTOM - 62);   // 62 ≈ status bar
+    const maxX = Math.max(10, area.width - w - 10);
+    const p = getPos(mol);
+    setPos(mol,
+        Math.round(Math.min(Math.max(p.x, 10), maxX)),
+        Math.round(Math.min(Math.max(p.y, minY), maxY)));
+}
+
+function removeMolecule(mol) {
+    molecules = molecules.filter(m => m !== mol);
+    mol.remove();
+}
+
+function toSvgPoint(evt) {
+    const pt = svgSpace.createSVGPoint();
+    pt.x = evt.clientX;
+    pt.y = evt.clientY;
+    return pt.matrixTransform(svgSpace.getScreenCTM().inverse());
+}
+
+function getPos(el) {
+    const m = (el.getAttribute('transform') || '').match(/translate\(\s*([-\d.]+)[ ,]+([-\d.]+)\s*\)/);
+    return m ? { x: parseFloat(m[1]), y: parseFloat(m[2]) } : { x: 0, y: 0 };
+}
+
+function setPos(el, x, y) {
+    el.setAttribute('transform', `translate(${x}, ${y})`);
+}
+
+function waterFx(x, y, mode) {
+    const g = document.createElementNS(SVG_NS, 'g');
+    g.setAttribute('class', `fx-water fx-${mode}`);
+    g.setAttribute('transform', `translate(${x}, ${y})`);
+
+    const inner = document.createElementNS(SVG_NS, 'g');
+    inner.setAttribute('class', 'fx-anim');
+    inner.appendChild(text(mode === 'out' ? '💧 + H₂O' : '💧 − H₂O', 0, 0, ''));
+    g.appendChild(inner);
+
+    fxLayer.appendChild(g);
+    inner.addEventListener('animationend', () => g.remove());
+}
+
+function setStatus(msg, kind) {
+    statusBar.textContent = msg;
+    statusBar.className = kind || '';
+}
+
+function resetGame() {
+    molecules.forEach(m => m.remove());
+    molecules = [];
+    fxLayer.textContent = '';
+    idCounter = 0;
+    waterCount = 0;
+    waterOut.textContent = '0';
+    setStatus('Bordet er ryddet. Træk to sukkerarter oven i hinanden for at danne et disakkarid.', '');
+}
+
+window.addEventListener('resize', () => molecules.forEach(clampIntoView));
+
+/* =====================================================================
+   3D viewer (3Dmol.js, real PubChem coordinates)
+   ===================================================================== */
+
+const modal           = document.getElementById('viewer-modal');
+const viewerContainer = document.getElementById('viewer-container');
+const viewerTitle     = document.getElementById('viewer-title');
+const viewerSub       = document.getElementById('viewer-sub');
+const btnSpin         = document.getElementById('btn-spin');
+
+const sdfCache = new Map();
+let viewer3d = null;
+let spinning = true;
+
+document.getElementById('viewer-close').addEventListener('click', closeViewer);
+modal.addEventListener('click', e => { if (e.target === modal) closeViewer(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeViewer(); });
+
+btnSpin.addEventListener('click', () => {
+    spinning = !spinning;
+    btnSpin.classList.toggle('active', spinning);
+    if (viewer3d) { viewer3d.spin(spinning ? 'y' : false); viewer3d.render(); }
+});
+
+window.addEventListener('resize', () => { if (viewer3d) viewer3d.resize(); });
+
+function closeViewer() {
+    if (viewer3d) { try { viewer3d.spin(false); } catch (_) {} }
+    viewer3d = null;
+    modal.classList.add('hidden');
+    viewerContainer.textContent = '';
+}
+
+function showViewerMessage(html, isError) {
+    viewerContainer.innerHTML = `<div class="viewer-msg${isError ? ' err' : ''}">${html}</div>`;
+}
+
+async function openViewer(name) {
+    const cfg = MOL[name];
+    if (!cfg) return;
+
+    modal.classList.remove('hidden');
+    viewerTitle.textContent = cfg.da;
+    viewerSub.textContent = cfg.formula + (cfg.bond ? ' · ' + cfg.bond : '');
+    viewerContainer.textContent = '';
+    viewer3d = null;
+
+    if (typeof $3Dmol === 'undefined') {
+        showViewerMessage('3Dmol.js kunne ikke indlæses.<br>Tjek internetforbindelsen og prøv igen.', true);
+        return;
     }
 
-    // --- Helpers ---
-    function getMousePos(evt) {
-        const pt = svgSpace.createSVGPoint();
-        pt.x = evt.clientX;
-        pt.y = evt.clientY;
-        return pt.matrixTransform(svgSpace.getScreenCTM().inverse());
-    }
+    showViewerMessage('Henter 3D-struktur …', false);
 
-    function getPos(el) {
-        const tf = el.getAttribute("transform");
-        if(!tf) return {x:0, y:0};
-        const m = tf.match(/translate\(([^,]+),\s*([^)]+)\)/);
-        return { x: parseFloat(m[1]), y: parseFloat(m[2]) };
-    }
-
-    function setPos(el, x, y) {
-        el.setAttribute("transform", `translate(${x}, ${y})`);
-    }
-
-    function resetGame() {
-        svgSpace.innerHTML = '<defs>' + document.querySelector('defs').innerHTML + '</defs>';
-        elements = [];
-        idCounter = 0;
-    }
-
-    // --- 3Dmol viewer (ball-and-stick) ---
-    const modal = document.getElementById('viewer-modal');
-    const viewerContainer = document.getElementById('viewer-container');
-    const viewerTitle = document.getElementById('viewer-title');
-    const btnClose = document.getElementById('viewer-close');
-    const viewButtons = document.querySelectorAll('.btn-view');
-    const sdfFiles = {
-        glucose: '../Molecules/glucose.sdf',
-        fructose: '../Molecules/fructose.sdf',
-        galactose: '../Molecules/galactose.sdf'
-    };
-
-    viewButtons.forEach(btn => btn.addEventListener('click', () => openViewer(btn.dataset.view)));
-    btnClose.addEventListener('click', closeViewer);
-
-    function closeViewer() {
-        modal.classList.add('hidden');
-        viewerContainer.innerHTML = '';
-    }
-
-    async function openViewer(name) {
-        modal.classList.remove('hidden');
-        viewerTitle.textContent = name.charAt(0).toUpperCase() + name.slice(1) + ' (SDF)';
-
-        // Clear previous viewer
-        viewerContainer.innerHTML = '';
-        if (typeof $3Dmol === 'undefined') {
-            viewerContainer.innerHTML = '<p style="padding:12px; color:#e74c3c;">3Dmol.js kunne ikke indlæses (ingen net?).</p>';
-            return;
+    let sdfText;
+    try {
+        if (sdfCache.has(name)) {
+            sdfText = sdfCache.get(name);
+        } else {
+            const res = await fetch(cfg.sdf);
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            sdfText = await res.text();
+            sdfCache.set(name, sdfText);
         }
-
-        const path = sdfFiles[name];
-        if (!path) {
-            viewerContainer.innerHTML = '<p style="padding:12px;">Manglende SDF-sti for '+name+'.</p>';
-            return;
-        }
-
-        const viewer = $3Dmol.createViewer(viewerContainer, { backgroundColor: 'white' });
-        try {
-            const sdfTxt = await fetch(path).then(r => {
-                if (!r.ok) throw new Error('Fetch fejlede');
-                return r.text();
-            });
-            viewer.addModel(sdfTxt, 'sdf');
-            viewer.setStyle({}, { stick: { radius: 0.15 }, sphere: { scale: 0.35 } });
-            viewer.zoomTo();
-            viewer.spin(true);
-            viewer.render();
-            viewer.resize();
-        } catch (err) {
-            viewerContainer.innerHTML = '<p style="padding:12px; color:#e74c3c;">Kunne ikke hente '+path+'. Ligger filen der?</p>';
-        }
+    } catch (err) {
+        const localHint = location.protocol === 'file:'
+            ? '<br><br>Siden er åbnet direkte fra disken (<code>file://</code>), og browseren blokerer derfor indlæsning af SDF-filen. Kør siden gennem en lille webserver, fx <code>python3 -m http.server</code>.'
+            : '';
+        showViewerMessage(`Kunne ikke hente <code>${cfg.sdf}</code>.${localHint}`, true);
+        return;
     }
+
+    // Modal is visible now, so the container has its final size
+    viewerContainer.textContent = '';
+    try {
+        viewer3d = $3Dmol.createViewer(viewerContainer, { backgroundColor: 'white' });
+        viewer3d.addModel(sdfText, 'sdf');
+        viewer3d.setStyle({}, { stick: { radius: 0.14 }, sphere: { scale: 0.26 } });
+        viewer3d.zoomTo();
+        viewer3d.render();
+        viewer3d.resize();
+        if (spinning) viewer3d.spin('y');
+    } catch (err) {
+        showViewerMessage('Kunne ikke tegne molekylet: ' + err.message, true);
+    }
+}
 </script>
-
-<script src="https://3Dmol.org/build/3Dmol-min.js"></script>
-<script src="https://3Dmol.org/build/3Dmol.ui-min.js"></script>
 
 </body>
 </html>
