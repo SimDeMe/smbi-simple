@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bio-Blocks: fra monosakkarider til polysakkarider</title>
+    <link rel="stylesheet" href="style.css">
+    <script defer src="https://3Dmol.org/build/3Dmol-min.js"></script>
+    <script type="module" src="js/main.js"></script>
+</head>
+<body>
+
+<header>
+    <div class="group">
+        <span class="group-label">Form</span>
+        <div class="seg" id="anomer-seg">
+            <button data-anomer="a" class="active" title="α-form: OH-gruppen på C1 peger nedad">α</button>
+            <button data-anomer="b" title="β-form: OH-gruppen på C1 peger opad">β</button>
+        </div>
+    </div>
+
+    <div class="group">
+        <button class="spawner btn-glu" data-spawn="glucose">⬢ Glukose</button>
+        <button class="spawner btn-fru" data-spawn="fructose">⬟ Fruktose</button>
+        <button class="spawner btn-gal" data-spawn="galactose">⬢ Galaktose</button>
+    </div>
+
+    <div class="group">
+        <span class="group-label">Hurtigbyg</span>
+        <button class="chip" data-build="amylose">Amylose</button>
+        <button class="chip" data-build="cellulose">Cellulose</button>
+        <button class="chip" data-build="glycogen">Glykogen</button>
+    </div>
+
+    <div class="group">
+        <span class="group-label">Enzymer</span>
+        <button class="spawner btn-enz btn-amylase"   id="enz-btn-amylase"   data-enzyme="amylase">Amylase</button>
+        <button class="spawner btn-enz btn-maltase"   id="enz-btn-maltase"   data-enzyme="maltase">Maltase</button>
+        <button class="spawner btn-enz btn-sucrase"   id="enz-btn-sucrase"   data-enzyme="sucrase">Sakkarase</button>
+        <button class="spawner btn-enz btn-lactase"   id="enz-btn-lactase"   data-enzyme="lactase">Laktase</button>
+        <button class="spawner btn-enz btn-cellulase" id="enz-btn-cellulase" data-enzyme="cellulase">Cellulase</button>
+        <button class="chip warn" id="btn-lactose-intolerance"
+                title="Slå laktaseproduktionen fra og se hvad der sker med mælkesukkeret">🥛 Laktoseintolerans</button>
+    </div>
+
+    <div class="group">
+        <span class="group-label">Visning</span>
+        <div class="seg text" id="repr-seg">
+            <button data-repr="blocks" class="active" title="Blokke: form og farve viser hvilken sukkerart det er">Blokke</button>
+            <button data-repr="haworth" title="Haworth-formel: ringen med OH-grupperne tegnet i korrekt α/β-orientering">Haworth</button>
+            <button data-repr="formula" title="Molekylformel: hver monomer som sumformel">Formel</button>
+        </div>
+        <button class="chip" id="btn-3d" title="Se molekylet i 3D med rigtige koordinater">3D</button>
+    </div>
+
+    <div class="group">
+        <button class="chip" id="btn-tasks">🎯 Opgaver</button>
+        <button class="chip active" id="btn-numbers">C-numre</button>
+        <div class="counter">💧 Vand: <b id="water-count">0</b></div>
+        <button class="spawner btn-reset" id="btn-reset">Ryd bordet</button>
+    </div>
+</header>
+
+<div id="game-area">
+    <svg id="svg-space" width="100%" height="100%">
+        <defs>
+            <linearGradient id="grad-glucose" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#2ecc71"/><stop offset="100%" stop-color="#1e8449"/>
+            </linearGradient>
+            <linearGradient id="grad-fructose" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#ec7063"/><stop offset="100%" stop-color="#b03a2e"/>
+            </linearGradient>
+            <linearGradient id="grad-galactose" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#f4d03f"/><stop offset="100%" stop-color="#b7950b"/>
+            </linearGradient>
+            <filter id="soft-shadow" x="-30%" y="-30%" width="180%" height="180%">
+                <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#000" flood-opacity="0.28"/>
+            </filter>
+        </defs>
+        <g id="layer-molecules"></g>
+        <g id="layer-enzymes"></g>
+        <g id="layer-preview"></g>
+        <g id="layer-fx"></g>
+    </svg>
+    <div id="status">Vælg α eller β, læg sukkerarter på bordet og træk dem sammen — kæden kan blive så lang du vil. Klik på et O i en binding for at hydrolysere netop den, eller træk en enzymblok hen på bindingen.</div>
+
+    <div id="task-panel" class="hidden">
+        <div class="tp-head">
+            <span>🎯 Opgaver</span>
+            <button id="task-close" title="Luk opgavepanelet">✕</button>
+        </div>
+        <ol id="task-list"></ol>
+        <div id="task-detail"></div>
+    </div>
+</div>
+
+<div id="fact-modal" class="hidden">
+    <div class="fact-box">
+        <div class="fact-top" id="fact-top">
+            <div>
+                <h2 id="fact-name">Molekyle</h2>
+                <span class="f-sub" id="fact-formula"></span>
+            </div>
+            <button id="fact-close" title="Luk">✕</button>
+        </div>
+        <div class="fact-rows" id="fact-rows"></div>
+    </div>
+</div>
+
+<div id="viewer-modal" class="hidden">
+    <div class="viewer-box">
+        <div class="viewer-bar">
+            <div>
+                <span id="viewer-title">Molekyle</span>
+                <span id="viewer-sub"></span>
+            </div>
+            <div class="viewer-actions">
+                <button class="btn-small active" id="btn-spin">↻ Rotation</button>
+                <button class="btn-small btn-close" id="viewer-close">Luk</button>
+            </div>
+        </div>
+        <div id="viewer-container" class="viewer-container"></div>
+        <p class="viewer-tip">Træk for at dreje · scroll for at zoome · rigtige 3D-koordinater fra PubChem</p>
+    </div>
+</div>
+
+</body>
+</html>
