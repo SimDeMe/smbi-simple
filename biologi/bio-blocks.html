@@ -309,6 +309,181 @@
         .btn-enz.missing { opacity: 0.5; text-decoration: line-through; }
         .chip.warn.active { background: #c0392b; border-color: #c0392b; }
 
+        /* ---------- Repræsentationer: Haworth og molekylformel ---------- */
+        .seg.text button { font-size: 12.5px; padding: 7px 11px; }
+
+        .hw-card { fill: rgba(255,255,255,0.93); stroke: #dfe6e9; stroke-width: 1.5; }
+        .hw-bond { stroke: #37474f; stroke-width: 2; stroke-linecap: round; fill: none; }
+        .hw-bond.front { stroke-width: 5; }
+        .hw-stick { stroke: #37474f; stroke-width: 1.8; stroke-linecap: round; }
+        .hw-o circle { fill: #ffffff; stroke: #37474f; stroke-width: 2; }
+        .hw-o text {
+            font-size: 11px; font-weight: 900; fill: #b71c1c;
+            text-anchor: middle; pointer-events: none;
+        }
+        .hw-sub {
+            font-size: 10.5px; font-weight: bold; fill: #2c3e50;
+            text-anchor: middle; pointer-events: none;
+        }
+        .hw-sub.end { text-anchor: end; }
+        /* Numbers sit inside the ring, so they need a halo to stay readable
+           where they cross a bond line */
+        .hw-num, .hw-abbr {
+            paint-order: stroke;
+            stroke: rgba(255,255,255,0.9);
+            stroke-width: 3px;
+            stroke-linejoin: round;
+        }
+        .hw-num {
+            font-size: 9px; font-weight: bold; fill: #78909c;
+            text-anchor: middle; pointer-events: none;
+        }
+        .hw-abbr {
+            font-size: 13px; font-weight: 900; fill: #37474f;
+            text-anchor: middle; pointer-events: none; letter-spacing: 0.5px;
+        }
+
+        .fm-box { stroke: rgba(0,0,0,0.2); stroke-width: 2; }
+        .fm-formula {
+            font-size: 17px; font-weight: 900; fill: #fff;
+            text-anchor: middle; pointer-events: none;
+        }
+        .fm-name {
+            font-size: 10.5px; font-weight: bold; fill: rgba(255,255,255,0.92);
+            text-anchor: middle; pointer-events: none;
+        }
+        .info-eq {
+            font-size: 12.5px; font-weight: bold; fill: #2471a3;
+            text-anchor: middle; pointer-events: none;
+        }
+        .badge-info circle { stroke: #16a085; }
+        .badge-info text  { fill: #16a085; }
+
+        /* ---------- Opgavepanel ---------- */
+        #task-panel {
+            position: absolute;
+            top: 10px; right: 10px; bottom: 66px;
+            width: 300px;
+            background: rgba(255,255,255,0.97);
+            border: 1px solid #dfe6e9;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.14);
+            display: flex;
+            flex-direction: column;
+            z-index: 20;
+            font-size: 13px;
+        }
+        #task-panel.hidden { display: none; }
+        .tp-head {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 12px;
+            border-bottom: 1px solid #ecf0f1;
+            font-weight: 900;
+            font-size: 14px;
+        }
+        .tp-head button {
+            border: none; background: #ecf0f1; color: #7f8c8d;
+            width: 26px; height: 26px; border-radius: 6px;
+            cursor: pointer; font-family: inherit; font-weight: bold;
+        }
+        .tp-head button:hover { background: #dfe6e9; color: #2c3e50; }
+        #task-list {
+            list-style: none; margin: 0; padding: 8px;
+            overflow-y: auto;
+            max-height: 42%;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        #task-list li {
+            display: flex; gap: 8px; align-items: baseline;
+            padding: 5px 7px;
+            border-radius: 6px;
+            line-height: 1.3;
+        }
+        #task-list li.now  { background: #eaf4fb; color: #1a5276; font-weight: bold; }
+        #task-list li.done { color: #1e8449; }
+        #task-list li.lock { color: #b2bec3; }
+        #task-list li .tp-mark { flex: 0 0 15px; font-size: 12px; }
+        #task-detail {
+            padding: 12px;
+            overflow-y: auto;
+            flex-grow: 1;
+            line-height: 1.45;
+        }
+        .tp-title { font-weight: 900; font-size: 14.5px; margin: 0 0 6px; }
+        .tp-goal { margin: 0 0 10px; }
+        .tp-why {
+            background: #eafaf1;
+            border-left: 4px solid #27ae60;
+            border-radius: 6px;
+            padding: 9px 11px;
+            margin: 0 0 10px;
+        }
+        .tp-solved { color: #1e8449; font-weight: 900; margin: 0 0 6px; }
+        .tp-tip { color: #7f8c8d; font-size: 12px; margin: 10px 0 0; }
+        .tp-btn {
+            border: none; background: #27ae60; color: #fff;
+            padding: 9px 13px; border-radius: 8px;
+            font-family: inherit; font-weight: bold; font-size: 13px;
+            cursor: pointer;
+            box-shadow: 0 3px 0 rgba(0,0,0,0.2);
+        }
+        .tp-btn:active { transform: translateY(3px); box-shadow: 0 0 0; }
+        .tp-btn.grey { background: #7f8c8d; }
+        .tp-sum { margin: 0 0 8px; padding-left: 18px; }
+        .tp-sum li { margin-bottom: 4px; }
+
+        /* ---------- Faktakort ---------- */
+        #fact-modal {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 210; padding: 16px;
+        }
+        #fact-modal.hidden { display: none; }
+        .fact-box {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 12px 34px rgba(0,0,0,0.3);
+            width: min(94vw, 560px);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .fact-top {
+            padding: 14px 18px;
+            border-radius: 12px 12px 0 0;
+            color: #fff;
+            display: flex; align-items: flex-start; justify-content: space-between;
+            gap: 12px;
+        }
+        .fact-top h2 { margin: 0; font-size: 19px; }
+        .fact-top .f-sub { font-size: 13px; opacity: 0.92; }
+        .fact-top button {
+            border: none; background: rgba(255,255,255,0.25); color: #fff;
+            width: 28px; height: 28px; border-radius: 7px; flex: 0 0 auto;
+            cursor: pointer; font-family: inherit; font-weight: bold;
+        }
+        .fact-top button:hover { background: rgba(255,255,255,0.4); }
+        .fact-rows { padding: 6px 18px 18px; }
+        .f-row { padding: 11px 0; border-bottom: 1px solid #ecf0f1; display: flex; gap: 11px; }
+        .f-row:last-child { border-bottom: none; }
+        .f-ico { font-size: 17px; flex: 0 0 22px; text-align: center; }
+        .f-lab {
+            font-size: 11px; font-weight: bold; color: #95a5a6;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .f-val { font-size: 13.5px; line-height: 1.45; }
+        .f-bar {
+            height: 9px; border-radius: 5px; background: #ecf0f1;
+            margin: 6px 0 3px; overflow: hidden; max-width: 260px;
+        }
+        .f-bar span { display: block; height: 100%; background: #e67e22; border-radius: 5px; }
+        .f-tag {
+            display: inline-block; font-size: 11.5px; font-weight: bold;
+            padding: 2px 8px; border-radius: 20px; margin-bottom: 4px;
+        }
+        .f-tag.yes { background: #eafaf1; color: #1e8449; }
+        .f-tag.no  { background: #fdecea; color: #c0392b; }
+
         /* ---------- 3D viewer ---------- */
         #viewer-modal {
             position: fixed;
@@ -409,6 +584,17 @@
     </div>
 
     <div class="group">
+        <span class="group-label">Visning</span>
+        <div class="seg text" id="repr-seg">
+            <button data-repr="blocks" class="active" title="Blokke: form og farve viser hvilken sukkerart det er">Blokke</button>
+            <button data-repr="haworth" title="Haworth-formel: ringen med OH-grupperne tegnet i korrekt α/β-orientering">Haworth</button>
+            <button data-repr="formula" title="Molekylformel: hver monomer som sumformel">Formel</button>
+        </div>
+        <button class="chip" id="btn-3d" title="Se molekylet i 3D med rigtige koordinater">3D</button>
+    </div>
+
+    <div class="group">
+        <button class="chip" id="btn-tasks">🎯 Opgaver</button>
         <button class="chip active" id="btn-numbers">C-numre</button>
         <div class="counter">💧 Vand: <b id="water-count">0</b></div>
         <button class="spawner btn-reset" onclick="resetGame()">Ryd bordet</button>
@@ -437,6 +623,28 @@
         <g id="layer-fx"></g>
     </svg>
     <div id="status">Vælg α eller β, læg sukkerarter på bordet og træk dem sammen — kæden kan blive så lang du vil. Klik på et O i en binding for at hydrolysere netop den, eller træk en enzymblok hen på bindingen.</div>
+
+    <div id="task-panel" class="hidden">
+        <div class="tp-head">
+            <span>🎯 Opgaver</span>
+            <button id="task-close" title="Luk opgavepanelet">✕</button>
+        </div>
+        <ol id="task-list"></ol>
+        <div id="task-detail"></div>
+    </div>
+</div>
+
+<div id="fact-modal" class="hidden">
+    <div class="fact-box">
+        <div class="fact-top" id="fact-top">
+            <div>
+                <h2 id="fact-name">Molekyle</h2>
+                <span class="f-sub" id="fact-formula"></span>
+            </div>
+            <button id="fact-close" title="Luk">✕</button>
+        </div>
+        <div class="fact-rows" id="fact-rows"></div>
+    </div>
 </div>
 
 <div id="viewer-modal" class="hidden">
@@ -517,25 +725,63 @@ const MOL = {
                  note: 'Adskiller sig fra glukose ved OH-gruppen på C4.' }
 };
 
-/* Disaccharides, keyed by donor|anomer|acceptor-carbon|acceptor */
+/* Disaccharides, keyed by donor|anomer|acceptor-carbon|acceptor.
+   `key` points into FACTS — the fact card for the molecule. */
 const DISACC = {
-    'glucose|a|4|glucose':   { da: 'Maltose',    sdf: '../Molecules/maltose.sdf',
+    'glucose|a|4|glucose':   { da: 'Maltose', key: 'maltose', sdf: '../Molecules/maltose.sdf',
         note: 'Maltsukker fra nedbrudt stivelse — spaltes af maltase.' },
-    'glucose|b|4|glucose':   { da: 'Cellobiose', sdf: '../Molecules/cellobiose.sdf',
+    'glucose|b|4|glucose':   { da: 'Cellobiose', key: 'cellobiose', sdf: '../Molecules/cellobiose.sdf',
         note: 'Byggestenen i cellulose. Kun β-1,4 adskiller den fra maltose.' },
-    'glucose|a|6|glucose':   { da: 'Isomaltose', sdf: '../Molecules/isomaltose.sdf',
+    'glucose|a|6|glucose':   { da: 'Isomaltose', key: 'isomaltose', sdf: '../Molecules/isomaltose.sdf',
         note: 'Grenpunktet i amylopektin og glykogen.' },
-    'glucose|b|6|glucose':   { da: 'Gentiobiose', sdf: null,
+    'glucose|b|6|glucose':   { da: 'Gentiobiose', key: 'gentiobiose', sdf: null,
         note: 'Sjælden β-1,6-binding — findes bl.a. i plantefarvestoffer.' },
-    'galactose|b|4|glucose': { da: 'Laktose',    sdf: '../Molecules/lactose.sdf',
+    'galactose|b|4|glucose': { da: 'Laktose', key: 'lactose', sdf: '../Molecules/lactose.sdf',
         note: 'Mælkesukker — kræver enzymet laktase for at kunne optages.' },
-    'galactose|a|6|glucose': { da: 'Melibiose',  sdf: null,
+    'galactose|a|6|glucose': { da: 'Melibiose', key: 'melibiose', sdf: null,
         note: 'Findes i bælgfrugter — mennesker mangler enzymet til den.' },
-    'glucose|a|2|fructose':  { da: 'Sakkarose',  sdf: '../Molecules/sucrose.sdf',
+    'glucose|a|2|fructose':  { da: 'Sakkarose', key: 'sucrose', sdf: '../Molecules/sucrose.sdf',
         note: 'Rør- og roesukker. Begge anomere C-atomer er bundet → ikke-reducerende.' }
 };
 
 const SUB = '₀₁₂₃₄₅₆₇₈₉';
+
+/* ---------- Haworth geometry ----------------------------------------
+   The ring vertices live in the same UNIT_W × UNIT_H box as the blocks,
+   and the anomeric carbon and C4 sit exactly where the block's binding
+   sites sit. Only the drawing changes: layout, bonds, hit-testing and
+   chemistry are shared by every representation.
+
+   Substituents are drawn in two lanes — one above and one below the ring —
+   which is what makes α/β visible: for a D-sugar the anomeric OH points
+   up in the β-form and down in the α-form.                              */
+const HW = {
+    hex: {
+        at:   { C1: [110, 48], C2: [82.5, 60], C3: [26, 60],
+                C4: [0, 48],   C5: [40, 36],   O:  [85, 36] },
+        // [from, to, isFrontBond] — the front bonds are drawn bold
+        ring: [['C1','C2',1], ['C2','C3',1], ['C3','C4',1],
+               ['C4','C5',0], ['C5','O',0],  ['O','C1',0]],
+        num:  { C1: [97, 45], C2: [74, 54], C3: [35, 54], C4: [13, 45], C5: [45, 47] },
+        up:   { line: 20, text: 13 },
+        down: { line: 74, text: 88 },
+        centre: [55, 53]
+    },
+    pent: {
+        at:   { C2: [104.5, 36], C3: [85, 66], C4: [25, 66],
+                C5: [5.5, 40],   O:  [55, 30] },
+        ring: [['C2','C3',1], ['C3','C4',1], ['C4','C5',0],
+               ['C5','O',0],   ['O','C2',0]],
+        num:  { C2: [93, 46], C3: [76, 57], C4: [34, 57], C5: [17, 48] },
+        up:   { line: 18, text: 11 },
+        down: { line: 76, text: 90 },
+        centre: [55, 52]
+    }
+};
+
+/* Where the C6 stub leaves the ring. In Haworth mode it grows out of C5,
+   which sits further right than the block's C6 corner. */
+const HW_C6_X = 40;
 
 let molecules = [];
 let enzymes = [];
@@ -544,6 +790,7 @@ let currentAnomer = 'a';
 let showNumbers = true;
 let lactoseIntolerant = false;
 let catalystHintShown = false;
+let repr = 'blocks';                 // blocks | haworth | formula
 
 /* =====================================================================
    Tree helpers
@@ -620,15 +867,16 @@ function classify(nodes, bonds) {
 
     if (n === 1) {
         const cfg = MOL[nodes[0].name];
-        return { name: `${greek(nodes[0].anomer)}-${cfg.da}`, formula,
+        return { name: `${greek(nodes[0].anomer)}-${cfg.da}`, formula, key: nodes[0].name,
                  note: cfg.note, sdf: cfg.sdf, sdfNote: '' };
     }
 
     if (n === 2) {
         const b = bonds[0];
         const hit = DISACC[`${b.donor.name}|${b.anomer}|${b.site}|${b.acceptor.name}`];
-        if (hit) return { name: hit.da, formula, note: hit.note, sdf: hit.sdf, sdfNote: '' };
-        return { name: 'Disakkarid', formula, sdf: null,
+        if (hit) return { name: hit.da, formula, key: hit.key,
+                          note: hit.note, sdf: hit.sdf, sdfNote: '' };
+        return { name: 'Disakkarid', formula, sdf: null, key: 'disacc',
                  note: 'Kemisk muligt, men ikke et af de almindelige disakkarider.' };
     }
 
@@ -639,14 +887,17 @@ function classify(nodes, bonds) {
     if (allGlucose && !branched && only14('a')) {
         return n === 3
             ? { name: 'Maltotriose', formula, sdf: '../Molecules/maltose.sdf',
+                key: 'maltotriose',
                 sdfNote: 'viser maltose — gentagelsesenheden',
                 note: 'Tre α-1,4-bundne glukoser — begyndelsen på en stivelseskæde.' }
             : { name: 'Amylose (stivelse)', formula, sdf: '../Molecules/maltose.sdf',
+                key: 'amylose',
                 sdfNote: 'viser maltose — gentagelsesenheden',
                 note: 'α-1,4 giver en spiralformet kæde. Nedbrydes let af amylase.' };
     }
     if (allGlucose && !branched && only14('b')) {
         return { name: n === 3 ? 'Cellotriose' : 'Cellulose', formula,
+                 key: 'cellulose',
                  sdf: '../Molecules/cellobiose.sdf',
                  sdfNote: 'viser cellobiose — gentagelsesenheden',
                  note: 'β-1,4 giver en lige, stiv kæde. Mennesker mangler cellulase.' };
@@ -654,12 +905,14 @@ function classify(nodes, bonds) {
     if (allGlucose && branched &&
         bonds.every(b => b.anomer === 'a' && (b.site === 4 || b.site === 6))) {
         return { name: 'Amylopektin / glykogen', formula,
+                 key: 'glycogen',
                  sdf: '../Molecules/isomaltose.sdf',
                  sdfNote: 'viser isomaltose — selve grenpunktet',
                  note: 'α-1,6-grene giver mange frie ender → kan nedbrydes hurtigt.' };
     }
 
     return { name: n >= 10 ? 'Polysakkarid' : 'Oligosakkarid', formula, sdf: null,
+             key: 'poly',
              note: 'Blandet kæde — prøv at bygge en ren α-1,4- eller β-1,4-kæde.' };
 }
 
@@ -736,7 +989,7 @@ function sitePoint(node, kind, p) {
     } else if (kind === 'c4') {
         lx = 0; ly = UNIT_CY;
     } else {                                       // c6 — the stub above the ring
-        lx = 27.5; ly = -26;
+        lx = repr === 'haworth' ? HW_C6_X : 27.5; ly = -26;
     }
 
     if (p.mirrorX) lx = UNIT_W - lx;
@@ -765,17 +1018,21 @@ function makeMolecule(root, x, y) {
     inner.setAttribute('class', 'mol-inner');
     g.appendChild(inner);
 
-    const gBonds = sub(inner), gArms = sub(inner), gUnits = sub(inner),
-          gDecor = sub(inner), gChrome = sub(inner);
+    const gCards = sub(inner), gBonds = sub(inner), gArms = sub(inner),
+          gUnits = sub(inner), gDecor = sub(inner), gChrome = sub(inner);
 
     // Invisible hit area so the whole molecule — gaps included — can be grabbed
     const hit = rect(0, 0, gridW, gridH, 'transparent');
     hit.setAttribute('pointer-events', 'all');
     gUnits.appendChild(hit);
 
-    drawArms(gArms, nodes, bonds, pos);
+    // A residue bonded through its own anomeric carbon is a donor — it has
+    // no free OH there, which the Haworth drawing has to know about
+    const donors = new Set(bonds.map(b => b.donor));
+
+    if (repr !== 'haworth') drawArms(gArms, nodes, bonds, pos);
     bonds.forEach(b => drawBond(gBonds, gDecor, b, pos));
-    nodes.forEach(node => drawUnit(gUnits, node, pos.get(node)));
+    nodes.forEach(node => drawUnit(gUnits, node, pos.get(node), donors.has(node), gCards));
 
     const extent = drawChrome(gChrome, info, bonds, gridW, gridH, n, scale);
 
@@ -792,16 +1049,44 @@ function makeMolecule(root, x, y) {
     return g;
 }
 
-function drawUnit(parent, node, p) {
-    const cfg  = MOL[node.name];
-    const pent = cfg.shape === 'pent';
+/* One residue, drawn in whichever representation is switched on. Every
+   representation uses the same box and the same binding-site coordinates,
+   so the students can flip between them and see the same molecule. */
+function drawUnit(parent, node, p, isDonor, cards) {
+    if (repr === 'haworth') return drawHaworth(parent, node, p, isDonor, cards);
+    if (repr === 'formula') return drawFormula(parent, node, p);
+    drawBlock(parent, node, p);
+}
 
+/* The group a residue is drawn in — mirrored for fructose, flipped 180°
+   when a β-1,4 bond turns the ring over. */
+function unitGroup(parent, p) {
     const unit = document.createElementNS(SVG_NS, 'g');
     let t = `translate(${p.x}, ${p.y})`;
     if (p.mirrorX) t += ` translate(${UNIT_W},0) scale(-1,1)`;
     if (p.flip)    t += ` translate(0,${UNIT_H}) scale(1,-1)`;
     unit.setAttribute('transform', t);
     parent.appendChild(unit);
+    return unit;
+}
+
+/* Text inside a mirrored or flipped residue: the mirror is undone on the
+   glyphs themselves, so labels always read left to right. */
+function placedText(unit, p, str, x, y, cls) {
+    const tg = document.createElementNS(SVG_NS, 'g');
+    let t = `translate(${x}, ${y})`;
+    if (p.mirrorX) t += ' scale(-1,1)';
+    if (p.flip)    t += ' scale(1,-1)';
+    tg.setAttribute('transform', t);
+    tg.appendChild(text(str, 0, 0, cls));
+    unit.appendChild(tg);
+    return tg;
+}
+
+function drawBlock(parent, node, p) {
+    const cfg  = MOL[node.name];
+    const pent = cfg.shape === 'pent';
+    const unit = unitGroup(parent, p);
 
     const path = document.createElementNS(SVG_NS, 'path');
     path.setAttribute('d', SHAPES[cfg.shape]);
@@ -811,14 +1096,7 @@ function drawUnit(parent, node, p) {
 
     if (showNumbers) {
         CARBONS[cfg.shape].forEach(([label, cx, cy, extra]) => {
-            // Mirrors are undone on the text itself so numbers stay readable
-            const tg = document.createElementNS(SVG_NS, 'g');
-            let tt = `translate(${cx}, ${cy})`;
-            if (p.mirrorX) tt += ' scale(-1,1)';
-            if (p.flip)    tt += ' scale(1,-1)';
-            tg.setAttribute('transform', tt);
-            tg.appendChild(text(label, 0, 3.5, 'c-num' + (extra ? ' ' + extra : '')));
-            unit.appendChild(tg);
+            placedText(unit, p, label, cx, cy + 3.5, 'c-num' + (extra ? ' ' + extra : ''));
         });
     }
 
@@ -832,6 +1110,139 @@ function drawUnit(parent, node, p) {
     lab.appendChild(text(`${greek(node.anomer)}-${cfg.da}`, UNIT_CX, baseY + 16, 'label-name'));
 }
 
+/* =====================================================================
+   Haworth projection
+
+   Which way an OH points is not decoration — it is the configuration.
+   For a D-sugar in this orientation: a group that sits on the right in the
+   Fischer projection points down, one on the left points up. That gives
+   glucose OH down-up-down on C2-C3-C4, galactose OH up on C4, and the
+   anomeric OH down for α and up for β.
+   ===================================================================== */
+
+const SUPER = { 1: '¹', 6: '⁶' };
+
+/* Exocyclic groups get their carbon number in front: ⁶CH₂OH. The ring
+   carbons are numbered inside the ring instead. */
+function hwLabel(label, num) {
+    return showNumbers && num ? SUPER[num] + label : label;
+}
+
+function haworthSubs(node, isDonor) {
+    const ano  = node.anomer === 'b' ? 'up' : 'down';   // the α/β signature
+    const anti = ano === 'up' ? 'down' : 'up';
+    const S = [];
+
+    if (node.name === 'fructose') {
+        // C2 is the anomeric carbon and it carries C1 as a side group
+        if (!isDonor && !node.at2) S.push({ at: 'C2', dir: ano, label: 'OH' });
+        S.push({ at: 'C2', dir: anti, label: 'CH₂OH', num: '1' });
+        S.push({ at: 'C3', dir: 'up',   label: 'OH', dx: -12 });
+        S.push({ at: 'C4', dir: 'down', label: 'OH' });
+        S.push({ at: 'C5', dir: 'up',   label: 'CH₂OH', num: '6', dx: 12 });
+        return S;
+    }
+
+    if (!isDonor) S.push({ at: 'C1', dir: ano, label: 'OH' });
+    S.push({ at: 'C2', dir: 'down', label: 'OH' });
+    S.push({ at: 'C3', dir: 'up',   label: 'OH', dx: 6 });
+    // Galactose differs from glucose in exactly one OH — this one
+    if (!node.at4) S.push({ at: 'C4', dir: node.name === 'galactose' ? 'up' : 'down',
+                            label: 'OH' });
+    return S;
+}
+
+function drawHaworth(parent, node, p, isDonor, cards) {
+    const cfg  = MOL[node.name];
+    const G    = HW[cfg.shape];
+    const unit = unitGroup(parent, p);
+    const A    = a => G.at[a];
+
+    // A white card keeps the line drawing readable over the dotted background.
+    // It goes in its own layer underneath the bonds, and reaches a little
+    // further out on a furanose, where C1 hangs off the anomeric carbon.
+    const wide = cfg.shape === 'pent' ? 10 : 0;
+    const card = rect(-6, -20, UNIT_W + 12 + wide, UNIT_H + 24, null);
+    card.setAttribute('class', 'hw-card');
+    card.setAttribute('rx', 10);
+    unitGroup(cards, p).appendChild(card);
+
+    // Ring interior in the monomer's own colour, so identity survives the switch
+    const poly = document.createElementNS(SVG_NS, 'polygon');
+    poly.setAttribute('points', G.ring.map(([a]) => A(a).join(',')).join(' '));
+    poly.setAttribute('fill', `url(#grad-${node.name})`);
+    poly.setAttribute('fill-opacity', 0.18);
+    unit.appendChild(poly);
+
+    G.ring.forEach(([a, b, front]) => {
+        const [x1, y1] = A(a), [x2, y2] = A(b);
+        unit.appendChild(line(x1, y1, x2, y2, 'hw-bond' + (front ? ' front' : '')));
+    });
+
+    // The ring oxygen sits on its vertex, masking the bonds behind it
+    const og = document.createElementNS(SVG_NS, 'g');
+    og.setAttribute('class', 'hw-o');
+    const oc = document.createElementNS(SVG_NS, 'circle');
+    oc.setAttribute('cx', A('O')[0]); oc.setAttribute('cy', A('O')[1]);
+    oc.setAttribute('r', 8.5);
+    og.appendChild(oc);
+    unit.appendChild(og);
+    placedText(og, p, 'O', A('O')[0], A('O')[1] + 4, null);
+
+    // Substituents: a stick into the lane, then the label. The carbon number
+    // rides along as a superscript, which is how a chemist writes it anyway.
+    haworthSubs(node, isDonor).forEach(s => {
+        const [ax, ay] = A(s.at);
+        const lane = G[s.dir];
+        const dx   = s.dx || 0;
+        unit.appendChild(line(ax, ay, ax + dx, lane.line, 'hw-stick'));
+        placedText(unit, p, hwLabel(s.label, s.num), ax + dx, lane.text, 'hw-sub');
+    });
+
+    // C6 on a pyranose: the branch point, drawn out of C5 as in a textbook
+    if (cfg.shape === 'hex') {
+        const [cx, cy] = A('C5');
+        const branched = !!node.at6;
+        unit.appendChild(line(cx, cy, HW_C6_X, branched ? -26 : 6, 'hw-stick'));
+        placedText(unit, p, hwLabel(branched ? 'CH₂' : 'CH₂OH', '6'),
+                   branched ? HW_C6_X - 7 : HW_C6_X, -3,
+                   'hw-sub' + (branched ? ' end' : ''));
+    }
+
+    // Numbers inside the ring, or the abbreviation when numbering is off
+    if (showNumbers) {
+        Object.keys(G.num).forEach(a => {
+            const [nx, ny] = G.num[a];
+            placedText(unit, p, a.slice(1), nx, ny, 'hw-num');
+        });
+    } else {
+        placedText(unit, p, cfg.abbr, G.centre[0], G.centre[1], 'hw-abbr');
+    }
+}
+
+/* =====================================================================
+   Molecule formula — every residue as its own sum formula. All three
+   monosaccharides are C₆H₁₂O₆: same formula, different molecule.
+   ===================================================================== */
+
+function drawFormula(parent, node, p) {
+    const cfg  = MOL[node.name];
+    const unit = unitGroup(parent, p);
+
+    const box = rect(2, 0, UNIT_W - 4, UNIT_H, null);
+    box.setAttribute('fill', `url(#grad-${node.name})`);
+    box.setAttribute('class', 'fm-box');
+    box.setAttribute('rx', 14);
+    unit.appendChild(box);
+
+    const lab = document.createElementNS(SVG_NS, 'g');
+    lab.setAttribute('transform', `translate(${p.x}, ${p.y})`);
+    parent.appendChild(lab);
+
+    lab.appendChild(text(hexFormula(1), UNIT_CX, 46, 'fm-formula'));
+    lab.appendChild(text(`${greek(node.anomer)}-${cfg.da}`, UNIT_CX, 64, 'fm-name'));
+}
+
 /* The C6 stub: drawn for every residue when numbering is on, and always
    for residues that actually carry a branch. */
 function drawArms(parent, nodes, bonds, pos) {
@@ -839,7 +1250,7 @@ function drawArms(parent, nodes, bonds, pos) {
 
     nodes.forEach(node => {
         if (MOL[node.name].shape !== 'hex') return;
-        if (!showNumbers && !branched.has(node)) return;
+        if (!branched.has(node) && !(showNumbers && repr === 'blocks')) return;
 
         const p = pos.get(node);
         const baseY = p.flip ? p.y + UNIT_H : p.y;
@@ -926,11 +1337,16 @@ function drawChrome(parent, info, bonds, gridW, gridH, n, scale) {
         say(`${n} monomerer · ${b} glykosidbinding${b === 1 ? '' : 'er'} · ${b} H₂O fraspaltet`,
             y, 'info-line');
         y += 16;
+        // Formula mode makes the water accounting explicit
+        if (repr === 'formula') {
+            say(`${n} × ${hexFormula(1)} − ${b} H₂O = ${info.formula}`, y, 'info-eq');
+            y += 17;
+        }
     }
     say(info.note, y, 'info-note');
     y += 26;
 
-    const buttons = [];
+    const buttons = [['ℹ', 'badge-info', 'facts', 'Faktakort: hvor findes det, sødme, fordøjelighed']];
     if (info.sdf) buttons.push(['👁', 'badge-3d', 'view', 'Se molekylet i 3D']);
     if (n === 1)  buttons.push(['α⇄β', 'badge-flip', 'flip', 'Skift mellem α- og β-form']);
     if (n > 1)    buttons.push(['✂', 'badge-cut', 'cut', 'Fuld hydrolyse til monomerer']);
@@ -1007,6 +1423,7 @@ function spawn(name) {
     const mol = makeMolecule(residue(name), Math.round(x), Math.round(y));
     clampIntoView(mol);
     setStatus(`${greek(currentAnomer)}-${MOL[name].da} lagt på bordet.`, 'info');
+    taskTick();
 }
 
 function quickBuild(kind) {
@@ -1035,6 +1452,7 @@ function quickBuild(kind) {
     clampIntoView(mol);
     addWater(n - 1);
     setStatus(`${mol._model.info.name} bygget af ${n} glukoseenheder — det har krævet ${n - 1} kondensationer og fraspaltet ${n - 1} vandmolekyler.`, 'ok');
+    taskTick();
 }
 
 function getPos(el) { return { x: +el.dataset.x, y: +el.dataset.y }; }
@@ -1048,10 +1466,12 @@ function setPos(el, x, y) {
 function clampIntoView(mol) {
     const area = svgSpace.getBoundingClientRect();
     const b = mol._box;
+    // The task panel covers the right-hand edge of the table while it is open
+    const inset = taskMode ? Math.min(322, area.width * 0.45) : 0;
     const minY = 8 + b.up;
     const maxY = Math.max(minY, area.height - b.down - 64);
     const minX = 10 + b.pad;                       // the caption is wider than the rings
-    const maxX = Math.max(minX, area.width - b.w - 10 - b.pad);
+    const maxX = Math.max(minX, area.width - inset - b.w - 10 - b.pad);
     const p = getPos(mol);
     setPos(mol,
         Math.round(Math.min(Math.max(p.x, minX), maxX)),
@@ -1077,6 +1497,7 @@ function startDrag(e) {
         e.preventDefault();
         const a = hitBadge.dataset.action;
         if (a === 'view') openViewer(mol._model.info);
+        else if (a === 'facts') openFacts(mol._model);
         else if (a === 'cut') fullHydrolysis(mol);
         else if (a === 'flip') flipAnomer(mol);
         else if (a === 'remove') removeEnzyme(mol);
@@ -1283,6 +1704,7 @@ function condense(pair) {
 
     const i = mol._model.info;
     setStatus(`Kondensation: ${i.name} (${i.formula}) dannet via en ${pair.label}-binding — der fraspaltes ét molekyle vand.`, 'ok');
+    taskTick();
 }
 
 /* Splits one glycosidic bond. Returns the names involved so an enzyme can
@@ -1311,6 +1733,7 @@ function hydrolyse(mol, bond, silent) {
     const names = { from: oldName, a: a._model.info.name, b: b._model.info.name };
     if (!silent)
         setStatus(`Hydrolyse: ${names.from} spaltet til ${names.a} + ${names.b} — det kræver ét molekyle vand.`, 'ok');
+    taskTick();
     return names;
 }
 
@@ -1333,6 +1756,7 @@ function fullHydrolysis(mol) {
     waterFx(p.x + 60, p.y - 40, 'in');
     addWater(-(count - 1));
     setStatus(`Fuld hydrolyse: ${oldName} spaltet til ${count} monomerer — det har krævet ${count - 1} vandmolekyler.`, 'ok');
+    taskTick();
 }
 
 function flipAnomer(mol) {
@@ -1346,6 +1770,7 @@ function flipAnomer(mol) {
         (node.anomer === 'a'
             ? 'α-formen giver α-1,4-bindinger — stivelse og glykogen.'
             : 'β-formen giver β-1,4-bindinger — cellulose.'), 'info');
+    taskTick();
 }
 
 /* =====================================================================
@@ -1608,12 +2033,15 @@ function dropEnzyme(enz, target) {
         if (v.gas) {
             waterFx(target.p.x, target.p.y - 20, 'out', '💨 gas');
             setStatus(`${v.msg} I tyktarmen lever bakterierne af den: der dannes gas, og laktosen trækker vand ud i tarmen — luft i maven og osmotisk diarré. Det er laktoseintolerans.`, 'error');
+            taskEvents.add('gas');
+            taskTick();
         } else {
             setStatus(`Ingen reaktion. ${v.msg}`, 'error');
         }
         return;
     }
 
+    taskEvents.add('cut:' + enz._enzyme);
     const names = hydrolyse(target.mol, target.bond, true);
 
     // Enzymet slipper substratet igen og bliver liggende — det er en katalysator
@@ -1686,6 +2114,7 @@ function resetGame() {
     waterCount = 0;
     waterOut.textContent = '0';
     setStatus('Bordet er ryddet. Vælg α eller β, og byg videre. Klik på et O i en binding for at hydrolysere netop den — eller lad et enzym gøre arbejdet.', '');
+    taskTick();
 }
 
 /* Rebuild every molecule in place — used when the C-number toggle changes */
@@ -1734,6 +2163,395 @@ window.addEventListener('resize', () => {
 });
 
 /* =====================================================================
+   Faktakort — konteksten omkring molekylet
+
+   Alt undtagen én ting er opslag i tabellen nedenfor. Den ene ting er
+   "reducerende sukker", og den beregnes: et molekyle er reducerende
+   præcis når det har et frit anomert C-atom, og det ved modellen allerede
+   (det er den frie plads freeSites kalder 'anomeric'). Sakkarose er det
+   eneste her hvor begge anomere C-atomer sidder i bindingen.
+   ===================================================================== */
+
+const FACT_COLOUR = {
+    glucose: '#1e8449', fructose: '#b03a2e', galactose: '#b7950b',
+    disacc: '#2471a3', poly: '#34495e'
+};
+
+const FACTS = {
+    glucose: {
+        where: 'Druer, honning og frugt — og i blodet: blodsukkeret er glukose (normalt 4–6 mmol/L).',
+        sweet: 0.75,
+        digest: 'Optages direkte i tyndtarmen. Den er allerede en monomer, så der skal ingen enzymer til.',
+        energy: '≈ 17 kJ/g (4 kcal/g). Cellernes vigtigste brændstof: glykolyse → citronsyrecyklus → ATP.'
+    },
+    fructose: {
+        where: 'Frugt og honning — og halvdelen af alt almindeligt sukker, som er sakkarose.',
+        sweet: 1.7,
+        digest: 'Optages direkte, men med en anden transportør (GLUT5) end glukose.',
+        energy: '≈ 17 kJ/g. Omsættes næsten udelukkende i leveren, og indgår derfor ikke i blodsukkeret på samme måde.'
+    },
+    galactose: {
+        where: 'Findes næsten kun som den ene halvdel af laktose i mælk.',
+        sweet: 0.32,
+        digest: 'Optages direkte og omdannes i leveren til glukose.',
+        energy: '≈ 17 kJ/g. Indgår også i glykolipider og glykoproteiner på cellernes overflade.'
+    },
+    maltose: {
+        where: 'Malt, øl og spirende korn — og i tarmen hver gang stivelse bliver nedbrudt.',
+        sweet: 0.35,
+        digest: 'Spaltes af maltase i tyndtarmens børstesøm til to glukoser.',
+        energy: '≈ 17 kJ/g. Mellemtrin i stivelsesfordøjelsen, ikke et lager i sig selv.'
+    },
+    lactose: {
+        where: 'Mælk og mejeriprodukter. Komælk ≈ 4,7 %, modermælk ≈ 7 %.',
+        sweet: 0.16,
+        digest: 'Kræver laktase. De fleste voksne i verden mister enzymet efter barndommen — nordeuropæere er undtagelsen.',
+        energy: '≈ 17 kJ/g. Uspaltet laktose når tyktarmen, hvor bakterier laver gas, og trækker vand ud i tarmen.'
+    },
+    sucrose: {
+        where: 'Sukkerrør og sukkerroer — det vi kalder sukker, rørsukker eller bordsukker.',
+        sweet: 1.0,
+        digest: 'Spaltes af sakkarase til glukose + fruktose. Blandingen kaldes invertsukker.',
+        energy: '≈ 17 kJ/g. Plantens transportform: sukker flyttes rundt i sivævet som sakkarose, netop fordi den er ikke-reducerende og dermed kemisk rolig.'
+    },
+    cellobiose: {
+        where: 'Frigives når cellulose nedbrydes af bakterier og svampe. Findes ikke frit i kosten.',
+        sweet: 0.05,
+        digest: 'Mennesker kan ikke spalte den: β-1,4 kræver cellulase eller β-glukosidase, som vi ikke har.',
+        energy: '0 kJ/g for os. Køer og termitter får energi ud af den via mikroorganismer.'
+    },
+    isomaltose: {
+        where: 'Selve grenpunktet i amylopektin og glykogen. Findes i sirup, honning og øl.',
+        sweet: 0.35,
+        digest: 'Spaltes af isomaltase (grænsedextrinase) — et andet enzym end maltase, fordi bindingen er α-1,6.',
+        energy: '≈ 17 kJ/g.'
+    },
+    gentiobiose: {
+        where: 'Plantestoffer, bl.a. i safranens farvestof crocin.',
+        sweet: null,
+        sweetNote: 'Smager bittert, ikke sødt — sødme afhænger af formen, ikke af at det er et sukker.',
+        digest: 'β-1,6 spaltes ikke af menneskets enzymer.',
+        energy: 'Ingen betydning som næringsstof.'
+    },
+    melibiose: {
+        where: 'Bælgfrugter, som del af raffinose i ærter, bønner og linser.',
+        sweet: 0.3,
+        digest: 'Kræver α-galaktosidase, som mennesker ikke har. Den fortsætter til tyktarmen.',
+        energy: 'Ingen energi for os — men bakterierne i tyktarmen laver gas af den. Det er derfor bønner giver luft i maven.'
+    },
+    maltotriose: {
+        where: 'Mellemprodukt når amylase klipper stivelse i stykker. Findes i øl og sirup.',
+        sweet: 0.2,
+        digest: 'Klippes videre af amylase og maltase til glukose.',
+        energy: '≈ 17 kJ/g.'
+    },
+    amylose: {
+        where: 'Kartofler, ris, brød, pasta, majs — plantens energilager i knolde og frø.',
+        sweet: 0,
+        digest: 'Amylase i spyt og bugspyt klipper α-1,4 inde i kæden, maltase tager sidste trin til glukose.',
+        energy: '≈ 17 kJ/g. Det vigtigste kulhydrat i den menneskelige kost.'
+    },
+    cellulose: {
+        where: 'Træ, bomuld, papir og alle plantecellevægge — Jordens mest udbredte organiske stof.',
+        sweet: 0,
+        digest: 'Kan ikke fordøjes: β-1,4 kræver cellulase, og den har mennesker ikke. Virker som kostfiber.',
+        energy: '0 kJ/g for mennesker. Køer, termitter og snegle klarer det med hjælp fra mikroorganismer.'
+    },
+    glycogen: {
+        where: 'Lever (≈ 100 g) og muskler (≈ 400 g) hos mennesker — dyrenes energilager. Amylopektin er plantens tilsvarende forgrenede form.',
+        sweet: 0,
+        digest: 'α-1,4 af amylase, α-1,6-grenpunkterne af isomaltase. I egne celler klippes glykogen af glykogenfosforylase.',
+        energy: '≈ 17 kJ/g. Grenene giver mange frie ender, så mange enzymer kan arbejde samtidig — derfor kan blodsukkeret rettes op i løbet af minutter.'
+    },
+    disacc: {
+        where: 'Ikke et af de almindelige disakkarider — men kemisk muligt.',
+        sweet: null,
+        sweetNote: 'Ukendt sødme.',
+        digest: 'Om det kan fordøjes afhænger helt af bindingen: prøv at trække et enzym hen på den.',
+        energy: 'Kun bindinger vi har enzymer til, giver energi.'
+    },
+    poly: {
+        where: 'En blandet kæde, ikke en af naturens standardpolymerer.',
+        sweet: 0,
+        digest: 'Enzymer er specifikke: hver enkelt binding skal passe til et enzym, ellers bliver den siddende.',
+        energy: 'Kun de bindinger vi har enzymer til, giver energi.'
+    }
+};
+
+const factModal = document.getElementById('fact-modal');
+
+function openFacts(model) {
+    const { info, nodes, sites } = model;
+    const n = nodes.length;
+    const f = FACTS[info.key] || FACTS[n === 2 ? 'disacc' : 'poly'];
+    const reducing = sites.some(s => s.kind === 'anomeric');
+
+    const colour = FACT_COLOUR[info.key] ||
+                   (n === 1 ? FACT_COLOUR.glucose : n === 2 ? FACT_COLOUR.disacc : FACT_COLOUR.poly);
+    document.getElementById('fact-top').style.background = colour;
+    document.getElementById('fact-name').textContent = info.name;
+    document.getElementById('fact-formula').textContent =
+        `${info.formula} · ${n} ${n === 1 ? 'monomer' : 'monomerer'}`;
+
+    // Sødme som søjle, målt mod sakkarose = 1
+    let sweetVal;
+    if (f.sweet === null || f.sweet === undefined) {
+        sweetVal = f.sweetNote || 'Ukendt.';
+    } else if (f.sweet === 0) {
+        sweetVal = 'Smager ikke sødt. Polysakkarider er for store til at nå smagsreceptorerne — ' +
+                   'men tygger man længe på et stykke brød, begynder det at smage sødt, fordi amylasen i spyttet frigiver maltose.';
+    } else {
+        const pct = Math.round(Math.min(1, f.sweet / 1.8) * 100);
+        sweetVal = `<div class="f-bar"><span style="width:${pct}%"></span></div>` +
+                   (f.sweet === 1
+                     ? 'Sakkarose <b>er</b> målestokken: al sødme angives i forhold til bordsukker.'
+                     : `≈ ${String(f.sweet).replace('.', ',')} × sakkarose (bordsukker = 1)`);
+    }
+
+    const redTag = reducing
+        ? `<span class="f-tag yes">Reducerende</span><br>Der er et frit anomert C-atom, så molekylet kan
+           oxideres — det er derfor Fehlings og Benedicts prøve slår ud.` +
+          (n >= 6 ? ' En lang kæde har kun én fri ende pr. molekyle, så udslaget bliver meget svagt.' : '')
+        : `<span class="f-tag no">Ikke-reducerende</span><br>Begge anomere C-atomer sidder i den
+           glykosidiske binding, så der er ingen fri aldehyd- eller ketogruppe. Fehlings prøve er negativ.`;
+
+    const rows = [
+        ['📍', 'Hvor findes det', f.where],
+        ['🍬', 'Sødme', sweetVal],
+        ['🧪', 'Reducerende sukker?', redTag],
+        ['🍽', 'Fordøjelighed for mennesker', f.digest],
+        ['⚡', 'Energi og rolle', f.energy]
+    ];
+
+    document.getElementById('fact-rows').innerHTML = rows.map(([ico, lab, val]) =>
+        `<div class="f-row"><div class="f-ico">${ico}</div>
+         <div><div class="f-lab">${lab}</div><div class="f-val">${val}</div></div></div>`).join('');
+
+    factModal.classList.remove('hidden');
+}
+
+function closeFacts() { factModal.classList.add('hidden'); }
+
+document.getElementById('fact-close').addEventListener('click', closeFacts);
+factModal.addEventListener('click', e => { if (e.target === factModal) closeFacts(); });
+
+/* =====================================================================
+   Opgavemode
+
+   En opgave er et spørgsmål til bordet: enten en tilstand molekylerne kan
+   have (byg laktose), eller noget der er sket undervejs (et enzym har
+   klippet). Efter hver handling får den aktuelle opgave bordet at se, og
+   når den er løst, kommer forklaringen — pointen står bagefter, ikke før.
+   ===================================================================== */
+
+const taskEvents = new Set();
+let taskMode  = false;
+let taskIndex = 0;
+let taskDone  = [];
+let taskJustSolved = false;
+
+/* Bindingens type, uden hensyn til hvilke sukkerarter der sidder i den */
+const bondSig = m => `${m.bonds[0].anomer}-1,${m.bonds[0].site}`;
+
+const TASKS = [
+    {
+        title: 'Byg maltose',
+        goal: 'Læg to α-glukoser på bordet og træk den enes C1 (højre hjørne) hen til den andens C4 (venstre hjørne).',
+        why: 'Kondensation: to monomerer bindes sammen, og der fraspaltes ét molekyle vand. ' +
+             'Maltose har α-1,4-bindingen — den samme som i stivelse. Læg mærke til vandtælleren.',
+        check: b => b.mols.some(m => m.info.key === 'maltose')
+    },
+    {
+        title: 'Byg laktose',
+        goal: 'Laktose = galaktose + glukose med en β-1,4-binding. Vælg β øverst, læg en galaktose og en glukose ud, ' +
+              'og træk galaktosens C1 hen til glukosens C4.',
+        why: 'Rækkefølgen betyder noget: det er galaktosen der binder med sit C1, og glukosen der modtager på sit C4. ' +
+             'Bytter man om, får man et andet molekyle. Netop derfor er enzymet laktase en β-galaktosidase.',
+        check: b => b.mols.some(m => m.info.key === 'lactose')
+    },
+    {
+        title: 'Lav 4 vandmolekyler ved kondensation',
+        goal: 'Få vandtælleren op på 4. Hver ny binding fraspalter ét vandmolekyle, så du skal danne 4 bindinger — ' +
+              'fx en kæde på 5 monomerer.',
+        why: 'En kæde på n monomerer holdes sammen af n − 1 bindinger og har afgivet n − 1 vandmolekyler. ' +
+             'Omvendt kræver det lige så mange vandmolekyler at hydrolysere kæden igen — derfor er fordøjelse hydrolyse.',
+        check: b => b.water >= 4
+    },
+    {
+        title: 'To disakkarider med samme sumformel',
+        goal: 'Byg to forskellige disakkarider der ligger på bordet samtidig — fx maltose (α-1,4) og cellobiose (β-1,4). ' +
+              'Skift til visningen "Formel" undervejs.',
+        why: 'Begge er C₁₂H₂₂O₁₁: samme sumformel, forskellig struktur — de er isomerer. ' +
+             'Sumformlen siger altså ikke hvad et molekyle kan. Forskellen mellem maltose og cellobiose er alene bindingens ' +
+             'geometri, og den er nok til at vi kan fordøje den ene og ikke den anden.',
+        check: b => {
+            const di = b.mols.filter(m => m.nodes.length === 2);
+            return di.some((x, i) => di.slice(i + 1).some(y =>
+                x.info.formula === y.info.formula && bondSig(x) !== bondSig(y)));
+        }
+    },
+    {
+        title: 'Byg en kæde vi ikke kan fordøje',
+        goal: 'Byg en kæde på mindst 4 glukoser hvor alle bindinger er β-1,4. Vælg β før du bygger — ' +
+              'eller brug Hurtigbyg → Cellulose. Prøv derefter amylase på den.',
+        why: 'Det er cellulose. Vi har amylase, som kun klipper α-1,4, men ingen cellulase til β-1,4. ' +
+             'Kæden er kemisk fuld af energi; vi kan bare ikke komme til den, og den passerer som kostfiber. ' +
+             'Læg mærke til at hver anden ring er vendt om — det er β-bindingen der tvinger den lige, stive kæde.',
+        check: b => b.mols.some(m => m.nodes.length >= 4 &&
+                                     m.nodes.every(x => x.name === 'glucose') &&
+                                     m.bonds.every(x => x.site === 4 && x.anomer === 'b'))
+    },
+    {
+        title: 'Byg et forgrenet polysakkarid',
+        goal: 'Byg en kæde på mindst 6 α-glukoser, og sæt en sidekæde på en af ringenes C6 (den lille 6-knop over ringen). ' +
+              'Hurtigbyg → Glykogen gør det for dig.',
+        why: 'Glykogen og amylopektin: α-1,4 i kæden, α-1,6 i grenpunkterne. ' +
+             'Grenene giver mange frie ender, så mange enzymmolekyler kan arbejde samtidig — derfor kan leveren frigive ' +
+             'glukose til blodet i løbet af minutter. En ugrenet kæde ville kun kunne klippes fra én ende.',
+        check: b => b.mols.some(m => m.nodes.length >= 6 &&
+                                     m.bonds.some(x => x.site === 6) &&
+                                     m.bonds.some(x => x.site === 4))
+    },
+    {
+        title: 'Fordøj stivelsen hele vejen',
+        goal: 'Byg (eller hurtigbyg) en amylosekæde. Træk amylase hen på en binding inde i kæden, og træk derefter ' +
+              'maltase hen på en maltose.',
+        why: 'To enzymer, to opgaver: amylase i spyt og bugspyt klipper inde i den lange kæde, mens maltase i ' +
+             'tyndtarmens børstesøm tager det sidste trin fra maltose til glukose. Først som fri glukose kan sukkeret ' +
+             'optages i blodet.',
+        check: b => b.ev.has('cut:amylase') && b.ev.has('cut:maltase')
+    },
+    {
+        title: 'Vis hvad laktoseintolerans er',
+        goal: 'Slå 🥛 Laktoseintolerans til, byg en laktose, og prøv at klippe den med laktase.',
+        why: 'Laktoseintolerans er ikke en allergi, men et manglende enzym. Uden laktase bliver laktosen ikke spaltet, ' +
+             'kan ikke optages i tyndtarmen, og fortsætter til tyktarmen: bakterierne laver gas, og sukkeret trækker ' +
+             'osmotisk vand ud i tarmen. Enzymet er hele forskellen.',
+        check: b => b.ev.has('gas')
+    }
+];
+
+const taskPanel  = document.getElementById('task-panel');
+const taskList   = document.getElementById('task-list');
+const taskDetail = document.getElementById('task-detail');
+
+function board() {
+    return { mols: molecules.map(m => m._model), water: waterCount, ev: taskEvents };
+}
+
+/* Kun den aktuelle opgave tjekkes — så er det tydeligt hvad der bliver kigget på */
+function taskTick() {
+    if (!taskMode) return;
+    const t = TASKS[taskIndex];
+    if (t && !taskDone[taskIndex] && t.check(board())) {
+        taskDone[taskIndex] = true;
+        taskJustSolved = true;
+    }
+    renderTasks();
+}
+
+function nextTask() {
+    taskJustSolved = false;
+    const next = TASKS.findIndex((t, i) => !taskDone[i]);
+    taskIndex = next === -1 ? TASKS.length : next;
+    renderTasks();
+}
+
+function renderTasks() {
+    const all = taskDone.filter(Boolean).length === TASKS.length;
+
+    taskList.innerHTML = TASKS.map((t, i) => {
+        const cls  = taskDone[i] ? 'done' : i === taskIndex ? 'now' : 'lock';
+        const mark = taskDone[i] ? '✔' : i === taskIndex ? '▶' : '🔒';
+        return `<li class="${cls}"><span class="tp-mark">${mark}</span><span>${i + 1}. ${t.title}</span></li>`;
+    }).join('');
+
+    if (all) {
+        taskDetail.innerHTML =
+            `<p class="tp-title">🎓 Opsamling</p>
+             <p class="tp-goal">Alle ${TASKS.length} opgaver er løst. Det er de samme fire ting hele vejen igennem:</p>
+             <ul class="tp-sum">
+               <li><b>Kondensation</b> binder monomerer sammen og fraspalter vand; <b>hydrolyse</b> gør det modsatte.
+                   Vandtælleren står nu på ${waterCount}.</li>
+               <li><b>Bindingen</b> — α eller β, 1,4 eller 1,6 — bestemmer molekylets form: spiral, lige kæde eller forgrenet net.</li>
+               <li><b>Samme sumformel</b> kan betyde vidt forskellige molekyler. Stivelse og cellulose er begge (C₆H₁₀O₅)ₙ.</li>
+               <li><b>Enzymer er specifikke</b>, og det er derfor cellulose er kostfiber, bønner giver luft i maven,
+                   og nogle mennesker ikke kan tåle mælk.</li>
+             </ul>
+             <button class="tp-btn grey" id="task-restart">Start opgaverne forfra</button>`;
+        document.getElementById('task-restart').addEventListener('click', () => {
+            taskDone = []; taskIndex = 0; taskEvents.clear(); taskJustSolved = false;
+            renderTasks();
+        });
+        return;
+    }
+
+    const t = TASKS[taskIndex];
+    const solved = taskDone[taskIndex];
+
+    taskDetail.innerHTML =
+        `<p class="tp-title">${taskIndex + 1}. ${t.title}</p>` +
+        (solved
+            ? `<p class="tp-solved">✔ Løst!</p><div class="tp-why">${t.why}</div>
+               <button class="tp-btn" id="task-next">Næste opgave →</button>`
+            : `<p class="tp-goal">${t.goal}</p>
+               <p class="tp-tip">Opgaven tjekkes automatisk, så snart bordet ser rigtigt ud.</p>`);
+
+    if (solved) document.getElementById('task-next').addEventListener('click', nextTask);
+}
+
+function toggleTasks() {
+    taskMode = !taskMode;
+    taskPanel.classList.toggle('hidden', !taskMode);
+    document.getElementById('btn-tasks').classList.toggle('active', taskMode);
+    if (taskMode) {
+        renderTasks();
+        taskTick();
+        setStatus('Opgavemode: løs opgaverne i panelet til højre. Bordet tjekkes automatisk efter hver handling.', 'info');
+    } else {
+        setStatus('Opgavepanelet er lukket — fri leg. Din fremgang er husket.', 'info');
+    }
+    molecules.forEach(clampIntoView);
+    enzymes.forEach(clampIntoView);
+}
+
+document.getElementById('btn-tasks').addEventListener('click', toggleTasks);
+document.getElementById('task-close').addEventListener('click', toggleTasks);
+
+/* =====================================================================
+   Repræsentationsskift
+   ===================================================================== */
+
+const REPR_MSG = {
+    blocks:  'Blokke: formen viser ringstørrelsen (seksring eller femring) og farven viser sukkerarten.',
+    haworth: 'Haworth-formel: samme molekyle, nu med OH-grupperne. Om den anomere OH peger op eller ned ER forskellen ' +
+             'mellem β og α. H-atomerne er udeladt, og den glykosidiske binding tegnes vandret, så kæden kan læses.',
+    formula: 'Molekylformel: hver monomer er C₆H₁₂O₆ — glukose, fruktose og galaktose har alle samme sumformel. ' +
+             'Regnestykket under molekylet viser hvor meget vand der er fraspaltet.'
+};
+
+document.querySelectorAll('#repr-seg button').forEach(btn => {
+    btn.addEventListener('click', () => {
+        repr = btn.dataset.repr;
+        document.querySelectorAll('#repr-seg button')
+            .forEach(b => b.classList.toggle('active', b === btn));
+        rerenderAll();
+        setStatus(REPR_MSG[repr], 'info');
+    });
+});
+
+/* Den fjerde repræsentation ligger i sin egen rude, så knappen leder
+   derhen — er der kun ét molekyle med en 3D-struktur, åbnes det direkte. */
+document.getElementById('btn-3d').addEventListener('click', () => {
+    const withSdf = molecules.filter(m => m._model.info.sdf);
+    if (withSdf.length === 1) openViewer(withSdf[0]._model.info);
+    else if (withSdf.length === 0)
+        setStatus('Der er ingen molekyler på bordet med en 3D-struktur endnu. Læg fx en glukose ud, og prøv igen.', 'error');
+    else
+        setStatus(`${withSdf.length} molekyler kan vises i 3D — klik 👁 under det du vil se.`, 'info');
+});
+
+/* =====================================================================
    3D viewer (3Dmol.js, real PubChem coordinates)
    ===================================================================== */
 
@@ -1749,7 +2567,11 @@ let spinning = true;
 
 document.getElementById('viewer-close').addEventListener('click', closeViewer);
 modal.addEventListener('click', e => { if (e.target === modal) closeViewer(); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeViewer(); });
+document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    closeViewer();
+    closeFacts();
+});
 
 btnSpin.addEventListener('click', () => {
     spinning = !spinning;

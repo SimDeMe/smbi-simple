@@ -7,48 +7,22 @@ forgreninger), α/β-anomerer, nummererede C-atomer, 3D-visning via PubChem-SDF,
 enzymblokke (amylase, maltase, sakkarase, laktase, cellulase) med
 substratspecificitet og laktoseintolerans-scenarie.
 
+Dertil (punkt 6–8, bygget):
+
+- **Repræsentationsskift** — Visning: Blokke / Haworth / Formel, plus 3D-knappen.
+  Alle visninger bruger samme layout og samme bindingspunkter, så det er
+  tydeligt at det er det samme molekyle. Haworth tegner ringen med
+  OH-grupperne i korrekt α/β-orientering (og C4 op på galaktose).
+- **Opgavemode** — 🎯 Opgaver: 8 opgaver med automatisk tjek, forklaring
+  bagefter, låste niveauer og en opsamling til sidst.
+- **Faktakort** — ℹ-knappen under hvert molekyle: hvor det findes, relativ
+  sødme, reducerende/ikke-reducerende (beregnet ud fra frie anomere C-atomer),
+  fordøjelighed og energi/rolle.
+
 Nedenstående punkter er ikke bygget endnu. Rækkefølgen er den oprindelige
 nummerering fra idélisten, ikke en prioritering.
 
 ---
-
-## 6. Repræsentationsskift
-
-Toggle mellem fire repræsentationer af **samme** molekyle:
-
-1. Blokke (nuværende visning)
-2. Haworth-formel
-3. Molekyleformel / sumformel
-4. 3D (findes allerede)
-
-Formålet er repræsentationskompetence — at eleverne kan se at det er det samme
-molekyle. Haworth-delen er den dyre: kræver tegnede ringe med OH-grupper i
-korrekt α/β-orientering.
-
-## 7. Opgavemode
-
-Opgaver med automatisk tjek og en kort forklaring bagefter:
-
-- "Byg laktose"
-- "Byg en kæde der ikke kan fordøjes af mennesker" (cellulose)
-- "Lav 4 vandmolekyler ved kondensation"
-- "Byg et forgrenet polysakkarid"
-- "Byg to disakkarider med samme sumformel, men forskellig binding"
-
-Gør appen brugbar til selvstændigt elevarbejde, ikke kun tavledemo.
-Overvej progression/låste niveauer og en kort opsamling til sidst.
-
-## 8. Faktakort på molekylerne
-
-Klik på et molekyle → kort med:
-
-- Hvor findes det (mælk, rørsukker, malt, kartofler, træ, lever/muskler)
-- Relativ sødme
-- Reducerende eller ikke-reducerende sukker
-- Fordøjelighed for mennesker
-- Energiindhold / rolle i organismen
-
-Lav kontekst pr. molekyle, lille arbejdsindsats.
 
 ## 9. Samme motor til proteiner og fedt
 
