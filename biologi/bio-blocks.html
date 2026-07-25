@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Bio-Blocks: fra monosakkarider til disakkarider</title>
+    <title>Bio-Blocks: fra monosakkarider til polysakkarider</title>
     <script defer src="https://3Dmol.org/build/3Dmol-min.js"></script>
     <style>
         * { box-sizing: border-box; }
@@ -22,25 +22,38 @@
         /* ---------- Top bar ---------- */
         header {
             background: #fff;
-            padding: 10px 16px;
+            padding: 8px 14px;
             box-shadow: 0 2px 6px rgba(0,0,0,0.08);
             display: flex;
-            gap: 10px;
+            gap: 8px;
             align-items: center;
             justify-content: center;
             flex-wrap: wrap;
             z-index: 10;
         }
+        .group {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+        .group + .group { border-left: 1px solid #e4e9ec; padding-left: 10px; }
+        .group-label {
+            font-size: 11px;
+            font-weight: bold;
+            color: #95a5a6;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
 
         .spawner, .btn-flat {
             border: none;
-            padding: 10px 14px;
+            padding: 9px 13px;
             border-radius: 8px;
             font-family: inherit;
             font-weight: bold;
             color: white;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 13.5px;
             box-shadow: 0 4px 0 rgba(0,0,0,0.2);
             transition: transform 0.08s, box-shadow 0.08s;
         }
@@ -51,6 +64,35 @@
         .btn-gal { background-color: #e6a700; }
         .btn-reset { background-color: #34495e; }
 
+        /* α / β segmented control */
+        .seg { display: flex; border: 2px solid #2471a3; border-radius: 8px; overflow: hidden; }
+        .seg button {
+            border: none;
+            background: #fff;
+            color: #2471a3;
+            font-family: inherit;
+            font-size: 16px;
+            font-weight: bold;
+            padding: 6px 15px;
+            cursor: pointer;
+        }
+        .seg button + button { border-left: 2px solid #2471a3; }
+        .seg button.active { background: #2471a3; color: #fff; }
+
+        .chip {
+            border: 1px solid #dfe6e9;
+            background: #f7f9fa;
+            color: #2c3e50;
+            padding: 8px 11px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: bold;
+            font-size: 12.5px;
+        }
+        .chip:hover { background: #eef2f4; }
+        .chip.active { background: #2980b9; border-color: #2980b9; color: #fff; }
+
         .counter {
             display: flex;
             align-items: center;
@@ -60,7 +102,7 @@
             color: #2471a3;
             border-radius: 8px;
             padding: 8px 12px;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: bold;
         }
         .counter b { font-size: 16px; }
@@ -78,15 +120,15 @@
         #status {
             position: absolute;
             left: 50%;
-            bottom: 16px;
+            bottom: 14px;
             transform: translateX(-50%);
             background: rgba(255,255,255,0.95);
             border: 1px solid #dfe6e9;
             border-left: 5px solid #7f8c8d;
             border-radius: 8px;
             padding: 9px 16px;
-            font-size: 14px;
-            max-width: min(92%, 640px);
+            font-size: 13.5px;
+            max-width: min(92%, 720px);
             text-align: center;
             box-shadow: 0 3px 10px rgba(0,0,0,0.08);
             transition: border-color 0.2s, background 0.2s;
@@ -103,20 +145,15 @@
             transform-box: fill-box;
             transform-origin: center;
         }
-        .molecule.dragging .mol-inner { transform: scale(1.04); }
+        .molecule.dragging .mol-inner { transform: scale(1.03); }
 
         .shape-body {
             stroke: rgba(0,0,0,0.22);
             stroke-width: 2px;
         }
-        .molecule.candidate .shape-body {
-            stroke: #2c3e50;
-            stroke-width: 4px;
-            stroke-dasharray: 8 5;
-        }
 
         .label-abbr {
-            font-size: 22px;
+            font-size: 20px;
             font-weight: 900;
             fill: white;
             text-anchor: middle;
@@ -124,40 +161,62 @@
             letter-spacing: 1px;
         }
         .label-name {
-            font-size: 11px;
+            font-size: 10.5px;
             font-weight: bold;
-            fill: rgba(255,255,255,0.9);
+            fill: rgba(255,255,255,0.92);
             text-anchor: middle;
             pointer-events: none;
         }
+        /* Carbon numbering printed inside the ring */
+        .c-num {
+            font-size: 10px;
+            font-weight: bold;
+            fill: rgba(255,255,255,0.78);
+            text-anchor: middle;
+            pointer-events: none;
+        }
+        .c-num.ring-o { fill: rgba(255,255,255,0.95); }
 
-        .bond-line { stroke: #566573; stroke-width: 7; stroke-linecap: round; }
-        .bond-atom { fill: #ffffff; stroke: #566573; stroke-width: 3; }
+        /* C6 stub — the branching site */
+        .arm-line { stroke: #90a4ae; stroke-width: 3; stroke-linecap: round; }
+        .arm-dot  { fill: #ffffff; stroke: #90a4ae; stroke-width: 2.5; }
+        .arm-text { font-size: 10px; font-weight: bold; fill: #78909c; text-anchor: middle; pointer-events: none; }
+
+        .bond-line { stroke: #566573; stroke-width: 6; stroke-linecap: round; }
+        .bond-atom { fill: #ffffff; stroke: #566573; stroke-width: 3; cursor: pointer; transition: fill 0.15s; }
+        .bond-hit:hover .bond-atom { fill: #fadbd8; stroke: #c0392b; }
         .bond-atom-text {
-            font-size: 13px; font-weight: 900; fill: #566573;
+            font-size: 12px; font-weight: 900; fill: #566573;
             text-anchor: middle; pointer-events: none;
         }
+        .bond-hit:hover .bond-atom-text { fill: #c0392b; }
         .bond-note {
-            font-size: 11px; fill: #566573; text-anchor: middle;
-            pointer-events: none; font-style: italic;
+            font-size: 10.5px; fill: #4a5b6a; text-anchor: middle;
+            pointer-events: none; font-weight: bold;
         }
 
         .product-bg { fill: #ffffff; stroke: #d5dbdb; stroke-width: 1.5; }
         .product-label {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 900;
             fill: #2c3e50;
             text-anchor: middle;
             pointer-events: none;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.3px;
+        }
+        .info-line {
+            font-size: 11px; fill: #7f8c8d; text-anchor: middle; pointer-events: none;
+        }
+        .info-note {
+            font-size: 11px; fill: #2471a3; text-anchor: middle; pointer-events: none;
+            font-style: italic;
         }
 
         /* Small round action buttons drawn inside the SVG */
         .badge { cursor: pointer; }
         .badge circle { fill: #ffffff; stroke: #b2bec3; stroke-width: 2; transition: fill 0.15s; }
         .badge text {
-            font-size: 15px; text-anchor: middle; pointer-events: none;
+            font-size: 14px; text-anchor: middle; pointer-events: none;
             fill: #2c3e50; font-weight: bold;
         }
         .badge:hover circle { fill: #dfe6e9; }
@@ -165,6 +224,18 @@
         .badge-3d text  { fill: #2980b9; }
         .badge-cut circle { stroke: #c0392b; }
         .badge-cut text  { fill: #c0392b; }
+        .badge-flip circle { stroke: #8e44ad; }
+        .badge-flip text  { fill: #8e44ad; font-size: 13px; }
+
+        /* ---------- Bond preview while dragging ---------- */
+        .pv-line { stroke-width: 4; stroke-dasharray: 7 5; fill: none; }
+        .pv-dot  { fill: #fff; stroke-width: 3; }
+        .pv-text { font-size: 12px; font-weight: bold; text-anchor: middle; }
+        .pv-ok .pv-line, .pv-ok .pv-dot { stroke: #27ae60; }
+        .pv-ok .pv-text { fill: #1e8449; }
+        .pv-no .pv-line, .pv-no .pv-dot { stroke: #e74c3c; }
+        .pv-no .pv-text { fill: #c0392b; }
+        .pv-bg { fill: rgba(255,255,255,0.92); stroke: none; }
 
         /* ---------- Effects ---------- */
         .fx-water text {
@@ -247,7 +318,7 @@
         .viewer-container {
             position: relative;
             width: 100%;
-            height: min(58vh, 470px);
+            height: min(56vh, 450px);
             border: 1px solid #ecf0f1;
             border-radius: 8px;
             background: linear-gradient(180deg, #f8fbff 0%, #eef3f7 100%);
@@ -266,11 +337,32 @@
 <body>
 
 <header>
-    <button class="spawner btn-glu" onclick="spawn('glucose')">⬢ Glukose</button>
-    <button class="spawner btn-fru" onclick="spawn('fructose')">⬟ Fruktose</button>
-    <button class="spawner btn-gal" onclick="spawn('galactose')">⬢ Galaktose</button>
-    <div class="counter">💧 Vand dannet: <b id="water-count">0</b></div>
-    <button class="spawner btn-reset" onclick="resetGame()">Ryd bordet</button>
+    <div class="group">
+        <span class="group-label">Form</span>
+        <div class="seg" id="anomer-seg">
+            <button data-anomer="a" class="active" title="α-form: OH-gruppen på C1 peger nedad">α</button>
+            <button data-anomer="b" title="β-form: OH-gruppen på C1 peger opad">β</button>
+        </div>
+    </div>
+
+    <div class="group">
+        <button class="spawner btn-glu" onclick="spawn('glucose')">⬢ Glukose</button>
+        <button class="spawner btn-fru" onclick="spawn('fructose')">⬟ Fruktose</button>
+        <button class="spawner btn-gal" onclick="spawn('galactose')">⬢ Galaktose</button>
+    </div>
+
+    <div class="group">
+        <span class="group-label">Hurtigbyg</span>
+        <button class="chip" onclick="quickBuild('amylose')">Amylose</button>
+        <button class="chip" onclick="quickBuild('cellulose')">Cellulose</button>
+        <button class="chip" onclick="quickBuild('glycogen')">Glykogen</button>
+    </div>
+
+    <div class="group">
+        <button class="chip active" id="btn-numbers">C-numre</button>
+        <div class="counter">💧 Vand: <b id="water-count">0</b></div>
+        <button class="spawner btn-reset" onclick="resetGame()">Ryd bordet</button>
+    </div>
 </header>
 
 <div id="game-area">
@@ -290,9 +382,10 @@
             </filter>
         </defs>
         <g id="layer-molecules"></g>
+        <g id="layer-preview"></g>
         <g id="layer-fx"></g>
     </svg>
-    <div id="status">Træk to sukkerarter oven i hinanden for at danne et disakkarid. Klik på 👁 for at se molekylet i 3D.</div>
+    <div id="status">Vælg α eller β, læg sukkerarter på bordet og træk dem sammen — kæden kan blive så lang du vil. Klik på et O i en binding for at hydrolysere netop den.</div>
 </div>
 
 <div id="viewer-modal" class="hidden">
@@ -314,102 +407,327 @@
 
 <script>
 /* =====================================================================
-   Bio-Blocks — monosakkarider → disakkarider
+   Bio-Blocks — monosakkarider → di- → polysakkarider
+
+   A molecule is a tree of residues rooted at the reducing end:
+       { name, anomer, at4, at6, at2 }
+   Each field holds the residue that donates its anomeric carbon into this
+   residue's C4, C6 or C2 respectively:
+       at4 — the ordinary 1,4-chain of starch and cellulose
+       at6 — the α-1,6 branch point of glycogen and amylopectin
+       at2 — fructose only: the 1,2-bond of sucrose
+
+   A residue is bonded to its parent through its own anomeric carbon, so
+   every residue has at most one parent and the root is the only one with
+   a free anomeric carbon — the reducing end. Cutting any parent-child
+   edge therefore releases exactly one fragment and creates exactly one
+   new reducing end, which is precisely what hydrolysis does.
    ===================================================================== */
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 const svgSpace  = document.getElementById('svg-space');
 const molLayer  = document.getElementById('layer-molecules');
+const pvLayer   = document.getElementById('layer-preview');
 const fxLayer   = document.getElementById('layer-fx');
 const statusBar = document.getElementById('status');
 const waterOut  = document.getElementById('water-count');
 
-/* --- Geometry: every monomer sits in a 120 × 104 box, centre (60, 52) --- */
-const UNIT_W = 120, UNIT_H = 104, UNIT_CX = 60, UNIT_CY = 52;
-const GAP    = 50;                    // space for the glycosidic oxygen
-const STEP   = UNIT_W + GAP;          // distance between two bonded units
-const BOND_NOTE_Y = UNIT_H + 20;      // caption under the rings
-const BADGE_Y     = UNIT_H + 48;      // round action buttons under that
-const MOL_BOTTOM  = BADGE_Y + 17;     // lowest painted pixel, relative to origin
-const MOL_TOP     = -40;              // highest (the product label)
-const WATER_Y     = MOL_TOP - 14;     // water is emitted clear of the label
+/* ---------- Geometry: every residue sits in a UNIT_W × UNIT_H box ---------- */
+const UNIT_W = 110, UNIT_H = 96;
+const UNIT_CX = 55, UNIT_CY = 48;
+const GAP     = 44;
+const STEP    = UNIT_W + GAP;     // horizontal distance between bonded residues
+const ROW_H   = UNIT_H + 62;      // vertical distance to a branch row
+const ARM     = 32;               // reserved space for the C6 stub, above and below
+const SNAP    = 115;              // how close two binding sites must be to react
 
 const SHAPES = {
-    hex:  "M30 0 L90 0 L120 52 L90 104 L30 104 L0 52 Z",
-    pent: "M60 0 L114 39 L93 104 L27 104 L6 39 Z"
+    hex:  "M27.5 0 L82.5 0 L110 48 L82.5 96 L27.5 96 L0 48 Z",
+    pent: "M55 0 L104.5 36 L85 96 L25 96 L5.5 36 Z"
+};
+
+/* Carbon labels, placed at the ring position they actually occupy in a
+   Haworth projection (ring O top right, C1 right, then counter-clockwise). */
+const CARBONS = {
+    hex:  [['5', 33, 12], ['O', 77, 12, 'ring-o'], ['1', 95, 48],
+           ['2', 79, 81], ['3', 31, 81], ['4', 15, 48]],
+    pent: [['O', 55, 13, 'ring-o'], ['1', 84, 26], ['2', 92, 46],
+           ['3', 76, 80], ['4', 34, 80], ['5', 18, 46], ['6', 26, 26]]
 };
 
 /* --- Molecule catalogue --------------------------------------------- */
 const MOL = {
-    glucose:   { da: 'Glukose',   abbr: 'GLU', shape: 'hex',  formula: 'C₆H₁₂O₆',   sdf: '../Molecules/glucose.sdf'   },
-    fructose:  { da: 'Fruktose',  abbr: 'FRU', shape: 'pent', formula: 'C₆H₁₂O₆',   sdf: '../Molecules/fructose.sdf'  },
-    galactose: { da: 'Galaktose', abbr: 'GAL', shape: 'hex',  formula: 'C₆H₁₂O₆',   sdf: '../Molecules/galactose.sdf' },
-
-    maltose:   { da: 'Maltose',   formula: 'C₁₂H₂₂O₁₁', sdf: '../Molecules/maltose.sdf', bond: 'α-1,4-glykosidbinding' },
-    sucrose:   { da: 'Sakkarose', formula: 'C₁₂H₂₂O₁₁', sdf: '../Molecules/sucrose.sdf', bond: 'α-1,β-2-glykosidbinding' },
-    lactose:   { da: 'Laktose',   formula: 'C₁₂H₂₂O₁₁', sdf: '../Molecules/lactose.sdf', bond: 'β-1,4-glykosidbinding' }
+    glucose:   { da: 'Glukose',   abbr: 'GLU', shape: 'hex',  sdf: '../Molecules/glucose.sdf',
+                 note: 'Druesukker — cellernes vigtigste brændstof.' },
+    fructose:  { da: 'Fruktose',  abbr: 'FRU', shape: 'pent', sdf: '../Molecules/fructose.sdf',
+                 note: 'Frugtsukker — femring (furanose) og den sødeste af de tre.' },
+    galactose: { da: 'Galaktose', abbr: 'GAL', shape: 'hex',  sdf: '../Molecules/galactose.sdf',
+                 note: 'Adskiller sig fra glukose ved OH-gruppen på C4.' }
 };
 
-/* Only these three combinations are real, common disaccharides.
-   `order` fixes which monomer is drawn to the left, so the picture
-   matches the way the disaccharide is normally written.             */
-const RECIPES = {
-    'glucose+glucose':   { key: 'maltose', order: ['glucose', 'glucose'] },
-    'fructose+glucose':  { key: 'sucrose', order: ['glucose', 'fructose'] },
-    'galactose+glucose': { key: 'lactose', order: ['galactose', 'glucose'] }
+/* Disaccharides, keyed by donor|anomer|acceptor-carbon|acceptor */
+const DISACC = {
+    'glucose|a|4|glucose':   { da: 'Maltose',    sdf: '../Molecules/maltose.sdf',
+        note: 'Maltsukker fra nedbrudt stivelse — spaltes af maltase.' },
+    'glucose|b|4|glucose':   { da: 'Cellobiose', sdf: '../Molecules/cellobiose.sdf',
+        note: 'Byggestenen i cellulose. Kun β-1,4 adskiller den fra maltose.' },
+    'glucose|a|6|glucose':   { da: 'Isomaltose', sdf: '../Molecules/isomaltose.sdf',
+        note: 'Grenpunktet i amylopektin og glykogen.' },
+    'glucose|b|6|glucose':   { da: 'Gentiobiose', sdf: null,
+        note: 'Sjælden β-1,6-binding — findes bl.a. i plantefarvestoffer.' },
+    'galactose|b|4|glucose': { da: 'Laktose',    sdf: '../Molecules/lactose.sdf',
+        note: 'Mælkesukker — kræver enzymet laktase for at kunne optages.' },
+    'galactose|a|6|glucose': { da: 'Melibiose',  sdf: null,
+        note: 'Findes i bælgfrugter — mennesker mangler enzymet til den.' },
+    'glucose|a|2|fructose':  { da: 'Sakkarose',  sdf: '../Molecules/sucrose.sdf',
+        note: 'Rør- og roesukker. Begge anomere C-atomer er bundet → ikke-reducerende.' }
 };
 
-const SNAP_DISTANCE = 150;
+const SUB = '₀₁₂₃₄₅₆₇₈₉';
 
 let molecules = [];
-let idCounter = 0;
 let waterCount = 0;
+let currentAnomer = 'a';
+let showNumbers = true;
 
 /* =====================================================================
-   Building molecules
+   Tree helpers
    ===================================================================== */
 
-function makeMolecule(units, x, y) {
+const SITE_FIELD = { 2: 'at2', 4: 'at4', 6: 'at6' };
+
+function residue(name, anomer) {
+    return { name, anomer: anomer || currentAnomer, at4: null, at6: null, at2: null };
+}
+
+/* The residue further from the reducing end along the main chain */
+function upstream(n) { return n.at4 || n.at2; }
+
+function chainLength(node) {
+    let n = node, c = 0;
+    while (n) { c++; n = upstream(n); }
+    return c;
+}
+
+/* Every residue, every glycosidic bond. Bonds carry everything the rest
+   of the app needs, so nothing about a bond is ever stored twice. */
+function analyse(root) {
+    const nodes = [], bonds = [];
+    (function walk(n) {
+        nodes.push(n);
+        [4, 2, 6].forEach(site => {
+            const donor = n[SITE_FIELD[site]];
+            if (!donor) return;
+            bonds.push({ donor, acceptor: n, site, anomer: donor.anomer });
+            walk(donor);
+        });
+    })(root);
+    return { nodes, bonds };
+}
+
+/* The free binding sites of a molecule. There is never more than one free
+   anomeric carbon — that is the reducing end, and it is the root. */
+function freeSites(nodes, bonds) {
+    const donors = new Set(bonds.map(b => b.donor));
+    const sites  = [];
+
+    nodes.forEach(n => {
+        const fru = n.name === 'fructose';
+        // Fructose's anomeric carbon is C2, and it can act as donor or acceptor
+        if (!donors.has(n) && !(fru && n.at2)) sites.push({ node: n, kind: 'anomeric' });
+        if (!fru) {
+            if (!n.at4) sites.push({ node: n, kind: 'c4' });
+            if (!n.at6) sites.push({ node: n, kind: 'c6' });
+        }
+    });
+    return sites;
+}
+
+function hexFormula(n) {
+    const s = x => String(x).split('').map(d => SUB[+d]).join('');
+    return `C${s(6 * n)}H${s(10 * n + 2)}O${s(5 * n + 1)}`;
+}
+
+function greek(a) { return a === 'a' ? 'α' : 'β'; }
+
+function bondLabel(bond) {
+    if (bond.site === 2) return 'α-1,β-2';
+    return `${greek(bond.anomer)}-1,${bond.site}`;
+}
+
+/* =====================================================================
+   Naming — what have the students actually built?
+   ===================================================================== */
+
+function classify(nodes, bonds) {
+    const n = nodes.length;
+    const formula = hexFormula(n);
+
+    if (n === 1) {
+        const cfg = MOL[nodes[0].name];
+        return { name: `${greek(nodes[0].anomer)}-${cfg.da}`, formula,
+                 note: cfg.note, sdf: cfg.sdf, sdfNote: '' };
+    }
+
+    if (n === 2) {
+        const b = bonds[0];
+        const hit = DISACC[`${b.donor.name}|${b.anomer}|${b.site}|${b.acceptor.name}`];
+        if (hit) return { name: hit.da, formula, note: hit.note, sdf: hit.sdf, sdfNote: '' };
+        return { name: 'Disakkarid', formula, sdf: null,
+                 note: 'Kemisk muligt, men ikke et af de almindelige disakkarider.' };
+    }
+
+    const allGlucose = nodes.every(x => x.name === 'glucose');
+    const branched   = bonds.some(b => b.site === 6);
+    const only14     = a => bonds.every(b => b.site === 4 && b.anomer === a);
+
+    if (allGlucose && !branched && only14('a')) {
+        return n === 3
+            ? { name: 'Maltotriose', formula, sdf: '../Molecules/maltose.sdf',
+                sdfNote: 'viser maltose — gentagelsesenheden',
+                note: 'Tre α-1,4-bundne glukoser — begyndelsen på en stivelseskæde.' }
+            : { name: 'Amylose (stivelse)', formula, sdf: '../Molecules/maltose.sdf',
+                sdfNote: 'viser maltose — gentagelsesenheden',
+                note: 'α-1,4 giver en spiralformet kæde. Nedbrydes let af amylase.' };
+    }
+    if (allGlucose && !branched && only14('b')) {
+        return { name: n === 3 ? 'Cellotriose' : 'Cellulose', formula,
+                 sdf: '../Molecules/cellobiose.sdf',
+                 sdfNote: 'viser cellobiose — gentagelsesenheden',
+                 note: 'β-1,4 giver en lige, stiv kæde. Mennesker mangler cellulase.' };
+    }
+    if (allGlucose && branched &&
+        bonds.every(b => b.anomer === 'a' && (b.site === 4 || b.site === 6))) {
+        return { name: 'Amylopektin / glykogen', formula,
+                 sdf: '../Molecules/isomaltose.sdf',
+                 sdfNote: 'viser isomaltose — selve grenpunktet',
+                 note: 'α-1,6-grene giver mange frie ender → kan nedbrydes hurtigt.' };
+    }
+
+    return { name: n >= 10 ? 'Polysakkarid' : 'Oligosakkarid', formula, sdf: null,
+             note: 'Blandet kæde — prøv at bygge en ren α-1,4- eller β-1,4-kæde.' };
+}
+
+/* =====================================================================
+   Layout — grid positions for every residue
+   ===================================================================== */
+
+/* The reducing end sits furthest right, so chains grow leftwards — the way
+   carbohydrates are conventionally drawn. A β-1,4 bond flips the donor ring
+   180°; that alternating pattern is the visual signature of cellulose. */
+function layout(root) {
+    const pos  = new Map();
+    const used = new Map();          // row → Set of occupied columns
+
+    const take = (row, col) => {
+        if (!used.has(row)) used.set(row, new Set());
+        used.get(row).add(col);
+    };
+    const rowFree = (row, from, to) => {
+        const set = used.get(row);
+        if (!set) return true;
+        for (let c = from; c <= to; c++) if (set.has(c)) return false;
+        return true;
+    };
+
+    (function place(head, col, row, flip) {
+        let n = head, c = col, f = flip;
+        while (n) {
+            pos.set(n, { col: c, row, flip: f, mirrorX: n.name === 'fructose' });
+            take(row, c);
+
+            if (n.at6) {
+                // The branch donates into this residue's C6, which sits at the
+                // ring's top left — so the branch goes one row up and to the left.
+                // One spare column on each side so neighbouring branches do
+                // not merge into what looks like a single long chain
+                const len = chainLength(n.at6);
+                let end = c - 1;
+                while (!rowFree(row - 1, end - len, end + 1)) end--;
+                place(n.at6, end, row - 1, false);
+            }
+
+            if (n.at4 && n.at4.anomer === 'b') f = !f;
+            n = upstream(n);
+            c--;
+        }
+    })(root, 0, 0, false);
+
+    let minCol = Infinity, maxCol = -Infinity, minRow = Infinity, maxRow = -Infinity;
+    pos.forEach(p => {
+        minCol = Math.min(minCol, p.col); maxCol = Math.max(maxCol, p.col);
+        minRow = Math.min(minRow, p.row); maxRow = Math.max(maxRow, p.row);
+    });
+    pos.forEach(p => {
+        p.x = (p.col - minCol) * STEP;
+        p.y = (p.row - minRow) * ROW_H;
+    });
+
+    return {
+        pos,
+        gridW: (maxCol - minCol) * STEP + UNIT_W,
+        gridH: (maxRow - minRow) * ROW_H + UNIT_H
+    };
+}
+
+/* Local coordinates of a binding site, flips included */
+function sitePoint(node, kind, p) {
+    const pent = MOL[node.name].shape === 'pent';
+    let lx, ly;
+
+    if (kind === 'anomeric') {
+        if (pent) { lx = 104.5; ly = 36; }        // fructose: C2 at the right vertex
+        else      { lx = UNIT_W; ly = UNIT_CY; }  // pyranose: C1 at the right vertex
+    } else if (kind === 'c4') {
+        lx = 0; ly = UNIT_CY;
+    } else {                                       // c6 — the stub above the ring
+        lx = 27.5; ly = -26;
+    }
+
+    if (p.mirrorX) lx = UNIT_W - lx;
+    if (p.flip)    ly = UNIT_H - ly;
+    return { x: p.x + lx, y: p.y + ly };
+}
+
+/* =====================================================================
+   Building the SVG for one molecule
+   ===================================================================== */
+
+function makeMolecule(root, x, y) {
+    const { nodes, bonds } = analyse(root);
+    const { pos, gridW, gridH } = layout(root);
+    const info  = classify(nodes, bonds);
+    const sites = freeSites(nodes, bonds);
+    const n     = nodes.length;
+    const scale = n <= 2 ? 1 : n <= 4 ? 0.82 : n <= 6 ? 0.7 : 0.58;
+
     const g = document.createElementNS(SVG_NS, 'g');
     g.setAttribute('class', 'molecule appear');
     g.setAttribute('filter', 'url(#soft-shadow)');
-    g.dataset.id = ++idCounter;
-    g.dataset.units = units.join(',');
-    setPos(g, x, y);
+    molLayer.appendChild(g);
 
     const inner = document.createElementNS(SVG_NS, 'g');
     inner.setAttribute('class', 'mol-inner');
     g.appendChild(inner);
 
-    // Attach before drawing: getComputedTextLength() only works once rendered
-    molLayer.appendChild(g);
-
-    const width = moleculeWidth(units);
-    const isDi  = units.length === 2;
-    const product = isDi ? RECIPES[recipeKey(units)] : null;
-    if (product) g.dataset.product = product.key;
+    const gBonds = sub(inner), gArms = sub(inner), gUnits = sub(inner),
+          gDecor = sub(inner), gChrome = sub(inner);
 
     // Invisible hit area so the whole molecule — gaps included — can be grabbed
-    const hit = document.createElementNS(SVG_NS, 'rect');
-    hit.setAttribute('x', 0);
-    hit.setAttribute('y', 0);
-    hit.setAttribute('width', width);
-    hit.setAttribute('height', UNIT_H);
-    hit.setAttribute('fill', 'transparent');
+    const hit = rect(0, 0, gridW, gridH, 'transparent');
     hit.setAttribute('pointer-events', 'all');
-    inner.appendChild(hit);
+    gUnits.appendChild(hit);
 
-    // Bridge first, so the rings paint over its ends
-    if (isDi) drawBridge(inner);
+    drawArms(gArms, nodes, bonds, pos);
+    bonds.forEach(b => drawBond(gBonds, gDecor, b, pos));
+    nodes.forEach(node => drawUnit(gUnits, node, pos.get(node)));
 
-    units.forEach((name, i) => drawUnit(inner, name, i * STEP));
+    const extent = drawChrome(gChrome, info, bonds, gridW, gridH, n, scale);
 
-    if (isDi) {
-        drawBondNote(inner, width, MOL[product.key].bond);
-        drawProductLabel(inner, width, MOL[product.key]);
-    }
-
-    drawBadges(inner, width, isDi);
+    g.setAttribute('transform', `translate(${x}, ${y}) scale(${scale})`);
+    g._model = { root, nodes, bonds, pos, sites, info, scale };
+    g._box   = { w: gridW * scale, ...extent };
+    Object.assign(g.dataset, { x, y });
 
     g.addEventListener('pointerdown', startDrag);
     g.addEventListener('animationend', () => g.classList.remove('appear', 'shake'));
@@ -418,93 +736,165 @@ function makeMolecule(units, x, y) {
     return g;
 }
 
-function drawUnit(parent, name, offsetX) {
-    const cfg = MOL[name];
+function drawUnit(parent, node, p) {
+    const cfg  = MOL[node.name];
+    const pent = cfg.shape === 'pent';
+
     const unit = document.createElementNS(SVG_NS, 'g');
-    unit.setAttribute('transform', `translate(${offsetX}, 0)`);
+    let t = `translate(${p.x}, ${p.y})`;
+    if (p.mirrorX) t += ` translate(${UNIT_W},0) scale(-1,1)`;
+    if (p.flip)    t += ` translate(0,${UNIT_H}) scale(1,-1)`;
+    unit.setAttribute('transform', t);
+    parent.appendChild(unit);
 
     const path = document.createElementNS(SVG_NS, 'path');
     path.setAttribute('d', SHAPES[cfg.shape]);
-    path.setAttribute('fill', `url(#grad-${name})`);
+    path.setAttribute('fill', `url(#grad-${node.name})`);
     path.setAttribute('class', 'shape-body');
     unit.appendChild(path);
 
-    // The pentagon's visual centre sits a little lower than the hexagon's
-    const baseY = cfg.shape === 'pent' ? 58 : 52;
-
-    unit.appendChild(text(cfg.abbr, UNIT_CX, baseY, 'label-abbr'));
-    unit.appendChild(text(cfg.da, UNIT_CX, baseY + 17, 'label-name'));
-
-    parent.appendChild(unit);
-}
-
-function drawBridge(parent) {
-    const g = document.createElementNS(SVG_NS, 'g');
-    const midX = UNIT_W + GAP / 2;
-
-    const line = document.createElementNS(SVG_NS, 'line');
-    line.setAttribute('x1', UNIT_W - 6);  line.setAttribute('y1', UNIT_CY);
-    line.setAttribute('x2', UNIT_W + GAP + 6); line.setAttribute('y2', UNIT_CY);
-    line.setAttribute('class', 'bond-line');
-    g.appendChild(line);
-
-    const atom = document.createElementNS(SVG_NS, 'circle');
-    atom.setAttribute('cx', midX); atom.setAttribute('cy', UNIT_CY);
-    atom.setAttribute('r', 13);
-    atom.setAttribute('class', 'bond-atom');
-    g.appendChild(atom);
-
-    g.appendChild(text('O', midX, UNIT_CY + 5, 'bond-atom-text'));
-    parent.appendChild(g);
-}
-
-/* Drawn after the rings so it is never painted over */
-function drawBondNote(parent, width, note) {
-    parent.appendChild(text(note, width / 2, BOND_NOTE_Y, 'bond-note'));
-}
-
-function drawProductLabel(parent, width, cfg) {
-    const g = document.createElementNS(SVG_NS, 'g');
-    parent.appendChild(g);
-
-    const label = text(`${cfg.da} · ${cfg.formula}`, width / 2, MOL_TOP + 21, 'product-label');
-    g.appendChild(label);
-
-    // Size the pill from the rendered text rather than a character-count guess
-    const w = label.getComputedTextLength() + 28;
-    const rect = document.createElementNS(SVG_NS, 'rect');
-    rect.setAttribute('class', 'product-bg');
-    rect.setAttribute('x', width / 2 - w / 2);
-    rect.setAttribute('y', MOL_TOP);
-    rect.setAttribute('width', w);
-    rect.setAttribute('height', 30);
-    rect.setAttribute('rx', 8);
-    g.insertBefore(rect, label);
-}
-
-function drawBadges(parent, width, isDi) {
-    const y = BADGE_Y;
-    if (isDi) {
-        parent.appendChild(badge(width / 2 - 24, y, '👁', 'badge-3d', 'view'));
-        parent.appendChild(badge(width / 2 + 24, y, '✂', 'badge-cut', 'split'));
-    } else {
-        parent.appendChild(badge(width / 2, y, '👁', 'badge-3d', 'view'));
+    if (showNumbers) {
+        CARBONS[cfg.shape].forEach(([label, cx, cy, extra]) => {
+            // Mirrors are undone on the text itself so numbers stay readable
+            const tg = document.createElementNS(SVG_NS, 'g');
+            let tt = `translate(${cx}, ${cy})`;
+            if (p.mirrorX) tt += ' scale(-1,1)';
+            if (p.flip)    tt += ' scale(1,-1)';
+            tg.setAttribute('transform', tt);
+            tg.appendChild(text(label, 0, 3.5, 'c-num' + (extra ? ' ' + extra : '')));
+            unit.appendChild(tg);
+        });
     }
+
+    // Labels are drawn in an un-mirrored group so they always read left to right
+    const lab = document.createElementNS(SVG_NS, 'g');
+    lab.setAttribute('transform', `translate(${p.x}, ${p.y})`);
+    parent.appendChild(lab);
+
+    const baseY = pent ? 56 : 50;
+    lab.appendChild(text(cfg.abbr, UNIT_CX, baseY, 'label-abbr'));
+    lab.appendChild(text(`${greek(node.anomer)}-${cfg.da}`, UNIT_CX, baseY + 16, 'label-name'));
 }
 
-function badge(cx, cy, glyph, cls, action) {
-    const g = document.createElementNS(SVG_NS, 'g');
-    g.setAttribute('class', `badge ${cls}`);
-    g.dataset.action = action;
+/* The C6 stub: drawn for every residue when numbering is on, and always
+   for residues that actually carry a branch. */
+function drawArms(parent, nodes, bonds, pos) {
+    const branched = new Set(bonds.filter(b => b.site === 6).map(b => b.acceptor));
+
+    nodes.forEach(node => {
+        if (MOL[node.name].shape !== 'hex') return;
+        if (!showNumbers && !branched.has(node)) return;
+
+        const p = pos.get(node);
+        const baseY = p.flip ? p.y + UNIT_H : p.y;
+        const dir   = p.flip ? 1 : -1;
+        const bx    = p.x + 27.5;
+
+        parent.appendChild(line(bx, baseY, bx, baseY + dir * 18, 'arm-line'));
+
+        const c = document.createElementNS(SVG_NS, 'circle');
+        c.setAttribute('cx', bx);
+        c.setAttribute('cy', baseY + dir * 26);
+        c.setAttribute('r', 9);
+        c.setAttribute('class', 'arm-dot');
+        parent.appendChild(c);
+        parent.appendChild(text('6', bx, baseY + dir * 26 + 3.5, 'arm-text'));
+    });
+}
+
+function drawBond(lineLayer, decorLayer, bond, pos) {
+    const a = sitePoint(bond.donor, 'anomeric', pos.get(bond.donor));
+    const b = sitePoint(bond.acceptor,
+                        bond.site === 6 ? 'c6' : bond.site === 2 ? 'anomeric' : 'c4',
+                        pos.get(bond.acceptor));
+    const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+
+    lineLayer.appendChild(line(a.x, a.y, b.x, b.y, 'bond-line'));
+
+    const hit = document.createElementNS(SVG_NS, 'g');
+    hit.setAttribute('class', 'bond-hit');
+    hit.dataset.bond = '1';
+    hit._bond = bond;
+    decorLayer.appendChild(hit);
 
     const c = document.createElementNS(SVG_NS, 'circle');
-    c.setAttribute('cx', cx); c.setAttribute('cy', cy); c.setAttribute('r', 15);
-    g.appendChild(c);
-    g.appendChild(text(glyph, cx, cy + 5, ''));
+    c.setAttribute('cx', mid.x); c.setAttribute('cy', mid.y);
+    c.setAttribute('r', 12);
+    c.setAttribute('class', 'bond-atom');
+    hit.appendChild(c);
+    hit.appendChild(text('O', mid.x, mid.y + 4.5, 'bond-atom-text'));
 
     const title = document.createElementNS(SVG_NS, 'title');
-    title.textContent = action === 'view' ? 'Se molekylet i 3D' : 'Hydrolyse: bryd bindingen';
-    g.appendChild(title);
+    title.textContent = `${bondLabel(bond)} — klik for at hydrolysere netop denne binding`;
+    hit.appendChild(title);
+
+    // Sideways for the diagonal branch bond, above the line for the rest
+    const off = bond.site === 6 ? { x: 30, y: -4 } : { x: 0, y: -19 };
+    decorLayer.appendChild(text(bondLabel(bond), mid.x + off.x, mid.y + off.y, 'bond-note'));
+}
+
+/* Name pill on top, summary lines and action buttons below.
+
+   The chrome is counter-scaled, so the name and the summary stay the same
+   size no matter how much a long chain has been shrunk. Coordinates are
+   therefore given in on-screen pixels rather than grid units.
+
+   Returns the molecule's extent: how far it reaches above and below the
+   grid, and how far the text sticks out past the rings on either side. */
+function drawChrome(parent, info, bonds, gridW, gridH, n, scale) {
+    parent.setAttribute('transform', `scale(${1 / scale})`);
+
+    const cx  = gridW / 2 * scale;
+    const arm = ARM * scale;
+    const top = -(arm + 30);
+    let widest = 0;
+
+    const say = (str, y, cls) => {
+        const t = text(str, cx, y, cls);
+        parent.appendChild(t);
+        widest = Math.max(widest, t.getComputedTextLength());
+        return t;
+    };
+
+    const label = say(`${info.name} · ${info.formula}`, top + 18, 'product-label');
+    const w = label.getComputedTextLength() + 26;
+    const bg = rect(cx - w / 2, top, w, 26, null);
+    bg.setAttribute('class', 'product-bg');
+    bg.setAttribute('rx', 8);
+    parent.insertBefore(bg, label);
+
+    let y = gridH * scale + arm + 18;
+    if (n > 1) {
+        const b = bonds.length;
+        say(`${n} monomerer · ${b} glykosidbinding${b === 1 ? '' : 'er'} · ${b} H₂O fraspaltet`,
+            y, 'info-line');
+        y += 16;
+    }
+    say(info.note, y, 'info-note');
+    y += 26;
+
+    const buttons = [];
+    if (info.sdf) buttons.push(['👁', 'badge-3d', 'view', 'Se molekylet i 3D']);
+    if (n === 1)  buttons.push(['α⇄β', 'badge-flip', 'flip', 'Skift mellem α- og β-form']);
+    if (n > 1)    buttons.push(['✂', 'badge-cut', 'cut', 'Fuld hydrolyse til monomerer']);
+
+    buttons.forEach(([glyph, cls, action, tip], i) => {
+        const bx = cx + (i - (buttons.length - 1) / 2) * 44;
+        parent.appendChild(badge(bx, y + 4, glyph, cls, action, tip));
+    });
+
+    return {
+        up:   -top + 4,
+        down: y + 24,
+        pad:  Math.max(0, (widest + 20 - gridW * scale) / 2)
+    };
+}
+
+/* ---------- small SVG helpers ---------- */
+
+function sub(parent) {
+    const g = document.createElementNS(SVG_NS, 'g');
+    parent.appendChild(g);
     return g;
 }
 
@@ -517,17 +907,103 @@ function text(str, x, y, cls) {
     return t;
 }
 
+function line(x1, y1, x2, y2, cls) {
+    const l = document.createElementNS(SVG_NS, 'line');
+    l.setAttribute('x1', x1); l.setAttribute('y1', y1);
+    l.setAttribute('x2', x2); l.setAttribute('y2', y2);
+    l.setAttribute('class', cls);
+    return l;
+}
+
+function rect(x, y, w, h, fill) {
+    const r = document.createElementNS(SVG_NS, 'rect');
+    r.setAttribute('x', x); r.setAttribute('y', y);
+    r.setAttribute('width', w); r.setAttribute('height', h);
+    if (fill) r.setAttribute('fill', fill);
+    return r;
+}
+
+function badge(cx, cy, glyph, cls, action, tip) {
+    const g = document.createElementNS(SVG_NS, 'g');
+    g.setAttribute('class', `badge ${cls}`);
+    g.dataset.action = action;
+
+    const c = document.createElementNS(SVG_NS, 'circle');
+    c.setAttribute('cx', cx); c.setAttribute('cy', cy); c.setAttribute('r', 15);
+    g.appendChild(c);
+    g.appendChild(text(glyph, cx, cy + 5, ''));
+
+    const title = document.createElementNS(SVG_NS, 'title');
+    title.textContent = tip;
+    g.appendChild(title);
+    return g;
+}
+
 /* =====================================================================
-   Spawning, dragging
+   Placing and moving molecules
    ===================================================================== */
 
 function spawn(name) {
     const area = svgSpace.getBoundingClientRect();
-    const x = 40 + Math.random() * Math.max(40, area.width - UNIT_W - 120);
-    const y = 50 + Math.random() * Math.max(40, area.height - MOL_BOTTOM - 140);
-    const mol = makeMolecule([name], Math.round(x), Math.round(y));
+    const x = 40 + Math.random() * Math.max(40, area.width - 300);
+    const y = 80 + Math.random() * Math.max(40, area.height - 340);
+    const mol = makeMolecule(residue(name), Math.round(x), Math.round(y));
     clampIntoView(mol);
-    setStatus(`${MOL[name].da} lagt på bordet.`, 'info');
+    setStatus(`${greek(currentAnomer)}-${MOL[name].da} lagt på bordet.`, 'info');
+}
+
+function quickBuild(kind) {
+    const glc = a => residue('glucose', a);
+    const form = kind === 'cellulose' ? 'b' : 'a';
+    const len  = kind === 'glycogen' ? 8 : 6;
+
+    // Build from the reducing end outwards
+    const root = glc(form);
+    const all  = [root];
+    let t = root;
+    for (let i = 1; i < len; i++) { t.at4 = glc(form); t = t.at4; all.push(t); }
+    let n = len;
+
+    if (kind === 'glycogen') {
+        // Real branch points sit several residues apart, which also keeps the
+        // two side chains from crowding each other on the row above
+        [2, 6].forEach(idx => {
+            const h = glc('a'); h.at4 = glc('a'); h.at4.at4 = glc('a');
+            all[idx].at6 = h;
+            n += 3;
+        });
+    }
+
+    const mol = makeMolecule(root, 60, 200);
+    clampIntoView(mol);
+    addWater(n - 1);
+    setStatus(`${mol._model.info.name} bygget af ${n} glukoseenheder — det har krævet ${n - 1} kondensationer og fraspaltet ${n - 1} vandmolekyler.`, 'ok');
+}
+
+function getPos(el) { return { x: +el.dataset.x, y: +el.dataset.y }; }
+
+function setPos(el, x, y) {
+    el.dataset.x = x;
+    el.dataset.y = y;
+    el.setAttribute('transform', `translate(${x}, ${y}) scale(${el._model.scale})`);
+}
+
+function clampIntoView(mol) {
+    const area = svgSpace.getBoundingClientRect();
+    const b = mol._box;
+    const minY = 8 + b.up;
+    const maxY = Math.max(minY, area.height - b.down - 64);
+    const minX = 10 + b.pad;                       // the caption is wider than the rings
+    const maxX = Math.max(minX, area.width - b.w - 10 - b.pad);
+    const p = getPos(mol);
+    setPos(mol,
+        Math.round(Math.min(Math.max(p.x, minX), maxX)),
+        Math.round(Math.min(Math.max(p.y, minY), maxY)));
+}
+
+function removeMolecule(mol) {
+    molecules = molecules.filter(m => m !== mol);
+    mol.remove();
 }
 
 let dragged = null;
@@ -536,18 +1012,22 @@ let activePointer = null;
 
 function startDrag(e) {
     if (e.button !== undefined && e.button !== 0) return;
-
     const mol = e.currentTarget;
 
-    // Badges are buttons, not drag handles
+    // Badges and bond oxygens are buttons, not drag handles
     const hitBadge = e.target.closest ? e.target.closest('.badge') : null;
     if (hitBadge) {
         e.preventDefault();
-        if (hitBadge.dataset.action === 'view') {
-            openViewer(mol.dataset.product || mol.dataset.units);
-        } else {
-            hydrolyse(mol);
-        }
+        const a = hitBadge.dataset.action;
+        if (a === 'view') openViewer(mol._model.info);
+        else if (a === 'cut') fullHydrolysis(mol);
+        else if (a === 'flip') flipAnomer(mol);
+        return;
+    }
+    const hitBond = e.target.closest ? e.target.closest('.bond-hit') : null;
+    if (hitBond) {
+        e.preventDefault();
+        hydrolyse(mol, hitBond._bond);
         return;
     }
 
@@ -572,7 +1052,7 @@ function doDrag(e) {
     e.preventDefault();
     const pt = toSvgPoint(e);
     setPos(dragged, pt.x - dragOffset.x, pt.y - dragOffset.y);
-    highlightCandidate(dragged);
+    showPreview(bestPair(dragged));
 }
 
 function endDrag(e) {
@@ -586,150 +1066,18 @@ function endDrag(e) {
     window.removeEventListener('pointerup', endDrag);
     window.removeEventListener('pointercancel', endDrag);
 
-    molecules.forEach(m => m.classList.remove('candidate'));
+    pvLayer.textContent = '';
     clampIntoView(mol);
-    tryFuse(mol);
-}
 
-/* Outline the molecule that would be bonded if the user let go now */
-function highlightCandidate(mol) {
-    const near = nearestNeighbour(mol);
-    molecules.forEach(m => m.classList.remove('candidate'));
-    if (near && isMonomer(mol) && isMonomer(near) && recipeFor(mol, near)) {
-        near.classList.add('candidate');
-    }
-}
-
-/* =====================================================================
-   Chemistry
-   ===================================================================== */
-
-function tryFuse(mol) {
-    const other = nearestNeighbour(mol);
-    if (!other) return;
-
-    if (!isMonomer(mol) || !isMonomer(other)) {
-        setStatus('Et disakkarid kan ikke binde mere her. Klik på ✂ for at hydrolysere det først.', 'info');
-        nudgeApart(mol, other);
-        return;
-    }
-
-    const recipe = recipeFor(mol, other);
-    if (!recipe) {
-        const a = MOL[unitsOf(mol)[0]].da, b = MOL[unitsOf(other)[0]].da;
-        setStatus(`${a} + ${b} danner ikke et af de tre almindelige disakkarider. Prøv med glukose.`, 'error');
+    const pair = bestPair(mol);
+    if (!pair) return;
+    if (pair.verdict.ok) {
+        condense(pair);
+    } else {
+        setStatus(pair.verdict.msg, 'error');
         mol.classList.add('shake');
-        nudgeApart(mol, other);
-        return;
+        nudgeApart(mol, pair.donorMol === mol ? pair.accMol : pair.donorMol);
     }
-
-    fuse(mol, other, recipe);
-}
-
-function fuse(a, b, recipe) {
-    const ca = centreOf(a), cb = centreOf(b);
-    const midX = (ca.x + cb.x) / 2;
-    const midY = (ca.y + cb.y) / 2;
-
-    removeMolecule(a);
-    removeMolecule(b);
-
-    const width = moleculeWidth(recipe.order);
-    const x = Math.round(midX - width / 2);
-    const y = Math.round(midY - UNIT_CY);
-    const di = makeMolecule(recipe.order, x, y);
-    clampIntoView(di);
-
-    const pos = getPos(di);
-    waterFx(pos.x + width / 2, pos.y + WATER_Y, 'out');
-
-    waterCount++;
-    waterOut.textContent = waterCount;
-
-    const cfg = MOL[recipe.key];
-    setStatus(`Kondensation: ${cfg.da} (${cfg.formula}) dannet via en ${cfg.bond} — og der fraspaltes ét molekyle vand.`, 'ok');
-}
-
-function hydrolyse(mol) {
-    const units = unitsOf(mol);
-    if (units.length < 2) return;
-
-    const pos = getPos(mol);
-    const productName = MOL[mol.dataset.product].da;
-    removeMolecule(mol);
-
-    waterFx(pos.x + moleculeWidth(units) / 2, pos.y + WATER_Y, 'in');
-
-    const left  = makeMolecule([units[0]], pos.x - 60, pos.y);
-    const right = makeMolecule([units[1]], pos.x + STEP + 60, pos.y + 20);
-    clampIntoView(left);
-    clampIntoView(right);
-
-    waterCount = Math.max(0, waterCount - 1);
-    waterOut.textContent = waterCount;
-
-    setStatus(`Hydrolyse: ${productName} spaltet til ${MOL[units[0]].da} + ${MOL[units[1]].da} — det kræver ét molekyle vand.`, 'ok');
-}
-
-function recipeKey(units) {
-    return [...units].sort().join('+');
-}
-
-function recipeFor(a, b) {
-    return RECIPES[recipeKey([unitsOf(a)[0], unitsOf(b)[0]])] || null;
-}
-
-/* =====================================================================
-   Helpers
-   ===================================================================== */
-
-function unitsOf(mol)        { return mol.dataset.units.split(','); }
-function isMonomer(mol)      { return unitsOf(mol).length === 1; }
-function moleculeWidth(units){ return UNIT_W + (units.length - 1) * STEP; }
-
-function centreOf(mol) {
-    const p = getPos(mol);
-    return { x: p.x + moleculeWidth(unitsOf(mol)) / 2, y: p.y + UNIT_CY };
-}
-
-function nearestNeighbour(mol) {
-    const c = centreOf(mol);
-    let best = null, bestDist = SNAP_DISTANCE;
-    molecules.forEach(other => {
-        if (other === mol) return;
-        const o = centreOf(other);
-        const d = Math.hypot(c.x - o.x, c.y - o.y);
-        if (d < bestDist) { bestDist = d; best = other; }
-    });
-    return best;
-}
-
-function nudgeApart(mol, other) {
-    const c = centreOf(mol), o = centreOf(other);
-    let dx = c.x - o.x, dy = c.y - o.y;
-    const d = Math.hypot(dx, dy) || 1;
-    if (d < 1) { dx = 1; dy = 0; }
-    const push = (SNAP_DISTANCE + 20 - d) / d;
-    const p = getPos(mol);
-    setPos(mol, Math.round(p.x + dx * push), Math.round(p.y + dy * push));
-    clampIntoView(mol);
-}
-
-function clampIntoView(mol) {
-    const area = svgSpace.getBoundingClientRect();
-    const w = moleculeWidth(unitsOf(mol));
-    const minY = 8 - WATER_Y + 58;    // room for the H₂O animation above the label
-    const maxY = Math.max(minY, area.height - MOL_BOTTOM - 62);   // 62 ≈ status bar
-    const maxX = Math.max(10, area.width - w - 10);
-    const p = getPos(mol);
-    setPos(mol,
-        Math.round(Math.min(Math.max(p.x, 10), maxX)),
-        Math.round(Math.min(Math.max(p.y, minY), maxY)));
-}
-
-function removeMolecule(mol) {
-    molecules = molecules.filter(m => m !== mol);
-    mol.remove();
 }
 
 function toSvgPoint(evt) {
@@ -739,13 +1087,208 @@ function toSvgPoint(evt) {
     return pt.matrixTransform(svgSpace.getScreenCTM().inverse());
 }
 
-function getPos(el) {
-    const m = (el.getAttribute('transform') || '').match(/translate\(\s*([-\d.]+)[ ,]+([-\d.]+)\s*\)/);
-    return m ? { x: parseFloat(m[1]), y: parseFloat(m[2]) } : { x: 0, y: 0 };
+function nudgeApart(mol, other) {
+    const c = centreOf(mol), o = centreOf(other);
+    let dx = c.x - o.x, dy = c.y - o.y;
+    const d = Math.hypot(dx, dy) || 1;
+    if (d < 1) { dx = 1; dy = 0; }
+    const push = (SNAP + 40 - d) / d;
+    const p = getPos(mol);
+    setPos(mol, Math.round(p.x + dx * push), Math.round(p.y + dy * push));
+    clampIntoView(mol);
 }
 
-function setPos(el, x, y) {
-    el.setAttribute('transform', `translate(${x}, ${y})`);
+function centreOf(mol) {
+    const p = getPos(mol), b = mol._box;
+    return { x: p.x + b.w / 2, y: p.y + (b.down - b.up) / 2 };
+}
+
+/* =====================================================================
+   Chemistry — which sites may react, and what happens when they do
+   ===================================================================== */
+
+/* Absolute position of a free site, molecule scale included */
+function absSite(mol, site) {
+    const p = getPos(mol), s = mol._model.scale;
+    const local = sitePoint(site.node, site.kind, mol._model.pos.get(site.node));
+    return { x: p.x + local.x * s, y: p.y + local.y * s };
+}
+
+function verdictFor(donorNode, accNode, site) {
+    if (donorNode.name === 'fructose')
+        return { ok: false, msg: 'Fruktose kan ikke være donor her — den binder kun med sit C2 til α-glukosens C1 i sakkarose.',
+                 short: 'Fruktose kan ikke donere' };
+
+    if (site === 2) {
+        if (donorNode.name !== 'glucose')
+            return { ok: false, msg: 'Kun glukose kan binde til fruktose. Sammen danner de sakkarose.',
+                     short: 'Kræver glukose' };
+        if (donorNode.anomer !== 'a')
+            return { ok: false, msg: 'Sakkarose kræver α-glukose. Klik α⇄β på glukosen og prøv igen.',
+                     short: 'Kræver α-glukose' };
+    }
+    return { ok: true };
+}
+
+/* The pair of free sites that would react if the user let go now */
+function bestPair(mol) {
+    let best = null, bestDist = SNAP;
+
+    molecules.forEach(other => {
+        if (other === mol) return;
+
+        [[mol, other], [other, mol]].forEach(([dMol, aMol]) => {
+            const donor = dMol._model.sites.find(s => s.kind === 'anomeric');
+            if (!donor) return;
+            const dp = absSite(dMol, donor);
+
+            aMol._model.sites.forEach(acc => {
+                let site = null;
+                if (acc.kind === 'c4') site = 4;
+                else if (acc.kind === 'c6') site = 6;
+                else if (acc.kind === 'anomeric' && acc.node.name === 'fructose') site = 2;
+                if (!site) return;
+
+                const ap = absSite(aMol, acc);
+                const d = Math.hypot(dp.x - ap.x, dp.y - ap.y);
+                if (d >= bestDist) return;
+
+                bestDist = d;
+                best = {
+                    donorMol: dMol, accMol: aMol, donor, acc, site,
+                    dp, ap,
+                    verdict: verdictFor(donor.node, acc.node, site),
+                    label: site === 2 ? 'α-1,β-2' : `${greek(donor.node.anomer)}-1,${site}`
+                };
+            });
+        });
+    });
+
+    return best;
+}
+
+function showPreview(pair) {
+    pvLayer.textContent = '';
+    if (!pair) return;
+
+    const g = document.createElementNS(SVG_NS, 'g');
+    g.setAttribute('class', pair.verdict.ok ? 'pv-ok' : 'pv-no');
+    pvLayer.appendChild(g);
+
+    g.appendChild(line(pair.dp.x, pair.dp.y, pair.ap.x, pair.ap.y, 'pv-line'));
+    [pair.dp, pair.ap].forEach(p => {
+        const c = document.createElementNS(SVG_NS, 'circle');
+        c.setAttribute('cx', p.x); c.setAttribute('cy', p.y);
+        c.setAttribute('r', 9);
+        c.setAttribute('class', 'pv-dot');
+        g.appendChild(c);
+    });
+
+    const mx = (pair.dp.x + pair.ap.x) / 2;
+    const my = (pair.dp.y + pair.ap.y) / 2 - 20;
+    const t = text(pair.verdict.ok ? pair.label : pair.verdict.short, mx, my, 'pv-text');
+    g.appendChild(t);
+    const w = t.getComputedTextLength() + 14;
+    const bg = rect(mx - w / 2, my - 13, w, 18, null);
+    bg.setAttribute('class', 'pv-bg');
+    bg.setAttribute('rx', 5);
+    g.insertBefore(bg, t);
+}
+
+function condense(pair) {
+    const { donorMol, accMol, acc, site } = pair;
+
+    // Where the finished molecule should appear
+    const cd = centreOf(donorMol), ca = centreOf(accMol);
+    const mid = { x: (cd.x + ca.x) / 2, y: (cd.y + ca.y) / 2 };
+
+    // The donor hangs off the acceptor's site; the reducing end never moves,
+    // so the acceptor molecule's root stays the root of the product.
+    acc.node[SITE_FIELD[site]] = donorMol._model.root;
+    const root = accMol._model.root;
+
+    removeMolecule(donorMol);
+    removeMolecule(accMol);
+
+    const mol = makeMolecule(root, 0, 0);
+    setPos(mol,
+        Math.round(mid.x - mol._box.w / 2),
+        Math.round(mid.y - (mol._box.down - mol._box.up) / 2));
+    clampIntoView(mol);
+
+    const p = getPos(mol);
+    waterFx(p.x + mol._box.w / 2, p.y - mol._box.up + 10, 'out');
+    addWater(1);
+
+    const i = mol._model.info;
+    setStatus(`Kondensation: ${i.name} (${i.formula}) dannet via en ${pair.label}-binding — der fraspaltes ét molekyle vand.`, 'ok');
+}
+
+function hydrolyse(mol, bond) {
+    const p = getPos(mol);
+    const oldName = mol._model.info.name;
+    const root = mol._model.root;
+
+    // Cutting the edge releases the donor's whole subtree, and its anomeric
+    // carbon becomes the new fragment's reducing end
+    bond.acceptor[SITE_FIELD[bond.site]] = null;
+    const freed = bond.donor;
+
+    removeMolecule(mol);
+
+    const a = makeMolecule(root, p.x, p.y);
+    const b = makeMolecule(freed, 0, 0);
+    setPos(b, Math.round(p.x - b._box.w - 50), Math.round(p.y + 40));
+    clampIntoView(a);
+    clampIntoView(b);
+
+    waterFx(p.x + a._box.w / 2, p.y - a._box.up + 10, 'in');
+    addWater(-1);
+
+    setStatus(`Hydrolyse: ${oldName} spaltet til ${a._model.info.name} + ${b._model.info.name} — det kræver ét molekyle vand.`, 'ok');
+}
+
+function fullHydrolysis(mol) {
+    const p = getPos(mol);
+    const { nodes } = mol._model;
+    const oldName = mol._model.info.name;
+    const count = nodes.length;
+
+    // Snapshot the residues, then cut every bond at once
+    const parts = nodes.slice();
+    parts.forEach(n => { n.at4 = null; n.at6 = null; n.at2 = null; });
+    removeMolecule(mol);
+
+    parts.forEach((node, i) => {
+        const m = makeMolecule(node, p.x + i * 130, p.y + (i % 2) * 30);
+        clampIntoView(m);
+    });
+
+    waterFx(p.x + 60, p.y - 40, 'in');
+    addWater(-(count - 1));
+    setStatus(`Fuld hydrolyse: ${oldName} spaltet til ${count} monomerer — det har krævet ${count - 1} vandmolekyler.`, 'ok');
+}
+
+function flipAnomer(mol) {
+    const node = mol._model.root;
+    node.anomer = node.anomer === 'a' ? 'b' : 'a';
+    const p = getPos(mol);
+    removeMolecule(mol);
+    const m = makeMolecule(node, p.x, p.y);
+    clampIntoView(m);
+    setStatus(`Skiftet til ${greek(node.anomer)}-${MOL[node.name].da}. ` +
+        (node.anomer === 'a'
+            ? 'α-formen giver α-1,4-bindinger — stivelse og glykogen.'
+            : 'β-formen giver β-1,4-bindinger — cellulose.'), 'info');
+}
+
+/* =====================================================================
+   Board-level helpers
+   ===================================================================== */
+
+function addWater(delta) {
+    waterCount = Math.max(0, waterCount + delta);
+    waterOut.textContent = waterCount;
 }
 
 function waterFx(x, y, mode) {
@@ -771,11 +1314,40 @@ function resetGame() {
     molecules.forEach(m => m.remove());
     molecules = [];
     fxLayer.textContent = '';
-    idCounter = 0;
+    pvLayer.textContent = '';
     waterCount = 0;
     waterOut.textContent = '0';
-    setStatus('Bordet er ryddet. Træk to sukkerarter oven i hinanden for at danne et disakkarid.', '');
+    setStatus('Bordet er ryddet. Vælg α eller β, og byg videre. Klik på et O i en binding for at hydrolysere netop den.', '');
 }
+
+/* Rebuild every molecule in place — used when the C-number toggle changes */
+function rerenderAll() {
+    const snapshot = molecules.map(m => ({ root: m._model.root, ...getPos(m) }));
+    molecules.forEach(m => m.remove());
+    molecules = [];
+    snapshot.forEach(s => {
+        const m = makeMolecule(s.root, s.x, s.y);
+        m.classList.remove('appear');
+        clampIntoView(m);
+    });
+}
+
+document.querySelectorAll('#anomer-seg button').forEach(btn => {
+    btn.addEventListener('click', () => {
+        currentAnomer = btn.dataset.anomer;
+        document.querySelectorAll('#anomer-seg button')
+            .forEach(b => b.classList.toggle('active', b === btn));
+        setStatus(currentAnomer === 'a'
+            ? 'α-form valgt: OH-gruppen på C1 peger nedad. Giver α-1,4 — stivelse og glykogen.'
+            : 'β-form valgt: OH-gruppen på C1 peger opad. Giver β-1,4 — cellulose, hvor hver anden ring er vendt om.', 'info');
+    });
+});
+
+document.getElementById('btn-numbers').addEventListener('click', e => {
+    showNumbers = !showNumbers;
+    e.currentTarget.classList.toggle('active', showNumbers);
+    rerenderAll();
+});
 
 window.addEventListener('resize', () => molecules.forEach(clampIntoView));
 
@@ -816,13 +1388,12 @@ function showViewerMessage(html, isError) {
     viewerContainer.innerHTML = `<div class="viewer-msg${isError ? ' err' : ''}">${html}</div>`;
 }
 
-async function openViewer(name) {
-    const cfg = MOL[name];
-    if (!cfg) return;
+async function openViewer(info) {
+    if (!info.sdf) return;
 
     modal.classList.remove('hidden');
-    viewerTitle.textContent = cfg.da;
-    viewerSub.textContent = cfg.formula + (cfg.bond ? ' · ' + cfg.bond : '');
+    viewerTitle.textContent = info.name;
+    viewerSub.textContent = info.formula + (info.sdfNote ? ' · ' + info.sdfNote : '');
     viewerContainer.textContent = '';
     viewer3d = null;
 
@@ -835,19 +1406,19 @@ async function openViewer(name) {
 
     let sdfText;
     try {
-        if (sdfCache.has(name)) {
-            sdfText = sdfCache.get(name);
+        if (sdfCache.has(info.sdf)) {
+            sdfText = sdfCache.get(info.sdf);
         } else {
-            const res = await fetch(cfg.sdf);
+            const res = await fetch(info.sdf);
             if (!res.ok) throw new Error('HTTP ' + res.status);
             sdfText = await res.text();
-            sdfCache.set(name, sdfText);
+            sdfCache.set(info.sdf, sdfText);
         }
     } catch (err) {
         const localHint = location.protocol === 'file:'
             ? '<br><br>Siden er åbnet direkte fra disken (<code>file://</code>), og browseren blokerer derfor indlæsning af SDF-filen. Kør siden gennem en lille webserver, fx <code>python3 -m http.server</code>.'
             : '';
-        showViewerMessage(`Kunne ikke hente <code>${cfg.sdf}</code>.${localHint}`, true);
+        showViewerMessage(`Kunne ikke hente <code>${info.sdf}</code>.${localHint}`, true);
         return;
     }
 

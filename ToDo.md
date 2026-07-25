@@ -1,2 +1,3 @@
 - Pause virker (stadig) ikke i TermiskTryk3.html
 - Tilføj 'hjem-knap' på alle undersider.
+- en ølbrygnings-app, som viser de fysiske, kemiske og biologiske processer ved ølbrygnig
