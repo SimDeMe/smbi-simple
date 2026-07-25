@@ -3,27 +3,14 @@
 App: [bio-blocks.html](bio-blocks.html)
 
 Bygget indtil videre: monosakkarider → disakkarider → polysakkarider (kæder og
-forgreninger), α/β-anomerer, nummererede C-atomer, 3D-visning via PubChem-SDF.
+forgreninger), α/β-anomerer, nummererede C-atomer, 3D-visning via PubChem-SDF,
+enzymblokke (amylase, maltase, sakkarase, laktase, cellulase) med
+substratspecificitet og laktoseintolerans-scenarie.
 
 Nedenstående punkter er ikke bygget endnu. Rækkefølgen er den oprindelige
 nummerering fra idélisten, ikke en prioritering.
 
 ---
-
-## 3. Enzymer som blokke man trækker på
-
-Erstat/supplér ✂-knappen med enzymblokke der trækkes hen på molekylet:
-**maltase, sakkarase, laktase, amylase, cellulase**.
-
-- Forkert enzym → ingen reaktion. Substratspecificitet demonstreres i stedet for
-  at blive forklaret.
-- Amylase klipper kun α-1,4 — ikke α-1,6 (derfor grænsedextriner) og ikke β-1,4.
-- Cellulase findes i appen, men skal markeres tydeligt som "mennesker har den ikke".
-- **Laktoseintolerans-scenarie:** uden laktase passerer laktosen til tyktarmen →
-  tarmbakterier → gas og osmotisk diarré. Knytter modulet til noget eleverne kender.
-
-Krav: en palet med enzymblokke, drop-zone-logik på de enkelte bindinger,
-og en regeltabel enzym → hvilke bindingstyper det kan hydrolysere.
 
 ## 6. Repræsentationsskift
 

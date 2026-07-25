@@ -270,6 +270,45 @@
             100% { transform: scale(1); opacity: 1; }
         }
 
+        /* ---------- Enzyme blocks ---------- */
+        .enzyme { cursor: grab; }
+        .enzyme.dragging { cursor: grabbing; }
+        .enzyme.dragging .mol-inner { transform: scale(1.03); }
+        .enzyme.appear .mol-inner { animation: popIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .enzyme.shake  .mol-inner { animation: shake 0.4s; }
+
+        .enz-body { stroke: rgba(0,0,0,0.22); stroke-width: 2px; }
+        .enz-body.off { fill-opacity: 0.4; stroke-dasharray: 7 5; }
+        .enz-name {
+            font-size: 16px; font-weight: 900; fill: #fff;
+            text-anchor: middle; pointer-events: none; letter-spacing: 0.5px;
+        }
+        .enz-sub {
+            font-size: 10.5px; font-weight: bold; fill: rgba(255,255,255,0.92);
+            text-anchor: middle; pointer-events: none;
+        }
+        .enz-tag {
+            font-size: 10.5px; font-weight: bold; fill: #c0392b;
+            text-anchor: middle; pointer-events: none;
+        }
+        .badge-del circle { stroke: #b2bec3; }
+        .badge-del text  { fill: #7f8c8d; font-size: 12px; }
+
+        /* Drop zones highlighted while an enzyme is dragged */
+        .enz-cand   { fill: none; stroke: #27ae60; stroke-width: 2.5; stroke-dasharray: 5 4; }
+        .enz-target { fill: none; stroke-width: 3.5; }
+        .enz-target.ok { stroke: #27ae60; }
+        .enz-target.no { stroke: #e74c3c; }
+
+        .btn-enz { font-size: 12.5px; padding: 8px 10px; }
+        .btn-amylase   { background-color: #8e44ad; }
+        .btn-maltase   { background-color: #16a085; }
+        .btn-sucrase   { background-color: #d35400; }
+        .btn-lactase   { background-color: #2980b9; }
+        .btn-cellulase { background-color: #7f8c8d; }
+        .btn-enz.missing { opacity: 0.5; text-decoration: line-through; }
+        .chip.warn.active { background: #c0392b; border-color: #c0392b; }
+
         /* ---------- 3D viewer ---------- */
         #viewer-modal {
             position: fixed;
@@ -359,6 +398,17 @@
     </div>
 
     <div class="group">
+        <span class="group-label">Enzymer</span>
+        <button class="spawner btn-enz btn-amylase"   id="enz-btn-amylase"   onclick="spawnEnzyme('amylase')">Amylase</button>
+        <button class="spawner btn-enz btn-maltase"   id="enz-btn-maltase"   onclick="spawnEnzyme('maltase')">Maltase</button>
+        <button class="spawner btn-enz btn-sucrase"   id="enz-btn-sucrase"   onclick="spawnEnzyme('sucrase')">Sakkarase</button>
+        <button class="spawner btn-enz btn-lactase"   id="enz-btn-lactase"   onclick="spawnEnzyme('lactase')">Laktase</button>
+        <button class="spawner btn-enz btn-cellulase" id="enz-btn-cellulase" onclick="spawnEnzyme('cellulase')">Cellulase</button>
+        <button class="chip warn" id="btn-lactose-intolerance"
+                title="Slå laktaseproduktionen fra og se hvad der sker med mælkesukkeret">🥛 Laktoseintolerans</button>
+    </div>
+
+    <div class="group">
         <button class="chip active" id="btn-numbers">C-numre</button>
         <div class="counter">💧 Vand: <b id="water-count">0</b></div>
         <button class="spawner btn-reset" onclick="resetGame()">Ryd bordet</button>
@@ -382,10 +432,11 @@
             </filter>
         </defs>
         <g id="layer-molecules"></g>
+        <g id="layer-enzymes"></g>
         <g id="layer-preview"></g>
         <g id="layer-fx"></g>
     </svg>
-    <div id="status">Vælg α eller β, læg sukkerarter på bordet og træk dem sammen — kæden kan blive så lang du vil. Klik på et O i en binding for at hydrolysere netop den.</div>
+    <div id="status">Vælg α eller β, læg sukkerarter på bordet og træk dem sammen — kæden kan blive så lang du vil. Klik på et O i en binding for at hydrolysere netop den, eller træk en enzymblok hen på bindingen.</div>
 </div>
 
 <div id="viewer-modal" class="hidden">
@@ -427,6 +478,7 @@
 const SVG_NS = "http://www.w3.org/2000/svg";
 const svgSpace  = document.getElementById('svg-space');
 const molLayer  = document.getElementById('layer-molecules');
+const enzLayer  = document.getElementById('layer-enzymes');
 const pvLayer   = document.getElementById('layer-preview');
 const fxLayer   = document.getElementById('layer-fx');
 const statusBar = document.getElementById('status');
@@ -486,9 +538,12 @@ const DISACC = {
 const SUB = '₀₁₂₃₄₅₆₇₈₉';
 
 let molecules = [];
+let enzymes = [];
 let waterCount = 0;
 let currentAnomer = 'a';
 let showNumbers = true;
+let lactoseIntolerant = false;
+let catalystHintShown = false;
 
 /* =====================================================================
    Tree helpers
@@ -725,6 +780,7 @@ function makeMolecule(root, x, y) {
     const extent = drawChrome(gChrome, info, bonds, gridW, gridH, n, scale);
 
     g.setAttribute('transform', `translate(${x}, ${y}) scale(${scale})`);
+    g._scale = scale;
     g._model = { root, nodes, bonds, pos, sites, info, scale };
     g._box   = { w: gridW * scale, ...extent };
     Object.assign(g.dataset, { x, y });
@@ -808,6 +864,7 @@ function drawBond(lineLayer, decorLayer, bond, pos) {
                         bond.site === 6 ? 'c6' : bond.site === 2 ? 'anomeric' : 'c4',
                         pos.get(bond.acceptor));
     const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+    bond.mid = mid;                       // the enzymes' drop zone
 
     lineLayer.appendChild(line(a.x, a.y, b.x, b.y, 'bond-line'));
 
@@ -985,7 +1042,7 @@ function getPos(el) { return { x: +el.dataset.x, y: +el.dataset.y }; }
 function setPos(el, x, y) {
     el.dataset.x = x;
     el.dataset.y = y;
-    el.setAttribute('transform', `translate(${x}, ${y}) scale(${el._model.scale})`);
+    el.setAttribute('transform', `translate(${x}, ${y}) scale(${el._scale})`);
 }
 
 function clampIntoView(mol) {
@@ -1022,6 +1079,7 @@ function startDrag(e) {
         if (a === 'view') openViewer(mol._model.info);
         else if (a === 'cut') fullHydrolysis(mol);
         else if (a === 'flip') flipAnomer(mol);
+        else if (a === 'remove') removeEnzyme(mol);
         return;
     }
     const hitBond = e.target.closest ? e.target.closest('.bond-hit') : null;
@@ -1035,7 +1093,7 @@ function startDrag(e) {
     dragged = mol;
     activePointer = e.pointerId;
     mol.classList.add('dragging');
-    molLayer.appendChild(mol);                    // bring to front
+    (mol._enzyme ? enzLayer : molLayer).appendChild(mol);   // bring to front
 
     const pt = toSvgPoint(e);
     const pos = getPos(mol);
@@ -1052,7 +1110,8 @@ function doDrag(e) {
     e.preventDefault();
     const pt = toSvgPoint(e);
     setPos(dragged, pt.x - dragOffset.x, pt.y - dragOffset.y);
-    showPreview(bestPair(dragged));
+    if (dragged._enzyme) showEnzymePreview(dragged, bestBond(dragged));
+    else                 showPreview(bestPair(dragged));
 }
 
 function endDrag(e) {
@@ -1068,6 +1127,8 @@ function endDrag(e) {
 
     pvLayer.textContent = '';
     clampIntoView(mol);
+
+    if (mol._enzyme) { dropEnzyme(mol, bestBond(mol)); return; }
 
     const pair = bestPair(mol);
     if (!pair) return;
@@ -1224,7 +1285,9 @@ function condense(pair) {
     setStatus(`Kondensation: ${i.name} (${i.formula}) dannet via en ${pair.label}-binding — der fraspaltes ét molekyle vand.`, 'ok');
 }
 
-function hydrolyse(mol, bond) {
+/* Splits one glycosidic bond. Returns the names involved so an enzyme can
+   phrase the story its own way instead of the generic message. */
+function hydrolyse(mol, bond, silent) {
     const p = getPos(mol);
     const oldName = mol._model.info.name;
     const root = mol._model.root;
@@ -1245,7 +1308,10 @@ function hydrolyse(mol, bond) {
     waterFx(p.x + a._box.w / 2, p.y - a._box.up + 10, 'in');
     addWater(-1);
 
-    setStatus(`Hydrolyse: ${oldName} spaltet til ${a._model.info.name} + ${b._model.info.name} — det kræver ét molekyle vand.`, 'ok');
+    const names = { from: oldName, a: a._model.info.name, b: b._model.info.name };
+    if (!silent)
+        setStatus(`Hydrolyse: ${names.from} spaltet til ${names.a} + ${names.b} — det kræver ét molekyle vand.`, 'ok');
+    return names;
 }
 
 function fullHydrolysis(mol) {
@@ -1283,6 +1349,306 @@ function flipAnomer(mol) {
 }
 
 /* =====================================================================
+   Enzymer — blokke der trækkes hen på en binding
+
+   Hvert enzym er en regel: givet en glykosidbinding (og molekylet den
+   sidder i) svarer enzymet enten "den kan jeg klippe" eller "den kan jeg
+   ikke — og her er hvorfor". Substratspecificiteten bliver dermed noget
+   eleverne støder ind i, ikke noget de får fortalt.
+   ===================================================================== */
+
+const ENZ_W = 152, ENZ_H = 62, ENZ_NOTCH = 15, ENZ_SNAP = 90;
+
+const canCut  = (short, msg) => ({ ok: true,  short, msg });
+const cantCut = (short, msg, extra) => Object.assign({ ok: false, short, msg }, extra);
+
+const isGlcGlc = b => b.donor.name === 'glucose' && b.acceptor.name === 'glucose';
+const isLactoseBond = b => b.site === 4 && b.anomer === 'b' &&
+                           b.donor.name === 'galactose' && b.acceptor.name === 'glucose';
+
+/* Regeltabellen: enzym → hvilke bindinger det kan hydrolysere */
+const ENZYMES = {
+    amylase: {
+        da: 'Amylase', colour: '#8e44ad', sub: 'α-1,4 inde i kæden',
+        where: 'spyt og bugspyt',
+        test(b, m) {
+            if (b.site === 2) return cantCut('ikke sakkarose',
+                'Amylase virker på stivelse og glykogen — ikke på sakkarose.');
+            if (b.site === 6) return cantCut('ikke α-1,6',
+                'Amylase kan ikke klippe α-1,6. Grenpunkterne bliver siddende tilbage som grænsedextriner, som andre enzymer må tage sig af.');
+            if (b.anomer !== 'a') return cantCut('ikke β-1,4',
+                'Amylase klipper kun α-1,4 — aldrig β-1,4. Netop derfor kan vi ikke fordøje cellulose.');
+            if (!isGlcGlc(b)) return cantCut('kun glukose',
+                'Amylase arbejder kun mellem glukoseenheder.');
+            if (m.nodes.length < 3) return cantCut('kæden er for kort',
+                'Amylase har brug for flere glukoser i sit aktive sted. Maltose er for kort — den klippes af maltase.');
+            if (b.acceptor.at6 || b.donor.at6) return cantCut('for tæt på grenpunkt',
+                'Bindingen ligger lige op ad et α-1,6-grenpunkt, og amylase kan ikke komme til. Det er sådan grænsedextriner opstår.');
+            return canCut('α-1,4 klippes',
+                'Amylase klipper α-1,4 inde i kæden — derfor bliver lange stivelseskæder hurtigt til korte stumper.');
+        }
+    },
+    maltase: {
+        da: 'Maltase', colour: '#16a085', sub: 'α-1,4 fra enden',
+        where: 'tyndtarmens børstesøm',
+        test(b) {
+            if (b.site === 2) return cantCut('ikke sakkarose',
+                'Sakkarose er ikke maltases substrat — den spaltes af sakkarase.');
+            if (b.site === 6) return cantCut('ikke α-1,6',
+                'α-1,6-grenpunktet kræver isomaltase (grænsedextrinase). Maltase kan kun α-1,4.');
+            if (b.anomer !== 'a') return cantCut('ikke β-1,4',
+                'Maltase spalter kun α-1,4. β-1,4 er en helt anden binding.');
+            if (!isGlcGlc(b)) return cantCut('kun glukose',
+                'Maltase spalter kun bindinger mellem to glukoser.');
+            if (b.donor.at4 || b.donor.at6 || b.donor.at2) return cantCut('ikke inde i kæden',
+                'Maltase klipper den yderste glukose af — den arbejder fra enden, ikke midt inde i kæden. Prøv den yderste binding.');
+            return canCut('α-1,4 klippes',
+                'Maltase klipper en enkelt glukose af enden. Det er sidste trin i stivelsesfordøjelsen.');
+        }
+    },
+    sucrase: {
+        da: 'Sakkarase', colour: '#d35400', sub: 'α-1,β-2 (sakkarose)',
+        where: 'tyndtarmens børstesøm',
+        test(b) {
+            if (b.site !== 2) return cantCut('kun sakkarose',
+                'Sakkarase spalter kun bindingen mellem glukosens C1 og fruktosens C2 — altså sakkarose.');
+            return canCut('α-1,β-2 klippes',
+                'Sakkarase spalter sakkarose til glukose + fruktose. Blandingen kaldes invertsukker.');
+        }
+    },
+    lactase: {
+        da: 'Laktase', colour: '#2980b9', sub: 'β-1,4 (laktose)',
+        where: 'tyndtarmens børstesøm',
+        test(b) {
+            if (b.site !== 4 || b.anomer !== 'b') return cantCut('kun β-1,4',
+                'Laktase spalter kun β-1,4-bindinger.');
+            if (b.donor.name !== 'galactose') return cantCut('kræver galaktose',
+                `Laktase er en β-galaktosidase: der skal sidde en galaktose på donorsiden. Her er det ${MOL[b.donor.name].da}.`);
+            if (b.acceptor.name !== 'glucose') return cantCut('kræver glukose',
+                'Laktase klipper galaktosen af en glukose — det er den kombination der hedder laktose.');
+            return canCut('β-1,4 klippes',
+                'Laktase spalter laktose til galaktose + glukose, og begge kan optages i tyndtarmen.');
+        }
+    },
+    cellulase: {
+        da: 'Cellulase', colour: '#7f8c8d', sub: 'β-1,4 (cellulose)',
+        where: 'bakterier, svampe og termitter',
+        tag: '✖ mennesker producerer den ikke',
+        test(b) {
+            if (b.site !== 4 || b.anomer !== 'b') return cantCut('kun β-1,4',
+                'Cellulase spalter kun β-1,4.');
+            if (!isGlcGlc(b)) return cantCut('kun glukose',
+                'Cellulase spalter β-1,4 mellem to glukoser. Laktosens β-1,4 sidder mellem galaktose og glukose.');
+            return canCut('β-1,4 klippes',
+                'Cellulase spalter β-1,4 — men mennesker producerer ikke cellulase. Derfor er cellulose kostfiber for os, mens en ko klarer det med hjælp fra sine bakterier.');
+        }
+    }
+};
+
+/* Findes enzymet i den krop vi lige nu simulerer? */
+function enzymeAvailable(key) {
+    if (key === 'lactase') return !lactoseIntolerant;
+    return true;
+}
+
+function enzymeVerdict(key, mol, bond) {
+    if (key === 'lactase' && lactoseIntolerant) {
+        return isLactoseBond(bond)
+            ? cantCut('ingen laktase',
+                'Du producerer ikke laktase. Laktosen bliver ikke spaltet, den kan ikke optages i tyndtarmen — og fortsætter uspaltet ned i tyktarmen.',
+                { gas: true })
+            : cantCut('ingen laktase', 'Du producerer ikke laktase — blokken kan ikke klippe noget som helst.');
+    }
+    return ENZYMES[key].test(bond, mol._model);
+}
+
+/* ---------- Enzymblokken som SVG ---------- */
+
+function enzymeShape() {
+    const W = ENZ_W, H = ENZ_H, r = 12, n = ENZ_NOTCH, cx = W / 2;
+    // Rundet kasse med et halvcirkelformet hak i bunden — det aktive sted
+    return `M${r},0 H${W - r} Q${W},0 ${W},${r} V${H - r} Q${W},${H} ${W - r},${H} ` +
+           `H${cx + n} A${n},${n} 0 0 0 ${cx - n},${H} ` +
+           `H${r} Q0,${H} 0,${H - r} V${r} Q0,0 ${r},0 Z`;
+}
+
+function makeEnzyme(key, x, y) {
+    const cfg  = ENZYMES[key];
+    const off  = !enzymeAvailable(key);
+    const tag  = off ? '✖ mangler — laktoseintolerans' : cfg.tag;
+
+    const g = document.createElementNS(SVG_NS, 'g');
+    g.setAttribute('class', 'enzyme appear');
+    g.setAttribute('filter', 'url(#soft-shadow)');
+    enzLayer.appendChild(g);
+
+    const inner = document.createElementNS(SVG_NS, 'g');
+    inner.setAttribute('class', 'mol-inner');
+    g.appendChild(inner);
+
+    const body = document.createElementNS(SVG_NS, 'path');
+    body.setAttribute('d', enzymeShape());
+    body.setAttribute('fill', cfg.colour);
+    body.setAttribute('class', 'enz-body' + (off ? ' off' : ''));
+    inner.appendChild(body);
+
+    inner.appendChild(text(cfg.da, ENZ_W / 2, 25, 'enz-name'));
+    inner.appendChild(text(cfg.sub, ENZ_W / 2, 40, 'enz-sub'));
+    if (tag) inner.appendChild(text(tag, ENZ_W / 2, ENZ_H + 15, 'enz-tag'));
+
+    inner.appendChild(badge(ENZ_W - 12, 6, '✕', 'badge-del', 'remove', 'Fjern enzymet fra bordet'));
+
+    const title = document.createElementNS(SVG_NS, 'title');
+    title.textContent = `${cfg.da} — findes i ${cfg.where}. Træk hakket hen på en binding.`;
+    inner.appendChild(title);
+
+    g._enzyme = key;
+    g._scale  = 1;
+    g._box    = { w: ENZ_W, up: 12, down: ENZ_H + (tag ? 22 : 6), pad: 0 };
+    setPos(g, x, y);
+
+    g.addEventListener('pointerdown', startDrag);
+    g.addEventListener('animationend', () => g.classList.remove('appear', 'shake'));
+
+    enzymes.push(g);
+    return g;
+}
+
+function spawnEnzyme(key) {
+    const area = svgSpace.getBoundingClientRect();
+    const x = 30 + Math.random() * Math.max(40, area.width - ENZ_W - 60);
+    const y = 20 + Math.random() * 60;
+    const enz = makeEnzyme(key, Math.round(x), Math.round(y));
+    clampIntoView(enz);
+
+    const cfg = ENZYMES[key];
+    setStatus(enzymeAvailable(key)
+        ? `${cfg.da} lagt på bordet — findes i ${cfg.where}. Træk hakket hen på den binding du vil have klippet; enzymet reagerer kun på sit eget substrat.`
+        : `${cfg.da} lagt på bordet, men du producerer den ikke. Prøv alligevel at trække den hen på laktosen.`,
+        'info');
+}
+
+function removeEnzyme(enz) {
+    enzymes = enzymes.filter(e => e !== enz);
+    enz.remove();
+}
+
+/* Enzymets aktive sted i bordets koordinater */
+function enzymeSite(enz) {
+    const p = getPos(enz);
+    return { x: p.x + ENZ_W / 2, y: p.y + ENZ_H - 6 };
+}
+
+/* En bindings midtpunkt i bordets koordinater */
+function absBond(mol, bond) {
+    const p = getPos(mol), s = mol._model.scale;
+    return { x: p.x + bond.mid.x * s, y: p.y + bond.mid.y * s };
+}
+
+/* Den binding enzymet ville ramme, hvis brugeren slap nu */
+function bestBond(enz) {
+    const site = enzymeSite(enz);
+    let best = null, bestDist = ENZ_SNAP;
+
+    molecules.forEach(mol => {
+        mol._model.bonds.forEach(bond => {
+            const p = absBond(mol, bond);
+            const d = Math.hypot(site.x - p.x, site.y - p.y);
+            if (d >= bestDist) return;
+            bestDist = d;
+            best = { mol, bond, p, verdict: enzymeVerdict(enz._enzyme, mol, bond) };
+        });
+    });
+    return best;
+}
+
+/* Alle bindinger enzymet kan klippe lyser op — det er hele pointen med
+   fx amylase på glykogen: grenpunkterne lyser ikke. */
+function showEnzymePreview(enz, best) {
+    pvLayer.textContent = '';
+    const key = enz._enzyme;
+
+    const ring = (p, r, cls) => {
+        const c = document.createElementNS(SVG_NS, 'circle');
+        c.setAttribute('cx', p.x); c.setAttribute('cy', p.y); c.setAttribute('r', r);
+        c.setAttribute('class', cls);
+        pvLayer.appendChild(c);
+    };
+
+    molecules.forEach(mol => {
+        mol._model.bonds.forEach(bond => {
+            if (!enzymeVerdict(key, mol, bond).ok) return;
+            ring(absBond(mol, bond), 17, 'enz-cand');
+        });
+    });
+
+    if (!best) return;
+    ring(best.p, 21, 'enz-target ' + (best.verdict.ok ? 'ok' : 'no'));
+
+    const g = document.createElementNS(SVG_NS, 'g');
+    g.setAttribute('class', best.verdict.ok ? 'pv-ok' : 'pv-no');
+    pvLayer.appendChild(g);
+
+    const t = text(`${ENZYMES[key].da}: ${best.verdict.short}`, best.p.x, best.p.y - 30, 'pv-text');
+    g.appendChild(t);
+    const w = t.getComputedTextLength() + 14;
+    const bg = rect(best.p.x - w / 2, best.p.y - 43, w, 18, null);
+    bg.setAttribute('class', 'pv-bg');
+    bg.setAttribute('rx', 5);
+    g.insertBefore(bg, t);
+}
+
+function dropEnzyme(enz, target) {
+    if (!target) return;
+    const cfg = ENZYMES[enz._enzyme];
+    const v   = target.verdict;
+
+    if (!v.ok) {
+        enz.classList.add('shake');
+        if (v.gas) {
+            waterFx(target.p.x, target.p.y - 20, 'out', '💨 gas');
+            setStatus(`${v.msg} I tyktarmen lever bakterierne af den: der dannes gas, og laktosen trækker vand ud i tarmen — luft i maven og osmotisk diarré. Det er laktoseintolerans.`, 'error');
+        } else {
+            setStatus(`Ingen reaktion. ${v.msg}`, 'error');
+        }
+        return;
+    }
+
+    const names = hydrolyse(target.mol, target.bond, true);
+
+    // Enzymet slipper substratet igen og bliver liggende — det er en katalysator
+    const p = getPos(enz);
+    setPos(enz, p.x, p.y - 46);
+    clampIntoView(enz);
+
+    let msg = `${cfg.da}: ${names.from} → ${names.a} + ${names.b}. ${v.msg}`;
+    if (!catalystHintShown) {
+        msg += ' Enzymet bruges ikke op — det kan klippe igen med det samme.';
+        catalystHintShown = true;
+    }
+    setStatus(msg, 'ok');
+}
+
+/* Enzymblokkene tegnes om, når fx laktoseintolerans slås til eller fra */
+function rerenderEnzymes() {
+    const snapshot = enzymes.map(e => ({ key: e._enzyme, ...getPos(e) }));
+    enzymes.forEach(e => e.remove());
+    enzymes = [];
+    snapshot.forEach(s => {
+        const e = makeEnzyme(s.key, s.x, s.y);
+        e.classList.remove('appear');
+        clampIntoView(e);
+    });
+}
+
+function syncEnzymeButtons() {
+    Object.keys(ENZYMES).forEach(key => {
+        document.getElementById('enz-btn-' + key)
+            .classList.toggle('missing', !enzymeAvailable(key));
+    });
+}
+
+/* =====================================================================
    Board-level helpers
    ===================================================================== */
 
@@ -1291,14 +1657,14 @@ function addWater(delta) {
     waterOut.textContent = waterCount;
 }
 
-function waterFx(x, y, mode) {
+function waterFx(x, y, mode, label) {
     const g = document.createElementNS(SVG_NS, 'g');
     g.setAttribute('class', `fx-water fx-${mode}`);
     g.setAttribute('transform', `translate(${x}, ${y})`);
 
     const inner = document.createElementNS(SVG_NS, 'g');
     inner.setAttribute('class', 'fx-anim');
-    inner.appendChild(text(mode === 'out' ? '💧 + H₂O' : '💧 − H₂O', 0, 0, ''));
+    inner.appendChild(text(label || (mode === 'out' ? '💧 + H₂O' : '💧 − H₂O'), 0, 0, ''));
     g.appendChild(inner);
 
     fxLayer.appendChild(g);
@@ -1313,11 +1679,13 @@ function setStatus(msg, kind) {
 function resetGame() {
     molecules.forEach(m => m.remove());
     molecules = [];
+    enzymes.forEach(e => e.remove());
+    enzymes = [];
     fxLayer.textContent = '';
     pvLayer.textContent = '';
     waterCount = 0;
     waterOut.textContent = '0';
-    setStatus('Bordet er ryddet. Vælg α eller β, og byg videre. Klik på et O i en binding for at hydrolysere netop den.', '');
+    setStatus('Bordet er ryddet. Vælg α eller β, og byg videre. Klik på et O i en binding for at hydrolysere netop den — eller lad et enzym gøre arbejdet.', '');
 }
 
 /* Rebuild every molecule in place — used when the C-number toggle changes */
@@ -1349,7 +1717,21 @@ document.getElementById('btn-numbers').addEventListener('click', e => {
     rerenderAll();
 });
 
-window.addEventListener('resize', () => molecules.forEach(clampIntoView));
+document.getElementById('btn-lactose-intolerance').addEventListener('click', e => {
+    lactoseIntolerant = !lactoseIntolerant;
+    e.currentTarget.classList.toggle('active', lactoseIntolerant);
+    syncEnzymeButtons();
+    rerenderEnzymes();
+    setStatus(lactoseIntolerant
+        ? 'Laktoseintolerans slået til: kroppen producerer ikke længere laktase. Byg en laktose (galaktose + glukose, β-1,4) og prøv at fordøje den.'
+        : 'Laktaseproduktionen er tilbage: laktosen kan igen spaltes til galaktose + glukose og optages i tyndtarmen.',
+        lactoseIntolerant ? 'error' : 'info');
+});
+
+window.addEventListener('resize', () => {
+    molecules.forEach(clampIntoView);
+    enzymes.forEach(clampIntoView);
+});
 
 /* =====================================================================
    3D viewer (3Dmol.js, real PubChem coordinates)
