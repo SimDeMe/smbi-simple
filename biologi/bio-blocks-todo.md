@@ -23,6 +23,13 @@ Nedenstående punkter er ikke bygget endnu. Rækkefølgen er den oprindelige
 nummerering fra idélisten, ikke en prioritering.
 
 ---
+## Refaktorering?
+Giver det mening at refaktorere bio-blocks så det ligger i flere filer i en mappe i stedet for som en gigastor html?
+
+
+
+## opgavemode
+Bordet skal ryddes, hver gang man går videre til en ny opgave.
 
 ## 9. Samme motor til proteiner og fedt
 
