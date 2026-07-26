@@ -8,13 +8,14 @@
    ===================================================================== */
 
 export const state = {
+    modId: 'carbs',           // kulhydrater | proteiner | fedt — se modules/
     molecules: [],            // <g class="molecule"> på bordet
     enzymes: [],              // <g class="enzyme"> på bordet
     waterCount: 0,
-    currentAnomer: 'a',       // a | b — den form nye monomerer får
+    variant: null,            // modulets formvalg, fx α/β på et sukker
     showNumbers: true,
-    lactoseIntolerant: false,
+    toggleOn: false,          // modulets kontakt: laktoseintolerans, galde …
     catalystHintShown: false,
-    repr: 'blocks',           // blocks | haworth | formula
+    repr: 'blocks',           // hvilken af modulets repræsentationer der vises
     taskMode: false
 };

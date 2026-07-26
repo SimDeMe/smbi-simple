@@ -4,6 +4,7 @@
    ===================================================================== */
 
 export const svgSpace  = document.getElementById('svg-space');
+export const svgDefs   = document.getElementById('svg-defs');
 export const molLayer  = document.getElementById('layer-molecules');
 export const enzLayer  = document.getElementById('layer-enzymes');
 export const pvLayer   = document.getElementById('layer-preview');

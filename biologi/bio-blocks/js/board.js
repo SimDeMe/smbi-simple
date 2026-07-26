@@ -4,12 +4,12 @@
    ===================================================================== */
 
 import { state } from './state.js';
+import { mod } from './modules/index.js';
 import { svgSpace, fxLayer, pvLayer, statusBar, waterOut } from './dom.js';
 import { SVG_NS, text } from './svg.js';
-import { MOL } from './data.js';
-import { residue, greek } from './model.js';
+import { residue } from './model.js';
 import { makeMolecule } from './render.js';
-import { taskTick } from './tasks.js';
+import { taskTick, taskEvents } from './tasks.js';
 
 export function spawn(name) {
     const area = svgSpace.getBoundingClientRect();
@@ -17,36 +17,22 @@ export function spawn(name) {
     const y = 80 + Math.random() * Math.max(40, area.height - 340);
     const mol = makeMolecule(residue(name), Math.round(x), Math.round(y));
     clampIntoView(mol);
-    setStatus(`${greek(state.currentAnomer)}-${MOL[name].da} lagt på bordet.`, 'info');
+    setStatus(`${mol._model.info.name} lagt på bordet.`, 'info');
     taskTick();
 }
 
-export function quickBuild(kind) {
-    const glc = a => residue('glucose', a);
-    const form = kind === 'cellulose' ? 'b' : 'a';
-    const len  = kind === 'glycogen' ? 8 : 6;
+/* Hurtigbyg: modulet leverer selve træet, så bordet kun skal placere det
+   og gøre vandregnskabet op. */
+export function quickBuild(id) {
+    const build = mod().builds.find(b => b.id === id);
+    if (!build) return;
 
-    // Build from the reducing end outwards
-    const root = glc(form);
-    const all  = [root];
-    let t = root;
-    for (let i = 1; i < len; i++) { t.at4 = glc(form); t = t.at4; all.push(t); }
-    let n = len;
-
-    if (kind === 'glycogen') {
-        // Real branch points sit several residues apart, which also keeps the
-        // two side chains from crowding each other on the row above
-        [2, 6].forEach(idx => {
-            const h = glc('a'); h.at4 = glc('a'); h.at4.at4 = glc('a');
-            all[idx].at6 = h;
-            n += 3;
-        });
-    }
-
-    const mol = makeMolecule(root, 60, 200);
+    const mol = makeMolecule(build.make(residue), 60, 200);
     clampIntoView(mol);
-    addWater(n - 1);
-    setStatus(`${mol._model.info.name} bygget af ${n} glukoseenheder — det har krævet ${n - 1} kondensationer og fraspaltet ${n - 1} vandmolekyler.`, 'ok');
+
+    const { nodes, bonds, info } = mol._model;
+    addWater(bonds.length);
+    setStatus(build.say(info.name, nodes.length), 'ok');
     taskTick();
 }
 
@@ -61,11 +47,11 @@ export function setPos(el, x, y) {
 export function clampIntoView(mol) {
     const area = svgSpace.getBoundingClientRect();
     const b = mol._box;
-    // The task panel covers the right-hand edge of the table while it is open
+    // Opgavepanelet dækker bordets højre kant så længe det er åbent
     const inset = state.taskMode ? Math.min(322, area.width * 0.45) : 0;
     const minY = 8 + b.up;
     const maxY = Math.max(minY, area.height - b.down - 64);
-    const minX = 10 + b.pad;                       // the caption is wider than the rings
+    const minX = 10 + b.pad;                       // teksten er bredere end ringene
     const maxX = Math.max(minX, area.width - inset - b.w - 10 - b.pad);
     const p = getPos(mol);
     setPos(mol,
@@ -107,7 +93,7 @@ export function setStatus(msg, kind) {
     statusBar.className = kind || '';
 }
 
-export function resetGame() {
+export function clearTable() {
     state.molecules.forEach(m => m.remove());
     state.molecules = [];
     state.enzymes.forEach(e => e.remove());
@@ -116,11 +102,18 @@ export function resetGame() {
     pvLayer.textContent = '';
     state.waterCount = 0;
     waterOut.textContent = '0';
-    setStatus('Bordet er ryddet. Vælg α eller β, og byg videre. Klik på et O i en binding for at hydrolysere netop den — eller lad et enzym gøre arbejdet.', '');
+    // Klippene er også noget der stod på bordet — ellers ville en opgave, der
+    // spørger til et enzymklip, blive ved med at være løst på et tomt bord
+    taskEvents.clear();
+}
+
+export function resetGame() {
+    clearTable();
+    setStatus('Bordet er ryddet. ' + mod().intro, '');
     taskTick();
 }
 
-/* Rebuild every molecule in place — used when the C-number toggle changes */
+/* Tegn hvert molekyle om, hvor det står — bruges når visningen skiftes */
 export function rerenderAll() {
     const snapshot = state.molecules.map(m => ({ root: m._model.root, ...getPos(m) }));
     state.molecules.forEach(m => m.remove());

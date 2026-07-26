@@ -2,6 +2,9 @@
    3D-ruden (3Dmol.js, rigtige PubChem-koordinater)
    ===================================================================== */
 
+import { state } from './state.js';
+import { setStatus } from './board.js';
+
 const modal           = document.getElementById('viewer-modal');
 const viewerContainer = document.getElementById('viewer-container');
 const viewerTitle     = document.getElementById('viewer-title');
@@ -22,6 +25,18 @@ btnSpin.addEventListener('click', () => {
 });
 
 window.addEventListener('resize', () => { if (viewer3d) viewer3d.resize(); });
+
+/* Den fjerde repræsentation ligger i sin egen rude, så knappen i
+   topbjælken leder derhen — er der kun ét molekyle med en 3D-struktur,
+   åbnes det direkte. */
+export function openFromTable() {
+    const withSdf = state.molecules.filter(m => m._model.info.sdf);
+    if (withSdf.length === 1) openViewer(withSdf[0]._model.info);
+    else if (withSdf.length === 0)
+        setStatus('Der er ingen molekyler på bordet med en 3D-struktur endnu. Læg fx en glukose ud, og prøv igen.', 'error');
+    else
+        setStatus(`${withSdf.length} molekyler kan vises i 3D — klik 👁 under det du vil se.`, 'info');
+}
 
 export function closeViewer() {
     if (viewer3d) { try { viewer3d.spin(false); } catch (_) {} }

@@ -29,6 +29,7 @@ header {
     align-items: center;
 }
 .group + .group { border-left: 1px solid #e4e9ec; padding-left: 10px; }
+.group.hidden { display: none; }
 .group-label {
     font-size: 11px;
     font-weight: bold;
@@ -51,12 +52,10 @@ header {
 }
 .spawner:active, .btn-flat:active { transform: translateY(4px); box-shadow: 0 0 0; }
 
-.btn-glu { background-color: #27ae60; }
-.btn-fru { background-color: #e74c3c; }
-.btn-gal { background-color: #e6a700; }
+/* Byggestenenes og enzymernes farver sættes fra modulets katalog */
 .btn-reset { background-color: #34495e; }
 
-/* α / β segmented control */
+/* Segmenterede valg: modul, form (α/β) og visning */
 .seg { display: flex; border: 2px solid #2471a3; border-radius: 8px; overflow: hidden; }
 .seg button {
     border: none;
@@ -293,11 +292,6 @@ header {
 .enz-target.no { stroke: #e74c3c; }
 
 .btn-enz { font-size: 12.5px; padding: 8px 10px; }
-.btn-amylase   { background-color: #8e44ad; }
-.btn-maltase   { background-color: #16a085; }
-.btn-sucrase   { background-color: #d35400; }
-.btn-lactase   { background-color: #2980b9; }
-.btn-cellulase { background-color: #7f8c8d; }
 .btn-enz.missing { opacity: 0.5; text-decoration: line-through; }
 .chip.warn.active { background: #c0392b; border-color: #c0392b; }
 
@@ -333,6 +327,40 @@ header {
 .hw-abbr {
     font-size: 13px; font-weight: 900; fill: #37474f;
     text-anchor: middle; pointer-events: none; letter-spacing: 0.5px;
+}
+
+/* Strukturformel for aminosyrer og fedtsyrer — samme streg og samme
+   hvide kort som Haworth-visningen, andet indhold */
+.st-bond { stroke: #37474f; stroke-width: 2; stroke-linecap: round; }
+.st-atom {
+    font-size: 15px; font-weight: 900; fill: #37474f;
+    text-anchor: middle; pointer-events: none;
+}
+.st-term {
+    font-size: 12px; font-weight: bold; fill: #2c3e50;
+    text-anchor: middle; pointer-events: none;
+}
+.st-term.n { fill: #2471a3; }
+.st-term.c { fill: #b71c1c; }
+.st-sub {
+    font-size: 10px; font-weight: bold; fill: #78909c;
+    text-anchor: middle; pointer-events: none;
+}
+.st-pill { stroke: rgba(0,0,0,0.15); stroke-width: 1.5; }
+.st-r {
+    font-size: 10.5px; font-weight: bold; fill: #fff;
+    text-anchor: middle; pointer-events: none;
+}
+.st-r.dark { fill: #2c3e50; }
+
+/* Fedtsyrens kulstofkæde: zigzaggen i blokken, og knækket der gør
+   forskellen på olie og smør */
+.fa-tail { fill: none; stroke: rgba(255,255,255,0.85); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
+.st-tail { fill: none; stroke: #37474f; stroke-width: 2.2; stroke-linejoin: round; stroke-linecap: round; }
+.fa-double { fill: #c0392b; stroke: #fff; stroke-width: 2; }
+.fa-tag {
+    font-size: 9.5px; font-weight: bold; fill: rgba(255,255,255,0.95);
+    text-anchor: middle; pointer-events: none;
 }
 
 .fm-box { stroke: rgba(0,0,0,0.2); stroke-width: 2; }

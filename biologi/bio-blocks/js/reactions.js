@@ -1,41 +1,41 @@
 /* =====================================================================
-   Kemien — hvilke pladser må reagere, og hvad sker der når de gør det
+   Kemien — hvilke pladser må reagere, og hvad sker der når de gør det.
+
+   Reglen er den samme uanset stofgruppe: en fri donorplads møder en fri
+   modtagerplads, der fraspaltes vand, og molekylerne bliver til ét.
+   Hvilke pladser der findes, og hvilke kombinationer der er tilladt,
+   kommer fra modulet.
    ===================================================================== */
 
 import { state } from './state.js';
+import { mod } from './modules/index.js';
 import { pvLayer } from './dom.js';
 import { SVG_NS, text, line, rect } from './svg.js';
-import { SNAP, MOL } from './data.js';
-import { SITE_FIELD, sitePoint, greek } from './model.js';
+import { SNAP } from './units.js';
+import { sitePoint } from './model.js';
 import { getPos, setPos, clampIntoView, removeMolecule, centreOf,
          addWater, waterFx, setStatus } from './board.js';
 import { makeMolecule } from './render.js';
 import { taskTick } from './tasks.js';
 
-/* Absolute position of a free site, molecule scale included */
+/* Et bindingssteds absolutte position, molekylets skalering iberegnet */
 function absSite(mol, site) {
     const p = getPos(mol), s = mol._model.scale;
     const local = sitePoint(site.node, site.kind, mol._model.pos.get(site.node));
     return { x: p.x + local.x * s, y: p.y + local.y * s };
 }
 
-function verdictFor(donorNode, accNode, site) {
-    if (donorNode.name === 'fructose')
-        return { ok: false, msg: 'Fruktose kan ikke være donor her — den binder kun med sit C2 til α-glukosens C1 i sakkarose.',
-                 short: 'Fruktose kan ikke donere' };
-
-    if (site === 2) {
-        if (donorNode.name !== 'glucose')
-            return { ok: false, msg: 'Kun glukose kan binde til fruktose. Sammen danner de sakkarose.',
-                     short: 'Kræver glukose' };
-        if (donorNode.anomer !== 'a')
-            return { ok: false, msg: 'Sakkarose kræver α-glukose. Klik α⇄β på glukosen og prøv igen.',
-                     short: 'Kræver α-glukose' };
-    }
-    return { ok: true };
+/* Den binding der ville blive dannet — beskrevet som en rigtig binding,
+   så modulet kan sætte navn på den med den samme funktion som ellers */
+function previewBond(donorNode, acc) {
+    const m = mod();
+    const b = { donor: donorNode, acceptor: acc.node, kind: acc.kind,
+                field: acc.link.field, site: acc.link.site, branch: !!acc.link.dRow };
+    if (m.variant) b[m.variant.field] = donorNode[m.variant.field];
+    return b;
 }
 
-/* The pair of free sites that would react if the user let go now */
+/* De to frie pladser der ville reagere, hvis brugeren slap nu */
 export function bestPair(mol) {
     let best = null, bestDist = SNAP;
 
@@ -43,28 +43,24 @@ export function bestPair(mol) {
         if (other === mol) return;
 
         [[mol, other], [other, mol]].forEach(([dMol, aMol]) => {
-            const donor = dMol._model.sites.find(s => s.kind === 'anomeric');
-            if (!donor) return;
-            const dp = absSite(dMol, donor);
+            dMol._model.sites.filter(s => s.canDonate).forEach(donor => {
+                const dp = absSite(dMol, donor);
 
-            aMol._model.sites.forEach(acc => {
-                let site = null;
-                if (acc.kind === 'c4') site = 4;
-                else if (acc.kind === 'c6') site = 6;
-                else if (acc.kind === 'anomeric' && acc.node.name === 'fructose') site = 2;
-                if (!site) return;
+                aMol._model.sites.forEach(acc => {
+                    if (!acc.link) return;               // ren donorplads, kan ikke modtage
+                    const ap = absSite(aMol, acc);
+                    const d  = Math.hypot(dp.x - ap.x, dp.y - ap.y);
+                    if (d >= bestDist) return;
 
-                const ap = absSite(aMol, acc);
-                const d = Math.hypot(dp.x - ap.x, dp.y - ap.y);
-                if (d >= bestDist) return;
-
-                bestDist = d;
-                best = {
-                    donorMol: dMol, accMol: aMol, donor, acc, site,
-                    dp, ap,
-                    verdict: verdictFor(donor.node, acc.node, site),
-                    label: site === 2 ? 'α-1,β-2' : `${greek(donor.node.anomer)}-1,${site}`
-                };
+                    const bond = previewBond(donor.node, acc);
+                    bestDist = d;
+                    best = {
+                        donorMol: dMol, accMol: aMol, donor, acc,
+                        site: acc.link.site, dp, ap, bond,
+                        verdict: mod().verdict(donor.node, acc.node, acc.link.site),
+                        label: mod().bondLabel(bond)
+                    };
+                });
             });
         });
     });
@@ -101,15 +97,15 @@ export function showPreview(pair) {
 }
 
 export function condense(pair) {
-    const { donorMol, accMol, acc, site } = pair;
+    const { donorMol, accMol, acc } = pair;
 
-    // Where the finished molecule should appear
+    // Hvor det færdige molekyle skal dukke op
     const cd = centreOf(donorMol), ca = centreOf(accMol);
     const mid = { x: (cd.x + ca.x) / 2, y: (cd.y + ca.y) / 2 };
 
-    // The donor hangs off the acceptor's site; the reducing end never moves,
-    // so the acceptor molecule's root stays the root of the product.
-    acc.node[SITE_FIELD[site]] = donorMol._model.root;
+    // Donoren hænger i acceptorens plads; den frie ende flytter sig ikke,
+    // så acceptormolekylets rod bliver også produktets rod.
+    acc.node[acc.link.field] = donorMol._model.root;
     const root = accMol._model.root;
 
     removeMolecule(donorMol);
@@ -130,16 +126,16 @@ export function condense(pair) {
     taskTick();
 }
 
-/* Splits one glycosidic bond. Returns the names involved so an enzyme can
-   phrase the story its own way instead of the generic message. */
+/* Klipper én binding. Returnerer navnene, så et enzym kan fortælle
+   historien på sin egen måde i stedet for den generiske besked. */
 export function hydrolyse(mol, bond, silent) {
     const p = getPos(mol);
     const oldName = mol._model.info.name;
     const root = mol._model.root;
 
-    // Cutting the edge releases the donor's whole subtree, and its anomeric
-    // carbon becomes the new fragment's reducing end
-    bond.acceptor[SITE_FIELD[bond.site]] = null;
+    // At klippe kanten frigiver hele donorens undertræ, og dens egen
+    // donorplads bliver fragmentets nye frie ende
+    bond.acceptor[bond.field] = null;
     const freed = bond.donor;
 
     removeMolecule(mol);
@@ -165,10 +161,11 @@ export function fullHydrolysis(mol) {
     const { nodes } = mol._model;
     const oldName = mol._model.info.name;
     const count = nodes.length;
+    const fields = Object.values(mod().links).map(l => l.field);
 
-    // Snapshot the residues, then cut every bond at once
+    // Tag et øjebliksbillede af enhederne, og klip så alle bindinger på én gang
     const parts = nodes.slice();
-    parts.forEach(n => { n.at4 = null; n.at6 = null; n.at2 = null; });
+    parts.forEach(n => fields.forEach(f => { n[f] = null; }));
     removeMolecule(mol);
 
     parts.forEach((node, i) => {
@@ -178,20 +175,25 @@ export function fullHydrolysis(mol) {
 
     waterFx(p.x + 60, p.y - 40, 'in');
     addWater(-(count - 1));
-    setStatus(`Fuld hydrolyse: ${oldName} spaltet til ${count} monomerer — det har krævet ${count - 1} vandmolekyler.`, 'ok');
+    setStatus(`Fuld hydrolyse: ${oldName} spaltet til ${count} ${mod().nouns.unit[1]} — det har krævet ${count - 1} vandmolekyler.`, 'ok');
     taskTick();
 }
 
-export function flipAnomer(mol) {
+/* Skifter monomerens form — kun moduler med et formvalg (α/β) har den */
+export function flipVariant(mol) {
+    const m = mod();
+    if (!m.variant) return;
+
     const node = mol._model.root;
-    node.anomer = node.anomer === 'a' ? 'b' : 'a';
+    const opts = m.variant.options;
+    const i    = opts.findIndex(o => o.id === node[m.variant.field]);
+    const next = opts[(i + 1) % opts.length];
+    node[m.variant.field] = next.id;
+
     const p = getPos(mol);
     removeMolecule(mol);
-    const m = makeMolecule(node, p.x, p.y);
-    clampIntoView(m);
-    setStatus(`Skiftet til ${greek(node.anomer)}-${MOL[node.name].da}. ` +
-        (node.anomer === 'a'
-            ? 'α-formen giver α-1,4-bindinger — stivelse og glykogen.'
-            : 'β-formen giver β-1,4-bindinger — cellulose.'), 'info');
+    const fresh = makeMolecule(node, p.x, p.y);
+    clampIntoView(fresh);
+    setStatus(`Skiftet til ${m.monomerName(node)}. ${next.flip || ''}`.trim(), 'info');
     taskTick();
 }

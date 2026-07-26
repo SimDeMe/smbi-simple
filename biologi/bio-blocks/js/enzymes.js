@@ -1,16 +1,17 @@
 /* =====================================================================
    Enzymer — blokke der trækkes hen på en binding
 
-   Hvert enzym er en regel: givet en glykosidbinding (og molekylet den
-   sidder i) svarer enzymet enten "den kan jeg klippe" eller "den kan jeg
-   ikke — og her er hvorfor". Substratspecificiteten bliver dermed noget
-   eleverne støder ind i, ikke noget de får fortalt.
+   Hvert enzym er en regel: givet en binding (og molekylet den sidder i)
+   svarer enzymet enten "den kan jeg klippe" eller "den kan jeg ikke — og
+   her er hvorfor". Substratspecificiteten bliver dermed noget eleverne
+   støder ind i, ikke noget de får fortalt. Reglerne står i modulet;
+   her står kun blokken, drop-zonen og beskederne.
    ===================================================================== */
 
 import { state } from './state.js';
+import { mod } from './modules/index.js';
 import { svgSpace, enzLayer, pvLayer } from './dom.js';
 import { SVG_NS, text, rect, badge } from './svg.js';
-import { MOL } from './data.js';
 import { getPos, setPos, clampIntoView, setStatus, waterFx } from './board.js';
 import { hydrolyse } from './reactions.js';
 import { startDrag } from './drag.js';
@@ -18,107 +19,17 @@ import { taskTick, taskEvents } from './tasks.js';
 
 const ENZ_W = 152, ENZ_H = 62, ENZ_NOTCH = 15, ENZ_SNAP = 90;
 
-const canCut  = (short, msg) => ({ ok: true,  short, msg });
-const cantCut = (short, msg, extra) => Object.assign({ ok: false, short, msg }, extra);
-
-const isGlcGlc = b => b.donor.name === 'glucose' && b.acceptor.name === 'glucose';
-const isLactoseBond = b => b.site === 4 && b.anomer === 'b' &&
-                           b.donor.name === 'galactose' && b.acceptor.name === 'glucose';
-
-/* Regeltabellen: enzym → hvilke bindinger det kan hydrolysere */
-const ENZYMES = {
-    amylase: {
-        da: 'Amylase', colour: '#8e44ad', sub: 'α-1,4 inde i kæden',
-        where: 'spyt og bugspyt',
-        test(b, m) {
-            if (b.site === 2) return cantCut('ikke sakkarose',
-                'Amylase virker på stivelse og glykogen — ikke på sakkarose.');
-            if (b.site === 6) return cantCut('ikke α-1,6',
-                'Amylase kan ikke klippe α-1,6. Grenpunkterne bliver siddende tilbage som grænsedextriner, som andre enzymer må tage sig af.');
-            if (b.anomer !== 'a') return cantCut('ikke β-1,4',
-                'Amylase klipper kun α-1,4 — aldrig β-1,4. Netop derfor kan vi ikke fordøje cellulose.');
-            if (!isGlcGlc(b)) return cantCut('kun glukose',
-                'Amylase arbejder kun mellem glukoseenheder.');
-            if (m.nodes.length < 3) return cantCut('kæden er for kort',
-                'Amylase har brug for flere glukoser i sit aktive sted. Maltose er for kort — den klippes af maltase.');
-            if (b.acceptor.at6 || b.donor.at6) return cantCut('for tæt på grenpunkt',
-                'Bindingen ligger lige op ad et α-1,6-grenpunkt, og amylase kan ikke komme til. Det er sådan grænsedextriner opstår.');
-            return canCut('α-1,4 klippes',
-                'Amylase klipper α-1,4 inde i kæden — derfor bliver lange stivelseskæder hurtigt til korte stumper.');
-        }
-    },
-    maltase: {
-        da: 'Maltase', colour: '#16a085', sub: 'α-1,4 fra enden',
-        where: 'tyndtarmens børstesøm',
-        test(b) {
-            if (b.site === 2) return cantCut('ikke sakkarose',
-                'Sakkarose er ikke maltases substrat — den spaltes af sakkarase.');
-            if (b.site === 6) return cantCut('ikke α-1,6',
-                'α-1,6-grenpunktet kræver isomaltase (grænsedextrinase). Maltase kan kun α-1,4.');
-            if (b.anomer !== 'a') return cantCut('ikke β-1,4',
-                'Maltase spalter kun α-1,4. β-1,4 er en helt anden binding.');
-            if (!isGlcGlc(b)) return cantCut('kun glukose',
-                'Maltase spalter kun bindinger mellem to glukoser.');
-            if (b.donor.at4 || b.donor.at6 || b.donor.at2) return cantCut('ikke inde i kæden',
-                'Maltase klipper den yderste glukose af — den arbejder fra enden, ikke midt inde i kæden. Prøv den yderste binding.');
-            return canCut('α-1,4 klippes',
-                'Maltase klipper en enkelt glukose af enden. Det er sidste trin i stivelsesfordøjelsen.');
-        }
-    },
-    sucrase: {
-        da: 'Sakkarase', colour: '#d35400', sub: 'α-1,β-2 (sakkarose)',
-        where: 'tyndtarmens børstesøm',
-        test(b) {
-            if (b.site !== 2) return cantCut('kun sakkarose',
-                'Sakkarase spalter kun bindingen mellem glukosens C1 og fruktosens C2 — altså sakkarose.');
-            return canCut('α-1,β-2 klippes',
-                'Sakkarase spalter sakkarose til glukose + fruktose. Blandingen kaldes invertsukker.');
-        }
-    },
-    lactase: {
-        da: 'Laktase', colour: '#2980b9', sub: 'β-1,4 (laktose)',
-        where: 'tyndtarmens børstesøm',
-        test(b) {
-            if (b.site !== 4 || b.anomer !== 'b') return cantCut('kun β-1,4',
-                'Laktase spalter kun β-1,4-bindinger.');
-            if (b.donor.name !== 'galactose') return cantCut('kræver galaktose',
-                `Laktase er en β-galaktosidase: der skal sidde en galaktose på donorsiden. Her er det ${MOL[b.donor.name].da}.`);
-            if (b.acceptor.name !== 'glucose') return cantCut('kræver glukose',
-                'Laktase klipper galaktosen af en glukose — det er den kombination der hedder laktose.');
-            return canCut('β-1,4 klippes',
-                'Laktase spalter laktose til galaktose + glukose, og begge kan optages i tyndtarmen.');
-        }
-    },
-    cellulase: {
-        da: 'Cellulase', colour: '#7f8c8d', sub: 'β-1,4 (cellulose)',
-        where: 'bakterier, svampe og termitter',
-        tag: '✖ mennesker producerer den ikke',
-        test(b) {
-            if (b.site !== 4 || b.anomer !== 'b') return cantCut('kun β-1,4',
-                'Cellulase spalter kun β-1,4.');
-            if (!isGlcGlc(b)) return cantCut('kun glukose',
-                'Cellulase spalter β-1,4 mellem to glukoser. Laktosens β-1,4 sidder mellem galaktose og glukose.');
-            return canCut('β-1,4 klippes',
-                'Cellulase spalter β-1,4 — men mennesker producerer ikke cellulase. Derfor er cellulose kostfiber for os, mens en ko klarer det med hjælp fra sine bakterier.');
-        }
-    }
-};
-
-/* Findes enzymet i den krop vi lige nu simulerer? */
+/* Virker enzymet i den krop vi lige nu simulerer? Modulets kontakt kan
+   slå netop ét enzym fra: laktasen der mangler, pepsinet ved forkert pH,
+   lipasen der ikke kommer til uden galde. */
 function enzymeAvailable(key) {
-    if (key === 'lactase') return !state.lactoseIntolerant;
-    return true;
+    const t = mod().toggle;
+    return !(state.toggleOn && t && t.blocks(key));
 }
 
 function enzymeVerdict(key, mol, bond) {
-    if (key === 'lactase' && state.lactoseIntolerant) {
-        return isLactoseBond(bond)
-            ? cantCut('ingen laktase',
-                'Du producerer ikke laktase. Laktosen bliver ikke spaltet, den kan ikke optages i tyndtarmen — og fortsætter uspaltet ned i tyktarmen.',
-                { gas: true })
-            : cantCut('ingen laktase', 'Du producerer ikke laktase — blokken kan ikke klippe noget som helst.');
-    }
-    return ENZYMES[key].test(bond, mol._model);
+    if (!enzymeAvailable(key)) return mod().toggle.verdict(key, bond);
+    return mod().enzymes[key].test(bond, mol._model);
 }
 
 /* ---------- Enzymblokken som SVG ---------- */
@@ -132,9 +43,9 @@ function enzymeShape() {
 }
 
 function makeEnzyme(key, x, y) {
-    const cfg  = ENZYMES[key];
+    const cfg  = mod().enzymes[key];
     const off  = !enzymeAvailable(key);
-    const tag  = off ? '✖ mangler — laktoseintolerans' : cfg.tag;
+    const tag  = off ? mod().toggle.missing : cfg.tag;
 
     const g = document.createElementNS(SVG_NS, 'g');
     g.setAttribute('class', 'enzyme appear');
@@ -180,10 +91,10 @@ export function spawnEnzyme(key) {
     const enz = makeEnzyme(key, Math.round(x), Math.round(y));
     clampIntoView(enz);
 
-    const cfg = ENZYMES[key];
+    const cfg = mod().enzymes[key];
     setStatus(enzymeAvailable(key)
         ? `${cfg.da} lagt på bordet — findes i ${cfg.where}. Træk hakket hen på den binding du vil have klippet; enzymet reagerer kun på sit eget substrat.`
-        : `${cfg.da} lagt på bordet, men du producerer den ikke. Prøv alligevel at trække den hen på laktosen.`,
+        : `${cfg.da} lagt på bordet, men den virker ikke lige nu. Prøv alligevel at trække den hen på en binding.`,
         'info');
 }
 
@@ -248,7 +159,7 @@ export function showEnzymePreview(enz, best) {
     g.setAttribute('class', best.verdict.ok ? 'pv-ok' : 'pv-no');
     pvLayer.appendChild(g);
 
-    const t = text(`${ENZYMES[key].da}: ${best.verdict.short}`, best.p.x, best.p.y - 30, 'pv-text');
+    const t = text(`${mod().enzymes[key].da}: ${best.verdict.short}`, best.p.x, best.p.y - 30, 'pv-text');
     g.appendChild(t);
     const w = t.getComputedTextLength() + 14;
     const bg = rect(best.p.x - w / 2, best.p.y - 43, w, 18, null);
@@ -259,15 +170,18 @@ export function showEnzymePreview(enz, best) {
 
 export function dropEnzyme(enz, target) {
     if (!target) return;
-    const cfg = ENZYMES[enz._enzyme];
+    const cfg = mod().enzymes[enz._enzyme];
     const v   = target.verdict;
 
     if (!v.ok) {
         enz.classList.add('shake');
-        if (v.gas) {
-            waterFx(target.p.x, target.p.y - 20, 'out', '💨 gas');
-            setStatus(`${v.msg} I tyktarmen lever bakterierne af den: der dannes gas, og laktosen trækker vand ud i tarmen — luft i maven og osmotisk diarré. Det er laktoseintolerans.`, 'error');
-            taskEvents.add('gas');
+        // Et afslag kan have en konsekvens i sig selv — gassen i tyktarmen,
+        // fedtdråben der ikke bliver mindre. Den vises som en effekt og
+        // huskes, så en opgave kan spørge til den.
+        if (v.event) {
+            waterFx(target.p.x, target.p.y - 20, 'out', v.fx);
+            setStatus(`${v.msg} ${v.tail || ''}`.trim(), 'error');
+            taskEvents.add(v.event);
             taskTick();
         } else {
             setStatus(`Ingen reaktion. ${v.msg}`, 'error');
@@ -304,8 +218,8 @@ export function rerenderEnzymes() {
 }
 
 export function syncEnzymeButtons() {
-    Object.keys(ENZYMES).forEach(key => {
-        document.getElementById('enz-btn-' + key)
-            .classList.toggle('missing', !enzymeAvailable(key));
+    Object.keys(mod().enzymes).forEach(key => {
+        const btn = document.getElementById('enz-btn-' + key);
+        if (btn) btn.classList.toggle('missing', !enzymeAvailable(key));
     });
 }

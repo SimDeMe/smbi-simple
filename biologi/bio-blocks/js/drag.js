@@ -5,10 +5,10 @@
    ===================================================================== */
 
 import { svgSpace, molLayer, enzLayer, pvLayer } from './dom.js';
-import { SNAP } from './data.js';
+import { SNAP } from './units.js';
 import { getPos, setPos, clampIntoView, centreOf, setStatus } from './board.js';
 import { bestPair, showPreview, condense, hydrolyse,
-         fullHydrolysis, flipAnomer } from './reactions.js';
+         fullHydrolysis, flipVariant } from './reactions.js';
 import { bestBond, showEnzymePreview, dropEnzyme, removeEnzyme } from './enzymes.js';
 import { openFacts } from './facts.js';
 import { openViewer } from './viewer3d.js';
@@ -29,7 +29,7 @@ export function startDrag(e) {
         if (a === 'view') openViewer(mol._model.info);
         else if (a === 'facts') openFacts(mol._model);
         else if (a === 'cut') fullHydrolysis(mol);
-        else if (a === 'flip') flipAnomer(mol);
+        else if (a === 'flip') flipVariant(mol);
         else if (a === 'remove') removeEnzyme(mol);
         return;
     }
