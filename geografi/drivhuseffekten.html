@@ -1,0 +1,1942 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Drivhuseffekten trin for trin</title>
+<meta name="description" content="Interaktiv figur: drivhuseffekten trin for trin, med skydere for CO₂ og albedo samt opgaver.">
+<style>
+/* ==========================================================================
+   Drivhuseffekten trin for trin — smbi.dk
+   Alle klassenavne er prefixet dh- så figuren kan lægges i en <iframe>
+   eller direkte på en side uden at kollidere med sidens egen CSS.
+   ========================================================================== */
+
+.dh-app {
+  /* Palette: "Ocean Gradient" */
+  --dh-morkeblaa: #21295C;
+  --dh-blaa:      #065A82;
+  --dh-teal:      #1C7293;
+  --dh-lyseblaa:  #CADCFC;
+  --dh-hvid:      #F7FAFC;
+  --dh-orange:    #E8734A;
+  /* Tekstsikre varianter (kontrast ≥ 4,5:1 på lys baggrund) */
+  --dh-orange-tekst: #A8442A;
+  --dh-lang-tekst:   #A93A2B;
+  --dh-kort-tekst:   #7A5406;
+  /* Stråling */
+  --dh-kort: #F2B134;   /* kortbølget: gul-orange, fuldt optrukket */
+  --dh-lang: #C64B3A;   /* langbølget: rød-orange, stiplet */
+  --dh-konv: #3E9BC4;   /* fordampning og opstigende varm luft */
+  --dh-groen: #1F7A55;
+  --dh-roed:  #B3341F;
+
+  --dh-serif: Cambria, "Hoefler Text", Constantia, Georgia, "Times New Roman", serif;
+  --dh-sans: Calibri, "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  --dh-r: 12px;
+  --dh-skygge: 0 1px 3px rgba(33,41,92,.12), 0 6px 18px rgba(33,41,92,.08);
+  --dh-basis: 16px;
+
+  font-family: var(--dh-sans);
+  font-size: var(--dh-basis);
+  line-height: 1.5;
+  color: var(--dh-morkeblaa);
+  background: var(--dh-hvid);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+.dh-app *, .dh-app *::before, .dh-app *::after { box-sizing: border-box; }
+.dh-app [hidden] { display: none !important; }
+.dh-app h1, .dh-app h2, .dh-app h3, .dh-app p, .dh-app ul, .dh-app ol, .dh-app figure { margin: 0; }
+.dh-app ul, .dh-app ol { padding-left: 1.2em; }
+.dh-app button { font: inherit; color: inherit; }
+
+/* Projektortilstand: ~140 % tekst. Overskrift og kort sætning løftes yderligere,
+   så de er mindst 24 pt (32 px) og kan læses fra bagerste række. */
+.dh-app[data-projektor="1"] { --dh-basis: 22px; }
+.dh-app[data-projektor="1"] .dh-trin-titel { font-size: 1.65em; }
+.dh-app[data-projektor="1"] .dh-trin-kort { font-size: 1.5em; }
+.dh-app[data-projektor="1"] .dh-scene text.dh-label { font-size: 19px; }
+.dh-app[data-projektor="1"] .dh-scene text.dh-zone { font-size: 16px; }
+.dh-app[data-projektor="1"] .dh-termo-vaerdi { font-size: 1.8em; }
+
+/* ── Topbjælke ─────────────────────────────────────────────────────────── */
+.dh-top {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px;
+  padding: 10px 18px;
+  background: var(--dh-morkeblaa);
+  color: var(--dh-hvid);
+}
+.dh-top h1 {
+  font-family: var(--dh-serif);
+  font-size: 1.25em; font-weight: 700; letter-spacing: .01em;
+  margin-right: auto;
+}
+.dh-tilstande { display: flex; gap: 4px; background: rgba(247,250,252,.13); padding: 3px; border-radius: 999px; }
+.dh-tilstande button {
+  border: 0; background: transparent; color: var(--dh-hvid);
+  padding: .35em 1em; border-radius: 999px; cursor: pointer;
+  font-size: .92em; font-weight: 600;
+}
+.dh-tilstande button[aria-pressed="true"] { background: var(--dh-hvid); color: var(--dh-morkeblaa); }
+.dh-tilstande button:hover:not([aria-pressed="true"]) { background: rgba(247,250,252,.18); }
+.dh-topknapper { display: flex; gap: 6px; }
+.dh-topknapper button {
+  border: 1px solid rgba(247,250,252,.45); background: transparent; color: var(--dh-hvid);
+  padding: .35em .85em; border-radius: 8px; cursor: pointer; font-size: .85em; font-weight: 600;
+}
+.dh-topknapper button:hover { background: rgba(247,250,252,.15); }
+.dh-topknapper button[aria-pressed="true"] { background: var(--dh-orange); border-color: var(--dh-orange); }
+
+/* ── Hovedlayout ───────────────────────────────────────────────────────── */
+.dh-layout {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(300px, .95fr);
+  gap: 16px;
+  padding: 16px;
+  align-items: start;
+  max-width: 1500px; width: 100%; margin: 0 auto;
+}
+.dh-kort {
+  background: #fff;
+  border: 1px solid var(--dh-lyseblaa);
+  border-radius: var(--dh-r);
+  box-shadow: var(--dh-skygge);
+}
+.dh-venstre { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.dh-hoejre  { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+
+/* ── Scene ─────────────────────────────────────────────────────────────── */
+.dh-scene-boks { padding: 10px 10px 4px; position: relative; }
+.dh-scene-wrap { max-width: 100%; }
+.dh-scene-indre { position: relative; }
+.dh-scene { display: block; width: 100%; height: auto; border-radius: 8px; }
+
+.dh-aflaes {
+  display: flex; flex-wrap: wrap; gap: 10px 20px; align-items: center;
+  padding: 10px 8px 8px;
+  border-top: 1px solid var(--dh-lyseblaa);
+  margin-top: 8px;
+}
+
+/* Termometer */
+.dh-termo { flex: 1 1 320px; min-width: 260px; }
+.dh-termo-hoved { display: flex; align-items: baseline; gap: 10px; font-size: .9em; }
+.dh-termo-navn { font-weight: 700; color: var(--dh-teal); }
+.dh-termo-vaerdi { font-family: var(--dh-serif); font-size: 1.5em; font-weight: 700; }
+.dh-termo-bar {
+  position: relative; height: 16px; margin-top: 32px; border-radius: 999px;
+  background: linear-gradient(90deg, #4E7FB8 0%, #8FB8D8 28%, #E8E2C8 52%, var(--dh-kort) 76%, var(--dh-lang) 100%);
+  border: 1px solid rgba(33,41,92,.25);
+}
+.dh-termo-maerke {
+  position: absolute; top: 50%; width: 18px; height: 18px; border-radius: 50%;
+  background: var(--dh-morkeblaa); border: 3px solid #fff;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 0 1px rgba(33,41,92,.5);
+}
+.dh-termo-spoegelse {
+  position: absolute; top: 50%; width: 14px; height: 14px; border-radius: 50%;
+  background: transparent; border: 3px dashed var(--dh-morkeblaa);
+  transform: translate(-50%, -50%); opacity: .75;
+}
+.dh-termo-spoegelse span {
+  position: absolute; left: 50%; top: 1.15em; transform: translateX(-50%);
+  font-size: .68em; font-weight: 700; white-space: nowrap; letter-spacing: .02em;
+}
+.dh-termo-gab {
+  position: absolute; top: -13px; height: 11px;
+  border: 2px solid var(--dh-orange-tekst); border-bottom: 0;
+  border-radius: 4px 4px 0 0;
+}
+.dh-termo-gab span {
+  position: absolute; left: 50%; top: -1.5em; transform: translateX(-50%);
+  font-size: .72em; font-weight: 700; color: var(--dh-orange-tekst); white-space: nowrap;
+}
+.dh-termo-skala { display: flex; justify-content: space-between; font-size: .7em; color: var(--dh-teal); margin-top: 22px; }
+.dh-termo[data-vis="fremhaevet"], .dh-balance[data-vis="fremhaevet"] {
+  box-shadow: 0 0 0 3px var(--dh-orange); border-radius: 10px; padding: 6px 8px;
+}
+
+/* Balanceindikator */
+.dh-balance { flex: 1 1 300px; min-width: 250px; font-size: .88em; }
+.dh-balance-titel { font-weight: 700; color: var(--dh-teal); font-size: .95em; }
+.dh-balance-linje { display: flex; align-items: center; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
+.dh-chip {
+  display: inline-flex; align-items: center; gap: .4em;
+  padding: .18em .7em; border-radius: 999px; font-weight: 700; font-size: .95em;
+  border: 2px solid currentColor;
+}
+.dh-chip[data-status="ok"]   { color: var(--dh-groen); background: rgba(31,122,85,.08); }
+.dh-chip[data-status="ude"]  { color: var(--dh-roed);  background: rgba(179,52,31,.08); }
+.dh-balance-note { margin-top: 3px; color: var(--dh-roed); font-weight: 600; }
+.dh-balance-note:empty { display: none; }
+
+/* ── Kontrolpanel ──────────────────────────────────────────────────────── */
+.dh-kontrol { padding: 14px 16px 16px; }
+.dh-kontrol-titel {
+  font-size: .72em; font-weight: 700; text-transform: uppercase; letter-spacing: .09em;
+  color: var(--dh-teal); margin-bottom: 10px;
+}
+.dh-skyder { margin-bottom: 14px; }
+.dh-skyder[data-laast="1"] { opacity: .5; }
+.dh-skyder-hoved { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.dh-skyder-navn { font-weight: 700; font-size: .95em; }
+.dh-skyder-vaerdi { margin-left: auto; font-family: var(--dh-serif); font-weight: 700; font-size: 1.15em; color: var(--dh-orange-tekst); }
+.dh-skyder-note { font-size: .78em; color: var(--dh-teal); }
+.dh-laasikon { font-size: .72em; font-weight: 700; color: var(--dh-teal); }
+
+.dh-app input[type="range"] {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 22px; background: transparent; cursor: pointer; margin: 2px 0 0;
+}
+.dh-app input[type="range"]::-webkit-slider-runnable-track {
+  height: 6px; border-radius: 3px; background: var(--dh-lyseblaa); border: 1px solid rgba(33,41,92,.2);
+}
+.dh-app input[type="range"]::-moz-range-track {
+  height: 6px; border-radius: 3px; background: var(--dh-lyseblaa); border: 1px solid rgba(33,41,92,.2);
+}
+.dh-app input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 22px; height: 22px; margin-top: -9px; border-radius: 50%;
+  background: var(--dh-orange); border: 3px solid #fff; box-shadow: 0 0 0 1px rgba(33,41,92,.45);
+}
+.dh-app input[type="range"]::-moz-range-thumb {
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--dh-orange); border: 3px solid #fff; box-shadow: 0 0 0 1px rgba(33,41,92,.45);
+}
+.dh-app input[type="range"]:focus-visible { outline: 3px solid var(--dh-teal); outline-offset: 3px; border-radius: 6px; }
+.dh-app input[type="range"]:disabled { cursor: not-allowed; }
+
+.dh-maerker { position: relative; height: 1.35em; font-size: .72em; margin-bottom: 2px; }
+.dh-maerke-tekst { font-size: .72em; color: var(--dh-teal); }
+.dh-maerker button {
+  position: absolute; top: 0; transform: translateX(-50%);
+  border: 0; background: transparent; padding: 0 .2em; cursor: pointer;
+  color: var(--dh-teal); font-size: 1em; white-space: nowrap;
+  border-top: 6px solid transparent;
+}
+.dh-maerker button::before {
+  content: ""; position: absolute; left: 50%; top: -6px; width: 1px; height: 5px; background: var(--dh-teal);
+}
+.dh-maerker button:hover { color: var(--dh-orange-tekst); text-decoration: underline; }
+.dh-maerker button:disabled { cursor: default; text-decoration: none; }
+
+.dh-kontrol-bund { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+
+.dh-knap {
+  border: 2px solid var(--dh-teal); background: #fff; color: var(--dh-teal);
+  border-radius: 8px; padding: .4em 1em; cursor: pointer; font-weight: 700; font-size: .88em;
+}
+.dh-knap:hover { background: var(--dh-lyseblaa); }
+.dh-knap-primaer { background: var(--dh-teal); color: #fff; }
+.dh-knap-primaer:hover { background: var(--dh-blaa); border-color: var(--dh-blaa); }
+.dh-knap:disabled { opacity: .45; cursor: not-allowed; }
+.dh-app :focus-visible { outline: 3px solid var(--dh-orange); outline-offset: 2px; }
+
+/* ── Forklaringspanel ──────────────────────────────────────────────────── */
+.dh-forklaring { padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
+.dh-trin-tael { font-size: .74em; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--dh-orange-tekst); }
+.dh-trin-titel { font-family: var(--dh-serif); font-size: 1.45em; line-height: 1.2; color: var(--dh-morkeblaa); }
+.dh-trin-kort { font-family: var(--dh-serif); font-size: 1.1em; color: var(--dh-blaa); font-weight: 700; display: none; }
+.dh-app[data-projektor="1"] .dh-trin-kort { display: block; }
+.dh-app[data-projektor="1"] .dh-trin-tekst { display: none; }
+
+/* Udforsk: ingen trintekst, kun figuren og en "Hvad ser jeg på?"-knap */
+.dh-app:not([data-mode="explore"]) #dhUdforskKnap { display: none; }
+.dh-app[data-mode="explore"] #dhTrinTael,
+.dh-app[data-mode="explore"] .dh-trin-kort,
+.dh-app[data-mode="explore"] .dh-trin-tekst,
+.dh-app[data-mode="explore"] #dhPasPaa,
+.dh-app[data-mode="explore"] #dhStopOp,
+.dh-app[data-mode="explore"] .dh-nav,
+.dh-app[data-mode="explore"] .dh-prikker { display: none; }
+.dh-trin-tekst { font-size: 1em; }
+.dh-trin-tekst b { color: var(--dh-blaa); }
+
+.dh-pasp {
+  border-left: 5px solid var(--dh-orange); background: #FDF3EE;
+  padding: 9px 12px; border-radius: 0 8px 8px 0; font-size: .88em;
+}
+.dh-pasp-titel { font-weight: 700; color: var(--dh-orange-tekst); display: block; }
+
+.dh-app details.dh-stopop { border: 1px solid var(--dh-lyseblaa); border-radius: 8px; background: var(--dh-hvid); }
+.dh-app details.dh-stopop > summary {
+  cursor: pointer; padding: .5em .8em; font-weight: 700; font-size: .88em; color: var(--dh-teal); list-style: none;
+}
+.dh-app details.dh-stopop > summary::-webkit-details-marker { display: none; }
+.dh-app details.dh-stopop > summary::before { content: "? "; font-weight: 700; }
+.dh-app details.dh-stopop[open] > summary { border-bottom: 1px solid var(--dh-lyseblaa); }
+.dh-stopop-krop { padding: .6em .8em; font-size: .92em; }
+
+.dh-nav { display: flex; gap: 8px; margin-top: auto; padding-top: 8px; }
+.dh-nav button { flex: 1; }
+.dh-prikker { display: flex; gap: 5px; justify-content: center; padding-top: 8px; flex-wrap: wrap; }
+.dh-prikker button {
+  width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--dh-lyseblaa);
+  background: #fff; cursor: pointer; font-size: .72em; font-weight: 700; color: var(--dh-teal); padding: 0;
+}
+.dh-prikker button[aria-current="step"] { background: var(--dh-orange); border-color: var(--dh-orange); color: #fff; }
+
+/* Sløjfediagram */
+.dh-sloejfe { border: 1px dashed var(--dh-teal); border-radius: 10px; padding: 8px; background: var(--dh-hvid); }
+.dh-sloejfe svg { display: block; width: 100%; height: auto; }
+
+/* ── Opgaver ───────────────────────────────────────────────────────────── */
+.dh-quiz { padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
+.dh-saet-valg { display: flex; gap: 6px; flex-wrap: wrap; }
+.dh-saet-valg button {
+  border: 2px solid var(--dh-lyseblaa); background: #fff; border-radius: 8px;
+  padding: .3em .8em; cursor: pointer; font-weight: 700; font-size: .84em;
+}
+.dh-saet-valg button[aria-pressed="true"] { background: var(--dh-morkeblaa); border-color: var(--dh-morkeblaa); color: #fff; }
+.dh-status { font-size: .8em; color: var(--dh-teal); font-weight: 700; }
+.dh-status-bar { height: 8px; border-radius: 999px; background: var(--dh-lyseblaa); overflow: hidden; margin-top: 4px; }
+.dh-status-bar i { display: block; height: 100%; background: var(--dh-teal); transition: width .3s; }
+.dh-opg-nr { font-size: .74em; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--dh-orange-tekst); }
+.dh-opg-spm { font-family: var(--dh-serif); font-size: 1.15em; line-height: 1.3; }
+.dh-svar { display: flex; flex-direction: column; gap: 7px; }
+.dh-svar label {
+  display: flex; gap: 9px; align-items: flex-start;
+  border: 2px solid var(--dh-lyseblaa); border-radius: 8px; padding: .5em .7em;
+  cursor: pointer; font-size: .95em; background: #fff;
+}
+.dh-svar label:hover { border-color: var(--dh-teal); }
+.dh-svar label[data-mark="rigtigt"] { border-color: var(--dh-groen); background: rgba(31,122,85,.08); }
+.dh-svar label[data-mark="forkert"] { border-color: var(--dh-roed); background: rgba(179,52,31,.07); }
+.dh-svar input { margin-top: .25em; width: 1.1em; height: 1.1em; flex: none; accent-color: var(--dh-teal); }
+.dh-app textarea, .dh-app input[type="number"], .dh-app input[type="text"] {
+  font: inherit; width: 100%; border: 2px solid var(--dh-lyseblaa); border-radius: 8px;
+  padding: .45em .6em; background: #fff; color: inherit;
+}
+.dh-app textarea { min-height: 6.5em; resize: vertical; }
+.dh-app input[type="number"] { max-width: 9em; }
+.dh-feedback { border-radius: 8px; padding: .6em .8em; font-size: .9em; border-left: 5px solid; }
+.dh-feedback[data-ok="1"] { border-color: var(--dh-groen); background: rgba(31,122,85,.08); }
+.dh-feedback[data-ok="0"] { border-color: var(--dh-roed); background: rgba(179,52,31,.07); }
+.dh-feedback[data-ok="åben"] { border-color: var(--dh-teal); background: var(--dh-lyseblaa); }
+.dh-feedback b { display: block; }
+.dh-opg-knapper { display: flex; gap: 8px; flex-wrap: wrap; }
+.dh-opsamling ul { margin-top: .4em; }
+.dh-opsamling li { margin-bottom: .25em; }
+
+/* Trækopgave */
+.dh-drop-lag { position: absolute; inset: 0; pointer-events: none; }
+.dh-drop {
+  position: absolute; transform: translate(-50%, -50%);
+  width: 7.2em; pointer-events: auto; line-height: 1.15;
+  border: 2px dashed var(--dh-morkeblaa); background: rgba(247,250,252,.94);
+  border-radius: 8px; padding: .3em .3em; font-size: .72em; font-weight: 700;
+  cursor: pointer; text-align: center; color: var(--dh-morkeblaa);
+}
+.dh-drop[data-valgt="1"] { border-style: solid; border-color: var(--dh-orange); }
+.dh-drop[data-mark="rigtigt"] { border-style: solid; border-color: var(--dh-groen); background: rgba(214,240,228,.96); }
+.dh-drop[data-mark="forkert"] { border-style: solid; border-color: var(--dh-roed); background: rgba(250,224,220,.96); }
+.dh-braet { display: flex; gap: 6px; flex-wrap: wrap; }
+.dh-brik {
+  border: 2px solid var(--dh-teal); background: #fff; border-radius: 8px;
+  padding: .3em .7em; font-size: .82em; font-weight: 700; cursor: grab; color: var(--dh-teal);
+}
+.dh-brik[aria-pressed="true"] { background: var(--dh-orange); border-color: var(--dh-orange); color: #fff; }
+.dh-brik[data-brugt="1"] { opacity: .35; cursor: default; }
+
+/* ── Dialog ────────────────────────────────────────────────────────────── */
+.dh-app dialog {
+  border: 0; border-radius: var(--dh-r); padding: 0; max-width: 620px; width: calc(100% - 32px);
+  box-shadow: 0 10px 50px rgba(33,41,92,.35); color: var(--dh-morkeblaa); background: #fff;
+}
+.dh-app dialog::backdrop { background: rgba(33,41,92,.55); }
+.dh-dialog-krop { padding: 20px 22px; font-size: .95em; }
+.dh-dialog-krop h2 { font-family: var(--dh-serif); font-size: 1.35em; margin-bottom: .5em; }
+.dh-dialog-krop h3 { font-family: var(--dh-serif); font-size: 1.05em; margin: 1em 0 .2em; }
+.dh-dialog-krop p, .dh-dialog-krop ul { margin-bottom: .7em; }
+.dh-dialog-krop table { border-collapse: collapse; font-size: .9em; margin-bottom: .7em; }
+.dh-dialog-krop td, .dh-dialog-krop th { border: 1px solid var(--dh-lyseblaa); padding: .25em .6em; text-align: left; }
+
+.dh-sr {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* ── SVG-scene ─────────────────────────────────────────────────────────── */
+.dh-scene text { font-family: var(--dh-sans); }
+.dh-el { transition: opacity .35s ease; }
+.dh-el[data-vis="skjult"] { display: none; }
+.dh-el[data-vis="tonet"] { opacity: .25; }
+.dh-el[data-vis="fremhaevet"] .dh-shaft { filter: drop-shadow(0 0 7px rgba(232,115,74,.95)); }
+.dh-el[data-vis="fremhaevet"] .dh-boks { filter: drop-shadow(0 0 7px rgba(232,115,74,.95)); }
+.dh-skyder[data-fremhaev="1"] { box-shadow: 0 0 0 3px var(--dh-orange); border-radius: 8px; padding: 4px 6px; margin-left: -6px; }
+/* Halo bag pil-labels, så de kan læses uanset hvor på baggrunden de ligger */
+.dh-label { font-size: 15px; font-weight: 700; paint-order: stroke; stroke-width: 3.5px; stroke-linejoin: round; }
+.dh-label-lys { fill: var(--dh-hvid); }
+.dh-label-moerk { fill: var(--dh-morkeblaa); }
+.dh-zone { font-size: 13px; font-weight: 700; letter-spacing: .12em; }
+
+@media (prefers-reduced-motion: reduce) {
+  .dh-app *, .dh-el { transition-duration: .001s !important; animation-duration: .001s !important; }
+}
+
+/* ── Responsivt ────────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .dh-layout { grid-template-columns: minmax(0, 1fr); }
+  .dh-top h1 { font-size: 1.05em; width: 100%; margin-right: 0; }
+}
+.dh-scene-rul { display: none; font-size: .74em; color: var(--dh-teal); padding: 4px 2px 0; }
+/* På telefon ville figurens tekster blive ulæselige, hvis SVG'en blev presset ned
+   i skærmbredden. Den beholder sin mindstebredde og får sin egen vandrette
+   rulning — siden som helhed ruller stadig kun lodret. */
+@media (max-width: 700px) {
+  .dh-scene-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .dh-scene-indre { min-width: 600px; }
+  .dh-scene-rul { display: block; }
+}
+@media (max-width: 560px) {
+  .dh-app { --dh-basis: 15px; }
+  .dh-layout { padding: 10px; gap: 10px; }
+  .dh-forklaring, .dh-quiz, .dh-kontrol { padding: 12px 13px; }
+  .dh-aflaes { gap: 14px; }
+}
+
+/* ── Print ─────────────────────────────────────────────────────────────── */
+.dh-print { display: none; }
+@media print {
+  .dh-app { display: none; }
+  .dh-print { display: block; font-family: var(--dh-sans, Calibri, sans-serif); color: #000; padding: 0; }
+  .dh-print h1 { font-family: Cambria, Georgia, serif; font-size: 20pt; margin-bottom: 2mm; }
+  .dh-print h2 { font-family: Cambria, Georgia, serif; font-size: 14pt; margin: 6mm 0 2mm; page-break-after: avoid; }
+  .dh-print .dh-p-opg { margin-bottom: 6mm; page-break-inside: avoid; font-size: 11pt; }
+  .dh-print .dh-p-spm { font-weight: 700; }
+  .dh-print .dh-p-valg { margin: 1mm 0 0 6mm; }
+  .dh-print .dh-p-linjer { border-bottom: 1px solid #999; height: 7mm; margin-top: 2mm; }
+  .dh-print .dh-p-facit { margin-top: 1.5mm; padding: 1.5mm 3mm; border-left: 3px solid #666; font-size: 10pt; }
+  body[data-print="uden"] .dh-p-facit { display: none; }
+  body[data-print="med"] .dh-p-linjer { display: none; }
+  @page { margin: 18mm 16mm; }
+}
+</style>
+</head>
+<body>
+
+<div class="dh-app" id="dhApp" data-mode="teach">
+
+  <header class="dh-top">
+    <h1>Drivhuseffekten trin for trin</h1>
+
+    <div class="dh-tilstande" role="group" aria-label="Vælg tilstand">
+      <button type="button" data-tilstand="teach" aria-pressed="true">Gennemgang</button>
+      <button type="button" data-tilstand="explore" aria-pressed="false">Udforsk</button>
+      <button type="button" data-tilstand="quiz" aria-pressed="false">Opgaver</button>
+    </div>
+
+    <div class="dh-topknapper">
+      <button type="button" id="dhProjektor" aria-pressed="false" title="Forstør al tekst til projektor">Projektor</button>
+      <button type="button" id="dhOmModellen">Om modellen</button>
+    </div>
+  </header>
+
+  <main class="dh-layout">
+
+    <!-- ══ Venstre: scene + kontroller ══════════════════════════════════ -->
+    <div class="dh-venstre">
+
+      <section class="dh-kort dh-scene-boks" aria-label="Figur: energistrømme i Jordens atmosfære">
+        <div class="dh-scene-wrap">
+         <div class="dh-scene-indre">
+          <svg class="dh-scene" id="dhSvg" viewBox="0 0 840 480" role="group"
+               aria-labelledby="dhSvgTitel" aria-describedby="dhSvgBesk" preserveAspectRatio="xMidYMid meet">
+            <title id="dhSvgTitel">Drivhuseffekten: energistrømme mellem Solen, atmosfæren og jordoverfladen</title>
+            <desc id="dhSvgBesk">Figuren viser kortbølget stråling fra Solen ind mod Jorden, hvor en del kastes tilbage, og langbølget varmestråling fra jordoverfladen, som drivhusgasserne optager og sender ud igen i alle retninger.</desc>
+
+            <defs>
+              <linearGradient id="dhHimmel" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%"   stop-color="#12184A"/>
+                <stop offset="26%"  stop-color="#21295C"/>
+                <stop offset="58%"  stop-color="#3F6494"/>
+                <stop offset="100%" stop-color="#9EC2E0"/>
+              </linearGradient>
+              <linearGradient id="dhJord" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%"   stop-color="#2F6B4F"/>
+                <stop offset="100%" stop-color="#1E3F33"/>
+              </linearGradient>
+              <linearGradient id="dhAtmFyld" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%"   stop-color="#CADCFC" stop-opacity=".16"/>
+                <stop offset="100%" stop-color="#CADCFC" stop-opacity=".42"/>
+              </linearGradient>
+              <radialGradient id="dhSolGlow">
+                <stop offset="0%"   stop-color="#FFE9A8"/>
+                <stop offset="55%"  stop-color="#F2B134"/>
+                <stop offset="100%" stop-color="#F2B134" stop-opacity="0"/>
+              </radialGradient>
+            </defs>
+
+            <!-- Baggrund -->
+            <rect x="0" y="0" width="840" height="404" fill="url(#dhHimmel)"/>
+            <rect x="0" y="404" width="840" height="76" fill="url(#dhJord)"/>
+
+            <!-- Zonelabels -->
+            <g class="dh-el" data-el="rummet">
+              <text class="dh-zone" x="820" y="26" text-anchor="end" fill="#CADCFC">RUMMET</text>
+              <g id="dhStjerner" fill="#F7FAFC" opacity=".55">
+                <circle cx="300" cy="22" r="1.6"/><circle cx="378" cy="46" r="1.2"/>
+                <circle cx="452" cy="18" r="1.4"/><circle cx="530" cy="40" r="1.1"/>
+                <circle cx="612" cy="20" r="1.5"/><circle cx="700" cy="52" r="1.2"/>
+                <circle cx="248" cy="58" r="1.1"/><circle cx="770" cy="30" r="1.3"/>
+              </g>
+            </g>
+
+            <!-- Toppen af atmosfæren -->
+            <g class="dh-el" data-el="toa">
+              <line x1="20" y1="150" x2="820" y2="150" stroke="#CADCFC" stroke-width="2" stroke-dasharray="9 8" opacity=".75"/>
+              <text class="dh-zone" x="470" y="172" text-anchor="middle" fill="#CADCFC" font-size="12">TOPPEN AF ATMOSFÆREN</text>
+            </g>
+
+            <!-- Solen -->
+            <g class="dh-el" data-el="sol" role="img" aria-label="Solen">
+              <title>Solen</title>
+              <circle cx="62" cy="52" r="60" fill="url(#dhSolGlow)" opacity=".55"/>
+              <circle class="dh-boks" cx="62" cy="52" r="30" fill="#F2B134" stroke="#FFE9A8" stroke-width="3"/>
+              <text class="dh-label dh-label-lys" x="62" y="112" text-anchor="middle" font-size="14">Solen</text>
+            </g>
+
+            <!-- Atmosfærelaget -->
+            <g class="dh-el" data-el="atmosfaere" role="img" aria-label="Atmosfærelaget med drivhusgasser">
+              <title>Atmosfærelaget med drivhusgasserne CO₂, H₂O og CH₄</title>
+              <rect class="dh-boks" x="24" y="214" width="792" height="104" rx="16"
+                    fill="url(#dhAtmFyld)" stroke="#CADCFC" stroke-width="2.5" stroke-dasharray="14 7"/>
+              <text class="dh-zone" x="44" y="240" fill="#F7FAFC">ATMOSFÆREN</text>
+              <g font-size="14" font-weight="700" fill="#21295C">
+                <g><circle cx="272" cy="292" r="17" fill="#CADCFC" stroke="#F7FAFC" stroke-width="1.5"/><text x="272" y="297" text-anchor="middle">H₂O</text></g>
+                <g><circle cx="482" cy="244" r="17" fill="#CADCFC" stroke="#F7FAFC" stroke-width="1.5"/><text x="482" y="249" text-anchor="middle">O₃</text></g>
+                <g><circle cx="668" cy="244" r="17" fill="#CADCFC" stroke="#F7FAFC" stroke-width="1.5"/><text x="668" y="249" text-anchor="middle">CH₄</text></g>
+                <g><circle cx="700" cy="296" r="17" fill="#CADCFC" stroke="#F7FAFC" stroke-width="1.5"/><text x="700" y="301" text-anchor="middle">N₂O</text></g>
+              </g>
+            </g>
+
+            <!-- Genudsendelse i alle retninger -->
+            <g class="dh-el" data-el="genudsendelse" role="img" aria-label="Drivhusgassen sender varmestrålingen ud igen i alle retninger">
+              <title>En drivhusgas sender varmestrålingen ud igen i alle retninger</title>
+              <g id="dhGenud" stroke="#C64B3A" stroke-width="3.5" stroke-dasharray="5 4" stroke-linecap="round" fill="none"></g>
+              <circle class="dh-boks" cx="556" cy="266" r="19" fill="#F7FAFC" stroke="#C64B3A" stroke-width="3"/>
+              <text x="556" y="271" text-anchor="middle" font-size="13" font-weight="700" fill="#21295C">CO₂</text>
+            </g>
+
+            <!-- Jordoverfladen -->
+            <g class="dh-el" data-el="overflade" role="img" aria-label="Jordoverfladen">
+              <title>Jordoverfladen</title>
+              <rect class="dh-boks" x="0" y="398" width="840" height="10" fill="#3C8A63"/>
+              <text class="dh-zone" x="420" y="446" text-anchor="middle" fill="#F7FAFC">JORDOVERFLADEN</text>
+            </g>
+
+            <!-- Is og sne (skrumper ved lav albedo) -->
+            <g class="dh-el" data-el="is" role="img" aria-label="Is og sne">
+              <title>Is og sne — lyse overflader med høj albedo</title>
+              <path id="dhIsVenstre" class="dh-boks" d="" fill="#F7FAFC" stroke="#CADCFC" stroke-width="2"/>
+              <path id="dhIsHoejre"  class="dh-boks" d="" fill="#F7FAFC" stroke="#CADCFC" stroke-width="2"/>
+            </g>
+
+            <!-- Pile: udfyldes af JS -->
+            <g class="dh-el" data-el="pilInd"></g>
+            <g class="dh-el" data-el="pilReflekteret"></g>
+            <g class="dh-el" data-el="pilAbsAtm"></g>
+            <g class="dh-el" data-el="pilAbsorberet"></g>
+            <g class="dh-el" data-el="pilJordUdRum"></g>
+            <g class="dh-el" data-el="pilOverfladeUd"></g>
+            <g class="dh-el" data-el="pilKonvektion"></g>
+            <g class="dh-el" data-el="pilTilbagestraaling"></g>
+            <g class="dh-el" data-el="pilRummet"></g>
+          </svg>
+
+          <!-- Overlay til trækopgaven -->
+          <div class="dh-drop-lag" id="dhDropLag" hidden></div>
+         </div>
+        </div>
+        <p class="dh-scene-rul">← Træk figuren til siden for at se det hele →</p>
+
+        <div class="dh-aflaes" id="dhAflaes">
+          <div class="dh-termo dh-el" data-el="termometer">
+            <div class="dh-termo-hoved">
+              <span class="dh-termo-navn">Temperatur ved overfladen</span>
+              <span class="dh-termo-vaerdi" id="dhTempVaerdi" aria-live="polite">–</span>
+            </div>
+            <div class="dh-termo-bar" id="dhTermoBar">
+              <div class="dh-termo-gab" id="dhGab" hidden><span id="dhGabTekst">33 °C mangler</span></div>
+              <div class="dh-termo-spoegelse" id="dhSpoegelse" hidden><span>målt +15 °C</span></div>
+              <div class="dh-termo-maerke" id="dhMaerke"></div>
+            </div>
+            <div class="dh-termo-skala" id="dhSkala"><span>−30 °C</span><span>0 °C</span><span>+40 °C</span></div>
+          </div>
+
+          <div class="dh-balance dh-el" data-el="balanceIndikator">
+            <div class="dh-balance-titel">Balance i toppen af atmosfæren</div>
+            <div class="dh-balance-linje">
+              <span id="dhBalanceTekst">ind 340 = ud 100 + 240</span>
+              <span class="dh-chip" id="dhBalanceChip" data-status="ok">✓ balance</span>
+            </div>
+            <div class="dh-balance-note" id="dhBalanceNote" aria-live="polite"></div>
+            <div class="dh-balance-titel" style="margin-top:6px">Ved overfladen</div>
+            <div class="dh-balance-linje"><span id="dhOverfladeBalance">–</span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Kontrolpanel -->
+      <section class="dh-kort dh-kontrol" aria-label="Kontrolpanel">
+        <div class="dh-kontrol-titel">Skydere</div>
+
+        <div class="dh-skyder" id="dhCo2Boks">
+          <div class="dh-skyder-hoved">
+            <label class="dh-skyder-navn" for="dhCo2">CO₂ i atmosfæren</label>
+            <span class="dh-laasikon" id="dhCo2Laas" hidden>🔒 låst indtil trin 7</span>
+            <span class="dh-skyder-vaerdi" id="dhCo2Vaerdi">280 ppm</span>
+          </div>
+          <input type="range" id="dhCo2" min="280" max="1120" step="10" value="280"
+                 aria-describedby="dhCo2Note">
+          <div class="dh-maerker" id="dhCo2Maerker"></div>
+          <div class="dh-skyder-note" id="dhCo2Note">CO₂ fylder kun 0,028 % af luften · ΔT = 0,0 °C</div>
+        </div>
+
+        <div class="dh-skyder" id="dhAlbedoBoks">
+          <div class="dh-skyder-hoved">
+            <label class="dh-skyder-navn" for="dhAlbedo">Albedo (hvor meget lys kastes tilbage)</label>
+            <span class="dh-laasikon" id="dhAlbedoLaas" hidden>🔒 låst indtil trin 8</span>
+            <span class="dh-skyder-vaerdi" id="dhAlbedoVaerdi">0,30</span>
+          </div>
+          <input type="range" id="dhAlbedo" min="0.10" max="0.50" step="0.01" value="0.30"
+                 aria-describedby="dhAlbedoNote">
+          <div class="dh-maerker" id="dhAlbedoMaerker"></div>
+          <div class="dh-skyder-note" id="dhAlbedoNote">30 % af sollyset kastes tilbage af skyer, is, sne og lyse overflader.</div>
+        </div>
+
+        <div class="dh-kontrol-bund">
+          <button type="button" class="dh-knap" id="dhNulstil">Nulstil</button>
+        </div>
+      </section>
+    </div>
+
+    <!-- ══ Højre: forklaring / opgaver ══════════════════════════════════ -->
+    <div class="dh-hoejre">
+
+      <section class="dh-kort dh-forklaring" id="dhForklaring" aria-live="polite">
+        <div>
+          <div class="dh-trin-tael" id="dhTrinTael">Trin 1 af 8</div>
+          <h2 class="dh-trin-titel" id="dhTrinTitel">Sollyset rammer Jorden</h2>
+        </div>
+        <p class="dh-trin-kort" id="dhTrinKort"></p>
+        <div class="dh-trin-tekst" id="dhTrinTekst"></div>
+        <div id="dhPasPaa"></div>
+        <div id="dhSloejfeBoks"></div>
+
+        <details class="dh-stopop" id="dhStopOp">
+          <summary>Stop op — spørgsmål til klassen</summary>
+          <div class="dh-stopop-krop" id="dhStopOpTekst"></div>
+        </details>
+
+        <div class="dh-nav">
+          <button type="button" class="dh-knap" id="dhForrige">◀ Forrige</button>
+          <button type="button" class="dh-knap dh-knap-primaer" id="dhNaeste">Næste ▶</button>
+        </div>
+        <div class="dh-prikker" id="dhPrikker" role="group" aria-label="Gå til trin"></div>
+      </section>
+
+      <section class="dh-kort dh-quiz" id="dhQuiz" hidden></section>
+    </div>
+  </main>
+
+  <dialog id="dhDialog">
+    <div class="dh-dialog-krop" id="dhDialogKrop"></div>
+    <div style="padding:0 22px 20px"><button type="button" class="dh-knap dh-knap-primaer" id="dhDialogLuk">Luk</button></div>
+  </dialog>
+
+  <p class="dh-sr" aria-live="polite" id="dhSrStatus"></p>
+</div>
+
+<!-- Printversion (bygges af JS) -->
+<div class="dh-print" id="dhPrint"></div>
+
+<script>
+(function () {
+"use strict";
+
+/* ==========================================================================
+   1. DATA — alt indhold ligger her, så tekster kan rettes uden at røre logikken
+   ========================================================================== */
+
+const DATA = {
+  meta: { titel: "Drivhuseffekten trin for trin", version: "1.0", sprog: "da" },
+
+  constants: {
+    solarkonstant: 1361,        // W/m²
+    sigma: 5.67e-8,             // W/(m²·K⁴)
+    albedoNu: 0.30,
+    co2Foerindustrielt: 280,    // ppm
+    co2Nu: 430,                 // ppm — opdateres årligt
+    lambda: 0.8,                // K/(W/m²)
+    naturligDrivhuseffekt: 33.5,// K — vises som "ca. 33 °C"
+    dFkoef: 5.35,               // ΔF = 5,35 · ln(C/280)
+    // Referencebudget (afrundede Trenberth-værdier), W/m²
+    indstraaling: 340,
+    reflekteretRef: 100,
+    udstraalingRef: 390,        // overfladens udstråling ved 15 °C
+    konvektion: 100
+  },
+
+  trin: [
+    {
+      id: 1,
+      overskrift: "Sollyset rammer Jorden",
+      kort: "Der kommer 340 W ind. 100 kastes tilbage. 240 optages.",
+      tekst: "Solen sender <b>kortbølget</b> stråling mod Jorden — det, vi kan se som lys. Fordelt over hele kloden og hele døgnet er det ca. 340 W pr. kvadratmeter. Ca. 30 % kastes direkte tilbage af skyer, is, sne og lyse overflader. Det tal kalder vi Jordens <b>albedo</b>. Resten — ca. 240 W pr. kvadratmeter — bliver optaget og varmer Jorden op.",
+      stopOp: "Hvad tror I, der sker med albedoen, hvis der bliver mindre is på Jorden?",
+      synlige: ["rummet", "toa", "sol", "pilInd", "pilReflekteret", "pilAbsorberet", "overflade", "is"],
+      fremhaev: ["pilInd"],
+      temp: "ingen",
+      budget: "te",
+      kontroller: { co2: "laast", albedo: "laast" }
+    },
+    {
+      id: 2,
+      overskrift: "Jorden sender varme ud igen",
+      kort: "Der skal ud lige så meget, som der kommer ind: 240 = 240.",
+      tekst: "Alt, der er varmt, udsender stråling. Jordoverfladen er meget koldere end Solen, så den udsender <b>langbølget</b> stråling — varmestråling, som vores øjne ikke kan se. Hvis Jorden ikke skal blive varmere og varmere, skal der komme lige så meget energi ud, som der kommer ind: 240 ud mod 240 ind. Det kaldes <b>strålingsbalance</b>.",
+      stopOp: "Hvad ville der ske, hvis der kom mere ind, end der gik ud?",
+      synlige: ["rummet", "toa", "sol", "pilInd", "pilReflekteret", "pilAbsorberet", "overflade", "is", "pilJordUdRum", "balanceIndikator"],
+      fremhaev: ["pilJordUdRum", "balanceIndikator"],
+      temp: "ingen",
+      budget: "te",
+      kontroller: { co2: "laast", albedo: "laast" }
+    },
+    {
+      id: 3,
+      overskrift: "Gåden: −18 °C",
+      kort: "Regnestykket giver −18 °C. Vi måler +15 °C. Der mangler 33 grader.",
+      tekst: "Regner man på det, giver den balance en overfladetemperatur på ca. <b>−18 °C</b>. Så koldt er der heldigvis ikke. Den målte middeltemperatur på Jorden er ca. <b>+15 °C</b>. Der mangler altså 33 grader i regnestykket. Forklaringen er atmosfæren.",
+      stopOp: "15 °C er et gennemsnit for hele kloden. Hvor på Jorden passer det tal godt — og hvor passer det slet ikke?",
+      synlige: ["rummet", "toa", "sol", "pilInd", "pilReflekteret", "pilAbsorberet", "overflade", "is", "pilJordUdRum", "balanceIndikator", "termometer"],
+      fremhaev: ["termometer"],
+      temp: "te",
+      budget: "te",
+      gab: true,
+      kontroller: { co2: "laast", albedo: "laast" }
+    },
+    {
+      id: 4,
+      overskrift: "Drivhusgasserne slipper lyset ind, men bremser varmen",
+      kort: "Sollyset slipper igennem. Varmestrålingen bliver optaget.",
+      tekst: "Atmosfæren er næsten gennemsigtig for sollys — det kortbølgede slipper igennem. Men de langbølgede varmestråler bliver <b>optaget</b> af nogle bestemte gasser: vanddamp (H₂O), kuldioxid (CO₂), metan (CH₄), lattergas (N₂O) og ozon (O₃). Det er dem, vi kalder <b>drivhusgasser</b>. Kvælstof og ilt, som fylder 99 % af atmosfæren, gør det ikke.",
+      stopOp: "Hvorfor er det ikke nok at kende luftens temperatur for at vide, hvor kraftig drivhuseffekten er?",
+      pasPaa: "<b>Ozonhullet er ikke drivhuseffekten.</b> Ozonlaget beskytter os mod UV-stråling. Drivhuseffekten handler om varmestråling. Det er to forskellige ting.",
+      synlige: ["rummet", "toa", "sol", "pilInd", "pilReflekteret", "pilAbsAtm", "pilAbsorberet", "overflade", "is", "atmosfaere", "pilOverfladeUd", "termometer"],
+      skjul: ["balanceIndikator", "pilJordUdRum"],
+      fremhaev: ["atmosfaere", "pilOverfladeUd"],
+      temp: "te",
+      budget: "te",
+      gab: true,
+      kontroller: { co2: "laast", albedo: "laast" }
+    },
+    {
+      id: 5,
+      overskrift: "Varmen sendes tilbage",
+      kort: "Overfladen får varme to steder fra: 160 fra Solen og 330 fra atmosfæren.",
+      tekst: "Når en drivhusgas har optaget varmestråling, sender den den ud igen — i <b>alle retninger</b>, også nedad. Overfladen modtager altså varme to steder fra: fra Solen (160) og fra atmosfæren (330). Det er den <b>tilbagestråling</b>, der er selve drivhuseffekten.",
+      stopOp: "Der kommer 330 ned fra atmosfæren og kun 160 fra Solen. Hvordan kan atmosfæren sende mere ned, end Solen gør?",
+      pasPaa: "<b>Drivhusgasserne holder ikke på varmen som et låg.</b> De optager strålingen og sender den ud igen i alle retninger — opad, nedad og til siderne. Det er kun den del, der sendes nedad, som varmer overfladen.",
+      synlige: ["rummet", "toa", "sol", "pilInd", "pilReflekteret", "pilAbsAtm", "pilAbsorberet", "overflade", "is", "atmosfaere", "pilOverfladeUd", "pilTilbagestraaling", "pilKonvektion", "genudsendelse", "termometer"],
+      skjul: ["balanceIndikator", "pilJordUdRum"],
+      fremhaev: ["pilTilbagestraaling", "genudsendelse"],
+      temp: "te",
+      budget: "model",
+      gab: true,
+      kontroller: { co2: "laast", albedo: "laast" }
+    },
+    {
+      id: 6,
+      overskrift: "Ny balance: +15 °C",
+      kort: "160 + 330 ind = 390 + 100 ud. Overfladen lander på +15 °C.",
+      tekst: "Nu passer regnestykket. Ved overfladen: ind 160 + 330 = 490. Ud 390 som stråling + 100 som fordampning og opstigende varm luft = 490. Og øverst i atmosfæren går der stadig 240 ud, ligesom der kommer 240 ind. Resultatet er en overflade på ca. <b>+15 °C</b>. Drivhuseffekten er altså helt naturlig — uden den var Jorden en frossen planet.",
+      stopOp: "Hvorfor er det forkert at sige, at drivhuseffekten er \"farlig\"?",
+      pasPaa: "<b>Drivhuseffekten er ikke i sig selv et problem.</b> Uden den ville middeltemperaturen være −18 °C. Problemet er, at vi forstærker den.",
+      synlige: ["rummet", "toa", "sol", "pilInd", "pilReflekteret", "pilAbsAtm", "pilAbsorberet", "overflade", "is", "atmosfaere", "pilOverfladeUd", "pilTilbagestraaling", "pilKonvektion", "genudsendelse", "pilRummet", "termometer", "balanceIndikator"],
+      skjul: ["pilJordUdRum"],
+      fremhaev: ["balanceIndikator", "termometer"],
+      temp: "model",
+      budget: "model",
+      kontroller: { co2: "laast", albedo: "laast" }
+    },
+    {
+      id: 7,
+      overskrift: "Vi skruer op",
+      kort: "Mere CO₂ → mindre går ud → temperaturen stiger, til der igen er balance.",
+      tekst: "Siden industrialiseringen er CO₂ i atmosfæren steget fra ca. 280 ppm til ca. 430 ppm (2026). Flere drivhusgasser betyder, at mere af varmestrålingen bliver bremset. Så går der et stykke tid mindre ud, end der kommer ind — balancen brydes — og temperaturen stiger, indtil der igen er balance. <b>Prøv selv:</b> træk i CO₂-skyderen.",
+      stopOp: "Hvad sker der med temperaturen, hvis vi holder CO₂ konstant på 560 ppm? Stiger den for evigt?",
+      pasPaa: "<b>CO₂ fylder meget lidt</b> — kun ca. 0,04 % af luften — og er alligevel afgørende. Det er ikke mængden, men gassens evne til at optage varmestråling, der tæller.",
+      synlige: ["rummet", "toa", "sol", "pilInd", "pilReflekteret", "pilAbsAtm", "pilAbsorberet", "overflade", "is", "atmosfaere", "pilOverfladeUd", "pilTilbagestraaling", "pilKonvektion", "genudsendelse", "pilRummet", "termometer", "balanceIndikator"],
+      skjul: ["pilJordUdRum"],
+      fremhaev: ["balanceIndikator"],
+      temp: "model",
+      budget: "model",
+      kontroller: { co2: "aktiv", albedo: "laast" }
+    },
+    {
+      id: 8,
+      overskrift: "Og så begynder det at forstærke sig selv",
+      kort: "Varmere → mindre is → lavere albedo → mere sollys optages → endnu varmere.",
+      tekst: "Bliver det varmere, smelter is og sne. Mørkt hav og mørk jord kommer frem, albedoen falder, og Jorden optager endnu mere sollys. Det gør det endnu varmere. Sådan en sløjfe kalder vi en <b>selvforstærkende tilbagekobling</b> — og den er grunden til, at Arktis opvarmes ca. 3–4 gange hurtigere end resten af kloden (<b>polar forstærkning</b>).",
+      stopOp: "Sløjfen virker også den anden vej: bliver det koldere, kommer der mere is. Hvad sker der så med albedoen og temperaturen?",
+      synlige: ["rummet", "toa", "sol", "pilInd", "pilReflekteret", "pilAbsAtm", "pilAbsorberet", "overflade", "is", "atmosfaere", "pilOverfladeUd", "pilTilbagestraaling", "pilKonvektion", "genudsendelse", "pilRummet", "termometer", "balanceIndikator"],
+      skjul: ["pilJordUdRum"],
+      fremhaev: ["is"],
+      sloejfe: true,
+      temp: "model",
+      budget: "model",
+      kontroller: { co2: "aktiv", albedo: "aktiv" }
+    }
+  ],
+
+  opgaver: [
+    {
+      id: "A1", saet: "A", type: "mc", begreb: "kortbølget og langbølget stråling",
+      spoergsmaal: "Hvilken slags stråling kommer fra Solen?",
+      svar: [
+        { tekst: "Kortbølget stråling", rigtigt: true },
+        { tekst: "Langbølget varmestråling", rigtigt: false },
+        { tekst: "Radiobølger", rigtigt: false },
+        { tekst: "Kun UV-stråling", rigtigt: false }
+      ],
+      feedback: "Solen er meget varm, og varme ting udsender kortbølget stråling. Jorden er kold og udsender langbølget.",
+      visTrin: 1
+    },
+    {
+      id: "A2", saet: "A", type: "mc", begreb: "kortbølget og langbølget stråling",
+      spoergsmaal: "Hvilken slags stråling udsender jordoverfladen?",
+      svar: [
+        { tekst: "Langbølget varmestråling", rigtigt: true },
+        { tekst: "Kortbølget lys", rigtigt: false },
+        { tekst: "Røntgenstråling", rigtigt: false },
+        { tekst: "Ingen — Jorden udsender ikke stråling", rigtigt: false }
+      ],
+      feedback: "Alt, der er varmt, udsender stråling. Jorden er meget koldere end Solen, så dens stråling er langbølget og usynlig for øjet.",
+      visTrin: 2
+    },
+    {
+      id: "A3", saet: "A", type: "mc-multi", begreb: "drivhusgasser",
+      spoergsmaal: "Hvilke af disse er drivhusgasser? Markér dem alle.",
+      svar: [
+        { tekst: "Kuldioxid (CO₂)", rigtigt: true },
+        { tekst: "Vanddamp (H₂O)", rigtigt: true },
+        { tekst: "Metan (CH₄)", rigtigt: true },
+        { tekst: "Ilt (O₂)", rigtigt: false },
+        { tekst: "Kvælstof (N₂)", rigtigt: false }
+      ],
+      feedback: "Ilt og kvælstof fylder 99 % af atmosfæren, men optager ikke varmestråling. Det gør CO₂, vanddamp og metan.",
+      visTrin: 4
+    },
+    {
+      id: "A4", saet: "A", type: "drag", begreb: "energibalancen i figuren",
+      spoergsmaal: "Placér de fem pile korrekt i figuren.",
+      brikker: [
+        { id: "d-ind",   tekst: "indstråling (340)" },
+        { id: "d-refl",  tekst: "reflekteret (100)" },
+        { id: "d-ud",    tekst: "overfladens udstråling (390)" },
+        { id: "d-tilb",  tekst: "tilbagestråling (330)" },
+        { id: "d-rum",   tekst: "udstråling til rummet (240)" }
+      ],
+      zoner: [
+        { id: "d-ind",  x: 12.6, y: 37 },
+        { id: "d-refl", x: 27.0, y: 20 },
+        { id: "d-rum",  x: 87.0, y: 31 },
+        { id: "d-ud",   x: 51.2, y: 76 },
+        { id: "d-tilb", x: 73.8, y: 76 }
+      ],
+      feedback: "De gule pile er kortbølget stråling fra Solen. De røde, stiplede er langbølget varmestråling.",
+      visTrin: 6
+    },
+    {
+      id: "A5", saet: "A", type: "mc", begreb: "albedo",
+      spoergsmaal: "Hvad betyder albedo?",
+      svar: [
+        { tekst: "Hvor stor en del af sollyset, en overflade kaster tilbage", rigtigt: true },
+        { tekst: "Hvor meget varme en overflade udsender", rigtigt: false },
+        { tekst: "Hvor tyk atmosfæren er", rigtigt: false },
+        { tekst: "Hvor meget CO₂ der er i luften", rigtigt: false }
+      ],
+      feedback: "Lyse overflader som is og sne har høj albedo. Mørkt hav har lav albedo og optager derfor mere.",
+      visTrin: 1
+    },
+    {
+      id: "B6", saet: "B", type: "numeric", begreb: "energibalancen i figuren",
+      spoergsmaal: "Der kommer 340 W/m² ind, og 100 W/m² kastes tilbage. Hvor meget optager Jorden?",
+      enhed: "W/m²", svar: 240, tolerance: 5,
+      feedback: "340 − 100 = 240 W/m². Det er den energi, der skal ud igen, hvis temperaturen skal være konstant.",
+      visTrin: 1
+    },
+    {
+      id: "B7", saet: "B", type: "numeric", begreb: "energibalancen ved overfladen",
+      spoergsmaal: "Overfladen modtager 160 fra Solen og 330 fra atmosfæren. Den sender 390 ud som stråling. Hvor meget må så forsvinde som fordampning og varm luft, for at det går op?",
+      enhed: "W/m²", svar: 100, tolerance: 5,
+      feedback: "160 + 330 = 490 ind. 490 − 390 = 100 W/m², som forsvinder med fordampning og opstigende varm luft.",
+      visTrin: 6
+    },
+    {
+      id: "B8", saet: "B", type: "predict", begreb: "CO₂ og temperatur",
+      spoergsmaal: "Du skruer CO₂ op fra 430 til 560 ppm. Hvad sker der med temperaturen?",
+      valg: ["Stiger", "Falder", "Uændret"], rigtigt: "Stiger",
+      proev: { co2Fra: 430, co2Til: 560 },
+      feedback: "Mere CO₂ bremser mere af varmestrålingen. Der går mindre ud, end der kommer ind, og temperaturen stiger, indtil balancen er genoprettet — her ca. 1,1 °C.",
+      visTrin: 7
+    },
+    {
+      id: "B9", saet: "B", type: "predict", begreb: "albedo",
+      spoergsmaal: "Du sætter albedoen ned fra 0,30 til 0,25. Hvad sker der med temperaturen?",
+      valg: ["Stiger", "Falder", "Uændret"], rigtigt: "Stiger",
+      proev: { albedoFra: 0.30, albedoTil: 0.25 },
+      feedback: "Lavere albedo = mindre lys kastes tilbage = mere optages = varmere.",
+      visTrin: 8
+    },
+    {
+      id: "B10", saet: "B", type: "mc", begreb: "strålingsbalance",
+      spoergsmaal: "Hvorfor bliver Jorden ved med at være ca. 15 °C i stedet for at blive varmere og varmere?",
+      svar: [
+        { tekst: "Fordi der indstiller sig en balance, hvor der går lige så meget energi ud, som der kommer ind", rigtigt: true },
+        { tekst: "Fordi Solen holder op med at sende stråling om natten", rigtigt: false },
+        { tekst: "Fordi atmosfæren kun kan optage en bestemt mængde varme og så er den fuld", rigtigt: false },
+        { tekst: "Fordi CO₂ falder ned igen efter et stykke tid", rigtigt: false }
+      ],
+      feedback: "Jo varmere overfladen bliver, jo mere stråling sender den ud. Derfor indstiller temperaturen sig, hvor ud = ind.",
+      visTrin: 6
+    },
+    {
+      id: "C11", saet: "C", type: "open", begreb: "den naturlige drivhuseffekt",
+      spoergsmaal: "Forklar med figuren, hvorfor Jorden ville være ca. 33 °C koldere uden atmosfære.",
+      modelsvar: "Uden atmosfære slipper al langbølget stråling direkte ud i rummet. Balancen mellem 240 W/m² ind og 240 W/m² ud giver en overflade på −18 °C. Med atmosfære optager drivhusgasserne en del af den langbølgede stråling og sender den ud igen i alle retninger, også nedad. Overfladen får derfor både solindstråling og tilbagestråling, og temperaturen indstiller sig først i balance ved ca. +15 °C.",
+      visTrin: 6
+    },
+    {
+      id: "C12", saet: "C", type: "open", begreb: "naturlig vs. forstærket drivhuseffekt",
+      spoergsmaal: "En klassekammerat siger: \"Drivhuseffekten er noget skidt, vi skal af med den.\" Hvad vil du svare?",
+      modelsvar: "Den naturlige drivhuseffekt gør Jorden beboelig — uden den var middeltemperaturen −18 °C. Problemet er ikke drivhuseffekten i sig selv, men at vi forstærker den ved at udlede CO₂ og andre drivhusgasser, så temperaturen stiger hurtigere, end natur og samfund kan nå at tilpasse sig.",
+      visTrin: 6
+    },
+    {
+      id: "C13", saet: "C", type: "open", begreb: "polar forstærkning og tilbagekobling",
+      spoergsmaal: "Forklar, hvorfor Arktis opvarmes hurtigere end resten af kloden. Brug ordene albedo og tilbagekobling.",
+      modelsvar: "Når det bliver varmere, smelter havis og sne. Under isen er hav og jord mørkere, så albedoen falder, og der optages mere sollys. Det giver yderligere opvarmning og endnu mindre is. Sløjfen forstærker sig selv (positiv tilbagekobling) og virker kraftigst der, hvor der er is at miste — altså i Arktis. Det kaldes polar forstærkning.",
+      visTrin: 8
+    },
+    {
+      id: "C14", saet: "C", type: "open", begreb: "årsagskæden fra CO₂ til højere temperatur",
+      spoergsmaal: "Brug figuren til at forklare hele kæden fra en stigning i CO₂ til en ny, højere middeltemperatur.",
+      modelsvar: "Mere CO₂ betyder, at en større del af overfladens langbølgede udstråling bliver optaget i atmosfæren og sendt ud igen i alle retninger. Tilbagestrålingen mod overfladen vokser, og der går et stykke tid mindre energi ud i toppen af atmosfæren, end der kommer ind — strålingsbalancen er brudt. Overfladen varmes op, og fordi en varmere overflade udsender mere stråling, vokser den udgående stråling, indtil ud igen er lig ind. Temperaturen står så stille på et nyt, højere niveau.",
+      visTrin: 7
+    }
+  ]
+};
+
+const K = DATA.constants;
+const NØGLE = "smbi.drivhus.v1";
+
+/* ==========================================================================
+   2. Fysikmotoren (vises ikke for eleverne)
+   ========================================================================== */
+
+// Effektiv temperatur, K:  Te = ((1 - a)·S / 4 / σ)^0,25
+function te(a) { return Math.pow((1 - a) * K.solarkonstant / 4 / K.sigma, 0.25); }
+
+// Strålingspåvirkning fra CO₂, W/m²:  ΔF = 5,35 · ln(C / 280)
+function dF(c) { return K.dFkoef * Math.log(c / K.co2Foerindustrielt); }
+
+// Temperaturændring fra CO₂, K:  ΔT = λ · ΔF
+function dT(c) { return K.lambda * dF(c); }
+
+// Overfladetemperatur, K:  Ts = Te + 33,5 + ΔT
+function ts(a, c) { return te(a) + K.naturligDrivhuseffekt + dT(c); }
+
+const tilC = kelvin => kelvin - 273.15;
+
+/**
+ * Energibudgettet i W/m². Alle tal er afledt af de samme størrelser, så
+ * regnestykkerne i figuren altid går op:
+ *   ind = reflekteret + absorberet   og   solIndOverflade + tilbage = udstråling + konvektion
+ * Ved albedo 0,30 og 280 ppm rammer de præcis referencetallene 340/100/240/80/160/390/330/100.
+ */
+// σT⁴ ved referencetilstanden (a = 0,30 · 280 ppm) — bruges til at forankre de
+// viste tal på referencebudgettet, så 390/330/100/160 rammer præcist.
+const U_REF = K.sigma * Math.pow(te(K.albedoNu) + K.naturligDrivhuseffekt, 4);
+
+function energi(albedo, tempK, ubalance, medAtmosfaere, udenDrivhus) {
+  const ind = K.indstraaling;
+  const refl = Math.round(K.reflekteretRef * albedo / K.albedoNu);
+  const abs = ind - refl;
+  const solAtm = medAtmosfaere ? Math.round(abs / 3) : 0;
+  const solOverflade = abs - solAtm;
+  const udRum = Math.round(abs - ubalance);
+  // Så længe drivhuseffekten ikke er sat i spil (trin 1–4), står overfladen i
+  // ligevægt uden atmosfære: den udsender præcis det, den optager — 240 ind = 240 ud.
+  // Derefter er overfladens udstråling σT⁴, som ved 15 °C giver 390.
+  const u = udenDrivhus
+    ? udRum
+    : Math.round(K.sigma * Math.pow(tempK, 4) * K.udstraalingRef / U_REF);
+  const konv = medAtmosfaere ? K.konvektion : 0;
+  const tilbage = medAtmosfaere ? u + konv - solOverflade : 0;
+  return { ind, refl, abs, solAtm, solOverflade, u, konv, tilbage, udRum };
+}
+
+/* ==========================================================================
+   3. Tilstand
+   ========================================================================== */
+
+const state = {
+  mode: "teach",
+  trin: 1,
+  co2: K.co2Foerindustrielt,
+  albedo: K.albedoNu,
+  projektor: false,
+  visTempK: ts(K.albedoNu, K.co2Foerindustrielt),
+  maalTempK: ts(K.albedoNu, K.co2Foerindustrielt),
+  animId: null,
+  quiz: { saet: "alle", idx: 0, svar: {}, vist: null }
+};
+
+const app = document.getElementById("dhApp");
+const $ = id => document.getElementById(id);
+const svg = $("dhSvg");
+const reduceret = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function trinData(n) { return DATA.trin[Math.min(Math.max(n, 1), DATA.trin.length) - 1]; }
+
+/* ==========================================================================
+   4. Scene — pile bygges i JS, så tykkelsen kan skalere med energimængden
+   ========================================================================== */
+
+// Pilenes tykkelse skalerer med energimængden (selvstændigt læringspunkt).
+function tykkelse(w) { return Math.max(4, Math.min(24, 2.5 + w / 21)); }
+
+const SVGNS = "http://www.w3.org/2000/svg";
+function lav(tag, attr) {
+  const el = document.createElementNS(SVGNS, tag);
+  for (const k in attr) el.setAttribute(k, attr[k]);
+  return el;
+}
+
+/**
+ * Tegner en lodret pil med halo (så den kan ses på både mørk og lys baggrund),
+ * skaft (fuldt optrukket = kortbølget, stiplet = langbølget) og spids.
+ */
+function tegnPil(gruppe, o) {
+  gruppe.textContent = "";
+  const w = tykkelse(o.vaerdi);
+  const ned = o.y2 > o.y1;
+  const hw = Math.max(7, Math.min(17, w * 0.95));
+  const len = Math.max(13, Math.min(24, w * 1.25));
+  const spids = o.y2;
+  const basis = ned ? o.y2 - len : o.y2 + len;
+  const skaftSlut = ned ? basis + 1 : basis - 1;
+
+  gruppe.appendChild(lav("line", {
+    x1: o.x, y1: o.y1, x2: o.x, y2: skaftSlut,
+    stroke: "#F7FAFC", "stroke-opacity": ".35", "stroke-width": w + 5, "stroke-linecap": "butt"
+  }));
+  const skaft = lav("line", {
+    x1: o.x, y1: o.y1, x2: o.x, y2: skaftSlut,
+    stroke: o.farve, "stroke-width": w, "stroke-linecap": "butt"
+  });
+  skaft.setAttribute("class", "dh-shaft");
+  if (o.stiplet) skaft.setAttribute("stroke-dasharray", "13 8");
+  gruppe.appendChild(skaft);
+
+  gruppe.appendChild(lav("polygon", {
+    points: `${o.x - hw},${basis} ${o.x + hw},${basis} ${o.x},${spids}`,
+    fill: o.farve, stroke: "#F7FAFC", "stroke-opacity": ".35", "stroke-width": "2"
+  }));
+
+  // Label — skjules i trækopgaven, hvor tallene ellers ville afsløre facit
+  if (!skjulPileTekst) {
+    const midt = (o.y1 + o.y2) / 2;
+    const venstre = o.labelSide === "venstre";
+    const lx = venstre ? o.x - hw - 9 : o.x + hw + 9;
+    const linjer = [].concat(o.navn || []);
+    const t = lav("text", {
+      x: lx, y: midt - linjer.length * 6, "text-anchor": venstre ? "end" : "start",
+      fill: o.tekstFarve, stroke: o.tekstFarve === MOERK ? "#F7FAFC" : "#12184A", class: "dh-label"
+    });
+    const l1 = lav("tspan", { x: lx, dy: "0" });
+    l1.textContent = o.vaerdi + " W/m²";
+    t.appendChild(l1);
+    linjer.forEach(linje => {
+      const l = lav("tspan", { x: lx, dy: "1.15em", "font-weight": "600", "font-size": "13" });
+      l.textContent = linje;
+      t.appendChild(l);
+    });
+    gruppe.appendChild(t);
+  }
+
+  const titel = lav("title", {});
+  titel.textContent = `Pil: ${o.aria}, ${o.vaerdi} watt pr. kvadratmeter`;
+  gruppe.insertBefore(titel, gruppe.firstChild);
+  gruppe.setAttribute("role", "img");
+  gruppe.setAttribute("aria-label", `${o.aria}, ${o.vaerdi} watt pr. kvadratmeter`);
+}
+
+const KORT = "#F2B134", LANG = "#C64B3A", KONV = "#3E9BC4";
+const LYS = "#F7FAFC", MOERK = "#21295C";
+
+let sidsteSignatur = "";
+let skjulPileTekst = false;
+
+function tegnScene(e, medAtm) {
+  // Is og sne — skrumper visuelt ved lav albedo
+  const f = (state.albedo - 0.10) / 0.40;            // 0 ved a=0,10 · 1 ved a=0,50
+  const b = 40 + f * 210;                            // bredde i px
+  const h = 12 + f * 26;                             // højde i px
+  $("dhIsVenstre").setAttribute("d",
+    `M0,398 L0,${398 - h} Q${b * 0.45},${398 - h - 10} ${b},398 Z`);
+  $("dhIsHoejre").setAttribute("d",
+    `M840,398 L840,${398 - h} Q${840 - b * 0.45},${398 - h - 10} ${840 - b},398 Z`);
+
+  // Pilene tegnes kun om, når et af de viste tal faktisk har ændret sig
+  const sig = [e.ind, e.refl, e.solAtm, e.solOverflade, e.u, e.konv, e.tilbage, e.udRum, medAtm, skjulPileTekst].join("|");
+  if (sig === sidsteSignatur) return;
+  sidsteSignatur = sig;
+
+  const el = navn => svg.querySelector(`[data-el="${navn}"]`);
+
+  tegnPil(el("pilInd"), {
+    x: 106, y1: 88, y2: 198, vaerdi: e.ind, farve: KORT, tekstFarve: KORT,
+    navn: "indstråling", aria: "indstråling fra Solen", labelSide: "hoejre"
+  });
+  tegnPil(el("pilReflekteret"), {
+    x: 226, y1: 196, y2: 86, vaerdi: e.refl, farve: "#FFE1A0", tekstFarve: "#FFE1A0",
+    navn: "reflekteret", aria: "sollys der kastes tilbage til rummet", labelSide: "hoejre"
+  });
+  tegnPil(el("pilAbsorberet"), {
+    x: 106, y1: 202, y2: 396, vaerdi: e.solOverflade, farve: KORT, tekstFarve: KORT,
+    navn: ["optages ved", "overfladen"], aria: "sollys der optages ved jordoverfladen", labelSide: "hoejre"
+  });
+  tegnPil(el("pilAbsAtm"), {
+    x: 330, y1: 202, y2: 268, vaerdi: e.solAtm, farve: KORT, tekstFarve: KORT,
+    navn: ["optages i luften"], aria: "sollys der optages i atmosfæren", labelSide: "hoejre"
+  });
+  tegnPil(el("pilJordUdRum"), {
+    x: 430, y1: 394, y2: 84, vaerdi: e.u, farve: LANG, tekstFarve: "#FFC9BE", stiplet: true,
+    navn: ["varmestråling ud"], aria: "langbølget varmestråling fra overfladen ud i rummet", labelSide: "hoejre"
+  });
+  tegnPil(el("pilOverfladeUd"), {
+    x: 430, y1: 394, y2: 324, vaerdi: e.u, farve: LANG, tekstFarve: MOERK, stiplet: true,
+    navn: ["overfladens", "udstråling"], aria: "langbølget udstråling fra jordoverfladen", labelSide: "venstre"
+  });
+  tegnPil(el("pilKonvektion"), {
+    x: 300, y1: 394, y2: 324, vaerdi: e.konv || K.konvektion, farve: KONV, tekstFarve: MOERK,
+    navn: ["fordampning", "og varm luft"], aria: "fordampning og opstigende varm luft", labelSide: "venstre"
+  });
+  tegnPil(el("pilTilbagestraaling"), {
+    x: 620, y1: 322, y2: 394, vaerdi: e.tilbage, farve: LANG, tekstFarve: MOERK, stiplet: true,
+    navn: "tilbagestråling", aria: "tilbagestråling fra atmosfæren mod jordoverfladen", labelSide: "hoejre"
+  });
+  tegnPil(el("pilRummet"), {
+    x: 760, y1: 206, y2: 86, vaerdi: e.udRum, farve: LANG, tekstFarve: "#FFC9BE", stiplet: true,
+    navn: "ud i rummet", aria: "langbølget udstråling til rummet", labelSide: "venstre"
+  });
+
+}
+
+// Genudsendelse i alle retninger (modvirker "låg"-fejlopfattelsen). Tegnes én gang.
+function tegnGenudsendelse() {
+  const g = $("dhGenud");
+  g.textContent = "";
+  [-90, -35, 0, 35, 90, 125, 180, -125].forEach(grader => {
+    const r = grader * Math.PI / 180;
+    const x1 = 556 + Math.cos(r) * 24, y1 = 266 + Math.sin(r) * 24;
+    const x2 = 556 + Math.cos(r) * 52, y2 = 266 + Math.sin(r) * 52;
+    g.appendChild(lav("line", { x1, y1, x2, y2 }));
+    const vr = r + Math.PI, s = 7;
+    g.appendChild(lav("path", {
+      d: `M${x2 + Math.cos(vr + 0.45) * s},${y2 + Math.sin(vr + 0.45) * s} L${x2},${y2} L${x2 + Math.cos(vr - 0.45) * s},${y2 + Math.sin(vr - 0.45) * s}`
+    }));
+  });
+}
+
+/* ==========================================================================
+   5. Synlighed — synlige/fremhaev styrer visningen deklarativt
+   ========================================================================== */
+
+const ALLE_EL = ["rummet", "toa", "sol", "atmosfaere", "overflade", "is", "genudsendelse",
+  "pilInd", "pilReflekteret", "pilAbsAtm", "pilAbsorberet", "pilJordUdRum",
+  "pilOverfladeUd", "pilKonvektion", "pilTilbagestraaling", "pilRummet",
+  "termometer", "balanceIndikator"];
+
+function elementer() {
+  const ud = {};
+  ALLE_EL.forEach(n => {
+    const node = document.querySelector(`.dh-el[data-el="${n}"]`);
+    if (node) ud[n] = node;
+  });
+  return ud;
+}
+
+function saetSynlighed(synlige, fremhaev, tidligere, skjul) {
+  const els = elementer();
+  ALLE_EL.forEach(navn => {
+    const node = els[navn];
+    if (!node) return;
+    let v;
+    if (fremhaev.indexOf(navn) >= 0) v = "fremhaevet";
+    else if (synlige.indexOf(navn) >= 0) v = "vist";
+    else if (skjul.indexOf(navn) >= 0) v = "skjult";
+    else if (tidligere.indexOf(navn) >= 0) v = "tonet";   // tones ned frem for at forsvinde
+    else v = "skjult";
+    if (node.getAttribute("data-vis") !== v) node.setAttribute("data-vis", v);
+  });
+}
+
+/* ==========================================================================
+   6. Temperaturanimation (1,5 s — selve pointen i trin 7)
+   ========================================================================== */
+
+function saetMaal(kelvin, animer) {
+  state.maalTempK = kelvin;
+  if (state.animId) { cancelAnimationFrame(state.animId); state.animId = null; }
+  if (!animer || reduceret || Math.abs(kelvin - state.visTempK) < 0.02) {
+    state.visTempK = kelvin;
+    render();
+    return;
+  }
+  const fra = state.visTempK, til = kelvin, t0 = performance.now(), varighed = 1500;
+  function trin(nu) {
+    const p = Math.min(1, (nu - t0) / varighed);
+    const e = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;   // ease-in-out
+    state.visTempK = fra + (til - fra) * e;
+    render();
+    if (p < 1) state.animId = requestAnimationFrame(trin);
+    else { state.animId = null; state.visTempK = til; render(); }
+  }
+  state.animId = requestAnimationFrame(trin);
+}
+
+function maalTemperatur() {
+  const t = state.mode === "teach" ? trinData(state.trin).temp : "model";
+  if (t === "te" || t === "ingen") return te(state.albedo);
+  return ts(state.albedo, state.co2);
+}
+
+/* ==========================================================================
+   7. Render
+   ========================================================================== */
+
+function fmt(x, d) {
+  return (Math.abs(x) < 0.05 && d === 1 ? 0 : x).toFixed(d).replace(".", ",");
+}
+function fmtTemp(c) {
+  const v = fmt(Math.abs(c) < 0.05 ? 0 : c, 1);
+  return (c > 0.05 ? "+" : c < -0.05 ? "−" : "") + v.replace("-", "") + " °C";
+}
+
+function render() {
+  const t = state.mode === "teach" ? trinData(state.trin) : null;
+
+  // ── Hvilke elementer er med? ──
+  let synlige, fremhaev, tidligere, skjul, budgetType, tempType;
+  if (state.mode === "teach") {
+    synlige = t.synlige;
+    fremhaev = t.fremhaev;
+    skjul = t.skjul || [];
+    tidligere = [];
+    for (let i = 0; i < state.trin - 1; i++) tidligere = tidligere.concat(DATA.trin[i].synlige);
+    budgetType = t.budget;
+    tempType = t.temp;
+  } else {
+    const vt = (state.mode === "quiz" && state.quiz.vist) ? trinData(state.quiz.vist) : DATA.trin[DATA.trin.length - 1];
+    synlige = vt.synlige;
+    fremhaev = (state.mode === "quiz" && state.quiz.vist) ? vt.fremhaev : [];
+    skjul = vt.skjul || [];
+    tidligere = [];
+    budgetType = vt.budget;
+    tempType = vt.temp;
+  }
+  const medAtm = synlige.indexOf("atmosfaere") >= 0;
+
+  // ── Energibudget ──
+  // Ubalancen er den drivende kraft, mens temperaturen er på vej mod ny ligevægt:
+  // N = (T_ligevægt − T_nu) / λ, dvs. præcis strålingspåvirkningen ved animationens start.
+  const ubalance = (state.maalTempK - state.visTempK) / K.lambda;
+  let budgetK;
+  if (budgetType === "te") budgetK = te(state.albedo);
+  else if (tempType !== "model") budgetK = ts(state.albedo, state.co2);  // trin 5: pilene viser 390/330, men termometret venter
+  else budgetK = state.visTempK;
+  const e = energi(state.albedo, budgetK, synlige.indexOf("pilRummet") >= 0 ? ubalance : 0,
+    medAtm, budgetType === "te");
+
+  tegnScene(e, medAtm);
+  saetSynlighed(synlige, fremhaev, tidligere, skjul);
+
+  // ── Termometer ──
+  const visC = tilC(state.visTempK);
+  const skalaMin = -30;
+  const skalaMax = 40;
+  const pct = v => Math.max(0, Math.min(100, (v - skalaMin) / (skalaMax - skalaMin) * 100));
+  const visTemp = tempType !== "ingen";
+  $("dhTempVaerdi").textContent = visTemp ? fmtTemp(visC) : "–";
+  $("dhMaerke").style.left = pct(visC) + "%";
+  $("dhMaerke").style.visibility = visTemp ? "visible" : "hidden";
+  $("dhSkala").innerHTML = `<span>−30 °C</span><span>0 °C</span><span>+${skalaMax} °C</span>`;
+
+  const gab = state.mode === "teach" && !!t.gab;
+  $("dhSpoegelse").hidden = !gab;
+  $("dhGab").hidden = !gab;
+  if (gab) {
+    const maalt = 15;
+    $("dhSpoegelse").style.left = pct(maalt) + "%";
+    const a = pct(tilC(te(state.albedo))), b = pct(maalt);
+    $("dhGab").style.left = Math.min(a, b) + "%";
+    $("dhGab").style.width = Math.abs(b - a) + "%";
+    $("dhGabTekst").textContent = "33 °C mangler";
+  }
+
+  // ── Balanceindikator ──
+  const iBalance = Math.abs(ubalance) < 0.05;
+  $("dhBalanceTekst").textContent = medAtm
+    ? `ind ${e.ind} = ud ${e.refl} + ${e.udRum}`
+    : `ind ${e.ind} = ud ${e.refl} + ${e.u}`;
+  const chip = $("dhBalanceChip");
+  chip.dataset.status = iBalance ? "ok" : "ude";
+  chip.textContent = iBalance ? "✓ balance" : "⚠ ubalance";
+  $("dhBalanceNote").textContent = iBalance ? "" :
+    (ubalance > 0
+      ? `Der går ${fmt(Math.abs(ubalance), 1)} W/m² mindre ud, end der kommer ind — temperaturen stiger.`
+      : `Der går ${fmt(Math.abs(ubalance), 1)} W/m² mere ud, end der kommer ind — temperaturen falder.`);
+  $("dhOverfladeBalance").textContent = medAtm
+    ? `ind ${e.solOverflade} + ${e.tilbage} = ${e.solOverflade + e.tilbage} · ud ${e.u} + ${e.konv} = ${e.u + e.konv}`
+    : `ind ${e.solOverflade} · ud ${e.u}`;
+
+  // Tom aflæsningsstribe skal ikke efterlade en streg (trin 1-2)
+  $("dhAflaes").hidden =
+    document.querySelector('[data-el="termometer"]').dataset.vis === "skjult" &&
+    document.querySelector('[data-el="balanceIndikator"]').dataset.vis === "skjult";
+
+  // ── Skydere ──
+  const kon = state.mode === "teach" ? t.kontroller : { co2: "aktiv", albedo: "aktiv" };
+  const co2Laast = kon.co2 !== "aktiv";
+  const albLaast = kon.albedo !== "aktiv";
+  $("dhCo2").disabled = co2Laast;
+  $("dhAlbedo").disabled = albLaast;
+  $("dhCo2Boks").dataset.laast = co2Laast ? "1" : "0";
+  $("dhAlbedoBoks").dataset.laast = albLaast ? "1" : "0";
+  $("dhCo2Laas").hidden = !co2Laast;
+  $("dhAlbedoLaas").hidden = !albLaast;
+  $("dhCo2Boks").dataset.fremhaev = (state.mode === "teach" && state.trin === 7) ? "1" : "0";
+  $("dhAlbedoBoks").dataset.fremhaev = (state.mode === "teach" && state.trin === 8) ? "1" : "0";
+
+  $("dhCo2").value = state.co2;
+  $("dhAlbedo").value = state.albedo;
+  $("dhCo2Vaerdi").textContent = state.co2 + " ppm";
+  $("dhAlbedoVaerdi").textContent = fmt(state.albedo, 2);
+  const pctLuft = (state.co2 / 10000).toFixed(3).replace(".", ",");
+  $("dhCo2Note").textContent = `CO₂ fylder kun ${pctLuft} % af luften · ΔT fra CO₂ = ${fmt(dT(state.co2), 1)} °C`;
+  $("dhAlbedoNote").textContent = `${Math.round(state.albedo * 100)} % af sollyset kastes tilbage af skyer, is, sne og lyse overflader.`;
+
+  // ── Forklaringspanel ──
+  if (state.mode === "teach") {
+    $("dhTrinTael").textContent = `Trin ${state.trin} af ${DATA.trin.length}`;
+    $("dhTrinTitel").textContent = t.overskrift;
+    $("dhTrinKort").textContent = t.kort;
+    $("dhTrinTekst").innerHTML = t.tekst;
+    $("dhStopOpTekst").textContent = t.stopOp;
+    $("dhPasPaa").innerHTML = t.pasPaa
+      ? `<div class="dh-pasp"><span class="dh-pasp-titel">Pas på</span>${t.pasPaa}</div>` : "";
+    $("dhSloejfeBoks").innerHTML = t.sloejfe ? sloejfeSvg() : "";
+    $("dhForrige").disabled = state.trin === 1;
+    $("dhNaeste").disabled = state.trin === DATA.trin.length;
+    document.querySelectorAll("#dhPrikker button").forEach(b => {
+      const n = Number(b.dataset.trin);
+      if (n === state.trin) b.setAttribute("aria-current", "step"); else b.removeAttribute("aria-current");
+    });
+  } else if (state.mode === "explore") {
+    $("dhTrinTitel").textContent = "Udforsk figuren";
+    $("dhSloejfeBoks").innerHTML = sloejfeSvg();
+  }
+}
+
+function sloejfeSvg() {
+  return `<div class="dh-sloejfe"><svg viewBox="0 0 320 172" role="img" aria-label="Sløjfe: varmere fører til mindre is, som giver lavere albedo, som giver mere optaget sollys, som giver varmere">
+    <title>Selvforstærkende tilbagekobling</title>
+    <g font-family="Calibri, sans-serif" font-size="12" font-weight="700" fill="#21295C" text-anchor="middle">
+      <rect x="110" y="4"   width="100" height="30" rx="8" fill="#F2B134"/><text x="160" y="23">varmere</text>
+      <rect x="212" y="62"  width="102" height="30" rx="8" fill="#CADCFC"/><text x="263" y="81">mindre is</text>
+      <rect x="110" y="128" width="100" height="30" rx="8" fill="#CADCFC"/><text x="160" y="147">lavere albedo</text>
+      <rect x="6"   y="62"  width="102" height="34" rx="8" fill="#E8734A"/>
+        <text x="57" y="76" fill="#fff">mere sollys</text><text x="57" y="90" fill="#fff">optages</text>
+    </g>
+    <g fill="none" stroke="#1C7293" stroke-width="2.5">
+      <path d="M212,25 C246,30 262,42 263,58" marker-end="url(#dhPil)"/>
+      <path d="M263,96 C262,112 246,124 212,140" marker-end="url(#dhPil)"/>
+      <path d="M110,140 C76,132 58,116 57,100" marker-end="url(#dhPil)"/>
+      <path d="M57,58 C58,42 76,30 110,25" marker-end="url(#dhPil)"/>
+    </g>
+    <defs><marker id="dhPil" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1C7293"/></marker></defs>
+  </svg></div>`;
+}
+
+/* ==========================================================================
+   8. Navigation og tilstande
+   ========================================================================== */
+
+function saetTrin(n, animer) {
+  n = Math.min(Math.max(n, 1), DATA.trin.length);
+  const skift = n !== state.trin;
+  state.trin = n;
+  const t = trinData(n);
+  saetMaal(maalTemperatur(), animer !== false && skift);
+  render();
+  opdaterUrl();
+  $("dhSrStatus").textContent = `Trin ${n} af ${DATA.trin.length}: ${t.overskrift}`;
+}
+
+function saetMode(m) {
+  state.mode = m;
+  app.dataset.mode = m;
+  document.querySelectorAll("[data-tilstand]").forEach(b =>
+    b.setAttribute("aria-pressed", String(b.dataset.tilstand === m)));
+  $("dhForklaring").hidden = m === "quiz";
+  $("dhQuiz").hidden = m !== "quiz";
+  $("dhDropLag").hidden = true;
+  state.quiz.vist = null;
+  skjulPileTekst = false;
+  if (m === "quiz") tegnOpgave();
+  saetMaal(maalTemperatur(), false);
+  render();
+  opdaterUrl();
+}
+
+function opdaterUrl() {
+  const p = new URLSearchParams();
+  p.set("mode", state.mode);
+  if (state.mode === "teach") p.set("trin", String(state.trin));
+  if (state.mode === "quiz" && state.quiz.saet !== "alle") p.set("saet", state.quiz.saet);
+  if (state.projektor) p.set("projektor", "1");
+  const hash = state.mode === "teach" ? "#trin=" + state.trin : "";
+  try {
+    history.replaceState(null, "", location.pathname + "?" + p.toString() + hash);
+  } catch (e) { /* fx sandkasset iframe — tilstanden virker stadig */ }
+}
+
+function laesUrl() {
+  const p = new URLSearchParams(location.search);
+  const h = /trin=(\d+)/.exec(location.hash || "");
+  const m = p.get("mode");
+  if (m === "teach" || m === "explore" || m === "quiz") state.mode = m;
+  const trin = Number(p.get("trin") || (h ? h[1] : 0));
+  if (trin >= 1 && trin <= DATA.trin.length) state.trin = trin;
+  const saet = (p.get("saet") || "").toUpperCase();
+  if (["A", "B", "C"].indexOf(saet) >= 0) state.quiz.saet = saet;
+  if (p.get("projektor") === "1") state.projektor = true;
+}
+
+/* ==========================================================================
+   9. Opgavetilstand
+   ========================================================================== */
+
+function gemFremskridt() {
+  try { localStorage.setItem(NØGLE, JSON.stringify({ svar: state.quiz.svar })); } catch (e) {}
+}
+function hentFremskridt() {
+  try {
+    const r = JSON.parse(localStorage.getItem(NØGLE) || "{}");
+    if (r && r.svar) state.quiz.svar = r.svar;
+  } catch (e) {}
+}
+
+function opgaveListe() {
+  return state.quiz.saet === "alle"
+    ? DATA.opgaver
+    : DATA.opgaver.filter(o => o.saet === state.quiz.saet);
+}
+
+function tegnOpgave() {
+  const boks = $("dhQuiz");
+  const liste = opgaveListe();
+  const idx = Math.min(state.quiz.idx, liste.length);
+  const besvaret = DATA.opgaver.filter(o => state.quiz.svar[o.id]).length;
+  const aktuel = liste[idx];
+
+  // I en ubesvaret trækopgave skjules pilenes tekster, så eleven må kende pilene
+  // på retning, farve og stregtype i stedet for at læse svaret på figuren.
+  skjulPileTekst = !!(aktuel && aktuel.type === "drag" && !state.quiz.svar[aktuel.id]);
+
+  const hoved = `
+    <div class="dh-saet-valg" role="group" aria-label="Vælg opgavesæt">
+      ${[["alle", `Alle ${DATA.opgaver.length}`], ["A", "A · Genkend"], ["B", "B · Anvend"], ["C", "C · Forklar"]].map(
+        ([v, n]) => `<button type="button" data-saet="${v}" aria-pressed="${state.quiz.saet === v}">${n}</button>`).join("")}
+    </div>
+    <div>
+      <div class="dh-status">${besvaret} af ${DATA.opgaver.length} besvaret</div>
+      <div class="dh-status-bar"><i style="width:${besvaret / DATA.opgaver.length * 100}%"></i></div>
+    </div>`;
+
+  if (idx >= liste.length) {
+    boks.innerHTML = hoved + opsamling(liste) + `
+      <div class="dh-opg-knapper">
+        <button type="button" class="dh-knap dh-knap-primaer" data-handling="forfra">Tag sættet forfra</button>
+        <button type="button" class="dh-knap" data-handling="print-uden">Print opgaver</button>
+        <button type="button" class="dh-knap" data-handling="print-med">Print med facit</button>
+        <button type="button" class="dh-knap" data-handling="ryd">Ryd mine svar</button>
+      </div>`;
+    bindQuiz();
+    $("dhDropLag").hidden = true;
+    render();
+    return;
+  }
+
+  const o = aktuel;
+  const gemt = state.quiz.svar[o.id];
+  let krop = "";
+
+  if (o.type === "mc" || o.type === "mc-multi") {
+    const type = o.type === "mc" ? "radio" : "checkbox";
+    krop = `<div class="dh-svar" role="group">` + o.svar.map((s, i) => {
+      let mark = "";
+      if (gemt) mark = s.rigtigt ? "rigtigt" : (gemt.valgt.indexOf(i) >= 0 ? "forkert" : "");
+      const valgt = gemt && gemt.valgt.indexOf(i) >= 0 ? "checked" : "";
+      return `<label ${mark ? `data-mark="${mark}"` : ""}>
+        <input type="${type}" name="dhSvar" value="${i}" ${valgt} ${gemt ? "disabled" : ""}>
+        <span>${s.tekst}</span></label>`;
+    }).join("") + `</div>`;
+  } else if (o.type === "numeric") {
+    krop = `<p><label for="dhTal">Skriv dit svar i ${o.enhed}:</label></p>
+      <p><input type="number" id="dhTal" step="any" inputmode="decimal"
+        value="${gemt ? gemt.vaerdi : ""}" ${gemt ? "disabled" : ""}> <b>${o.enhed}</b></p>`;
+  } else if (o.type === "predict") {
+    krop = `<div class="dh-svar" role="group">` + o.valg.map((v, i) => {
+      let mark = "";
+      if (gemt) mark = v === o.rigtigt ? "rigtigt" : (gemt.valgt === v ? "forkert" : "");
+      return `<label ${mark ? `data-mark="${mark}"` : ""}>
+        <input type="radio" name="dhSvar" value="${v}" ${gemt && gemt.valgt === v ? "checked" : ""} ${gemt ? "disabled" : ""}>
+        <span>${v}</span></label>`;
+    }).join("") + `</div>`;
+  } else if (o.type === "open") {
+    krop = `<p><label for="dhAaben" class="dh-sr">Dit svar</label>
+      <textarea id="dhAaben" placeholder="Skriv dit svar her …">${gemt ? (gemt.tekst || "") : ""}</textarea></p>`;
+  } else if (o.type === "drag") {
+    krop = `<p style="font-size:.88em">Vælg en mærkat, og klik derefter på den plads i figuren, hvor pilen hører til. Du kan også trække mærkaten med musen.</p>
+      <div class="dh-braet" id="dhBraet"></div>`;
+  }
+
+  let fb = "";
+  if (gemt) {
+    if (o.type === "open") {
+      fb = `<div class="dh-feedback" data-ok="åben"><b>Modelsvar</b>${o.modelsvar}</div>`;
+    } else {
+      fb = `<div class="dh-feedback" data-ok="${gemt.rigtigt ? 1 : 0}">
+        <b>${gemt.rigtigt ? "Rigtigt" : "Ikke helt"}</b>${o.feedback}</div>`;
+    }
+  }
+
+  const knapper = `<div class="dh-opg-knapper">
+    ${gemt ? "" : `<button type="button" class="dh-knap dh-knap-primaer" data-handling="tjek">${o.type === "open" ? "Vis facit" : "Tjek svar"}</button>`}
+    ${gemt && o.type === "predict" && o.proev ? `<button type="button" class="dh-knap" data-handling="proev">Prøv det i figuren</button>` : ""}
+    ${gemt && !gemt.rigtigt && o.visTrin ? `<button type="button" class="dh-knap" data-handling="vis">Vis mig det i figuren</button>` : ""}
+    ${gemt && o.type === "open" && o.visTrin ? `<button type="button" class="dh-knap" data-handling="vis">Vis mig det i figuren</button>` : ""}
+    <button type="button" class="dh-knap" data-handling="forrige" ${idx === 0 ? "disabled" : ""}>◀ Forrige</button>
+    <button type="button" class="dh-knap ${gemt ? "dh-knap-primaer" : ""}" data-handling="naeste">${idx === liste.length - 1 ? "Afslut ▶" : "Næste ▶"}</button>
+  </div>`;
+
+  boks.innerHTML = hoved + `
+    <div>
+      <div class="dh-opg-nr">Opgave ${o.id} · ${idx + 1} af ${liste.length}</div>
+      <p class="dh-opg-spm">${o.spoergsmaal}</p>
+    </div>
+    ${krop}${fb}${knapper}
+    ${state.quiz.vist ? `<div class="dh-feedback" data-ok="åben"><b>Trin ${state.quiz.vist}: ${trinData(state.quiz.vist).overskrift}</b>${trinData(state.quiz.vist).tekst}</div>` : ""}`;
+
+  if (o.type === "drag") tegnTraek(o, gemt);
+  else $("dhDropLag").hidden = true;
+
+  bindQuiz();
+  render();
+}
+
+function opsamling(liste) {
+  const forkerte = liste.filter(o => {
+    const s = state.quiz.svar[o.id];
+    return s && o.type !== "open" && !s.rigtigt;
+  });
+  const ubesvarede = liste.filter(o => !state.quiz.svar[o.id]);
+  const aabne = liste.filter(o => o.type === "open" && state.quiz.svar[o.id]);
+  let h = `<div class="dh-opsamling"><h3 class="dh-opg-spm">Opsamling</h3>`;
+  if (!forkerte.length && !ubesvarede.length) {
+    h += `<p>Flot — alt er besvaret, og der er ikke noget, du behøver at genlæse.</p>`;
+  }
+  if (forkerte.length) {
+    h += `<p>Begreber, du bør genlæse:</p><ul>` +
+      forkerte.map(o => `<li><b>${o.begreb}</b> — se trin ${o.visTrin} (opgave ${o.id})</li>`).join("") + `</ul>`;
+  }
+  if (aabne.length) {
+    h += `<p>Sammenlign dine skriftlige svar med modelsvarene i opgave ${aabne.map(o => o.id).join(", ")}.</p>`;
+  }
+  if (ubesvarede.length) {
+    h += `<p>Ubesvaret: ${ubesvarede.map(o => o.id).join(", ")}.</p>`;
+  }
+  return h + `</div>`;
+}
+
+function tegnTraek(o, gemt) {
+  const lag = $("dhDropLag");
+  lag.hidden = false;
+  lag.innerHTML = o.zoner.map(z =>
+    `<button type="button" class="dh-drop" data-zone="${z.id}" style="left:${z.x}%;top:${z.y}%">?</button>`).join("");
+  const braet = $("dhBraet");
+  braet.innerHTML = o.brikker.map(b =>
+    `<button type="button" class="dh-brik" data-brik="${b.id}" draggable="true" aria-pressed="false">${b.tekst}</button>`).join("");
+
+  const placeret = (gemt && gemt.placering) ? gemt.placering : {};
+  let valgt = null;
+
+  function opdater() {
+    lag.querySelectorAll(".dh-drop").forEach(d => {
+      const brikId = placeret[d.dataset.zone];
+      const brik = o.brikker.find(b => b.id === brikId);
+      d.textContent = brik ? brik.tekst : "?";
+      d.dataset.valgt = "0";
+      if (gemt) d.dataset.mark = brikId === d.dataset.zone ? "rigtigt" : "forkert";
+    });
+    braet.querySelectorAll(".dh-brik").forEach(b => {
+      const brugt = Object.keys(placeret).some(z => placeret[z] === b.dataset.brik);
+      b.dataset.brugt = brugt ? "1" : "0";
+      b.setAttribute("aria-pressed", String(valgt === b.dataset.brik));
+      b.disabled = !!gemt;
+    });
+  }
+
+  function placer(zone, brikId) {
+    if (gemt || !brikId) return;
+    Object.keys(placeret).forEach(z => { if (placeret[z] === brikId) delete placeret[z]; });
+    placeret[zone] = brikId;
+    valgt = null;
+    opdater();
+  }
+
+  // Egenskaber frem for addEventListener: overlayet genbruges mellem opgaver,
+  // så lytterne må ikke hobe sig op.
+  braet.onclick = ev => {
+    const b = ev.target.closest(".dh-brik");
+    if (!b || gemt) return;
+    valgt = valgt === b.dataset.brik ? null : b.dataset.brik;
+    opdater();
+  };
+  braet.ondragstart = ev => {
+    const b = ev.target.closest(".dh-brik");
+    if (!b) return;
+    ev.dataTransfer.setData("text/plain", b.dataset.brik);
+    valgt = b.dataset.brik;
+  };
+  lag.onclick = ev => {
+    const d = ev.target.closest(".dh-drop");
+    if (d && valgt) placer(d.dataset.zone, valgt);
+  };
+  lag.ondragover = ev => { if (ev.target.closest(".dh-drop")) ev.preventDefault(); };
+  lag.ondrop = ev => {
+    const d = ev.target.closest(".dh-drop");
+    if (!d) return;
+    ev.preventDefault();
+    placer(d.dataset.zone, ev.dataTransfer.getData("text/plain") || valgt);
+  };
+
+  lag._placering = placeret;
+  opdater();
+}
+
+function tjekSvar(o) {
+  const liste = opgaveListe();
+  let resultat = null;
+  if (o.type === "mc" || o.type === "mc-multi") {
+    const valgt = [...document.querySelectorAll('#dhQuiz input[name="dhSvar"]:checked')].map(i => Number(i.value));
+    if (!valgt.length) return;
+    const facit = o.svar.map((s, i) => s.rigtigt ? i : -1).filter(i => i >= 0);
+    const rigtigt = valgt.length === facit.length && facit.every(i => valgt.indexOf(i) >= 0);
+    resultat = { valgt, rigtigt };
+  } else if (o.type === "numeric") {
+    const felt = $("dhTal");
+    if (felt.value === "") return;
+    const v = Number(String(felt.value).replace(",", "."));
+    resultat = { vaerdi: felt.value, rigtigt: Math.abs(v - o.svar) <= o.tolerance };
+  } else if (o.type === "predict") {
+    const v = document.querySelector('#dhQuiz input[name="dhSvar"]:checked');
+    if (!v) return;
+    resultat = { valgt: v.value, rigtigt: v.value === o.rigtigt };
+  } else if (o.type === "open") {
+    resultat = { tekst: $("dhAaben").value, rigtigt: null };
+  } else if (o.type === "drag") {
+    const p = $("dhDropLag")._placering || {};
+    if (Object.keys(p).length < o.zoner.length) return;
+    resultat = { placering: p, rigtigt: o.zoner.every(z => p[z.id] === z.id) };
+  }
+  if (!resultat) return;
+  state.quiz.svar[o.id] = resultat;
+  gemFremskridt();
+  tegnOpgave();
+  if (o.type === "predict" && o.proev) proevSkyder(o.proev);
+}
+
+function proevSkyder(p) {
+  if (typeof p.co2Fra === "number") { state.co2 = p.co2Fra; state.albedo = K.albedoNu; }
+  if (typeof p.albedoFra === "number") { state.albedo = p.albedoFra; state.co2 = K.co2Foerindustrielt; }
+  state.visTempK = ts(state.albedo, state.co2);
+  render();
+  setTimeout(() => {
+    if (typeof p.co2Til === "number") state.co2 = p.co2Til;
+    if (typeof p.albedoTil === "number") state.albedo = p.albedoTil;
+    saetMaal(ts(state.albedo, state.co2), true);
+  }, 450);
+}
+
+function bindQuiz() {
+  const boks = $("dhQuiz");
+  boks.querySelectorAll("[data-saet]").forEach(b => b.addEventListener("click", () => {
+    state.quiz.saet = b.dataset.saet;
+    state.quiz.idx = 0;
+    state.quiz.vist = null;
+    tegnOpgave();
+    render();
+    opdaterUrl();
+  }));
+  boks.querySelectorAll("[data-handling]").forEach(b => b.addEventListener("click", () => {
+    const liste = opgaveListe();
+    const o = liste[Math.min(state.quiz.idx, liste.length - 1)];
+    switch (b.dataset.handling) {
+      case "tjek": tjekSvar(o); break;
+      case "proev": proevSkyder(o.proev); break;
+      case "vis":
+        state.quiz.vist = o.visTrin;
+        state.co2 = K.co2Foerindustrielt; state.albedo = K.albedoNu;
+        state.visTempK = state.maalTempK = maalTempForTrin(o.visTrin);
+        tegnOpgave(); render();
+        break;
+      case "forrige": state.quiz.idx = Math.max(0, state.quiz.idx - 1); state.quiz.vist = null; tegnOpgave(); render(); break;
+      case "naeste": state.quiz.idx = state.quiz.idx + 1; state.quiz.vist = null; tegnOpgave(); render(); break;
+      case "forfra": state.quiz.idx = 0; state.quiz.vist = null; tegnOpgave(); render(); break;
+      case "ryd":
+        state.quiz.svar = {}; gemFremskridt(); state.quiz.idx = 0; tegnOpgave(); render(); break;
+      case "print-uden": udskriv("uden"); break;
+      case "print-med": udskriv("med"); break;
+    }
+  }));
+}
+
+function maalTempForTrin(n) {
+  const t = trinData(n);
+  return t.temp === "model" ? ts(state.albedo, state.co2) : te(state.albedo);
+}
+
+/* ==========================================================================
+   10. Print
+   ========================================================================== */
+
+function byggePrint() {
+  const boks = $("dhPrint");
+  const saetNavn = { A: "Sæt A — Genkend", B: "Sæt B — Anvend", C: "Sæt C — Forklar" };
+  let h = `<h1>Drivhuseffekten trin for trin — opgaver</h1>
+    <p style="font-size:10pt">smbi.dk · Navn: ______________________  Klasse: ________</p>`;
+  ["A", "B", "C"].forEach(s => {
+    h += `<h2>${saetNavn[s]}</h2>`;
+    DATA.opgaver.filter(o => o.saet === s).forEach((o, i) => {
+      const valgmuligheder = Array.isArray(o.svar) ? o.svar : null;
+      h += `<div class="dh-p-opg"><div class="dh-p-spm">${o.id}. ${o.spoergsmaal}</div>`;
+      if (valgmuligheder) h += `<div class="dh-p-valg">` + valgmuligheder.map((v, j) =>
+        `☐ ${String.fromCharCode(97 + j)}) ${v.tekst}`).join("<br>") + `</div>`;
+      if (o.valg) h += `<div class="dh-p-valg">` + o.valg.map(v => `☐ ${v}`).join("&nbsp;&nbsp;&nbsp;") + `</div>`;
+      if (o.type === "numeric") h += `<div class="dh-p-valg">Svar: ____________ ${o.enhed}</div>`;
+      if (o.type === "drag") h += `<div class="dh-p-valg">${o.brikker.map(b => b.tekst).join(" · ")}<br>(tegn pilene på figuren)</div>`;
+      if (o.type === "open") h += `<div class="dh-p-linjer"></div><div class="dh-p-linjer"></div><div class="dh-p-linjer"></div><div class="dh-p-linjer"></div>`;
+      let facit = "";
+      if (valgmuligheder) facit = "Facit: " + valgmuligheder.filter(v => v.rigtigt).map(v => v.tekst).join(" · ");
+      else if (o.valg) facit = "Facit: " + o.rigtigt;
+      else if (o.type === "numeric") facit = `Facit: ${o.svar} ${o.enhed} (tolerance ±${o.tolerance})`;
+      else if (o.type === "drag") facit = "Facit: indstråling og reflekteret øverst til venstre, udstråling til rummet øverst til højre, overfladens udstråling og tilbagestråling nederst.";
+      else if (o.type === "open") facit = "Modelsvar: " + o.modelsvar;
+      if (o.feedback && o.type !== "open") facit += " — " + o.feedback;
+      h += `<div class="dh-p-facit">${facit}</div></div>`;
+    });
+  });
+  boks.innerHTML = h;
+}
+
+function udskriv(variant) {
+  document.body.dataset.print = variant;
+  window.print();
+}
+
+/* ==========================================================================
+   11. "Om modellen"
+   ========================================================================== */
+
+function omModellen() {
+  visDialog(`
+    <h2>Om modellen</h2>
+    <p>Figuren bruger en <b>stærkt forenklet klimamodel</b>. Den regner på den samlede
+    strålingsbalance for hele kloden og siger intet om, hvor på Jorden eller hvornår
+    ændringerne sker.</p>
+    <h3>Hvad modellen ikke kan</h3>
+    <ul>
+      <li>Den <b>medregner ikke tidsforsinkelsen fra havene</b>. I virkeligheden går der
+      årtier, før temperaturen har indstillet sig på en ny balance. I figuren tager det 1,5 sekund.</li>
+      <li>Den regner kun med is-albedo som tilbagekobling. Vanddamp, skyer og permafrost er ikke med.</li>
+      <li>Tallene på pilene er afrundede globale gennemsnit (NASA/NOAA's energibudget).</li>
+    </ul>
+    <h3>Et rigtigt drivhus virker anderledes</h3>
+    <p>Et drivhus i en have bliver først og fremmest varmt, fordi glasset <b>stopper luftens
+    bevægelse</b>, så den varme luft ikke kan stige op og væk. Atmosfærens drivhuseffekt
+    handler derimod om stråling. Navnet er altså lidt misvisende.</p>
+    <h3>Tal og kilder</h3>
+    <table>
+      <tr><td>Solarkonstant</td><td>${K.solarkonstant} W/m²</td></tr>
+      <tr><td>Global indstråling</td><td>${K.indstraaling} W/m²</td></tr>
+      <tr><td>Albedo i dag</td><td>${fmt(K.albedoNu, 2)}</td></tr>
+      <tr><td>CO₂ førindustrielt / i dag</td><td>${K.co2Foerindustrielt} / ca. ${K.co2Nu} ppm (2026)</td></tr>
+      <tr><td>Klimafølsomhed</td><td>ca. 3 °C pr. fordobling af CO₂</td></tr>
+      <tr><td>Naturlig drivhuseffekt</td><td>ca. 33 °C</td></tr>
+    </table>
+    <p style="font-size:.9em">Kilder: NASA/NOAA's globale energibudget (afrundede Trenberth-værdier),
+    NOAA Global Monitoring Laboratory for CO₂-koncentrationen, IPCC AR6 for klimafølsomheden.</p>`);
+}
+
+/* ==========================================================================
+   12. Init
+   ========================================================================== */
+
+function visDialog(html) {
+  $("dhDialogKrop").innerHTML = html;
+  const d = $("dhDialog");
+  try { d.showModal(); } catch (e) { d.setAttribute("open", ""); }   // fx iframe uden allow-modals
+}
+
+function byggeMaerker() {
+  const co2 = $("dhCo2Maerker");
+  [280, 430, 560].forEach(v => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = v;
+    b.title = v === 280 ? "Førindustrielt niveau" : v === 430 ? "Niveauet i dag" : "Fordoblet CO₂";
+    b.setAttribute("aria-label", `Sæt CO₂ til ${v} ppm (${b.title.toLowerCase()})`);
+    b.style.left = ((v - 280) / (1120 - 280) * 100) + "%";
+    b.addEventListener("click", () => {
+      if ($("dhCo2").disabled) return;
+      state.co2 = v;
+      saetMaal(maalTemperatur(), true);
+    });
+    co2.appendChild(b);
+  });
+  const legende = document.createElement("div");
+  legende.className = "dh-maerke-tekst";
+  legende.textContent = "280 = førindustrielt · 430 = i dag · 560 = fordobling";
+  co2.insertAdjacentElement("afterend", legende);
+
+  const alb = $("dhAlbedoMaerker");
+  [[0.30, "0,30 i dag"]].forEach(([v, t]) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = t;
+    b.setAttribute("aria-label", "Sæt albedo til 0,30 — niveauet i dag");
+    b.style.left = ((v - 0.10) / 0.40 * 100) + "%";
+    b.addEventListener("click", () => {
+      if ($("dhAlbedo").disabled) return;
+      state.albedo = v;
+      saetMaal(maalTemperatur(), true);
+    });
+    alb.appendChild(b);
+  });
+}
+
+function byggePrikker() {
+  const p = $("dhPrikker");
+  p.innerHTML = DATA.trin.map(t =>
+    `<button type="button" data-trin="${t.id}" aria-label="Trin ${t.id}: ${t.overskrift}">${t.id}</button>`).join("");
+  p.querySelectorAll("button").forEach(b =>
+    b.addEventListener("click", () => saetTrin(Number(b.dataset.trin), true)));
+}
+
+function init() {
+  hentFremskridt();
+  laesUrl();
+  tegnGenudsendelse();
+  byggeMaerker();
+  byggePrikker();
+  byggePrint();
+
+  // "Hvad ser jeg på?" i udforsk-tilstand
+  const hvad = document.createElement("button");
+  hvad.type = "button";
+  hvad.id = "dhUdforskKnap";
+  hvad.className = "dh-knap";
+  hvad.textContent = "Hvad ser jeg på?";
+  hvad.addEventListener("click", () => {
+    visDialog(`<h2>Hvad ser jeg på?</h2>` + DATA.trin.map(t =>
+      `<h3>${t.id}. ${t.overskrift}</h3><p>${t.tekst}</p>`).join(""));
+  });
+  $("dhForklaring").querySelector(".dh-nav").insertAdjacentElement("beforebegin", hvad);
+
+  // Tilstandsvælger
+  document.querySelectorAll("[data-tilstand]").forEach(b =>
+    b.addEventListener("click", () => saetMode(b.dataset.tilstand)));
+
+  // Navigation
+  $("dhNaeste").addEventListener("click", () => saetTrin(state.trin + 1, true));
+  $("dhForrige").addEventListener("click", () => saetTrin(state.trin - 1, true));
+
+  // Skydere
+  $("dhCo2").addEventListener("input", ev => {
+    state.co2 = Number(ev.target.value);
+    saetMaal(maalTemperatur(), true);
+  });
+  $("dhAlbedo").addEventListener("input", ev => {
+    state.albedo = Number(ev.target.value);
+    saetMaal(maalTemperatur(), true);
+  });
+
+  $("dhNulstil").addEventListener("click", () => {
+    state.co2 = K.co2Foerindustrielt;
+    state.albedo = K.albedoNu;
+    saetMaal(maalTemperatur(), true);
+  });
+
+  // Projektortilstand
+  $("dhProjektor").addEventListener("click", () => {
+    state.projektor = !state.projektor;
+    app.dataset.projektor = state.projektor ? "1" : "0";
+    $("dhProjektor").setAttribute("aria-pressed", String(state.projektor));
+    opdaterUrl();
+  });
+  app.dataset.projektor = state.projektor ? "1" : "0";
+  $("dhProjektor").setAttribute("aria-pressed", String(state.projektor));
+
+  $("dhOmModellen").addEventListener("click", omModellen);
+  $("dhDialogLuk").addEventListener("click", () => $("dhDialog").close());
+
+  // Tastatur: piletaster og mellemrum til næste/forrige
+  document.addEventListener("keydown", ev => {
+    if (state.mode !== "teach") return;
+    const t = ev.target;
+    if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT" || t.isContentEditable)) return;
+    if (ev.key === "ArrowRight" || ev.key === "PageDown" || (ev.key === " " && t.tagName !== "BUTTON" && t.tagName !== "SUMMARY")) {
+      ev.preventDefault(); saetTrin(state.trin + 1, true);
+    } else if (ev.key === "ArrowLeft" || ev.key === "PageUp") {
+      ev.preventDefault(); saetTrin(state.trin - 1, true);
+    } else if (ev.key === "Home") { ev.preventDefault(); saetTrin(1, true); }
+    else if (ev.key === "End") { ev.preventDefault(); saetTrin(DATA.trin.length, true); }
+  });
+
+  window.addEventListener("afterprint", () => { delete document.body.dataset.print; });
+
+  saetMode(state.mode);
+  saetTrin(state.trin, false);
+  state.visTempK = state.maalTempK = maalTemperatur();
+  render();
+}
+
+if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+else init();
+
+})();
+</script>
+</body>
+</html>
