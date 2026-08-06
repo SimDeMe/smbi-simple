@@ -203,6 +203,7 @@ export function setLevel(id) {
 
     buildHeader();
     rerenderAll();               // molekylernes egne knapper følger også niveauet
+    renderTasks();               // og opgavelisten er kortere på C
     setStatus(levelInfo(id).msg, 'info');
 }
 

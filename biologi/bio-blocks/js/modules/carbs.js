@@ -544,6 +544,7 @@ const tasks = [
     },
     {
         title: 'Byg laktose',
+        level: 'B',                       // kræver β-formen, som først er fremme på B
         predict: {
             q: 'Gæt først: hvad nu hvis du bytter om, så glukosens C1 binder til galaktosens C4?',
             options: ['Det giver den samme laktose',
@@ -572,6 +573,7 @@ const tasks = [
     },
     {
         title: 'To disakkarider med samme sumformel',
+        level: 'A',                       // kræver både β og formelvisningen
         predict: {
             q: 'Gæt først: to molekyler har den samme sumformel. Kan vi så fordøje det ene og ikke det andet?',
             options: ['Nej — samme sumformel betyder samme stof',
@@ -591,6 +593,7 @@ const tasks = [
     },
     {
         title: 'Byg en kæde vi ikke kan fordøje',
+        level: 'B',                       // β-kæden og amylasen hører til B
         predict: {
             q: 'Gæt først: du bygger en kæde af β-1,4-bundne glukoser og trækker amylase hen på den. Hvad sker der?',
             options: ['Amylase klipper den',
@@ -617,7 +620,7 @@ const tasks = [
             correct: 0
         },
         goal: 'Byg en kæde på mindst 6 α-glukoser, og sæt en sidekæde på en af ringenes C6 (den lille 6-knop over ringen). ' +
-              'Hurtigbyg → Glykogen gør det for dig.',
+              'På B- og A-niveau kan Hurtigbyg → Glykogen gøre det for dig.',
         why: 'Glykogen og amylopektin: α-1,4 i kæden, α-1,6 i grenpunkterne. ' +
              'Grenene giver mange frie ender, så mange enzymmolekyler kan arbejde samtidig — derfor kan leveren frigive ' +
              'glukose til blodet i løbet af minutter. En ugrenet kæde ville kun kunne klippes fra én ende.',
@@ -627,6 +630,7 @@ const tasks = [
     },
     {
         title: 'Fordøj stivelsen hele vejen',
+        level: 'B',                       // amylase og maltase
         predict: {
             q: 'Gæt først: amylase har klippet stivelsen i maltose. Kan sukkeret optages i blodet nu?',
             options: ['Ja, maltose kan optages',
@@ -642,6 +646,7 @@ const tasks = [
     },
     {
         title: 'Vis hvad laktoseintolerans er',
+        level: 'B',                       // laktase og kontakten
         predict: {
             q: 'Gæt først: hvad er laktoseintolerans?',
             options: ['En allergi over for mælk',
@@ -783,7 +788,7 @@ export const carbs = {
 
     tasks,
     summary: water =>
-        `<p class="tp-goal">Alle ${tasks.length} opgaver er løst. Det er de samme fire ting hele vejen igennem:</p>
+        `<p class="tp-goal">Alle opgaverne er løst. Det er de samme fire ting hele vejen igennem:</p>
          <ul class="tp-sum">
            <li><b>Kondensation</b> binder monomerer sammen og fraspalter vand; <b>hydrolyse</b> gør det modsatte.
                Vandtælleren står nu på ${water}.</li>

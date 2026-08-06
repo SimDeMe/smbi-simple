@@ -180,8 +180,12 @@ export function condense(pair) {
     waterFx(p.x + mol._box.w / 2, p.y - mol._box.up + 10, 'out');
     addWater(1);
 
+    // Den fælles motor står i hver eneste kondensationsbesked, med samme
+    // ordlyd i alle tre moduler. Før fik eleven kun pointen i opsamlingen
+    // efter otte opgaver, og de færreste nåede dertil.
     const i = mol._model.info;
-    setStatus(`Kondensation: ${i.name} (${i.formula}) dannet via en ${pair.label}-binding — der fraspaltes ét molekyle vand.`, 'ok');
+    setStatus(`Kondensation: ${i.name} (${i.formula}) dannet via en ${pair.label}-binding — der fraspaltes ét molekyle vand. ` +
+              'Samme reaktion i kulhydrater, proteiner og fedt.', 'ok');
     taskTick();
 }
 

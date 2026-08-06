@@ -310,6 +310,7 @@ const tasks = [
     },
     {
         title: 'Klip inde i kæden med pepsin',
+        level: 'B',                       // pepsin
         predict: {
             q: 'Gæt først: du trækker pepsin hen på en binding uden en aromatisk sidekæde ved siden af. Hvad sker der?',
             options: ['Den klipper — et enzym klipper det den kommer til',
@@ -323,6 +324,7 @@ const tasks = [
     },
     {
         title: 'Frigør en enkelt aminosyre',
+        level: 'B',                       // peptidase
         predict: {
             q: 'Gæt først: hvor meget frigør en exopeptidase pr. klip?',
             options: ['Én aminosyre', 'To aminosyrer', 'Hele kæden på én gang'],
@@ -335,6 +337,7 @@ const tasks = [
     },
     {
         title: 'Vis hvad pH gør ved et enzym',
+        level: 'B',                       // syrehæmmer-kontakten
         predict: {
             q: 'Gæt først: mavesyren mangler. Hvad sker der med pepsin?',
             options: ['Enzymet er væk',
@@ -438,7 +441,7 @@ export const protein = {
 
     tasks,
     summary: water =>
-        `<p class="tp-goal">Alle ${tasks.length} opgaver er løst. Læg mærke til hvor lidt der egentlig var nyt:</p>
+        `<p class="tp-goal">Alle opgaverne er løst. Læg mærke til hvor lidt der egentlig var nyt:</p>
          <ul class="tp-sum">
            <li><b>Samme reaktion</b> som ved kulhydraterne: kondensation binder sammen og fraspalter vand,
                hydrolyse gør det modsatte. Vandtælleren står på ${water}.</li>

@@ -70,7 +70,10 @@
                         valgfrit `predict: { q, options[], correct }` —
                         forudsigelsen eleven skal gøre *før* handlingen.
                         Panelet viser ikke `goal`, før der er gættet, og
-                        facit kommer sammen med `why`
+                        facit kommer sammen med `why`.
+                        `level` ('B'/'A') skjuler opgaven under det niveau
+                        og skal sættes på alt, der kræver knapper C-niveau
+                        ikke har: α/β-valget, enzymerne, formelvisningen
    summary(state)       opsamlingen når alle opgaver er løst
    ===================================================================== */
 

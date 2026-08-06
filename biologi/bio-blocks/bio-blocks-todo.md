@@ -296,23 +296,48 @@ sætningsskel. Teksterne er skrevet med pointen forrest i forvejen, så et
 dermed to steder at glemme at rette. Er den første sætning under 60 tegn,
 kommer den næste med: "Det er cellulose." siger ingenting alene.
 
-### Opgavemode
+### Opgavemode — gjort
 
-- [ ] **Opgave 1 kan være løst før man åbner panelet.** Ligger maltosen på
-      bordet fra fri leg, giver `taskTick()` et ✔ og en forklaring på noget
-      eleven ikke bevidst har gjort. `toggleTasks()` bør rydde bordet på vej
-      ind i opgavemode, ligesom `nextTask()` allerede gør.
-- [ ] **Lineær låsning uden vej udenom.** Opgave 4–6 (isomerer, β-1,4-kæde,
-      forgrening) er mærkbart sværere end 1–2. Den der går i stå på 4, når
-      aldrig til 7–8, som er de mest konkrete og biologisk vedkommende
-      (fordøjelse, laktoseintolerans). Enten en "spring over"-knap eller
-      niveauvalget, der skjuler 4–6 på C-niveau — niveauerne findes nu
-      (`js/levels.js`), så det er et `level`-felt på opgaven og et filter i
-      `tasks.js`.
-- [ ] **Pointen om at de tre moduler kører på samme motor** får eleven kun i
-      opsamlingen efter alle otte opgaver, og de færreste når dertil. Den
-      kunne stå i kondensationsbeskeden hver gang, med samme ordlyd i alle tre
-      moduler.
+- [x] **Opgave 1 kan være løst før man åbner panelet.** `toggleTasks()` rydder
+      nu bordet på vej ind i opgavemode, ligesom "Næste opgave" gør det. Lå
+      maltosen der fra fri leg, blev opgave 1 ellers kvitteret med et ✔ og en
+      forklaring på noget eleven ikke bevidst havde gjort.
+- [x] **Lineær låsning uden vej udenom.** Begge dele, for de løser hver sin
+      halvdel: en **Spring over →**-knap på enhver uløst opgave (også før man
+      har gættet — den der er gået i stå, skal ikke først tvinges til at
+      svare), og et `level`-felt på opgaverne, så C-niveau kun viser dem der
+      kan løses med C-niveauets knapper.
+- [x] **Pointen om den fælles motor** står nu i hver eneste
+      kondensationsbesked: "… der fraspaltes ét molekyle vand. Samme reaktion
+      i kulhydrater, proteiner og fedt." Beskeden bygges i `reactions.js`, så
+      ordlyden er den samme i alle tre moduler af sig selv.
+
+**Niveau og fremgang.** `visible()` i `tasks.js` er opgaverne på det aktuelle
+niveau, hver med sin plads i modulets fulde liste. Nummeret eleven ser, er
+pladsen i den synlige række, men alt der huskes — løst, gættet, sprunget over
+— gemmes på den fulde. Derfor kan man skifte niveau midt i det hele uden at
+fremgangen flytter sig: går man fra C til A efter tre løste opgaver, står de
+tre stadig med ✔, og de fem nye er nu med.
+
+Hvad der kræver hvad: opgaver med α/β (laktose, cellulose), med enzymer
+(fordøjelsen, pepsin, lipasen) eller med en kontakt (laktoseintolerans, pH,
+galde) er `level: 'B'`, og isomer-opgaven, der både kræver β og
+formelvisningen, er `'A'`. Tilbage på C står tre pr. modul: dan bindingen,
+tæl vandet, byg videre på kæden. Det er præcis det, C-niveau skal kunne.
+
+**Spring over.** `pickNext()` roterer videre fra den aktuelle opgave, hele
+vejen rundt, og tager usprungne først. Rotationen er det, der gør knappen til
+en vej udenom: uden den ville en liste, hvor alt tilbage var sprunget over,
+altid pege på den første — altså den man lige stod på. Den man lander på, er
+ikke længere sprunget over, så listen er ærlig om hvad der venter.
+
+To ting kom med undervejs, fordi de først blev synlige nu:
+
+- Opsamlingen overhalede den sidste forklaring. Nu holder `justSolved` den
+  tilbage, og knappen hedder "Se opsamlingen →" på den sidste opgave — før
+  var `why` på den sidste opgave den eneste, der aldrig blev vist.
+- Opsamlingen sagde "Alle 8 opgaver er løst" også når niveauet kun viste tre.
+  Tallet er væk; det sagde alligevel ikke noget.
 
 ### Sprog og aflevering
 

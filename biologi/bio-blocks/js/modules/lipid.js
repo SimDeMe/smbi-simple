@@ -312,6 +312,7 @@ const tasks = [
     },
     {
         title: 'Fordøj fedtet med bugspytlipase',
+        level: 'B',                       // bugspytlipasen
         predict: {
             q: 'Gæt først: bugspytlipasen går i gang med et triglycerid. Hvad bliver der tilbage?',
             options: ['Glycerol og tre frie fedtsyrer',
@@ -325,6 +326,7 @@ const tasks = [
     },
     {
         title: 'Vis hvad galde gør',
+        level: 'B',                       // galde-kontakten
         predict: {
             q: 'Gæt først: hvad laver galden i tarmen?',
             options: ['Den spalter fedtet ligesom et enzym',
@@ -431,7 +433,7 @@ export const lipid = {
 
     tasks,
     summary: water =>
-        `<p class="tp-goal">Alle ${tasks.length} opgaver er løst. Fedt er bygget efter samme princip som resten:</p>
+        `<p class="tp-goal">Alle opgaverne er løst. Fedt er bygget efter samme princip som resten:</p>
          <ul class="tp-sum">
            <li><b>Kondensation</b> danner esterbindingen og fraspalter vand — nøjagtig som ved sukker og protein.
                Vandtælleren står på ${water}.</li>

@@ -604,6 +604,10 @@ circle.site-mark.hot { animation: site-pulse 0.7s ease-in-out infinite; }
 }
 .tp-btn:active { transform: translateY(3px); box-shadow: 0 0 0; }
 .tp-btn.grey { background: #7f8c8d; }
+.tp-btn.small { padding: 7px 11px; font-size: 12px; margin-top: 10px; }
+
+/* En sprunget opgave er hverken løst eller låst — den venter */
+#task-list li.skip { color: #b9770e; }
 .tp-sum { margin: 0 0 8px; padding-left: 18px; }
 .tp-sum li { margin-bottom: 4px; }
 
