@@ -7,7 +7,7 @@
 import { svgSpace, molLayer, enzLayer, pvLayer } from './dom.js';
 import { SNAP } from './units.js';
 import { getPos, setPos, clampIntoView, centreOf, setStatus } from './board.js';
-import { bestPair, showPreview, condense, hydrolyse,
+import { bestPair, showPreview, clearPreview, condense, hydrolyse,
          fullHydrolysis, flipVariant } from './reactions.js';
 import { bestBond, showEnzymePreview, dropEnzyme, removeEnzyme } from './enzymes.js';
 import { openFacts } from './facts.js';
@@ -44,6 +44,9 @@ export function startDrag(e) {
     dragged = mol;
     activePointer = e.pointerId;
     mol.classList.add('dragging');
+    // Bindingspladserne lyser op så længe der trækkes i et molekyle —
+    // enzymer binder til bindinger og ikke til pladser, så ikke for dem
+    if (!mol._enzyme) svgSpace.classList.add('linking');
     (mol._enzyme ? enzLayer : molLayer).appendChild(mol);   // bring to front
 
     const pt = toSvgPoint(e);
@@ -76,7 +79,8 @@ function endDrag(e) {
     window.removeEventListener('pointerup', endDrag);
     window.removeEventListener('pointercancel', endDrag);
 
-    pvLayer.textContent = '';
+    svgSpace.classList.remove('linking');
+    clearPreview();
     clampIntoView(mol);
 
     if (mol._enzyme) { dropEnzyme(mol, bestBond(mol)); return; }

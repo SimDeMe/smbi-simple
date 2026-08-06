@@ -13,7 +13,7 @@ import { atLeast } from './levels.js';
 import { molLayer, svgDefs } from './dom.js';
 import { SVG_NS, sub, text, line, rect, badge } from './svg.js';
 import { unitGroup, placedText } from './draw.js';
-import { UNIT_W, UNIT_H, UNIT_CX, ARM } from './units.js';
+import { UNIT_W, UNIT_H, UNIT_CX, UNIT_CY, ARM } from './units.js';
 import { analyse, layout, classify, freeSites, sitePoint, shapeOf,
          monoFormula, sumAtoms, formulaText, bondLabel } from './model.js';
 import { startDrag } from './drag.js';
@@ -47,9 +47,10 @@ export function makeMolecule(root, x, y) {
     // gruppe dér — det skal strukturformlen vide
     const donors = new Set(bonds.map(b => b.donor));
 
-    if (state.repr !== 'struct') drawArms(gArms, nodes, pos);
+    if (state.repr !== 'struct') drawArms(gArms, nodes, pos, sites);
     bonds.forEach(b => drawBond(gBonds, gDecor, b, pos));
     nodes.forEach(node => drawUnit(gUnits, node, pos.get(node), donors.has(node), gCards));
+    drawSites(gDecor, sites, pos);
 
     const extent = drawChrome(gChrome, info, nodes, bonds, gridW, gridH, scale);
 
@@ -123,8 +124,11 @@ function drawFormula(parent, node, p) {
 }
 
 /* Stubben ud til en grenplads: tegnes for alle enheder der har en, når
-   nummereringen er slået til, og altid når grenen faktisk sidder der. */
-function drawArms(parent, nodes, pos) {
+   nummereringen er slået til, og altid når grenen faktisk sidder der.
+
+   Er pladsen fri, er knoppen samtidig dens markør — så den lyser op med
+   de andre, i stedet for at få en ring tegnet oven i sig. */
+function drawArms(parent, nodes, pos, sites) {
     const m = mod();
 
     nodes.forEach(node => {
@@ -147,7 +151,70 @@ function drawArms(parent, nodes, pos) {
             c.setAttribute('class', 'arm-dot');
             parent.appendChild(c);
             parent.appendChild(text(link.stub.label, pt.x, pt.y + 3.5, 'arm-text'));
+
+            const free = sites.find(s => s.node === node && s.kind === kind);
+            if (free) {
+                c.classList.add('site-mark', 'site-acc');
+                free.el = c;
+            }
         });
+    });
+}
+
+/* De frie bindingspladser.
+
+   Eleven skulle før vide udenad at C1 er højre hjørne og C4 venstre —
+   kun grenpladsen havde en synlig knop. Nu har hver fri plads sin egen
+   markør: en fyldt knop dér hvor enheden kan donere, og en åben ring dér
+   hvor den kan modtage. Retningen udad regnes ud fra kassens midte, så
+   den passer i alle moduler, også når enheden er spejlet eller vendt.
+
+   Markørerne står svagt, indtil man tager fat i et molekyle — så lyser de
+   op (`.linking` fra drag.js), og det par der ville reagere, bliver
+   fremhævet af `showPreview()`. Sådan kan man se hvad der er ved at ske,
+   før man slipper.
+
+   Kun i blokvisningen: strukturformlen tegner allerede OH og COOH præcis
+   dér hvor pladserne er, og en markør oven i den ville skjule det den
+   skal vise. */
+function drawSites(parent, sites, pos) {
+    if (state.repr !== 'blocks') return;
+
+    sites.forEach(site => {
+        if (site.el) return;                       // grenpladsen har sin knop
+        const p  = pos.get(site.node);
+        const pt = sitePoint(site.node, site.kind, p);
+
+        // Udad = væk fra enhedens midte
+        const dx = pt.x - (p.x + UNIT_CX), dy = pt.y - (p.y + UNIT_CY);
+        const len = Math.hypot(dx, dy) || 1;
+        const ux = dx / len, uy = dy / len;
+
+        const g = document.createElementNS(SVG_NS, 'g');
+        g.setAttribute('class', 'site-mark ' + (site.canDonate ? 'site-donor' : 'site-acc'));
+        parent.appendChild(g);
+
+        // Stubben starter uden for knoppen, ellers forsvinder den under den
+        if (site.canDonate)
+            g.appendChild(line(pt.x + ux * 5, pt.y + uy * 5,
+                               pt.x + ux * 13, pt.y + uy * 13, 'site-stub'));
+
+        const c = document.createElementNS(SVG_NS, 'circle');
+        c.setAttribute('cx', pt.x);
+        c.setAttribute('cy', pt.y);
+        c.setAttribute('r', 7);
+        c.setAttribute('class', 'site-dot');
+        g.appendChild(c);
+
+        // Uden navn: C-numrene står allerede på blokken lige ved siden af,
+        // og hvad pladsen hedder, er ikke det samme i alle moduler
+        const title = document.createElementNS(SVG_NS, 'title');
+        title.textContent = site.canDonate
+            ? 'Fri donorplads — træk den hen til en fri modtagerplads'
+            : 'Fri modtagerplads — her kan en anden byggesten binde sig';
+        g.appendChild(title);
+
+        site.el = g;
     });
 }
 

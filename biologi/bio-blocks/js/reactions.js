@@ -68,8 +68,32 @@ export function bestPair(mol) {
     return best;
 }
 
+/* De to markører der lige nu peger på hinanden. De holdes uden for
+   pvLayer, fordi de hører til molekylerne og ikke til forhåndsvisningen —
+   derfor skal de også have deres klasse fjernet igen med håndkraft. */
+let hot = [];
+
+function setHot(pair) {
+    hot.forEach(el => el.classList.remove('hot', 'ok', 'no'));
+    hot = [];
+    if (!pair) return;
+    const kind = pair.verdict.ok ? 'ok' : 'no';
+    [pair.donor.el, pair.acc.el].forEach(el => {
+        if (!el) return;                       // markører findes kun i blokvisningen
+        el.classList.add('hot', kind);
+        hot.push(el);
+    });
+}
+
+/* Slut på trækket: både stregen og de fremhævede markører ryddes */
+export function clearPreview() {
+    pvLayer.textContent = '';
+    setHot(null);
+}
+
 export function showPreview(pair) {
     pvLayer.textContent = '';
+    setHot(pair);
     if (!pair) return;
 
     const g = document.createElementNS(SVG_NS, 'g');

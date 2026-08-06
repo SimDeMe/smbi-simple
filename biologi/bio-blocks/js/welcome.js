@@ -52,9 +52,16 @@ export function syncWelcome() {
     const s = mod().start;
     if (!s) { box.classList.add('hidden'); return; }
 
+    // Markørernes betydning er motorens og ikke modulets: en knop er en
+    // knop, uanset om det er en glukose eller en fedtsyre
     box.innerHTML =
         `<p class="wc-title">${s.title}</p>
          <ol class="wc-steps">${s.steps.map(t => `<li>${t}</li>`).join('')}</ol>
+         <p class="wc-legend">
+           <b class="lg-donor"></b> knop = fri donorplads ·
+           <b class="lg-acc"></b> ring = fri modtagerplads.
+           De lyser op, mens du trækker.
+         </p>
          <div class="wc-actions">
            <button class="wc-btn" id="wc-demo">Læg dem ud for mig</button>
            <button class="wc-btn grey" id="wc-tasks">🎯 Gå til opgaverne</button>

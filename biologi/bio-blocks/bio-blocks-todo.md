@@ -118,10 +118,39 @@ sorteret efter effekt pr. arbejdstime, ikke efter hvor de hører til i koden.
 
 - [x] **Giv appen en start.** — gjort, se nedenfor.
 - [x] **Gæt → gør → forklar i opgavemode.** — gjort, se nedenfor.
-- [ ] **Marker de frie bindingspladser på blokkene.** Eleven skal i dag vide
-      at C1 er højre hjørne og C4 venstre. Kun C6 har en synlig knop
-      (`drawArms` i `render.js`). Giv donorplads og modtagerplads hver sin
-      markør, og lad dem lyse op mens man trækker.
+- [x] **Marker de frie bindingspladser på blokkene.** — gjort, se nedenfor.
+
+### Bindingspladserne er synlige — gjort
+
+Før skulle eleven vide udenad at C1 er højre hjørne og C4 venstre; kun
+grenpladsen (C6) havde en synlig knop. Nu har hver fri plads sin egen
+markør, og de betyder det samme i alle tre moduler:
+
+- **Orange knop med en lille tap** = fri donorplads. Det er den ende der
+  skal trækkes.
+- **Blå ring** = fri modtagerplads. Det er dér en anden byggesten kan binde
+  sig.
+
+Markørerne står dæmpet, indtil man tager fat i et molekyle. Så lyser alle
+pladser op, og det par der ville reagere, bliver grønt eller rødt sammen med
+forhåndsvisningen — man kan altså se hvad der er ved at ske, før man slipper.
+
+- `drawSites()` i `render.js` tegner dem ud fra `freeSites()`, som motoren
+  havde i forvejen: en optaget plads er ikke i listen og får derfor ingen
+  markør. Retningen "udad" regnes ud fra kassens midte, så tappen vender
+  rigtigt, også når enheden er spejlet (fruktose) eller vendt (β-kæden).
+- Grenpladsens knop fra `drawArms()` bliver selv markøren, når pladsen er
+  fri — ellers ville der stå en ring oven i en knop.
+- Fremhævningen er to ting: `drag.js` sætter `.linking` på `#svg-space`
+  mens der trækkes i et *molekyle* (ikke et enzym — de binder til bindinger,
+  ikke til pladser), og `showPreview()` i `reactions.js` sætter `.hot ok|no`
+  på netop de to markører der peger på hinanden. `clearPreview()` rydder
+  begge dele igen, også når man slipper uden at der sker noget.
+- Kun i blokvisningen. Strukturformlen tegner allerede OH og COOH præcis dér
+  hvor pladserne er, og en markør oven i den ville skjule det den skal vise.
+- Startkortet har fået to linjers forklaring på farverne. Den står i
+  `welcome.js` og ikke i modulerne: en knop er en knop, uanset om det er en
+  glukose eller en fedtsyre.
 
 ### Gæt → gør → forklar — gjort
 

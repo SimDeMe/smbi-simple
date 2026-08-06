@@ -193,6 +193,31 @@ header::before { content: ''; flex: none; width: 92px; }
 .arm-dot  { fill: #ffffff; stroke: #90a4ae; stroke-width: 2.5; }
 .arm-text { font-size: 10px; font-weight: bold; fill: #78909c; text-anchor: middle; pointer-events: none; }
 
+/* ---------- Frie bindingspladser ----------
+   Knop = kan donere, ring = kan modtage. De står dæmpet, indtil man tager
+   fat i et molekyle: så lyser alle pladser op, og det par der ville
+   reagere, bliver grønt eller rødt. */
+.site-mark { opacity: 0.55; transition: opacity 0.15s; }
+#svg-space.linking .site-mark { opacity: 1; }
+
+.site-donor .site-dot { fill: #e67e22; stroke: #ffffff; stroke-width: 2; }
+.site-donor .site-stub { stroke: #e67e22; stroke-width: 4; stroke-linecap: round; }
+.site-acc .site-dot { fill: #ffffff; stroke: #2980b9; stroke-width: 3; }
+circle.site-acc { stroke: #2980b9; }          /* grenknoppen er selv markøren */
+
+.site-mark.hot { opacity: 1; }
+.site-mark.hot .site-dot,
+circle.site-mark.hot { animation: site-pulse 0.7s ease-in-out infinite; }
+.site-mark.hot.ok .site-dot, circle.site-mark.hot.ok { stroke: #27ae60; }
+.site-mark.hot.ok .site-stub { stroke: #27ae60; }
+.site-mark.hot.no .site-dot, circle.site-mark.hot.no { stroke: #e74c3c; }
+.site-mark.hot.no .site-stub { stroke: #e74c3c; }
+
+@keyframes site-pulse {
+    0%, 100% { stroke-width: 3; }
+    50%      { stroke-width: 6; }
+}
+
 .bond-line { stroke: #566573; stroke-width: 6; stroke-linecap: round; }
 .bond-atom { fill: #ffffff; stroke: #566573; stroke-width: 3; cursor: pointer; transition: fill 0.15s; }
 .bond-hit:hover .bond-atom { fill: #fadbd8; stroke: #c0392b; }
@@ -424,6 +449,22 @@ header::before { content: ''; flex: none; width: 92px; }
 }
 .wc-steps li { margin-bottom: 6px; }
 .wc-steps b { color: #1a5276; }
+/* Forklaringen på markørerne — samme to farver som på blokkene */
+.wc-legend {
+    margin: 0 0 14px;
+    font-size: 12.5px;
+    color: #5d6d7e;
+    line-height: 1.6;
+}
+.wc-legend b {
+    display: inline-block;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    vertical-align: -1px;
+}
+.wc-legend .lg-donor { background: #e67e22; }
+.wc-legend .lg-acc   { background: #fff; border: 3px solid #2980b9; }
+
 .wc-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 .wc-btn {
     border: none; background: #27ae60; color: #fff;
