@@ -13,12 +13,14 @@ import { resetGame, rerenderAll, clampIntoView, setStatus } from './board.js';
 import { buildHeader } from './ui.js';
 import { closeViewer } from './viewer3d.js';
 import { closeFacts } from './facts.js';
+import { syncWelcome } from './welcome.js';
 
 /* ---------- Det modulafhængige ---------- */
 
 state.repr    = mod().reprs[0].id;
 state.variant = mod().variant ? mod().variant.options[0].id : null;
 buildHeader();
+syncWelcome();
 setStatus(mod().intro, '');
 
 /* ---------- Det fælles ---------- */

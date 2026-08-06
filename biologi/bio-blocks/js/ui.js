@@ -14,6 +14,7 @@ import { spawnEnzyme, syncEnzymeButtons, rerenderEnzymes } from './enzymes.js';
 import { syncGradients } from './render.js';
 import { openFromTable } from './viewer3d.js';
 import { renderTasks } from './tasks.js';
+import { syncWelcome } from './welcome.js';
 
 const el = id => document.getElementById(id);
 
@@ -162,5 +163,6 @@ export function switchModule(id) {
 
     buildHeader();
     renderTasks();
+    syncWelcome();                 // det nye modul har sin egen vejledning
     setStatus(mod().intro, 'info');
 }

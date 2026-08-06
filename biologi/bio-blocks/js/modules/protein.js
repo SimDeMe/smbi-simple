@@ -323,6 +323,18 @@ export const protein = {
     intro: 'Proteiner: læg aminosyrer på bordet og træk carboxylgruppen (højre) hen til den næstes aminogruppe (venstre). ' +
            'Farven viser sidekædens type — det er den der bestemmer alt.',
 
+    start: {
+        title: 'Byg dit første peptid',
+        steps: [
+            'Klik på to aminosyrer, fx <b>Glycin</b> og <b>Serin</b>.',
+            'Træk den enes <b>COOH</b> (højre side) hen til den andens <b>NH₂</b> (venstre side) — ' +
+            'linjen mellem dem bliver grøn.',
+            'Slip. Der dannes en peptidbinding, og der fraspaltes ét vandmolekyle — ' +
+            'præcis som hos kulhydraterne.'
+        ],
+        demo: ['glycine', 'serine']
+    },
+
     shapes: SHAPES,
     mon,
     links,

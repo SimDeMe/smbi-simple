@@ -12,6 +12,7 @@
 import { state } from './state.js';
 import { mod } from './modules/index.js';
 import { setStatus, clampIntoView, resetGame } from './board.js';
+import { syncWelcome } from './welcome.js';
 
 export const taskEvents = new Set();
 
@@ -99,6 +100,7 @@ function toggleTasks() {
     state.taskMode = !state.taskMode;
     taskPanel.classList.toggle('hidden', !state.taskMode);
     document.getElementById('btn-tasks').classList.toggle('active', state.taskMode);
+    syncWelcome();      // startkortet hører til det tomme bord i fri leg
     if (state.taskMode) {
         renderTasks();
         taskTick();

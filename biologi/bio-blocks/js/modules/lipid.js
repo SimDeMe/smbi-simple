@@ -316,6 +316,18 @@ export const lipid = {
     intro: 'Fedt: læg en glycerol ud og træk fedtsyrer hen på dens tre OH-grupper. ' +
            'Fedtsyrerne kan ikke binde til hinanden — derfor bliver det et triglycerid og ikke en kæde.',
 
+    start: {
+        title: 'Byg dit første fedtstof',
+        steps: [
+            'Klik på <b>Glycerol</b> og på en fedtsyre, fx <b>Palmitinsyre</b>.',
+            'Træk fedtsyrens <b>COOH</b> hen til en af glycerolens tre <b>OH</b>-grupper — ' +
+            'linjen mellem dem bliver grøn.',
+            'Slip. Der dannes en esterbinding, og der fraspaltes ét vandmolekyle — ' +
+            'samme princip som hos kulhydrater og proteiner.'
+        ],
+        demo: ['glycerol', 'palmitic']
+    },
+
     // De tre fedtsyrer sidder tæt om glycerolen — men esterbindingerne skal
     // have plads nok til at etiketten kan stå i mellemrummet
     step: UNIT_W + 86,

@@ -614,6 +614,17 @@ export const carbs = {
     intro: 'Kulhydrater: vælg α eller β, læg sukkerarter på bordet og træk dem sammen. ' +
            'Klik på et O i en binding for at hydrolysere netop den, eller træk en enzymblok hen på bindingen.',
 
+    start: {
+        title: 'Byg dit første kulhydrat',
+        steps: [
+            'Klik på <b>Glukose</b> to gange. Så ligger der to sukkerringe på bordet.',
+            'Træk den ene hen mod den anden, indtil <b>C1</b> (højre hjørne) er tæt på ' +
+            '<b>C4</b> (venstre hjørne) — linjen mellem dem bliver grøn.',
+            'Slip. De bliver til ét molekyle, og der fraspaltes ét vandmolekyle.'
+        ],
+        demo: ['glucose', 'glucose']
+    },
+
     shapes: SHAPES,
     mon,
     links,

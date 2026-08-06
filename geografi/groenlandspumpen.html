@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grønlandspumpen — den termohaline cirkulation</title>
+<meta name="description" content="Grafisk simulator til NV / naturgeografi: den termohaline cirkulation som et forsøgskar, man kan skrue på. Uden tal — kun bevægelse, farve og hastighed.">
+
+<!--
+  ==========================================================================
+  GRØNLANDSPUMPEN · skjulte grænser og tidskonstanter (ikke i brugerfladen)
+  ==========================================================================
+  Fire skjulte værdier, alle nul til en: kulde (skyder et), ferskvand (skyder
+  to), salt (intern), pumpe (beregnet). Desuden "laag" = ferskvandslåget:
+  ferskvandsskyderen med træghed. Det er lågets tykkelse — ikke skyderen —
+  pumpen mærker. Det er den vigtigste tilføjelse i forhold til afsnit seks.
+
+    tyngde   = kulde + K_SALT*salt - K_FERSK*laag     K_SALT     = 0.42
+    pumpeMaal= clamp01(tyngde - TYNGDE_NUL)           K_FERSK    = 0.756
+                                                      TYNGDE_NUL = 0.20
+
+  Tidskonstanter (eksponentiel tilnaermelse, sekunder):
+    pumpe ned .......... TAU_PUMPE_NED  = 5
+    pumpe op ........... TAU_PUMPE_OP   = 13     (op er traegere end ned)
+    pumpe naar laast ... TAU_PUMPE_LAAS = 5
+    salt -> pumpe ...... TAU_SALT       = 9      (salt-advektions-tilbagekobling)
+    laag vokser ........ TAU_LAAG_OP    = 2.5    (ses naesten med det samme)
+    laag forsvinder .... TAU_LAAG_NED   = 5 + 9*(1-pumpe)
+                         -> 14 s naar pumpen staar stille: uden cirkulation
+                            bliver laaget ikke roert vaek. Det er herfra
+                            modstanden ved genstart kommer.
+    Danmark-landskab ... TAU_VARME      = 20     (halter bevidst bagefter)
+    varmestroem ........ TAU_STROEM     = 7
+
+  Laasen (hysterese):
+    pumpe < LAAS_NED (0.10)      -> tilstanden laases til "staar stille"
+    pumpeMaal > LAAS_OP (0.35)   -> laasen slipper igen
+
+  Tilstandsgraenser paa pumpe (med 0.03 doedbaand mod flimmer):
+    >= 0.70 koerer | >= 0.40 traeg | >= 0.14 ved at gaa i staa | ellers stille
+
+  Maalt paa modellen med disse tal (simuleret, tresindstyve billeder i sekundet):
+    · Saet ferskvandsskyderen og vent: koerer til ca. 0.2 · traeg 0.3-0.4 ·
+      ved at gaa i staa 0.5-0.6 · staar stille fra ca. 0.7. Altsaa gradvist
+      hele vejen, og stop cirka to tredjedele oppe.
+    · Ferskvandet slaaet helt op: traeg 5 s, ved at gaa i staa 10 s,
+      staar stille 19 s.
+    · Derefter skyderen helt i bund igen: pumpen bliver staaende i 24 s og
+      naar foerst fuld styrke efter ca. 60 s.
+    · Kvasistatisk vej tilbage: laasen slipper foerst omkring skyder 0.25 —
+      den stoppede omkring 0.70. Man skal altsaa maerkbart laengere tilbage.
+    · Landskabet i Danmark halter ca. 14 s efter cirkulationen.
+    · Scenariet "Isen smelter": staar stille efter ca. 30 s.
+    · Scenariet "Saadan startede pumpen": foerste bevaegelse efter ca. 12 s,
+      fuld styrke efter ca. 48 s.
+    · Scenariet "Kan den komme tilbage?": starter af sig selv efter ca. 21 s.
+
+  Kalibrering — hvad der blev justeret undervejs:
+  · Foerste forsoeg havde K_SALT = 0.50 med TAU_SALT = 16. Tilbagekoblings-
+    forstaerkningen K_SALT er noedt til at ligge under en, ellers loeber
+    modellen loebsk og pumpen slaar fra i et spring i stedet for gradvist
+    (krav 6, punkt fire). Men 0.50/16 gav ogsaa en effektiv tidskonstant paa
+    ca. 27 s, saa selv en langsom traekning i skyderen overskoed stoppunktet
+    helt op i toppen. Endte paa K_SALT = 0.42 og TAU_SALT = 9: samme
+    mekanisme, effektiv tidskonstant ca. 15 s.
+  · K_FERSK og TYNGDE_NUL blev derefter loest, saa ligevaegten er
+    pumpe = 1 - 1.30*fersk ved kulde = 0.78. Det laegger stoppet paa
+    ferskvand ca. 0.66 — cirka to tredjedele oppe ad skyderen.
+  · TAU_LAAG_NED blev sat ned fra 8+16*(1-pumpe) til 5+9*(1-pumpe). Med den
+    foerste vaerdi stod pumpen stille i 43 s efter en nulstilling; det foeltes
+    som en fejl frem for som modstand. Nu er det 24 s.
+  · LAAS_OP blev sat til 0.35, saa laasen foerst slipper, naar laaget er nede
+    omkring 0.30. Med en lavere vaerdi kunne man skrue tilbage til naesten
+    samme sted og faa pumpen igen — genstarten foeltes for billig.
+  · Kontrolleret: paa hele ferskvandsskyderen og hele kuldeskyderen findes
+    der ikke et sted, hvor en enkelt pixel skifter tilstandstekst pga. laasen.
+    Laasen slaar til, mens pumpen allerede staar paa 0.10, altsaa dybt inde i
+    "staar stille". Ingen brat opfoersel.
+  · Overfladestroemmen har en bund paa 0.20 af fuld fart (vinddrevet). Uden
+    den kom der ingen partikler frem til laaget, og "proppen" kunne ikke ses.
+  ==========================================================================
+-->
+
+<style>
+.gp-app{
+  /* Ocean Gradient */
+  --gp-navy:#21295C;
+  --gp-blaa:#065A82;
+  --gp-teal:#1C7293;
+  --gp-lys:#CADCFC;
+  --gp-hvid:#F7FAFC;
+  --gp-orange:#E8734A;
+  --gp-orange-dyb:#C9552E;
+
+  --gp-serif:Cambria,"Hoefler Text",Constantia,Georgia,"Times New Roman",serif;
+  --gp-sans:Calibri,"Segoe UI",-apple-system,BlinkMacSystemFont,Roboto,"Helvetica Neue",Arial,sans-serif;
+
+  font-family:var(--gp-sans);
+  font-size:17px;
+  line-height:1.45;
+  color:var(--gp-navy);
+  background:var(--gp-hvid);
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+}
+html,body{margin:0;padding:0;background:#F7FAFC;}
+.gp-app *,.gp-app *::before,.gp-app *::after{box-sizing:border-box;}
+.gp-app h1,.gp-app h2,.gp-app h3,.gp-app p,.gp-app ul,.gp-app ol{margin:0;}
+.gp-app button,.gp-app select{font:inherit;color:inherit;}
+
+/* ── Topbjælke ────────────────────────────────────────────────────────── */
+.gp-top{
+  display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  padding:12px 22px 12px 132px;
+  border-bottom:2px solid var(--gp-lys);
+  background:#fff;
+}
+.gp-top h1{
+  font-family:var(--gp-serif);
+  font-size:30px;font-weight:700;letter-spacing:.01em;
+  color:var(--gp-navy);flex:1 1 auto;
+}
+.gp-knap{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:10px 18px;min-height:44px;
+  border:2px solid var(--gp-teal);border-radius:999px;
+  background:#fff;color:var(--gp-teal);
+  font-weight:600;font-size:17px;cursor:pointer;
+  transition:background .15s,color .15s;
+}
+.gp-knap:hover{background:var(--gp-teal);color:#fff;}
+.gp-knap:focus-visible{outline:3px solid var(--gp-orange);outline-offset:2px;}
+.gp-knap svg{flex:none;}
+
+/* ── Statusfelt ───────────────────────────────────────────────────────── */
+.gp-status{
+  display:flex;align-items:center;gap:18px;
+  padding:12px 22px;
+  background:var(--gp-hvid);
+  border-bottom:2px solid var(--gp-lys);
+  border-left:14px solid var(--gp-teal);
+  color:var(--gp-teal);
+  transition:border-color .8s ease,background .8s ease,color .8s ease;
+}
+.gp-status .gp-status-tekst{
+  font-family:var(--gp-serif);
+  font-size:34px;font-weight:700;line-height:1.1;
+}
+.gp-status[data-tilstand="1"],
+.gp-status[data-tilstand="2"]{border-left-color:var(--gp-orange);color:var(--gp-orange-dyb);}
+.gp-status[data-tilstand="3"]{border-left-color:var(--gp-navy);background:#EBF0F8;color:var(--gp-navy);}
+.gp-status[data-tilstand="2"]{animation:gp-puls 3.4s ease-in-out infinite;}
+@keyframes gp-puls{
+  0%,100%{box-shadow:inset 0 0 0 0 rgba(232,115,74,0);}
+  50%{box-shadow:inset 0 0 0 5px rgba(232,115,74,.42);}
+}
+
+/* ── Scenen ───────────────────────────────────────────────────────────── */
+.gp-scene{
+  position:relative;flex:1 1 auto;min-height:330px;
+  background:var(--gp-hvid);
+}
+.gp-scene canvas{display:block;width:100%;height:100%;}
+.gp-spg{
+  position:absolute;left:50%;top:10px;transform:translateX(-50%);
+  max-width:min(92%,780px);
+  padding:9px 24px;border-radius:999px;
+  background:rgba(255,255,255,.92);
+  border:2px solid var(--gp-lys);
+  font-family:var(--gp-serif);font-style:italic;font-size:20px;
+  color:var(--gp-navy);text-align:center;
+  pointer-events:none;
+}
+.gp-spg[hidden]{display:none;}
+
+/* ── Kontroller ───────────────────────────────────────────────────────── */
+.gp-kontrol{
+  display:flex;align-items:flex-start;gap:30px;flex-wrap:wrap;
+  padding:14px 22px 18px;
+  border-top:2px solid var(--gp-lys);
+  background:#fff;
+}
+.gp-skyder{flex:1 1 320px;min-width:270px;}
+.gp-skyder-raekke{display:flex;align-items:center;gap:14px;}
+.gp-skyder-raekke svg{flex:none;}
+.gp-skyder label{
+  display:block;margin-top:2px;
+  font-size:18px;font-weight:600;color:var(--gp-navy);
+}
+.gp-skyder input[type=range]{
+  flex:1 1 auto;width:100%;height:44px;
+  -webkit-appearance:none;appearance:none;background:transparent;cursor:pointer;
+}
+.gp-skyder input[type=range]:focus{outline:none;}
+.gp-skyder input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 2px var(--gp-teal),0 0 0 7px rgba(232,115,74,.55);}
+.gp-skyder input[type=range]:focus-visible::-moz-range-thumb{box-shadow:0 0 0 2px var(--gp-teal),0 0 0 7px rgba(232,115,74,.55);}
+.gp-skyder input[type=range]::-webkit-slider-runnable-track{
+  height:14px;border-radius:999px;background:var(--gp-lys);border:2px solid #A8BEE4;
+}
+.gp-skyder input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;
+  width:40px;height:40px;margin-top:-15px;border-radius:50%;
+  background:var(--gp-teal);border:4px solid #fff;
+  box-shadow:0 0 0 2px var(--gp-teal);
+}
+.gp-skyder input[type=range]::-moz-range-track{
+  height:14px;border-radius:999px;background:var(--gp-lys);border:2px solid #A8BEE4;
+}
+.gp-skyder input[type=range]::-moz-range-thumb{
+  width:36px;height:36px;border-radius:50%;
+  background:var(--gp-teal);border:4px solid #fff;
+  box-shadow:0 0 0 2px var(--gp-teal);
+}
+.gp-vaerktoej{
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  flex:0 0 auto;padding-top:4px;
+}
+.gp-vaerktoej select{
+  padding:10px 14px;min-height:44px;
+  border:2px solid var(--gp-teal);border-radius:12px;
+  background:#fff;color:var(--gp-teal);font-weight:600;cursor:pointer;
+}
+.gp-vaerktoej select:focus-visible{outline:3px solid var(--gp-orange);outline-offset:2px;}
+
+/* ── Hjælpepanel ──────────────────────────────────────────────────────── */
+.gp-overlay{
+  position:fixed;inset:0;z-index:60;
+  display:flex;align-items:center;justify-content:center;
+  padding:20px;background:rgba(33,41,92,.42);
+}
+.gp-overlay[hidden]{display:none;}
+.gp-panel{
+  width:min(660px,100%);max-height:88vh;overflow:auto;
+  background:#fff;border-radius:16px;border:3px solid #CADCFC;
+  padding:26px 30px 30px;
+  font-family:Calibri,"Segoe UI",system-ui,sans-serif;color:#21295C;
+}
+.gp-panel h2{
+  font-family:Cambria,Georgia,serif;font-size:26px;margin:0 0 14px;color:#21295C;
+}
+.gp-legende{list-style:none;padding:0;margin:0;}
+.gp-legende li{
+  display:flex;align-items:center;gap:18px;
+  padding:11px 0;border-bottom:1px solid #CADCFC;font-size:19px;
+}
+.gp-legende li:last-child{border-bottom:none;}
+.gp-legende svg{flex:none;}
+.gp-panel .gp-luk{margin-top:20px;}
+
+/* ── Opgaver ──────────────────────────────────────────────────────────── */
+.gp-opgaver{
+  border-top:2px solid var(--gp-lys);
+  background:var(--gp-hvid);
+  padding:0 22px 30px;
+}
+.gp-opgaver summary{
+  cursor:pointer;padding:16px 0;
+  font-family:var(--gp-serif);font-size:23px;font-weight:700;color:var(--gp-navy);
+}
+.gp-opgaver summary:focus-visible{outline:3px solid var(--gp-orange);outline-offset:3px;}
+.gp-opgaver ol{list-style:none;padding:0;display:grid;gap:14px;max-width:940px;}
+.gp-opgave{
+  background:#fff;border:2px solid var(--gp-lys);border-radius:12px;
+  padding:14px 18px;
+}
+.gp-opgave h3{
+  font-family:var(--gp-serif);font-size:19px;margin-bottom:5px;
+}
+.gp-opgave p{font-size:17px;}
+.gp-opgave .gp-knap{margin-top:10px;padding:7px 16px;min-height:38px;font-size:16px;}
+
+.gp-skjult{
+  position:absolute;width:1px;height:1px;overflow:hidden;
+  clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;
+}
+
+@media (max-width:900px){
+  .gp-top{padding-left:22px;padding-top:56px;}
+  .gp-top h1{font-size:25px;}
+  .gp-status .gp-status-tekst{font-size:28px;}
+}
+</style>
+</head>
+<body>
+
+<!-- smbi hjem-knap -->
+<a href="/" class="smbi-home" aria-label="Til forsiden" title="Til forsiden">
+<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+<span>Hjem</span>
+</a>
+<style>
+.smbi-home{position:fixed;top:14px;left:14px;z-index:2147483000;display:inline-flex;align-items:center;gap:6px;padding:8px 13px;font:600 14px/1 system-ui,-apple-system,"Segoe UI",sans-serif;color:#F5F0E8;background:#1C2E44;border:1px solid #2E4A6A;border-radius:999px;text-decoration:none;box-shadow:0 2px 10px rgba(0,0,0,.28);opacity:.9;transition:opacity .15s,transform .15s}
+.smbi-home:hover{opacity:1;transform:translateY(-1px)}
+.smbi-home svg{flex:none}
+@media print{.smbi-home{display:none!important}}
+</style>
+<script>(function(){try{if(window.top!==window.self){var e=document.querySelector(".smbi-home");if(e)e.style.display="none";}}catch(x){}})();</script>
+
+
+<div class="gp-app" id="gpApp">
+
+  <header class="gp-top">
+    <h1>Grønlandspumpen</h1>
+    <button type="button" class="gp-knap" id="gpHjaelp" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.4 9.2a2.7 2.7 0 0 1 5.2.9c0 1.8-2.6 2.2-2.6 3.9"/><path d="M12 17.4h.01"/></svg>
+      Sådan læser du billedet
+    </button>
+    <button type="button" class="gp-knap" id="gpForfra">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 12a8.5 8.5 0 1 1 2.6 6.1"/><path d="M3.2 6.4v5h5"/></svg>
+      Forfra
+    </button>
+  </header>
+
+  <div class="gp-status" id="gpStatus" data-tilstand="0">
+    <svg viewBox="0 0 34 34" width="34" height="34" aria-hidden="true">
+      <circle cx="17" cy="17" r="14" fill="none" stroke="currentColor" stroke-width="3"/>
+      <path d="M17 9v13M11.5 16.5 17 22.5l5.5-6" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <div class="gp-status-tekst" id="gpStatusTekst">Pumpen kører</div>
+    <div class="gp-skjult" id="gpLive" role="status" aria-live="polite"></div>
+  </div>
+
+  <div class="gp-scene" id="gpScene">
+    <canvas id="gpLaerred"></canvas>
+    <div class="gp-spg" id="gpSpg" hidden></div>
+  </div>
+
+  <div class="gp-kontrol">
+    <div class="gp-skyder">
+      <div class="gp-skyder-raekke">
+        <!-- iskoldt -->
+        <svg viewBox="0 0 26 26" width="26" height="26" aria-hidden="true" fill="none" stroke="#065A82" stroke-width="2.4" stroke-linecap="round">
+          <path d="M13 2v22M3.5 7.5l19 11M22.5 7.5l-19 11"/>
+        </svg>
+        <input type="range" id="gpSkyderKulde" min="0" max="1" step="0.002" value="0.22">
+        <!-- mildt -->
+        <svg viewBox="0 0 26 26" width="26" height="26" aria-hidden="true" fill="none" stroke="#E8734A" stroke-width="2.4" stroke-linecap="round">
+          <circle cx="13" cy="13" r="5.2" fill="#E8734A" stroke="none"/>
+          <path d="M13 1.5v3.2M13 21.3v3.2M1.5 13h3.2M21.3 13h3.2M4.9 4.9l2.3 2.3M18.8 18.8l2.3 2.3M21.1 4.9l-2.3 2.3M7.2 18.8l-2.3 2.3"/>
+        </svg>
+      </div>
+      <label for="gpSkyderKulde">Hvor koldt er der i nord?</label>
+    </div>
+
+    <div class="gp-skyder">
+      <div class="gp-skyder-raekke">
+        <!-- isen ligger stille -->
+        <svg viewBox="0 0 26 26" width="26" height="26" aria-hidden="true">
+          <path d="M2 22 13 5l11 17z" fill="#CADCFC" stroke="#065A82" stroke-width="2.2" stroke-linejoin="round"/>
+        </svg>
+        <input type="range" id="gpSkyderFersk" min="0" max="1" step="0.002" value="0">
+        <!-- kraftig afsmeltning -->
+        <svg viewBox="0 0 26 26" width="26" height="26" aria-hidden="true">
+          <path d="M13 3c4.6 6 7 9.4 7 12.4A7 7 0 0 1 6 15.4C6 12.4 8.4 9 13 3z" fill="#CADCFC" stroke="#1C7293" stroke-width="2.2" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <label for="gpSkyderFersk">Hvor meget smelter indlandsisen?</label>
+    </div>
+
+    <div class="gp-vaerktoej">
+      <button type="button" class="gp-knap" id="gpPause" aria-pressed="false">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true" id="gpPauseIkon"><rect x="6" y="4" width="4.4" height="16" rx="1"/><rect x="13.6" y="4" width="4.4" height="16" rx="1"/></svg>
+        <span id="gpPauseTekst">Pause</span>
+      </button>
+      <label class="gp-skjult" for="gpScenarie">Prøv et scenarie</label>
+      <select id="gpScenarie">
+        <option value="" disabled selected>Prøv et scenarie …</option>
+        <option value="idag">Som i dag</option>
+        <option value="start">Sådan startede pumpen</option>
+        <option value="smelt">Isen smelter</option>
+        <option value="tilbage">Kan den komme tilbage?</option>
+        <option value="fri">Fri leg</option>
+      </select>
+    </div>
+  </div>
+
+  <details class="gp-opgaver" id="gpOpgaver">
+    <summary>Elevopgaver</summary>
+    <ol>
+      <li class="gp-opgave">
+        <h3>Første opgave — Se efter</h3>
+        <p>Kør «Som i dag». Beskriv med dine egne ord, hvad vandet gør. Hvor synker det ned? Hvor stiger det op? Tegn det.</p>
+        <button type="button" class="gp-knap" data-scenarie="idag">Sæt op</button>
+      </li>
+      <li class="gp-opgave">
+        <h3>Anden opgave — Hvad driver pumpen?</h3>
+        <p>Kør «Sådan startede pumpen». Hvad var det, der skulle ændre sig, før vandet begyndte at synke?</p>
+        <button type="button" class="gp-knap" data-scenarie="start">Sæt op</button>
+      </li>
+      <li class="gp-opgave">
+        <h3>Tredje opgave — Én ting ad gangen</h3>
+        <p>Rør kun ved kuldeskyderen. Hvad sker der? Stil den tilbage. Rør nu kun ved smeltevandsskyderen. Hvad sker der? Hvilken af de to gjorde størst forskel?</p>
+        <button type="button" class="gp-knap" data-scenarie="fri">Sæt op</button>
+      </li>
+      <li class="gp-opgave">
+        <h3>Fjerde opgave — Vejen tilbage</h3>
+        <p>Kør «Kan den komme tilbage?». Skru begge skydere tilbage til udgangspunktet og vent. Hvad sker der — og hvad sagde du på forhånd, der ville ske?</p>
+        <button type="button" class="gp-knap" data-scenarie="tilbage">Sæt op</button>
+      </li>
+      <li class="gp-opgave">
+        <h3>Femte opgave — Fra kar til skærm</h3>
+        <p>Hvad på skærmen svarer til isen i jeres plexiglas-kar? Til den varme flaske? Til frugtfarven? Nævn to ting, skærmen kan, som karret ikke kan — og to ting, karret gør bedre.</p>
+        <button type="button" class="gp-knap" data-scenarie="idag">Sæt op</button>
+      </li>
+    </ol>
+  </details>
+</div>
+
+<div class="gp-overlay" id="gpHjaelpLag" hidden>
+  <div class="gp-panel" role="dialog" aria-modal="true" aria-labelledby="gpHjaelpTitel" tabindex="-1" id="gpPanel">
+    <h2 id="gpHjaelpTitel">Sådan læser du billedet</h2>
+    <ul class="gp-legende">
+      <li>
+        <svg viewBox="0 0 54 26" width="54" height="26" aria-hidden="true"><circle cx="27" cy="13" r="8" fill="#083A5F"/></svg>
+        <span>tungt vand</span>
+      </li>
+      <li>
+        <svg viewBox="0 0 54 26" width="54" height="26" aria-hidden="true"><circle cx="27" cy="13" r="8" fill="#E4EDFB" stroke="#A8BEE4" stroke-width="1.6"/></svg>
+        <span>let vand</span>
+      </li>
+      <li>
+        <svg viewBox="0 0 54 26" width="54" height="26" aria-hidden="true" fill="none" stroke="#065A82" stroke-width="4.5" stroke-linecap="round">
+          <path d="M4 8h16M28 8h20M8 18h12M30 18h18"/>
+        </svg>
+        <span>hurtige partikler — kraftig strøm</span>
+      </li>
+      <li>
+        <svg viewBox="0 0 54 26" width="54" height="26" aria-hidden="true">
+          <path d="M15 1h24l-6 16h-12z" fill="#21295C" opacity=".38"/>
+          <path d="M27 6v12M20.5 13 27 20l6.5-7" fill="none" stroke="#21295C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>her synker vandet ned</span>
+      </li>
+      <li>
+        <svg viewBox="0 0 54 26" width="54" height="26" aria-hidden="true">
+          <path d="M46 3c-9 4-14 9-18 14-2 3-5 5-9 6" fill="none" stroke="#CADCFC" stroke-width="9" stroke-linecap="round"/>
+        </svg>
+        <span>smeltevand</span>
+      </li>
+      <li>
+        <svg viewBox="0 0 54 26" width="54" height="26" aria-hidden="true">
+          <rect x="3" y="9" width="23" height="14" fill="#4F8B5A"/>
+          <rect x="28" y="9" width="23" height="14" fill="#8C949F"/>
+          <path d="M9 9V5M15 5H9M40 9V5M46 5h-6" fill="none" stroke="#21295C" stroke-width="1.8"/>
+        </svg>
+        <span>grønt eller gråt landskab — klimaet i Danmark</span>
+      </li>
+    </ul>
+    <button type="button" class="gp-knap gp-luk" id="gpLukHjaelp">Luk</button>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ══════════════════════════════════════════════════════════════════════
+   1. Den skjulte logik — se HTML-kommentaren øverst i filen.
+      Ingen af disse værdier må nogensinde vises i brugerfladen.
+   ══════════════════════════════════════════════════════════════════════ */
+var K_SALT=0.42, K_FERSK=0.756, TYNGDE_NUL=0.20;
+var TAU_PUMPE_NED=5, TAU_PUMPE_OP=13, TAU_PUMPE_LAAS=5;
+var TAU_SALT=9, TAU_LAAG_OP=2.5, TAU_VARME=20, TAU_STROEM=7;
+var LAAG_NED_A=5, LAAG_NED_B=9;
+var LAAS_NED=0.10, LAAS_OP=0.35;
+var KULDE_START=0.78;
+
+var M={ kulde:KULDE_START, fersk:0, laag:0, salt:1, pumpe:1, laast:false,
+        varme:1, stroem:1, tilstand:0 };
+
+function klip(v,a,b){ return v<a?a:(v>b?b:v); }
+function k01(v){ return (typeof v==='number' && isFinite(v)) ? klip(v,0,1) : 0; }
+function mix(a,b,t){ return a+(b-a)*t; }
+function glat(t){ t=k01(t); return t*t*(3-2*t); }
+function naerm(v,maal,tau,dt){ return v+(maal-v)*(1-Math.exp(-dt/tau)); }
+
+function opdaterModel(dt){
+  /* Låget: vokser hurtigt, forsvinder kun langsomt — og allerlangsomst,
+     når pumpen står stille, for så er der intet, der rører det væk. */
+  var tauLaag = (M.fersk>M.laag) ? TAU_LAAG_OP : (LAAG_NED_A+LAAG_NED_B*(1-M.pumpe));
+  M.laag = k01(naerm(M.laag, M.fersk, tauLaag, dt));
+
+  var tyngde = M.kulde + K_SALT*M.salt - K_FERSK*M.laag;
+  var maal   = k01(tyngde - TYNGDE_NUL);
+
+  if(!M.laast && M.pumpe < LAAS_NED) M.laast = true;
+  if( M.laast && maal    > LAAS_OP ) M.laast = false;
+
+  var m   = M.laast ? 0 : maal;
+  var tau = M.laast ? TAU_PUMPE_LAAS : (m<M.pumpe ? TAU_PUMPE_NED : TAU_PUMPE_OP);
+  M.pumpe  = k01(naerm(M.pumpe,  m,       tau,        dt));
+  M.salt   = k01(naerm(M.salt,   M.pumpe, TAU_SALT,   dt));
+  M.varme  = k01(naerm(M.varme,  M.pumpe, TAU_VARME,  dt));
+  M.stroem = k01(naerm(M.stroem, M.pumpe, TAU_STROEM, dt));
+
+  /* Tilstand med dødbånd, så teksten ikke flimrer henne ved en grænse */
+  var g=[0.70,0.40,0.14], d=0.03, t=M.tilstand, p=M.pumpe;
+  var ny = p>=g[0]?0 : p>=g[1]?1 : p>=g[2]?2 : 3;
+  if(ny<t && p > g[ny]+d) t=ny;
+  else if(ny>t && p < g[t]-d) t=ny;
+  M.tilstand=t;
+}
+
+/* Hvor tungt er overfladevandet i nord lige nu — styrer partiklernes farve */
+function nordTunghed(){ return k01(0.34 + 0.55*M.kulde + 0.28*M.salt - 1.05*M.laag); }
+var SYD_TUNGHED=0.45;
+
+/* ══════════════════════════════════════════════════════════════════════
+   2. Scenens geometri. Virtuelle koordinater, skaleres til lærredet.
+   ══════════════════════════════════════════════════════════════════════ */
+var W=1280, H=680;
+var KAR={x0:70,x1:1150,y0:250,y1:560};
+var xL=140, xR=990, ySurf=300, yDeep=505, R=48;
+var BAAND={x0:70,x1:1150,y0:596,y1:648};
+
+var C_NAVY='#21295C', C_TEAL='#1C7293', C_LYS='#CADCFC',
+    C_HVID='#F7FAFC', C_ORANGE='#E8734A', C_ORANGE_DYB='#C9552E';
+var TUNG_RGB=[8,58,95], LET_RGB=[228,238,252];
+function tunghedFarve(t,a){
+  t=k01(t);
+  return 'rgba('+Math.round(mix(LET_RGB[0],TUNG_RGB[0],t))+','
+               +Math.round(mix(LET_RGB[1],TUNG_RGB[1],t))+','
+               +Math.round(mix(LET_RGB[2],TUNG_RGB[2],t))+','+(a===undefined?1:a)+')';
+}
+
+/* ── Sløjfen: otte stykker med afrundede hjørner ──────────────────────── */
+var STYKKER=[
+  {t:'l',x1:xL+R,y1:ySurf,x2:xR-R,y2:ySurf,               k:'over'},
+  {t:'a',cx:xR-R,cy:ySurf+R,r:R,a1:-Math.PI/2,a2:0,       k:'ned'},
+  {t:'l',x1:xR,y1:ySurf+R,x2:xR,y2:yDeep-R,               k:'ned'},
+  {t:'a',cx:xR-R,cy:yDeep-R,r:R,a1:0,a2:Math.PI/2,        k:'dyb'},
+  {t:'l',x1:xR-R,y1:yDeep,x2:xL+R,y2:yDeep,               k:'dyb'},
+  {t:'a',cx:xL+R,cy:yDeep-R,r:R,a1:Math.PI/2,a2:Math.PI,  k:'dyb'},
+  {t:'l',x1:xL,y1:yDeep-R,x2:xL,y2:ySurf+R,               k:'op'},
+  {t:'a',cx:xL+R,cy:ySurf+R,r:R,a1:Math.PI,a2:Math.PI*1.5,k:'op'}
+];
+var LOOP=0;
+(function(){
+  for(var i=0;i<STYKKER.length;i++){
+    var s=STYKKER[i];
+    s.len=(s.t==='l')? Math.hypot(s.x2-s.x1,s.y2-s.y1) : Math.abs(s.a2-s.a1)*s.r;
+    s.s0=LOOP; LOOP+=s.len;
+  }
+})();
+function stykkeVed(s){
+  s=((s%LOOP)+LOOP)%LOOP;
+  for(var i=0;i<STYKKER.length;i++){
+    if(s < STYKKER[i].s0+STYKKER[i].len) return i;
+  }
+  return STYKKER.length-1;
+}
+var _p={x:0,y:0,nx:0,ny:0};
+function punktVed(s){
+  s=((s%LOOP)+LOOP)%LOOP;
+  var k=STYKKER[stykkeVed(s)], u=(s-k.s0)/k.len;
+  if(k.t==='l'){
+    _p.x=mix(k.x1,k.x2,u); _p.y=mix(k.y1,k.y2,u);
+    var dx=k.x2-k.x1, dy=k.y2-k.y1, L=Math.hypot(dx,dy)||1;
+    _p.nx=-dy/L; _p.ny=dx/L;
+  }else{
+    var a=mix(k.a1,k.a2,u);
+    _p.x=k.cx+Math.cos(a)*k.r; _p.y=k.cy+Math.sin(a)*k.r;
+    _p.nx=Math.cos(a); _p.ny=Math.sin(a);
+  }
+  return _p;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   3. Partiklerne
+   ══════════════════════════════════════════════════════════════════════ */
+var N_MAX=145, V_MAX=232, GAB=7;
+var P=[], orden=[];
+(function(){
+  for(var i=0;i<N_MAX;i++){
+    P.push({ s:Math.random()*LOOP, off:(Math.random()*2-1)*13,
+             fase:Math.random()*Math.PI*2, fart:0.82+Math.random()*0.36,
+             tung:0.85, liv:i<70?1:0, r:2.6+Math.random()*1.5, v:0 });
+    orden.push(i);
+  }
+})();
+
+/* Overfladestrømmen er vinddrevet og bliver ved — derfor bunden på 0.20.
+   Nedstrømmen, dybstrømmen og opstigningen følger pumpen helt til nul. */
+function fartFaktor(kind){
+  return (kind==='over') ? Math.max(0.20,M.pumpe) : M.pumpe;
+}
+
+function opdaterPartikler(dt){
+  var aktive=Math.round(mix(48,N_MAX,Math.pow(M.pumpe,0.75)));
+  var nt=nordTunghed();
+  for(var i=0;i<N_MAX;i++){
+    var p=P[i];
+    p.liv=naerm(p.liv,(i<aktive)?1:0,2.4,dt);
+
+    var kind=STYKKER[stykkeVed(p.s)].k;
+    p.v=V_MAX*p.fart*fartFaktor(kind);
+    p.s=(p.s+p.v*dt)%LOOP;
+
+    /* Vandmassen tager farve efter, hvor den er */
+    if(kind==='ned')       p.tung=naerm(p.tung,nt,0.42,dt);
+    else if(kind==='op')   p.tung=naerm(p.tung,SYD_TUNGHED,1.1,dt);
+    else if(kind==='over') p.tung=naerm(p.tung,mix(SYD_TUNGHED,nt,0.35),9,dt);
+
+    p.fase+=dt*(1.1+0.7*p.fart);
+  }
+  haandhaevKoe();
+}
+
+/* Ingen overhaling. Når nedstrømmen bliver træg, hober vandet sig op foran
+   låget i stedet for at synke — det er "proppen". Rent visuelt. */
+function haandhaevKoe(){
+  orden.sort(function(a,b){ return P[a].s-P[b].s; });
+  var sNed0=STYKKER[1].s0, sNed1=STYKKER[2].s0+STYKKER[2].len, lead=-1;
+  for(var k=orden.length-1;k>=0;k--){
+    var q=P[orden[k]];
+    if(q.liv>0.05 && q.s>=sNed0 && q.s<=sNed1){ lead=k; break; }
+  }
+  if(lead<0) return;
+  var prev=P[orden[lead]].s;
+  for(var n=1;n<orden.length;n++){
+    var p=P[orden[(lead-n+orden.length)%orden.length]];
+    if(p.liv<=0.05) continue;
+    var s=p.s;
+    while(s>prev) s-=LOOP;
+    if(prev-s<GAB) s=prev-GAB;
+    p.s=((s%LOOP)+LOOP)%LOOP;
+    prev=s;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   4. Tidsbåndet — hukommelse i stedet for graf
+   ══════════════════════════════════════════════════════════════════════ */
+var BAAND_MAKS=270, BAAND_INTERVAL=0.30;
+var baand=[], baandUr=0;
+function nulstilBaand(){ baand.length=0; baandUr=0; }
+function opdaterBaand(dt){
+  baandUr+=dt;
+  while(baandUr>=BAAND_INTERVAL){
+    baandUr-=BAAND_INTERVAL;
+    var skift = (baand.length===0) || baand[baand.length-1].t!==M.tilstand;
+    baand.push({t:M.tilstand,skift:skift});
+    if(baand.length>BAAND_MAKS) baand.shift();
+  }
+}
+var TILSTAND_TEKST=['Pumpen kører','Pumpen bliver træg','Pumpen er ved at gå i stå','Pumpen står stille'];
+var TILSTAND_FARVE=[C_TEAL,C_ORANGE,C_ORANGE_DYB,C_NAVY];
+var TILSTAND_ORD=['kører','bliver træg','ved at gå i stå','står stille'];
+
+/* ══════════════════════════════════════════════════════════════════════
+   5. Tegningen
+   ══════════════════════════════════════════════════════════════════════ */
+var cv=document.getElementById('gpLaerred'), ctx=cv.getContext('2d');
+var scene=document.getElementById('gpScene');
+var visning={sc:1,ox:0,oy:0};
+var SERIF='Cambria,"Hoefler Text",Georgia,serif';
+var SANS='Calibri,"Segoe UI",system-ui,sans-serif';
+
+function tilpas(){
+  var r=scene.getBoundingClientRect();
+  var dpr=Math.min(window.devicePixelRatio||1,2);
+  var bw=Math.max(1,Math.round(r.width)), bh=Math.max(1,Math.round(r.height));
+  cv.width=Math.round(bw*dpr); cv.height=Math.round(bh*dpr);
+  cv.style.width=bw+'px'; cv.style.height=bh+'px';
+  var sc=Math.min(bw/W,bh/H);
+  visning.sc=sc*dpr;
+  visning.ox=(bw-W*sc)/2*dpr;
+  visning.oy=(bh-H*sc)/2*dpr;
+}
+if(window.ResizeObserver) new ResizeObserver(tilpas).observe(scene);
+window.addEventListener('resize',tilpas);
+
+function afrundet(x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y);
+  ctx.closePath();
+}
+function karSti(){ afrundet(KAR.x0,KAR.y0,KAR.x1-KAR.x0,KAR.y1-KAR.y0,10); }
+
+/* Lågets underkant som funktion af x: tykkest i nord, tynder ud mod syd */
+function laagDybde(x){
+  if(M.laag<0.012) return 0;
+  var Dmax=M.laag*(58+150*(1-M.pumpe));
+  if(x>=xR) return Dmax;
+  var venstre=xR-(110+640*M.laag);
+  return Dmax*glat((x-venstre)/(xR-venstre));
+}
+function isHoejde(){ return 0.42+0.58*M.kulde; }
+
+function tegnHimmel(){
+  var mild=1-M.kulde;
+  var g=ctx.createLinearGradient(0,0,0,KAR.y0);
+  g.addColorStop(0,'rgb('+Math.round(mix(163,196,mild))+','+Math.round(mix(192,214,mild))+','+Math.round(mix(232,240,mild))+')');
+  g.addColorStop(1,'rgb('+Math.round(mix(224,250,mild))+','+Math.round(mix(234,242,mild))+','+Math.round(mix(248,234,mild))+')');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,KAR.y0+2);
+}
+
+function tegnSol(){
+  var x=152,y=100,r=32+9*(1-M.kulde);
+  ctx.save();
+  ctx.strokeStyle=C_ORANGE; ctx.lineWidth=6; ctx.lineCap='round';
+  for(var i=0;i<8;i++){
+    var a=i*Math.PI/4;
+    ctx.beginPath();
+    ctx.moveTo(x+Math.cos(a)*(r+14),y+Math.sin(a)*(r+14));
+    ctx.lineTo(x+Math.cos(a)*(r+30),y+Math.sin(a)*(r+30));
+    ctx.stroke();
+  }
+  ctx.fillStyle=C_ORANGE; ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+  ctx.fillStyle=C_NAVY; ctx.font='600 22px '+SANS; ctx.textAlign='center';
+  ctx.fillText('troperne',x,196);
+}
+
+function tegnGroenland(){
+  var f=isHoejde(), b=KAR.y0;
+  ctx.save();
+  ctx.fillStyle='#7E8896';
+  ctx.beginPath();
+  ctx.moveTo(905,b); ctx.lineTo(1012,b-88); ctx.lineTo(1086,b-124);
+  ctx.lineTo(1160,b-66); ctx.lineTo(1160,b);
+  ctx.closePath(); ctx.fill();
+
+  var h1=112*f, h2=152*f, h3=94*f;
+  ctx.fillStyle=C_HVID; ctx.strokeStyle='#B7CCEC'; ctx.lineWidth=4; ctx.lineJoin='round';
+  ctx.beginPath();
+  ctx.moveTo(922,b);
+  ctx.quadraticCurveTo(986,b-h1,1036,b-h2);
+  ctx.quadraticCurveTo(1086,b-h2-14,1128,b-h3);
+  ctx.lineTo(1160,b-h3*0.6); ctx.lineTo(1160,b);
+  ctx.closePath(); ctx.fill(); ctx.stroke();
+
+  ctx.strokeStyle='rgba(183,204,236,.9)'; ctx.lineWidth=3;
+  ctx.beginPath();
+  ctx.moveTo(972,b-26*f); ctx.quadraticCurveTo(1040,b-h2*0.55,1124,b-h3*0.5);
+  ctx.stroke();
+  ctx.restore();
+
+  ctx.fillStyle=C_NAVY; ctx.font='600 22px '+SANS; ctx.textAlign='right';
+  ctx.fillText('Grønland — indlandsis',1152,Math.min(b-h2-22,b-70));
+}
+
+function tegnSmeltevand(tid){
+  if(M.fersk<0.02) return;
+  var b=KAR.y0, f=M.fersk, top=b-96*isHoejde();
+  var bredde=7+46*f;
+  ctx.save();
+  ctx.lineCap='round'; ctx.lineJoin='round';
+  ctx.strokeStyle='rgba(202,220,252,'+(0.55+0.4*f)+')';
+  ctx.lineWidth=bredde;
+  ctx.beginPath();
+  ctx.moveTo(1026,top); ctx.quadraticCurveTo(1000,b-64,976,b+6);
+  ctx.stroke();
+  /* løbende striber, så man ser, at det er en strøm og ikke en flade */
+  ctx.strokeStyle='rgba(255,255,255,.8)';
+  ctx.lineWidth=Math.max(2,bredde*0.22);
+  for(var i=0;i<4;i++){
+    var u=(tid*0.6+i*0.25)%1, v=Math.min(1,u+0.10);
+    ctx.beginPath();
+    ctx.moveTo(mix(mix(1026,1000,u),mix(1000,976,u),u), mix(mix(top,b-64,u),mix(b-64,b+6,u),u));
+    ctx.lineTo(mix(mix(1026,1000,v),mix(1000,976,v),v), mix(mix(top,b-64,v),mix(b-64,b+6,v),v));
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function tegnDanmark(){
+  var v=M.varme, b=KAR.y0, x0=676, x1=884, top=b-96;
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(x0,b);
+  ctx.quadraticCurveTo(700,top+18,754,top+8);
+  ctx.quadraticCurveTo(820,top-6,858,top+28);
+  ctx.quadraticCurveTo(874,b-38,x1,b);
+  ctx.closePath();
+  ctx.fillStyle='rgb('+Math.round(mix(140,79,v))+','+Math.round(mix(148,139,v))+','+Math.round(mix(158,90,v))+')';
+  ctx.fill();
+  ctx.clip();
+  if(v<0.55){                                   /* rim, når det bliver råkoldt */
+    var a=(0.55-v)/0.55;
+    ctx.fillStyle='rgba(255,255,255,'+(0.5*a)+')';
+    ctx.fillRect(x0,b-34,x1-x0,34);
+    ctx.fillStyle='rgba(255,255,255,'+(0.55*a)+')';
+    for(var i=0;i<28;i++) ctx.fillRect(x0+((i*41)%(x1-x0)),b-48+((i*23)%46),4,3);
+  }
+  ctx.restore();
+
+  /* hus */
+  ctx.save();
+  ctx.strokeStyle=C_NAVY; ctx.lineWidth=3.4; ctx.lineJoin='round';
+  ctx.fillStyle=C_HVID;
+  ctx.beginPath(); ctx.rect(706,b-54,52,42); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(698,b-54); ctx.lineTo(732,b-82); ctx.lineTo(766,b-54); ctx.closePath();
+  ctx.fillStyle='rgb('+Math.round(mix(154,232,v))+','+Math.round(mix(163,115,v))+','+Math.round(mix(176,74,v))+')';
+  ctx.fill(); ctx.stroke();
+  ctx.restore();
+
+  /* træ */
+  var tx=814, ty=b-30;
+  ctx.save();
+  ctx.strokeStyle='#6B5540'; ctx.lineWidth=8; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(tx,ty); ctx.lineTo(tx,ty-40); ctx.stroke();
+  if(v>0.30){
+    var a2=(v-0.30)/0.70;
+    ctx.fillStyle='rgba('+Math.round(mix(150,74,a2))+','+Math.round(mix(160,138,a2))+','+Math.round(mix(150,84,a2))+','+(0.4+0.6*a2)+')';
+    ctx.beginPath(); ctx.arc(tx,ty-56,15+11*a2,0,Math.PI*2); ctx.fill();
+  }else{
+    ctx.lineWidth=4.5;
+    ctx.beginPath();
+    ctx.moveTo(tx,ty-38); ctx.lineTo(tx-15,ty-56);
+    ctx.moveTo(tx,ty-40); ctx.lineTo(tx+15,ty-58);
+    ctx.moveTo(tx,ty-46); ctx.lineTo(tx+3,ty-66);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  ctx.fillStyle=C_NAVY; ctx.font='600 22px '+SANS; ctx.textAlign='center';
+  ctx.fillText('Danmark',780,b-106);
+}
+
+function tegnHav(){
+  ctx.save();
+  karSti(); ctx.clip();
+  var g=ctx.createLinearGradient(0,KAR.y0,0,KAR.y1);
+  g.addColorStop(0,'#1C7293'); g.addColorStop(0.45,'#0A5E86'); g.addColorStop(1,'#152350');
+  ctx.fillStyle=g; ctx.fillRect(KAR.x0,KAR.y0,KAR.x1-KAR.x0,KAR.y1-KAR.y0);
+  ctx.restore();
+}
+
+function tegnVarmestroem(tid){
+  var a=M.stroem; if(a<0.03) return;
+  ctx.save();
+  karSti(); ctx.clip();
+  var y=272;
+  var g=ctx.createLinearGradient(KAR.x0,0,940,0);
+  g.addColorStop(0,'rgba(232,115,74,'+(0.62*a)+')');
+  g.addColorStop(0.55,'rgba(240,160,96,'+(0.44*a)+')');
+  g.addColorStop(1,'rgba(240,180,120,0)');
+  ctx.strokeStyle=g; ctx.lineWidth=26; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(KAR.x0+26,y); ctx.lineTo(930,y); ctx.stroke();
+  ctx.strokeStyle='rgba(255,214,170,'+(0.5*a)+')'; ctx.lineWidth=9;
+  for(var i=0;i<5;i++){
+    var x=mix(KAR.x0+30,890,(tid*0.13*(0.35+a)+i*0.2)%1);
+    ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x+62,y); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function tegnLaag(kant){
+  if(M.laag<0.012) return;
+  ctx.save();
+  karSti(); ctx.clip();
+  ctx.beginPath();
+  ctx.moveTo(KAR.x0,KAR.y0+laagDybde(KAR.x0));
+  for(var x=KAR.x0+8;x<=KAR.x1;x+=8) ctx.lineTo(x,KAR.y0+laagDybde(x));
+  ctx.lineTo(KAR.x1,KAR.y0+laagDybde(KAR.x1));
+  if(kant){
+    ctx.strokeStyle='rgba(255,255,255,.95)'; ctx.lineWidth=4.5; ctx.stroke();
+  }else{
+    ctx.lineTo(KAR.x1,KAR.y0); ctx.lineTo(KAR.x0,KAR.y0); ctx.closePath();
+    ctx.fillStyle='rgba(216,231,253,.87)'; ctx.fill();
+  }
+  ctx.restore();
+}
+
+function tegnSynkezone(tid){
+  var p=M.pumpe;
+  ctx.save();
+  karSti(); ctx.clip();
+  if(p>0.02){
+    var w=18+82*p, a=0.10+0.50*p;
+    var g=ctx.createLinearGradient(0,KAR.y0,0,yDeep+24);
+    g.addColorStop(0,'rgba(20,40,86,'+(a*0.5)+')');
+    g.addColorStop(0.5,'rgba(20,40,86,'+a+')');
+    g.addColorStop(1,'rgba(20,40,86,0)');
+    ctx.fillStyle=g;
+    ctx.beginPath();
+    ctx.moveTo(xR-w/2,KAR.y0); ctx.lineTo(xR+w/2,KAR.y0);
+    ctx.lineTo(xR+w*0.32,yDeep+24); ctx.lineTo(xR-w*0.32,yDeep+24);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle='rgba(202,220,252,'+(0.18+0.42*p)+')';
+    ctx.lineWidth=3.5; ctx.lineCap='round';
+    for(var i=0;i<5;i++){
+      var u=(tid*(0.10+0.32*p)+i*0.2)%1;
+      var y=mix(KAR.y0+18,yDeep,u), ww=w*(0.5-0.16*u);
+      ctx.beginPath(); ctx.moveTo(xR-ww,y); ctx.quadraticCurveTo(xR,y+13,xR+ww,y); ctx.stroke();
+    }
+  }
+  ctx.restore();
+  ctx.fillStyle='rgba(255,255,255,.85)'; ctx.font='600 19px '+SANS; ctx.textAlign='center';
+  ctx.fillText('synkezonen',xR,yDeep+42);
+}
+
+/* Ikonet over synkezonen visner, når pumpen svækkes */
+function tegnPumpeikon(){
+  var p=M.pumpe, b=KAR.y0-16, h=18+32*p;
+  ctx.save();
+  ctx.globalAlpha=0.22+0.72*p;
+  ctx.strokeStyle=p>0.4?C_TEAL:C_NAVY;
+  ctx.lineWidth=6; ctx.lineCap='round'; ctx.lineJoin='round';
+  ctx.beginPath();
+  ctx.moveTo(xR,b-h); ctx.lineTo(xR,b);
+  ctx.moveTo(xR-12-7*p,b-15); ctx.lineTo(xR,b); ctx.lineTo(xR+12+7*p,b-15);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function tegnPartikler(){
+  ctx.save();
+  karSti(); ctx.clip();
+  ctx.lineCap='round';
+  var vug=(1-M.pumpe)*3.2;
+  for(var i=0;i<N_MAX;i++){
+    var p=P[i]; if(p.liv<0.03) continue;
+    var off=p.off+Math.sin(p.fase)*(1.5+vug);
+    var q=punktVed(p.s), x=q.x+q.nx*off, y=q.y+q.ny*off;
+    var hale=Math.max(5,p.v*0.055);
+    var q2=punktVed(p.s-hale), x2=q2.x+q2.nx*off, y2=q2.y+q2.ny*off;
+    ctx.strokeStyle=tunghedFarve(p.tung,0.5*p.liv);
+    ctx.lineWidth=p.r*1.5;
+    ctx.beginPath(); ctx.moveTo(x2,y2); ctx.lineTo(x,y); ctx.stroke();
+    ctx.fillStyle=tunghedFarve(p.tung,p.liv);
+    ctx.beginPath(); ctx.arc(x,y,p.r+1,0,Math.PI*2); ctx.fill();
+  }
+  ctx.restore();
+}
+
+function pil(x,y,retning,laengde,farve,bredde){
+  ctx.save();
+  ctx.strokeStyle=farve; ctx.lineWidth=bredde; ctx.lineCap='round'; ctx.lineJoin='round';
+  ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x+retning*laengde,y); ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x+retning*(laengde-13),y-9);
+  ctx.lineTo(x+retning*laengde,y);
+  ctx.lineTo(x+retning*(laengde-13),y+9);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function tegnMaerkater(){
+  var hvid='rgba(255,255,255,.88)';
+  ctx.fillStyle=hvid; ctx.font='600 20px '+SANS; ctx.textAlign='left';
+  ctx.fillText('overfladestrøm mod nord',306,ySurf-24);
+  pil(576,ySurf-31,1,44,hvid,3.5);
+  ctx.fillText('dybstrøm mod syd',348,yDeep+38);
+  pil(340,yDeep+32,-1,44,hvid,3.5);
+}
+
+function tegnKar(){
+  karSti();
+  ctx.strokeStyle=C_NAVY; ctx.lineWidth=5; ctx.stroke();
+  ctx.strokeStyle='rgba(255,255,255,.65)'; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.moveTo(KAR.x0+6,KAR.y0); ctx.lineTo(KAR.x1-6,KAR.y0); ctx.stroke();
+}
+
+function tegnBaand(){
+  var x0=BAAND.x0,x1=BAAND.x1,y0=BAAND.y0,h=BAAND.y1-BAAND.y0;
+  ctx.fillStyle=C_NAVY; ctx.font='600 18px '+SANS; ctx.textAlign='left';
+  ctx.fillText('Forløbet indtil nu',x0,y0-9);
+  ctx.save();
+  afrundet(x0,y0,x1-x0,h,9);
+  ctx.fillStyle='#FFFFFF'; ctx.fill();
+  ctx.save(); ctx.clip();
+  var bw=(x1-x0)/BAAND_MAKS, start=x1-baand.length*bw;
+  for(var i=0;i<baand.length;i++){
+    ctx.fillStyle=TILSTAND_FARVE[baand[i].t];
+    ctx.fillRect(start+i*bw,y0+21,bw+1,h-21);
+  }
+  ctx.font='600 16px '+SANS; ctx.textAlign='left';
+  var sidst=-999;
+  for(var j=0;j<baand.length;j++){
+    if(!baand[j].skift) continue;
+    var px=start+j*bw;
+    if(px-sidst<132 || px>x1-104) continue;
+    sidst=px;
+    ctx.strokeStyle=TILSTAND_FARVE[baand[j].t]; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(px,y0+3); ctx.lineTo(px,BAAND.y1); ctx.stroke();
+    ctx.fillStyle=TILSTAND_FARVE[baand[j].t];
+    ctx.fillText(TILSTAND_ORD[baand[j].t],px+6,y0+16);
+  }
+  ctx.restore();
+  afrundet(x0,y0,x1-x0,h,9);
+  ctx.strokeStyle=C_LYS; ctx.lineWidth=3; ctx.stroke();
+  ctx.restore();
+}
+
+function tegn(tid){
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.fillStyle=C_HVID; ctx.fillRect(0,0,cv.width,cv.height);
+  ctx.setTransform(visning.sc,0,0,visning.sc,visning.ox,visning.oy);
+
+  tegnHimmel();
+  tegnSol();
+  tegnGroenland();
+  tegnSmeltevand(tid);
+  tegnDanmark();
+
+  tegnHav();
+  tegnVarmestroem(tid);
+  tegnLaag(false);
+  tegnSynkezone(tid);
+  tegnPartikler();
+  tegnLaag(true);
+  tegnMaerkater();
+  tegnKar();
+  tegnPumpeikon();
+  tegnBaand();
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   6. Brugerfladen
+   ══════════════════════════════════════════════════════════════════════ */
+var slKulde=document.getElementById('gpSkyderKulde');
+var slFersk=document.getElementById('gpSkyderFersk');
+var elStatus=document.getElementById('gpStatus');
+var elStatusTekst=document.getElementById('gpStatusTekst');
+var elLive=document.getElementById('gpLive');
+var elSpg=document.getElementById('gpSpg');
+var elScenarie=document.getElementById('gpScenarie');
+var elPause=document.getElementById('gpPause');
+var elPauseTekst=document.getElementById('gpPauseTekst');
+var elPauseIkon=document.getElementById('gpPauseIkon');
+
+var pause=false, auto=null, visTilstand=-1;
+
+function laesSkydere(){
+  var a=parseFloat(slKulde.value), b=parseFloat(slFersk.value);
+  M.kulde = isFinite(a)? k01(1-a) : KULDE_START;
+  M.fersk = isFinite(b)? k01(b)   : 0;
+}
+function saetSkydere(kulde,fersk){
+  slKulde.value=String(k01(1-kulde));
+  slFersk.value=String(k01(fersk));
+  laesSkydere();
+}
+slKulde.addEventListener('input',function(){ auto=null; laesSkydere(); });
+slFersk.addEventListener('input',function(){ auto=null; laesSkydere(); });
+
+function opdaterStatus(){
+  if(M.tilstand===visTilstand) return;
+  visTilstand=M.tilstand;
+  elStatus.setAttribute('data-tilstand',String(M.tilstand));
+  elStatusTekst.textContent=TILSTAND_TEKST[M.tilstand];
+  elLive.textContent=TILSTAND_TEKST[M.tilstand];
+}
+
+/* ── Scenarier ────────────────────────────────────────────────────────── */
+function koerende(){ M.laag=0; M.salt=1; M.pumpe=1; M.laast=false; M.varme=1; M.stroem=1; M.tilstand=0; }
+var SCENARIER={
+  idag:{ spg:'Hvor synker vandet ned? Og hvorfor lige dér?',
+    saet:function(){ saetSkydere(KULDE_START,0); koerende(); } },
+  start:{ spg:'Hvad skal der til, før vandet begynder at synke?',
+    saet:function(){ saetSkydere(0.12,0.18);
+      M.laag=0.18; M.salt=0; M.pumpe=0; M.laast=true; M.varme=0.10; M.stroem=0; M.tilstand=3;
+      auto={felt:'kulde',fra:0.12,til:0.90,varighed:8,forsink:1.6,t:0}; } },
+  smelt:{ spg:'Hvornår går pumpen i stå — og hvad skete der lige før?',
+    saet:function(){ saetSkydere(KULDE_START,0); koerende();
+      auto={felt:'fersk',fra:0,til:0.92,varighed:10,forsink:2,t:0}; } },
+  tilbage:{ spg:'Skru tilbage. Starter pumpen igen?',
+    saet:function(){ saetSkydere(KULDE_START,0);
+      M.laag=0.85; M.salt=0.05; M.pumpe=0; M.laast=true; M.varme=0.12; M.stroem=0; M.tilstand=3; } },
+  fri:{ spg:'Prøv at få pumpen til at stoppe. Prøv så at få den i gang igen.',
+    saet:function(){ saetSkydere(KULDE_START,0); koerende(); } }
+};
+
+function koerScenarie(navn){
+  var s=SCENARIER[navn]; if(!s) return;
+  auto=null;
+  s.saet();
+  nulstilBaand();
+  visTilstand=-1; opdaterStatus();
+  var t=(M.pumpe>0.5)?0.9:0.3;
+  for(var i=0;i<N_MAX;i++) P[i].tung=t;
+  elSpg.textContent=s.spg; elSpg.hidden=false;
+  elScenarie.value=navn;
+}
+
+function opdaterAuto(dt){
+  if(!auto) return;
+  auto.t+=dt;
+  var u=k01((auto.t-auto.forsink)/auto.varighed);
+  var v=mix(auto.fra,auto.til,glat(u));
+  if(auto.felt==='kulde') slKulde.value=String(k01(1-v));
+  else                    slFersk.value=String(k01(v));
+  laesSkydere();
+  if(u>=1) auto=null;
+}
+
+/* ── Knapper ──────────────────────────────────────────────────────────── */
+document.getElementById('gpForfra').addEventListener('click',function(){ koerScenarie('idag'); });
+elScenarie.addEventListener('change',function(){ if(this.value) koerScenarie(this.value); });
+
+elPause.addEventListener('click',function(){
+  pause=!pause;
+  elPause.setAttribute('aria-pressed',String(pause));
+  elPauseTekst.textContent=pause?'Fortsæt':'Pause';
+  elPauseIkon.innerHTML = pause
+    ? '<path d="M7 4.5 19 12 7 19.5z"/>'
+    : '<rect x="6" y="4" width="4.4" height="16" rx="1"/><rect x="13.6" y="4" width="4.4" height="16" rx="1"/>';
+});
+
+var hjaelpLag=document.getElementById('gpHjaelpLag'), hjaelpPanel=document.getElementById('gpPanel');
+function aabnHjaelp(){ hjaelpLag.hidden=false; hjaelpPanel.focus(); }
+function lukHjaelp(){ hjaelpLag.hidden=true; document.getElementById('gpHjaelp').focus(); }
+document.getElementById('gpHjaelp').addEventListener('click',aabnHjaelp);
+document.getElementById('gpLukHjaelp').addEventListener('click',lukHjaelp);
+hjaelpLag.addEventListener('click',function(e){ if(e.target===hjaelpLag) lukHjaelp(); });
+document.addEventListener('keydown',function(e){ if(e.key==='Escape' && !hjaelpLag.hidden) lukHjaelp(); });
+
+var opgaveKnapper=document.querySelectorAll('.gp-opgave [data-scenarie]');
+for(var q=0;q<opgaveKnapper.length;q++){
+  opgaveKnapper[q].addEventListener('click',function(){
+    koerScenarie(this.getAttribute('data-scenarie'));
+    scene.scrollIntoView({behavior:'smooth',block:'center'});
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   7. Løkken
+   ══════════════════════════════════════════════════════════════════════ */
+var sidst=0, tid=0;
+function ramme(nu){
+  requestAnimationFrame(ramme);
+  if(!sidst) sidst=nu;
+  var dt=(nu-sidst)/1000; sidst=nu;
+  if(!isFinite(dt)||dt<0) dt=0;
+  if(dt>0.05) dt=0.05;                 /* robust efter faneskift */
+  if(pause) dt=0;
+  tid+=dt;
+
+  opdaterAuto(dt);
+  laesSkydere();
+  if(dt>0){
+    opdaterModel(dt);
+    opdaterPartikler(dt);
+    opdaterBaand(dt);
+  }
+  opdaterStatus();
+  tegn(tid);
+}
+
+tilpas();
+koerScenarie('idag');
+requestAnimationFrame(ramme);
+
+})();
+</script>
+</body>
+</html>

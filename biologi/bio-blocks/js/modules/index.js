@@ -11,6 +11,9 @@
 
    id, da, sub          identitet og knaptekst i modulvælgeren
    intro                statuslinjen når man skifter til modulet
+   start                startkortet på det tomme bord — { title, steps[],
+                        demo[] }, hvor demo er de monomernavne "Læg dem ud
+                        for mig" lægger side om side
    step, rowH           valgfri: vandret og lodret afstand mellem enheder
 
    shapes {}            formerne enhederne tegnes i:

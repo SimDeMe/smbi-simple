@@ -10,15 +10,21 @@ import { SVG_NS, text } from './svg.js';
 import { residue } from './model.js';
 import { makeMolecule } from './render.js';
 import { taskTick, taskEvents } from './tasks.js';
+import { syncWelcome } from './welcome.js';
 
-export function spawn(name) {
+/* `at` bruges af startkortets demo, der lægger to byggesten side om side
+   i stedet for tilfældigt — ellers ligger de sjældent så de indbyder til
+   at blive trukket sammen. */
+export function spawn(name, at) {
     const area = svgSpace.getBoundingClientRect();
-    const x = 40 + Math.random() * Math.max(40, area.width - 300);
-    const y = 80 + Math.random() * Math.max(40, area.height - 340);
+    const x = at ? at.x : 40 + Math.random() * Math.max(40, area.width - 300);
+    const y = at ? at.y : 80 + Math.random() * Math.max(40, area.height - 340);
     const mol = makeMolecule(residue(name), Math.round(x), Math.round(y));
     clampIntoView(mol);
     setStatus(`${mol._model.info.name} lagt på bordet.`, 'info');
+    syncWelcome();
     taskTick();
+    return mol;
 }
 
 /* Hurtigbyg: modulet leverer selve træet, så bordet kun skal placere det
@@ -33,6 +39,7 @@ export function quickBuild(id) {
     const { nodes, bonds, info } = mol._model;
     addWater(bonds.length);
     setStatus(build.say(info.name, nodes.length), 'ok');
+    syncWelcome();
     taskTick();
 }
 
@@ -105,6 +112,7 @@ export function clearTable() {
     // Klippene er også noget der stod på bordet — ellers ville en opgave, der
     // spørger til et enzymklip, blive ved med at være løst på et tomt bord
     taskEvents.clear();
+    syncWelcome();
 }
 
 export function resetGame() {

@@ -98,3 +98,117 @@ SDF-filer i `Molecules/`. 3D-knappen skjuler sig selv i de andre moduler.
 
 ## 11. Gør det muligt at vælge C, B eller A-niveau. 
 Hvor C-niveau kun viser enkle sammenhænge, B-niveau bliver mere nuanceret og A-niveau er den fulde oplevelse
+
+Se punkt 12: niveauvalget bør først og fremmest fjerne knapper, ikke tilføje
+indhold.
+
+
+## 12. Brugervenlighed og læringsudbytte for gennemsnitseleven
+
+Noteret efter en gennemgang af koden og en tur gennem appen i browseren
+(byggede maltose, åbnede opgavepanelet, målte topbjælken). Punkterne er
+sorteret efter effekt pr. arbejdstime, ikke efter hvor de hører til i koden.
+
+### De tre der betyder mest
+
+- [x] **Giv appen en start.** — gjort, se nedenfor.
+- [ ] **Gæt → gør → forklar i opgavemode.** Opgaverne tester i dag handling,
+      ikke forståelse: `goal` fortæller præcis hvad man skal gøre ("træk den
+      enes C1 hen til den andens C4"), og `check()` godkender resultatet. Det
+      kan følges bogstaveligt uden at forstå noget. Tilføj et
+      forudsigelsesspørgsmål med 2–3 svarmuligheder *før* handlingen ("hvor
+      mange vandmolekyler bliver der dannet?"). Motoren er der allerede — det
+      er ét nyt felt i opgaveobjektet (`predict: { q, options, correct }`) og
+      lidt i `tasks.js`.
+- [ ] **Marker de frie bindingspladser på blokkene.** Eleven skal i dag vide
+      at C1 er højre hjørne og C4 venstre. Kun C6 har en synlig knop
+      (`drawArms` i `render.js`). Giv donorplads og modtagerplads hver sin
+      markør, og lad dem lyse op mens man trækker.
+
+### Startkortet — gjort
+
+Før mødte eleven et tomt gitter og fireogtyve knapper, og den eneste
+vejledning var `mod().intro` i statuslinjen nederst på skærmen — langt fra
+der hvor øjet lander. Nu står der et kort midt på bordet med de tre trin, der
+skal til for at danne den første binding, og to knapper: **Læg dem ud for
+mig** og **🎯 Gå til opgaverne**.
+
+Reglen for hvornår det vises, er den samme hele vejen: *er der ingen
+molekyler på bordet, og er opgavepanelet lukket, så er der ikke noget at se
+på — og så står kortet der.* Det forsvinder i samme øjeblik der ligger en
+byggesten, og kommer igen efter "Ryd bordet". Derfor er der ingen "vis ikke
+igen" at holde styr på, og ingen `localStorage`: kortet er en egenskab ved
+det tomme bord, ikke ved det første besøg.
+
+- `js/welcome.js` er ruden og reglen. `syncWelcome()` kaldes fra `board.js`
+  (`spawn`, `quickBuild`, `clearTable`), fra `toggleTasks()` og fra
+  `switchModule()`.
+- Teksten er modulets, ikke motorens: `start: { title, steps[], demo[] }` i
+  hvert modul, dokumenteret i `modules/index.js`. Kulhydraterne siger C1 og
+  C4, proteinerne COOH og NH₂, fedtet COOH og OH — og trin 3 siger hver gang
+  at der fraspaltes ét vandmolekyle, så pointen om den fælles motor kommer
+  allerede her og ikke først i opsamlingen.
+- `spawn(name, at)` har fået en valgfri placering, så "Læg dem ud for mig"
+  kan lægge byggestenene i en trappe med `DEMO_GAP` imellem. Mellemrummet er
+  større end `SNAP`, så de ikke binder af sig selv — eleven skal stadig lave
+  bindingen, ellers er der ikke noget at forstå — og trappen nedad er der,
+  for at hver byggesten kan have sin navnetekst og sin note uden at de
+  skriver oven i hinanden.
+
+### Topbjælken viser alt på én gang
+
+24 knapper i tre grupperækker. Målt: 140 px høj ved 1358 px bredde, **225 px
+ved 768 px** — på en tablet i portræt æder bjælken 30 % af skærmen, og
+opgavepanelet dækker yderligere 322 px i bredden. En elev der lige er begyndt,
+ser fem enzymer og en laktoseintolerans-kontakt før den første glukose er lagt
+ud.
+
+Det er her punkt 11 hører hjemme, og pointen er at niveauvalget skal fjerne
+knapper: C = modul, byggesten, blokvisning, opgaver. B = + form (α/β),
+enzymer, Haworth. A = det hele.
+
+### Feedback
+
+- [ ] **Statuslinjen ligger forkert.** Handlingen sker midt på bordet,
+      beskeden kommer nederst. Fejlbeskeden fra `drag.js`, når `verdict.ok` er
+      falsk, forsvinder i praksis: eleven ser `shake` og `nudgeApart` og
+      tænker "det virkede ikke" i stedet for "α kan ikke binde dér".
+      Preview-teksten i `reactions.js` siger allerede det rigtige, men kun
+      mens man trækker — lad afvisningen blive stående ved molekylet et par
+      sekunder.
+- [ ] **Ingen fortryd.** Man kan klikke bindingens O for at hydrolysere, men
+      det er ikke selvopdagende; tooltip'et i `drawBond` er eneste kilde.
+      Ctrl+Z, eller en synlig ✕ på den seneste binding.
+- [ ] **Forklaringerne bliver ikke læst.** `why`-teksterne er 4–6 linjer.
+      Kort dem ned til én sætning med "læs mere" til resten.
+
+### Opgavemode
+
+- [ ] **Opgave 1 kan være løst før man åbner panelet.** Ligger maltosen på
+      bordet fra fri leg, giver `taskTick()` et ✔ og en forklaring på noget
+      eleven ikke bevidst har gjort. `toggleTasks()` bør rydde bordet på vej
+      ind i opgavemode, ligesom `nextTask()` allerede gør.
+- [ ] **Lineær låsning uden vej udenom.** Opgave 4–6 (isomerer, β-1,4-kæde,
+      forgrening) er mærkbart sværere end 1–2. Den der går i stå på 4, når
+      aldrig til 7–8, som er de mest konkrete og biologisk vedkommende
+      (fordøjelse, laktoseintolerans). Enten en "spring over"-knap eller
+      niveauvalget, der skjuler 4–6 på C-niveau.
+- [ ] **Pointen om at de tre moduler kører på samme motor** får eleven kun i
+      opsamlingen efter alle otte opgaver, og de færreste når dertil. Den
+      kunne stå i kondensationsbeskeden hver gang, med samme ordlyd i alle tre
+      moduler.
+
+### Sprog og aflevering
+
+- [ ] **Fagordene er uforklarede.** "Anomer", "glykosidbinding", "reducerende
+      sukker", "α-1,4", "essentiel aminosyre" står i statuslinjen og på
+      faktakortene uden nogen vej til en forklaring. Gør termen klikbar med to
+      linjers forklaring.
+- [ ] **Intet at aflevere.** PNG-eksport står under punkt 10; en "min log",
+      der samler hvad eleven har bygget og svaret, og som kan kopieres ind i
+      en rapport, er mere værd — den tvinger eleven til at genkalde sig noget.
+
+### Fejl
+
+- [ ] **Hjem-knappen dækker "MODUL"-labelen.** `.smbi-home` i `index.html` er
+      `position: fixed` oven på headeren. Rettes med padding-left på `header`.
