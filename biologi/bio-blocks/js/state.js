@@ -16,6 +16,7 @@ export const state = {
     showNumbers: true,
     toggleOn: false,          // modulets kontakt: laktoseintolerans, galde …
     catalystHintShown: false,
+    bondLog: [],              // de bindinger man selv har dannet, ældst først — se fortryd i reactions.js
     repr: 'blocks',           // hvilken af modulets repræsentationer der vises
     level: 'C',               // C | B | A — hvor mange knapper der er fremme, se levels.js
     taskMode: false

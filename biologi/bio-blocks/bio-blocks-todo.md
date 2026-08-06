@@ -262,20 +262,39 @@ Til rest: opgavelisten er stadig den samme på alle tre niveauer. Punktet om
 at skjule opgave 4–6 på C står under Opgavemode og kan nu bygges med
 `atLeast()` og et `level`-felt på opgaven.
 
-### Feedback
+### Feedback — gjort
 
-- [ ] **Statuslinjen ligger forkert.** Handlingen sker midt på bordet,
-      beskeden kommer nederst. Fejlbeskeden fra `drag.js`, når `verdict.ok` er
-      falsk, forsvinder i praksis: eleven ser `shake` og `nudgeApart` og
-      tænker "det virkede ikke" i stedet for "α kan ikke binde dér".
-      Preview-teksten i `reactions.js` siger allerede det rigtige, men kun
-      mens man trækker — lad afvisningen blive stående ved molekylet et par
-      sekunder.
-- [ ] **Ingen fortryd.** Man kan klikke bindingens O for at hydrolysere, men
-      det er ikke selvopdagende; tooltip'et i `drawBond` er eneste kilde.
-      Ctrl+Z, eller en synlig ✕ på den seneste binding.
-- [ ] **Forklaringerne bliver ikke læst.** `why`-teksterne er 4–6 linjer.
-      Kort dem ned til én sætning med "læs mere" til resten.
+- [x] **Statuslinjen ligger forkert.** Afvisningen bliver nu hængende ved
+      molekylet i knap tre sekunder — `rejectFx()` i `reactions.js` tegner
+      den korte grund ("✘ Kræver α-glukose") midt mellem de to pladser, hvor
+      forsøget blev gjort. Den lange forklaring står som før i statuslinjen,
+      så beskeden findes i to længder: den man læser i farten, og den man
+      læser bagefter.
+- [x] **Ingen fortryd.** Ctrl+Z (og ⌘Z) hydrolyserer den binding man senest
+      har dannet, og den samme binding har fået et synligt ✕ ved siden af sit
+      O. Krydset ligger inde i bindingens egen klikflade, så det virker
+      gennem den kode der allerede var der.
+- [x] **Forklaringerne bliver ikke læst.** Panelet viser nu pointen — første
+      sætning — og resten på et klik på "Læs mere ▾".
+
+**Fortryd i detaljer.** `state.bondLog` er de bindinger man selv har dannet,
+ældst først, og en binding kendes på sine to enheder og ikke på sit
+bond-objekt: det bygges forfra hver gang molekylet tegnes om. `condense()`
+lægger til, `hydrolyse()` fjerner, `fullHydrolysis()` rydder molekylets egne,
+og `clearTable()` rydder det hele — loggen hørte til det bord der forsvandt.
+`undoLast()` går baglæns gennem loggen og springer det over, et enzym har
+klippet i mellemtiden.
+
+Hurtigbyg og enzymklip står ikke i loggen: det er ikke bindinger man har
+lavet med hånden, og et enzymklip er en pointe i sig selv og ikke en
+fortrydelse. Derfor siger den tomme besked heller ikke "ingenting", men
+"Ctrl+Z tager de bindinger du selv har dannet".
+
+**Læs mere i detaljer.** `splitWhy()` i `tasks.js` deler ved første
+sætningsskel. Teksterne er skrevet med pointen forrest i forvejen, så et
+`short`-felt i modulet ville være den samme sætning skrevet to gange — og
+dermed to steder at glemme at rette. Er den første sætning under 60 tegn,
+kommer den næste med: "Det er cellulose." siger ingenting alene.
 
 ### Opgavemode
 

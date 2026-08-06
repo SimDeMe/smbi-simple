@@ -109,6 +109,7 @@ export function clearTable() {
     pvLayer.textContent = '';
     state.waterCount = 0;
     waterOut.textContent = '0';
+    state.bondLog = [];            // fortryd-loggen hørte til det bord der lige forsvandt
     // Klippene er også noget der stod på bordet — ellers ville en opgave, der
     // spørger til et enzymklip, blive ved med at være løst på et tomt bord
     taskEvents.clear();

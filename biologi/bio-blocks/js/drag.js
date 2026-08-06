@@ -8,7 +8,7 @@ import { svgSpace, molLayer, enzLayer, pvLayer } from './dom.js';
 import { SNAP } from './units.js';
 import { getPos, setPos, clampIntoView, centreOf, setStatus } from './board.js';
 import { bestPair, showPreview, clearPreview, condense, hydrolyse,
-         fullHydrolysis, flipVariant } from './reactions.js';
+         fullHydrolysis, flipVariant, rejectFx } from './reactions.js';
 import { bestBond, showEnzymePreview, dropEnzyme, removeEnzyme } from './enzymes.js';
 import { openFacts } from './facts.js';
 import { openViewer } from './viewer3d.js';
@@ -91,6 +91,7 @@ function endDrag(e) {
         condense(pair);
     } else {
         setStatus(pair.verdict.msg, 'error');
+        rejectFx(pair);                 // grunden bliver hængende ved molekylet
         mol.classList.add('shake');
         nudgeApart(mol, pair.donorMol === mol ? pair.accMol : pair.donorMol);
     }

@@ -221,6 +221,12 @@ circle.site-mark.hot { animation: site-pulse 0.7s ease-in-out infinite; }
 .bond-line { stroke: #566573; stroke-width: 6; stroke-linecap: round; }
 .bond-atom { fill: #ffffff; stroke: #566573; stroke-width: 3; cursor: pointer; transition: fill 0.15s; }
 .bond-hit:hover .bond-atom { fill: #fadbd8; stroke: #c0392b; }
+
+/* Fortryd-krydset på den binding man senest har dannet */
+.bond-undo circle { fill: #ffffff; stroke: #e74c3c; stroke-width: 2; }
+.bond-undo-x { font-size: 11px; font-weight: bold; fill: #c0392b; text-anchor: middle; pointer-events: none; }
+.bond-hit:hover .bond-undo circle { fill: #e74c3c; }
+.bond-hit:hover .bond-undo-x { fill: #ffffff; }
 .bond-atom-text {
     font-size: 12px; font-weight: 900; fill: #566573;
     text-anchor: middle; pointer-events: none;
@@ -278,6 +284,18 @@ circle.site-mark.hot { animation: site-pulse 0.7s ease-in-out infinite; }
     font-size: 15px; font-weight: bold; fill: #2980b9;
     text-anchor: middle; pointer-events: none;
 }
+/* Afvisningen bliver hængende ved molekylet: læselig med det samme,
+   væk af sig selv efter et par sekunder */
+.fx-reject-text { font-size: 12.5px; font-weight: bold; fill: #c0392b; text-anchor: middle; }
+.fx-reject-bg   { fill: rgba(255,255,255,0.96); stroke: #e74c3c; stroke-width: 1.5; }
+.fx-reject .fx-anim { animation: rejectHold 2.8s ease-out forwards; }
+@keyframes rejectHold {
+    0%   { opacity: 0; transform: translateY(6px); }
+    10%  { opacity: 1; transform: translateY(0); }
+    75%  { opacity: 1; }
+    100% { opacity: 0; transform: translateY(-8px); }
+}
+
 .fx-out .fx-anim { animation: floatUp 1.4s ease-out forwards; }
 .fx-in  .fx-anim { animation: floatIn 1.0s ease-in forwards; }
 @keyframes floatUp {
@@ -535,6 +553,18 @@ circle.site-mark.hot { animation: site-pulse 0.7s ease-in-out infinite; }
     margin: 0 0 10px;
 }
 .tp-solved { color: #1e8449; font-weight: 900; margin: 0 0 6px; }
+.tp-more {
+    border: none;
+    background: none;
+    color: #1e8449;
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: bold;
+    padding: 0 0 0 4px;
+    cursor: pointer;
+    text-decoration: underline;
+}
+.tp-rest.hidden { display: none; }
 
 /* Gæt → gør → forklar. Spørgsmålet står alene i panelet, indtil der er
    svaret — derfor må det fylde som en overskrift og ikke som en note. */

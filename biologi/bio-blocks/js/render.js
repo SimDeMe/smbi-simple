@@ -244,6 +244,25 @@ function drawBond(lineLayer, decorLayer, bond, pos) {
     title.textContent = `${bondLabel(bond)} — klik for at hydrolysere netop denne binding`;
     hit.appendChild(title);
 
+    // Den binding man senest har dannet, får et ✕. At man kan klikke
+    // bindingens O væk, stod kun i et tooltip og blev ikke fundet;
+    // ✕'et er den synlige vej tilbage — og det ligger inde i den samme
+    // klikflade, så det virker af sig selv.
+    const newest = state.bondLog[state.bondLog.length - 1];
+    if (newest && newest.donor === bond.donor && newest.acceptor === bond.acceptor) {
+        const u = document.createElementNS(SVG_NS, 'g');
+        u.setAttribute('class', 'bond-undo');
+        const c = document.createElementNS(SVG_NS, 'circle');
+        c.setAttribute('cx', mid.x + 15); c.setAttribute('cy', mid.y - 15);
+        c.setAttribute('r', 9);
+        u.appendChild(c);
+        u.appendChild(text('✕', mid.x + 15, mid.y - 11.5, 'bond-undo-x'));
+        const ut = document.createElementNS(SVG_NS, 'title');
+        ut.textContent = 'Fortryd denne binding (Ctrl+Z) — den bliver hydrolyseret igen';
+        u.appendChild(ut);
+        hit.appendChild(u);
+    }
+
     // Ved siden af den skrå grenbinding, over stregen ved resten. Et modul
     // kan sige noget andet — fedtets tre estere sidder tættere sammen.
     const off = m.bondNote ? m.bondNote(bond)

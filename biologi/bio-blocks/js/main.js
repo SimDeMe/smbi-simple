@@ -11,6 +11,7 @@ import { state } from './state.js';
 import { mod, intro } from './modules/index.js';
 import { resetGame, rerenderAll, clampIntoView, setStatus } from './board.js';
 import { buildHeader } from './ui.js';
+import { undoLast } from './reactions.js';
 import { closeViewer } from './viewer3d.js';
 import { closeFacts } from './facts.js';
 import { syncWelcome } from './welcome.js';
@@ -38,9 +39,12 @@ window.addEventListener('resize', () => {
     state.enzymes.forEach(clampIntoView);
 });
 
-/* Escape lukker de ruder der måtte være åbne */
+/* Escape lukker de ruder der måtte være åbne, og Ctrl+Z fortryder den
+   binding man senest har dannet */
 document.addEventListener('keydown', e => {
-    if (e.key !== 'Escape') return;
-    closeViewer();
-    closeFacts();
+    if (e.key === 'Escape') { closeViewer(); closeFacts(); return; }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+        e.preventDefault();
+        undoLast();
+    }
 });

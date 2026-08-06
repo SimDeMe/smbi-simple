@@ -96,6 +96,32 @@ function guessPanel(t, p, n) {
         }));
 }
 
+/* Forklaringerne er 4–6 linjer, og fire linjer bliver ikke læst af den
+   der lige har fået et ✔. Første sætning er pointen — resten er hvorfor
+   den gælder, og den kommer frem på et klik.
+
+   Delingen sker her og ikke i modulerne: teksterne er skrevet med
+   pointen forrest i forvejen, så et `short`-felt ville være den samme
+   sætning skrevet to gange og dermed to steder at glemme at rette. */
+const WHY_HEAD = 60;           // en sætning på under det er ikke en pointe, kun en optakt
+
+function splitWhy(why) {
+    const parts = why.split(/(?<=[.!?])\s+(?=[A-ZÆØÅ])/);
+    let head = '', i = 0;
+    // "Det er cellulose." siger ingenting alene — så kommer næste sætning med
+    while (i < parts.length && head.length < WHY_HEAD) head += (head ? ' ' : '') + parts[i++];
+    return [head, parts.slice(i).join(' ')];
+}
+
+function whyBlock(why) {
+    const [first, rest] = splitWhy(why);
+    if (!rest) return `<div class="tp-why">${first}</div>`;
+    return `<div class="tp-why">${first}
+              <button class="tp-more" id="why-more">Læs mere ▾</button>
+              <span class="tp-rest hidden" id="why-rest">${rest}</span>
+            </div>`;
+}
+
 /* Facit efter handlingen: både det rigtige svar og det eleven troede */
 function guessVerdict(t, guess) {
     const right = guess === t.predict.correct;
@@ -145,12 +171,18 @@ export function renderTasks() {
     taskDetail.innerHTML =
         `<p class="tp-title">${p.index + 1}. ${t.title}</p>` +
         (solved
-            ? `<p class="tp-solved">✔ Løst!</p>${facit}<div class="tp-why">${t.why}</div>
+            ? `<p class="tp-solved">✔ Løst!</p>${facit}${whyBlock(t.why)}
                <button class="tp-btn" id="task-next">Næste opgave →</button>`
             : `<p class="tp-goal">${t.goal}</p>${noteret}
                <p class="tp-tip">Opgaven tjekkes automatisk, så snart bordet ser rigtigt ud.</p>`);
 
     if (solved) document.getElementById('task-next').addEventListener('click', nextTask);
+
+    const more = document.getElementById('why-more');
+    if (more) more.addEventListener('click', () => {
+        document.getElementById('why-rest').classList.remove('hidden');
+        more.remove();
+    });
 }
 
 /* Hvor mange af gættene holdt? Kun de opgaver der havde et spørgsmål, og

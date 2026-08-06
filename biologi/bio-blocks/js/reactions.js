@@ -9,7 +9,7 @@
 
 import { state } from './state.js';
 import { mod } from './modules/index.js';
-import { pvLayer } from './dom.js';
+import { pvLayer, fxLayer } from './dom.js';
 import { SVG_NS, text, line, rect } from './svg.js';
 import { SNAP } from './units.js';
 import { sitePoint } from './model.js';
@@ -120,6 +120,37 @@ export function showPreview(pair) {
     g.insertBefore(bg, t);
 }
 
+/* Afvisningen bliver stående ved molekylet.
+
+   Handlingen sker midt på bordet, men beskeden kom kun i statuslinjen
+   nederst på skærmen — langt fra der hvor øjet er. I praksis så eleven
+   rystet og skubbet fra hinanden og tænkte "det virkede ikke" i stedet
+   for "α kan ikke binde dér". Nu bliver den korte grund hængende et par
+   sekunder dér hvor forsøget blev gjort; den lange forklaring står som
+   før i statuslinjen. */
+export function rejectFx(pair) {
+    const x = (pair.dp.x + pair.ap.x) / 2;
+    const y = (pair.dp.y + pair.ap.y) / 2 - 26;
+
+    const g = document.createElementNS(SVG_NS, 'g');
+    g.setAttribute('class', 'fx-reject');
+    fxLayer.appendChild(g);
+
+    const inner = document.createElementNS(SVG_NS, 'g');
+    inner.setAttribute('class', 'fx-anim');
+    g.appendChild(inner);
+
+    const t = text(`✘ ${pair.verdict.short}`, x, y, 'fx-reject-text');
+    inner.appendChild(t);
+    const w = t.getComputedTextLength() + 20;
+    const bg = rect(x - w / 2, y - 15, w, 22, null);
+    bg.setAttribute('class', 'fx-reject-bg');
+    bg.setAttribute('rx', 6);
+    inner.insertBefore(bg, t);
+
+    inner.addEventListener('animationend', () => g.remove());
+}
+
 export function condense(pair) {
     const { donorMol, accMol, acc } = pair;
 
@@ -131,6 +162,10 @@ export function condense(pair) {
     // så acceptormolekylets rod bliver også produktets rod.
     acc.node[acc.link.field] = donorMol._model.root;
     const root = accMol._model.root;
+
+    // Loggen skal opdateres før molekylet tegnes, ellers sætter render.js
+    // sit fortryd-✕ på den forrige binding
+    state.bondLog.push({ donor: pair.donor.node, acceptor: acc.node });
 
     removeMolecule(donorMol);
     removeMolecule(accMol);
@@ -150,6 +185,43 @@ export function condense(pair) {
     taskTick();
 }
 
+/* Bindingen findes stadig på bordet — hvor sidder den? */
+function locate(entry) {
+    for (const mol of state.molecules) {
+        const bond = mol._model.bonds.find(b => b.donor === entry.donor && b.acceptor === entry.acceptor);
+        if (bond) return { mol, bond };
+    }
+    return null;
+}
+
+function forget(bond) {
+    state.bondLog = state.bondLog.filter(e => !(e.donor === bond.donor && e.acceptor === bond.acceptor));
+}
+
+/* Fortryd: hydrolysér den binding man senest har dannet selv.
+
+   Uden den var eneste vej tilbage at klikke på bindingens O, og det er
+   ikke selvopdagende — tooltip'et var eneste kilde. Kun egne bindinger
+   ligger i loggen: har et enzym klippet undervejs, er den binding væk,
+   og så tages den næste i rækken. */
+export function undoLast() {
+    while (state.bondLog.length) {
+        const hit = locate(state.bondLog[state.bondLog.length - 1]);
+        if (!hit) { state.bondLog.pop(); continue; }      // klippet af et enzym i mellemtiden
+        hydrolyse(hit.mol, hit.bond);
+        return true;
+    }
+    // Ærligt formuleret: hurtigbyg og enzymklip står ikke i loggen, så
+    // "ingenting" ville lyde forkert lige efter man har trykket på noget
+    setStatus('Der er ikke noget at fortryde — Ctrl+Z tager de bindinger du selv har dannet.', 'info');
+    return false;
+}
+
+/* Den nyeste binding, som render.js sætter sit ✕ på */
+export function newestBond() {
+    return state.bondLog[state.bondLog.length - 1] || null;
+}
+
 /* Klipper én binding. Returnerer navnene, så et enzym kan fortælle
    historien på sin egen måde i stedet for den generiske besked. */
 export function hydrolyse(mol, bond, silent) {
@@ -161,6 +233,7 @@ export function hydrolyse(mol, bond, silent) {
     // donorplads bliver fragmentets nye frie ende
     bond.acceptor[bond.field] = null;
     const freed = bond.donor;
+    forget(bond);                     // den er ikke længere til at fortryde
 
     removeMolecule(mol);
 
@@ -189,6 +262,7 @@ export function fullHydrolysis(mol) {
 
     // Tag et øjebliksbillede af enhederne, og klip så alle bindinger på én gang
     const parts = nodes.slice();
+    state.bondLog = state.bondLog.filter(e => !parts.includes(e.donor));
     parts.forEach(n => fields.forEach(f => { n[f] = null; }));
     removeMolecule(mol);
 
