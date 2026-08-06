@@ -8,6 +8,7 @@
    ===================================================================== */
 
 import { mod } from './modules/index.js';
+import { markTerms } from './glossary.js';
 
 const factModal = document.getElementById('fact-modal');
 
@@ -25,9 +26,11 @@ export function openFacts(model) {
 
     document.getElementById('fact-rows').innerHTML = m.factRows(model, f)
         .filter(row => row && row[2])
+        // Fagordene i rækken gøres klikbare — det er her de fleste af dem
+        // står, og faktakortet er netop dér man er gået hen for at forstå
         .map(([ico, lab, val]) =>
             `<div class="f-row"><div class="f-ico">${ico}</div>
-             <div><div class="f-lab">${lab}</div><div class="f-val">${val}</div></div></div>`)
+             <div><div class="f-lab">${lab}</div><div class="f-val">${markTerms(val)}</div></div></div>`)
         .join('');
 
     factModal.classList.remove('hidden');

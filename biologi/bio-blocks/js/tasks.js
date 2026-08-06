@@ -32,6 +32,8 @@ import { mod } from './modules/index.js';
 import { atLeast } from './levels.js';
 import { setStatus, clampIntoView, resetGame, clearTable } from './board.js';
 import { syncWelcome } from './welcome.js';
+import { markTerms } from './glossary.js';
+import { logEvent } from './log.js';
 
 export const taskEvents = new Set();
 
@@ -97,8 +99,25 @@ export function taskTick() {
     if (t && !p.done[p.index] && guessed(t, p) && t.check(board())) {
         p.done[p.index] = true;
         p.justSolved = true;
+        logSolved(t, p);
     }
     renderTasks();
+}
+
+/* Til loggen: opgaven og gættet — men ikke `why`.
+
+   Forklaringen er appens ord, og en rapport der er klippet sammen af
+   dem, har eleven ikke lært noget af. Det der skal med hjem, er hvad man
+   selv troede, og om det holdt. */
+function logSolved(t, p) {
+    const g = p.guess[p.index];
+    const said = t.predict && g !== undefined
+        ? ` Jeg gættede "${t.predict.options[g]}" — ` +
+          (g === t.predict.correct
+              ? 'og det passede.'
+              : `det rigtige var "${t.predict.options[t.predict.correct]}".`)
+        : '';
+    logEvent('task', `Opgave ${shownNumber(p.index)}: ${t.title} — løst.${said}`);
 }
 
 /* Nyt spørgsmål, nyt bord: resterne fra den forrige opgave ville ellers
@@ -155,7 +174,7 @@ function guessPanel(t, p, n) {
 
     taskDetail.innerHTML =
         `<p class="tp-title">${n}. ${t.title}</p>
-         <p class="tp-predict">${t.predict.q}</p>
+         <p class="tp-predict">${markTerms(t.predict.q)}</p>
          <div class="tp-opts">${opts}</div>
          <p class="tp-tip">Gæt først. Du får at vide om det passer, når du har bygget det.</p>` +
         (flere ? `<button class="tp-btn grey small" id="task-skip">Spring over →</button>` : '');
@@ -188,12 +207,15 @@ function splitWhy(why) {
     return [head, parts.slice(i).join(' ')];
 }
 
+/* Pointen og resten mærkes op hver for sig: står "hydrolyse" begge
+   steder, skal ordet også kunne forklares begge steder — den ene halvdel
+   er skjult bag "Læs mere", til man beder om den. */
 function whyBlock(why) {
     const [first, rest] = splitWhy(why);
-    if (!rest) return `<div class="tp-why">${first}</div>`;
-    return `<div class="tp-why">${first}
+    if (!rest) return `<div class="tp-why">${markTerms(first)}</div>`;
+    return `<div class="tp-why">${markTerms(first)}
               <button class="tp-more" id="why-more">Læs mere ▾</button>
-              <span class="tp-rest hidden" id="why-rest">${rest}</span>
+              <span class="tp-rest hidden" id="why-rest">${markTerms(rest)}</span>
             </div>`;
 }
 
@@ -224,7 +246,7 @@ export function renderTasks() {
 
     if (all) {
         taskDetail.innerHTML =
-            `<p class="tp-title">🎓 Opsamling</p>${guessScore(p, vis)}${mod().summary(state.waterCount)}
+            `<p class="tp-title">🎓 Opsamling</p>${guessScore(p, vis)}${markTerms(mod().summary(state.waterCount))}
              <button class="tp-btn grey" id="task-restart">Start opgaverne forfra</button>`;
         document.getElementById('task-restart').addEventListener('click', () => {
             progress[state.modId] = fresh();
@@ -256,7 +278,7 @@ export function renderTasks() {
             ? `<p class="tp-solved">✔ Løst!</p>${facit}${whyBlock(t.why)}
                <button class="tp-btn" id="task-next">${
                    visible().every(x => p.done[x.i]) ? 'Se opsamlingen →' : 'Næste opgave →'}</button>`
-            : `<p class="tp-goal">${t.goal}</p>${noteret}
+            : `<p class="tp-goal">${markTerms(t.goal)}</p>${noteret}
                <p class="tp-tip">Opgaven tjekkes automatisk, så snart bordet ser rigtigt ud.</p>` +
               (flere ? `<button class="tp-btn grey small" id="task-skip">Spring over →</button>` : ''));
 

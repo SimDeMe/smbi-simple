@@ -264,6 +264,60 @@ function factRows(model, f) {
     return rows;
 }
 
+/* --- Ordbog ---------------------------------------------------------- */
+
+/* Proteinernes egne fagord — de fælles står i glossary.js */
+const terms = {
+    peptidbinding: {
+        da: 'Peptidbinding',
+        alt: ['peptidbinding'],
+        txt: 'Bindingen mellem to aminosyrer: carboxylgruppen på den ene, aminogruppen på den næste. ' +
+             'Den er plan og stiv, og det begrænser hvordan kæden kan folde sig.'
+    },
+    essentiel: {
+        da: 'Essentiel aminosyre',
+        alt: ['essentiel aminosyre', 'essentielle aminosyre', 'essentiel'],
+        txt: 'En aminosyre kroppen ikke selv kan danne — den skal komme fra kosten. ' +
+             'Ni af de tyve er essentielle, og mangler én af dem, kan proteinet ikke bygges færdigt.'
+    },
+    sidekaede: {
+        da: 'Sidekæde (R-gruppe)',
+        alt: ['sidekæde', 'R-gruppe'],
+        txt: 'Den del der er forskellig fra aminosyre til aminosyre — rygraden er ens i alle tyve. ' +
+             'Rækkefølgen af sidekæder er hele informationen i et protein.'
+    },
+    polaer: {
+        da: 'Polær og upolær',
+        alt: ['upolær', 'polær'],
+        txt: 'Polære sidekæder kan lide vand og vender udad; upolære skyr vandet og gemmer sig inde i midten. ' +
+             'Det er dét træk der folder kæden til den rigtige form.'
+    },
+    primaer: {
+        da: 'Primærstruktur',
+        alt: ['primærstruktur', 'sekundærstruktur', 'tertiærstruktur'],
+        txt: 'Primærstrukturen er rækkefølgen af aminosyrer. Sekundærstrukturen er α-helix og β-plade, ' +
+             'som hydrogenbindingerne i rygraden danner, og tertiærstrukturen er den endelige foldning.'
+    },
+    peptidase: {
+        da: 'Endo- og exopeptidase',
+        alt: ['endopeptidase', 'exopeptidase', 'peptidase'],
+        txt: 'En endopeptidase klipper inde i kæden (pepsin, trypsin), en exopeptidase klipper én ' +
+             'aminosyre af enden. Der skal begge slags til, før der er frie aminosyrer at optage.'
+    },
+    denaturere: {
+        da: 'Denaturering',
+        alt: ['denaturering', 'denaturere', 'denatureret'],
+        txt: 'Proteinet mister sin foldning — af varme, syre eller salt. ' +
+             'Formen er funktionen, så et denatureret protein virker ikke. Et stegt æg kan ikke blive råt igen.'
+    },
+    grupper: {
+        da: 'Amino- og carboxylgruppe',
+        alt: ['aminogruppe', 'carboxylgruppe'],
+        txt: 'NH₂ i den ene ende af aminosyren, COOH i den anden. ' +
+             'Peptidbindingen dannes mellem netop de to, og derfor kan aminosyrer sættes sammen i en kæde.'
+    }
+};
+
 /* --- Opgaver --------------------------------------------------------- */
 
 const classesIn = m => new Set(m.nodes.map(n => mon[n.name].cls)).size;
@@ -435,6 +489,7 @@ export const protein = {
     toggle,
     facts,
     factRows,
+    terms,
     factColour: (info, n) => n === 1
         ? CLASS[mon[info.key].cls].colour[1]
         : { di: '#2471a3', tri: '#2471a3', oligo: '#1f618d', poly: '#1a5276', protein: '#34495e' }[info.key],

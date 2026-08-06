@@ -339,15 +339,59 @@ To ting kom med undervejs, fordi de først blev synlige nu:
 - Opsamlingen sagde "Alle 8 opgaver er løst" også når niveauet kun viste tre.
   Tallet er væk; det sagde alligevel ikke noget.
 
-### Sprog og aflevering
+### Sprog og aflevering — gjort
 
-- [ ] **Fagordene er uforklarede.** "Anomer", "glykosidbinding", "reducerende
-      sukker", "α-1,4", "essentiel aminosyre" står i statuslinjen og på
-      faktakortene uden nogen vej til en forklaring. Gør termen klikbar med to
-      linjers forklaring.
-- [ ] **Intet at aflevere.** PNG-eksport står under punkt 10; en "min log",
-      der samler hvad eleven har bygget og svaret, og som kan kopieres ind i
-      en rapport, er mere værd — den tvinger eleven til at genkalde sig noget.
+- [x] **Fagordene er uforklarede.** Ordene er nu klikbare dér hvor de står,
+      med to linjers forklaring i en lille rude ved ordet.
+- [x] **Intet at aflevere.** 📋 Min log samler hvad der er sket og hvad
+      eleven har svaret, og kan kopieres som ren tekst.
+
+**Ordbogen.** `js/glossary.js` er ordlisten og ruden. Teksterne skrives som
+hidtil, og `markTerms()` mærker de ord op, ordbogen kender — statuslinjen
+(`setStatus`), faktakortenes rækker og opgavepanelets spørgsmål, mål og
+forklaringer. At skrive `<span>` i hånden i halvtreds tekster ville være
+halvtreds steder at glemme det.
+
+- Ét ord forklares ét sted. Retter man forklaringen, er den rettet i
+  statuslinjen, i faktakortet og i opgaven på én gang.
+- Kun første forekomst i hver tekst mærkes op. Fire prikkede "hydrolyse"
+  i den samme forklaring ville ligne en fejl.
+- Bøjningen tages med: ordbogen holder stammen, og `SUFFIX` er de danske
+  endelser, så "glykosidbindingen", "anomere" og "enzymerne" også fanges.
+  Uregelmæssige former står i ordets `alt`.
+- De fælles ord — kondensation, hydrolyse, monomer, enzym, substrat,
+  aktivt sted, specificitet, isomer, sumformel — står i motoren, for de er
+  de samme i alle tre moduler. De stofspecifikke står i modulets `terms`
+  (α-1,4 og reducerende sukker hos kulhydraterne, essentiel aminosyre og
+  primærstruktur hos proteinerne, mættet/umættet og emulgering hos fedtet).
+- Svarmulighederne i opgavemode mærkes ikke op: en knap inde i en knap er
+  ikke en knap, og et gæt skal besvares, ikke slås op.
+
+**Min log.** `js/log.js` skriver med undervejs, og 📋-knappen åbner ruden.
+Det der kommer i loggen, er det der *skete*: molekyler dannet ved
+kondensation, bindinger spaltet, enzymer der klippede — og enzymer der
+sagde nej og hvorfor. Et nej er lige så meget værd i en rapport som et ja;
+det er dér substratspecificiteten viser sig. At lægge en byggesten på
+bordet er derimod ikke en hændelse, men en forberedelse.
+
+- **Forklaringen kommer ikke med.** Opgavelinjen har titlen og elevens eget
+  gæt, men ikke `why`. En rapport klippet sammen af appens egne ord har
+  eleven ikke lært noget af — derfor står der tre spørgsmål nederst, som
+  kun eleven kan svare på, og de kommer med i kopien.
+- **Det samme skrives kun én gang.** Bygger man maltose fem gange, står der
+  én linje. Loggen er hvad der er sket, ikke hvor mange gange man klikkede.
+- **"Ryd bordet" rører den ikke.** Bordet er det man arbejder på, loggen er
+  det man har lavet. Kun "Ryd loggen" tømmer, og den knap spørger en gang
+  til i stedet for at åbne en dialogboks.
+- Kopien er ren tekst, så den kan sættes ind i Word, i Docs eller i et
+  afleveringsfelt uden at slæbe et layout med sig. Ruden siger selv at
+  loggen forsvinder med fanen — der er ingen `localStorage` her heller.
+- Fortryd (Ctrl+Z) står i loggen som en hydrolyse, for det er dét den er i
+  modellen — det er også det statuslinjen har sagt hele tiden.
+- Knappen ligger i den faste gruppe ved 🎯 Opgaver og koster ingen
+  bjælkehøjde: 98 px med og uden ved 1024 px, og målt på samme måde 139 px
+  ved 768 px. Den er med på alle tre niveauer — en elev på C-niveau
+  afleverer også.
 
 ### Fejl
 

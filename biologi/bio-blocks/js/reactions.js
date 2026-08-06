@@ -17,6 +17,7 @@ import { getPos, setPos, clampIntoView, removeMolecule, centreOf,
          addWater, waterFx, setStatus } from './board.js';
 import { makeMolecule } from './render.js';
 import { taskTick } from './tasks.js';
+import { logEvent } from './log.js';
 
 /* Et bindingssteds absolutte position, molekylets skalering iberegnet */
 function absSite(mol, site) {
@@ -186,6 +187,7 @@ export function condense(pair) {
     const i = mol._model.info;
     setStatus(`Kondensation: ${i.name} (${i.formula}) dannet via en ${pair.label}-binding — der fraspaltes ét molekyle vand. ` +
               'Samme reaktion i kulhydrater, proteiner og fedt.', 'ok');
+    logEvent('build', `${i.name} (${i.formula}) — ${pair.label}-binding, dannet ved kondensation med fraspaltning af ét vandmolekyle.`);
     taskTick();
 }
 
@@ -251,8 +253,11 @@ export function hydrolyse(mol, bond, silent) {
     addWater(-1);
 
     const names = { from: oldName, a: a._model.info.name, b: b._model.info.name };
-    if (!silent)
+    // Enzymklippet siger det bedre selv, og det er `silent` netop tegnet på
+    if (!silent) {
         setStatus(`Hydrolyse: ${names.from} spaltet til ${names.a} + ${names.b} — det kræver ét molekyle vand.`, 'ok');
+        logEvent('split', `${names.from} spaltet til ${names.a} + ${names.b} ved hydrolyse — ét vandmolekyle brugt.`);
+    }
     taskTick();
     return names;
 }
@@ -277,7 +282,9 @@ export function fullHydrolysis(mol) {
 
     waterFx(p.x + 60, p.y - 40, 'in');
     addWater(-(count - 1));
-    setStatus(`Fuld hydrolyse: ${oldName} spaltet til ${count} ${mod().nouns.unit[1]} — det har krævet ${count - 1} vandmolekyler.`, 'ok');
+    const say = `Fuld hydrolyse: ${oldName} spaltet til ${count} ${mod().nouns.unit[1]} — det har krævet ${count - 1} vandmolekyler.`;
+    setStatus(say, 'ok');
+    logEvent('split', say);
     taskTick();
 }
 

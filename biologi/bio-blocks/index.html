@@ -36,6 +36,7 @@
 
     <div class="group">
         <button class="chip" id="btn-tasks">🎯 Opgaver</button>
+        <button class="chip" id="btn-log" title="Det du har bygget og svaret — til rapporten">📋 Min log</button>
         <button class="chip active" id="btn-numbers">C-numre</button>
         <div class="counter">💧 Vand: <b id="water-count">0</b></div>
         <button class="spawner btn-reset" id="btn-reset">Ryd bordet</button>
@@ -85,6 +86,25 @@
             <button id="fact-close" title="Luk">✕</button>
         </div>
         <div class="fact-rows" id="fact-rows"></div>
+    </div>
+</div>
+
+<!-- Min log: hvad eleven har bygget og svaret — fyldes af js/log.js -->
+<div id="log-modal" class="hidden">
+    <div class="log-box">
+        <div class="log-top">
+            <div>
+                <h2>📋 Min log</h2>
+                <span class="f-sub" id="log-sub"></span>
+            </div>
+            <button id="log-close" title="Luk">✕</button>
+        </div>
+        <div class="log-body" id="log-body"></div>
+        <div class="log-actions">
+            <button class="tp-btn" id="log-copy">📋 Kopier til rapport</button>
+            <button class="tp-btn grey" id="log-clear">Ryd loggen</button>
+            <span class="log-warn">Loggen forsvinder, når du lukker fanen — kopiér den inden.</span>
+        </div>
     </div>
 </div>
 

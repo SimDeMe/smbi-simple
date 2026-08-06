@@ -11,6 +11,8 @@ import { residue } from './model.js';
 import { makeMolecule } from './render.js';
 import { taskTick, taskEvents } from './tasks.js';
 import { syncWelcome } from './welcome.js';
+import { markTerms } from './glossary.js';
+import { logEvent } from './log.js';
 
 /* `at` bruges af startkortets demo, der lægger to byggesten side om side
    i stedet for tilfældigt — ellers ligger de sjældent så de indbyder til
@@ -38,7 +40,9 @@ export function quickBuild(id) {
 
     const { nodes, bonds, info } = mol._model;
     addWater(bonds.length);
-    setStatus(build.say(info.name, nodes.length), 'ok');
+    const say = build.say(info.name, nodes.length);
+    setStatus(say, 'ok');
+    logEvent('build', 'Hurtigbyg: ' + say);
     syncWelcome();
     taskTick();
 }
@@ -95,8 +99,10 @@ export function waterFx(x, y, mode, label) {
     inner.addEventListener('animationend', () => g.remove());
 }
 
+/* Fagordene i beskeden gøres klikbare undervejs — se glossary.js. Alle
+   beskeder kommer fra koden selv, så der er ikke noget at undslippe. */
 export function setStatus(msg, kind) {
-    statusBar.textContent = msg;
+    statusBar.innerHTML = markTerms(msg);
     statusBar.className = kind || '';
 }
 

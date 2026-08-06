@@ -522,6 +522,61 @@ function factRows(model, f) {
     ];
 }
 
+/* --- Ordbog ---------------------------------------------------------- */
+
+/* Kulhydraternes egne fagord. De fælles — kondensation, hydrolyse,
+   enzym, isomer — står i glossary.js. */
+const terms = {
+    anomer: {
+        da: 'Anomert C-atom',
+        alt: ['anomert C-atom', 'anomere C-atom', 'anomer', 'anomert'],
+        txt: 'Det C-atom der lukker ringen — C1 i glukose. OH-gruppen på det kan pege ned (α) ' +
+             'eller op (β), og netop dét er hele forskellen mellem stivelse og cellulose.'
+    },
+    glykosid: {
+        da: 'Glykosidbinding',
+        alt: ['glykosidbinding', 'glykosidisk binding', 'glykosidiske binding'],
+        txt: 'Bindingen mellem to sukkerarter, dannet ved kondensation. ' +
+             'Navnet siger hvor den sidder: α-1,4 går fra C1 på den ene til C4 på den næste.'
+    },
+    a14: {
+        da: 'α-1,4-binding',
+        alt: ['α-1,4'],
+        txt: 'Fra C1 til C4 med OH-gruppen nedad (α-formen). ' +
+             'Det er bindingen i stivelse og glykogen — og amylase kan klippe den.'
+    },
+    b14: {
+        da: 'β-1,4-binding',
+        alt: ['β-1,4'],
+        txt: 'Samme to C-atomer som α-1,4, men OH-gruppen peger opad. Hver anden ring vender om, ' +
+             'kæden bliver lige og stiv: det er cellulose, og vi har ikke enzymet til den.'
+    },
+    a16: {
+        da: 'α-1,6-binding',
+        alt: ['α-1,6'],
+        txt: 'Fra C1 til C6 — altså ud til siden i stedet for videre i kæden. ' +
+             'Det er grenpunktet i glykogen og amylopektin.'
+    },
+    reducerende: {
+        da: 'Reducerende sukker',
+        alt: ['ikke-reducerende', 'reducerende sukker', 'reducerende'],
+        txt: 'Et sukker med et frit anomert C-atom kan afgive elektroner — det er dét Fehlings og ' +
+             'Benedicts prøve viser. Sidder begge anomere C-atomer i bindingen, som i sakkarose, er sukkeret ikke-reducerende.'
+    },
+    sakkarid: {
+        da: 'Mono-, di- og polysakkarid',
+        alt: ['monosakkarid', 'disakkarid', 'oligosakkarid', 'polysakkarid'],
+        txt: 'Ét sukkermolekyle, to bundet sammen, eller mange i en kæde. ' +
+             'Forskellen er kun antallet af byggesten — reaktionen imellem dem er den samme.'
+    },
+    haworth: {
+        da: 'Haworth-formel',
+        alt: ['Haworth-formel', 'Haworth-projektion', 'Haworth'],
+        txt: 'Måden at tegne en sukkerring fladt på papir, med ringen set fra kanten. ' +
+             'Det man skal se efter, er om OH-grupperne peger op eller ned.'
+    }
+};
+
 /* --- Opgaver --------------------------------------------------------- */
 
 /* Bindingens type, uden hensyn til hvilke sukkerarter der sidder i den */
@@ -783,6 +838,7 @@ export const carbs = {
     toggle,
     facts,
     factRows,
+    terms,
     factColour: (info, n) => FACT_COLOUR[info.key] ||
         (n === 1 ? FACT_COLOUR.glucose : n === 2 ? FACT_COLOUR.disacc : FACT_COLOUR.poly),
 

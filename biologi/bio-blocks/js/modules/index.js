@@ -66,6 +66,12 @@
    facts {}             faktakortenes indhold, key → data
    factRows(model, f)   rækkerne i faktakortet
    factColour(info, n)  farven på faktakortets top
+   terms {}             valgfri: stofgruppens fagord, key → { da, alt[],
+                        txt }. `alt` er de skrivemåder der skal fanges i
+                        teksterne (stammen er nok — de danske endelser
+                        tages med), og `txt` er de to linjers forklaring.
+                        De ord der gælder alle tre stofgrupper, står i
+                        glossary.js og skal ikke gentages her
    tasks []             opgaverne: { title, goal, why, check(board) } plus
                         valgfrit `predict: { q, options[], correct }` —
                         forudsigelsen eleven skal gøre *før* handlingen.

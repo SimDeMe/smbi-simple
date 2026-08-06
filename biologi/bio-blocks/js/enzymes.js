@@ -16,6 +16,7 @@ import { getPos, setPos, clampIntoView, setStatus, waterFx } from './board.js';
 import { hydrolyse } from './reactions.js';
 import { startDrag } from './drag.js';
 import { taskTick, taskEvents } from './tasks.js';
+import { logEvent } from './log.js';
 
 const ENZ_W = 152, ENZ_H = 62, ENZ_NOTCH = 15, ENZ_SNAP = 90;
 
@@ -191,15 +192,23 @@ export function dropEnzyme(enz, target) {
             waterFx(target.p.x, target.p.y - 20, 'out', v.fx);
             setStatus(`${v.msg} ${v.tail || ''}`.trim(), 'error');
             taskEvents.add(v.event);
+            // Kontaktens afslag er ikke enzymkemi, men noget der sker i en
+            // krop: laktasen der mangler, pH'en der er forkert, galden der
+            // er væk. Derfor står de for sig selv i loggen.
+            logEvent('body', `${mod().toggle.da}: ${v.msg}`);
             taskTick();
         } else {
             setStatus(`Ingen reaktion. ${v.msg}`, 'error');
+            // Et nej er lige så meget værd i en rapport som et ja: det er
+            // dér substratspecificiteten viser sig
+            logEvent('enzyme', `${cfg.da} ville ikke klippe (${v.short}). ${v.msg}`);
         }
         return;
     }
 
     taskEvents.add('cut:' + enz._enzyme);
     const names = hydrolyse(target.mol, target.bond, true);
+    logEvent('enzyme', `${cfg.da} klippede ${names.from} → ${names.a} + ${names.b}. ${v.msg}`);
 
     // Enzymet slipper substratet igen og bliver liggende — det er en katalysator
     const p = getPos(enz);

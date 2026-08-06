@@ -15,6 +15,8 @@ import { undoLast } from './reactions.js';
 import { closeViewer } from './viewer3d.js';
 import { closeFacts } from './facts.js';
 import { syncWelcome } from './welcome.js';
+import { closeTerm } from './glossary.js';
+import { closeLog } from './log.js';
 
 /* ---------- Det modulafhængige ---------- */
 
@@ -40,9 +42,15 @@ window.addEventListener('resize', () => {
 });
 
 /* Escape lukker de ruder der måtte være åbne, og Ctrl+Z fortryder den
-   binding man senest har dannet */
+   binding man senest har dannet.
+
+   Ordforklaringen tages først og alene: den står oven på faktakortet, og
+   den der lukker en lille rude, vil ikke have det store kort med. */
 document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { closeViewer(); closeFacts(); return; }
+    if (e.key === 'Escape') {
+        if (!closeTerm()) { closeViewer(); closeFacts(); closeLog(); }
+        return;
+    }
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
         e.preventDefault();
         undoLast();

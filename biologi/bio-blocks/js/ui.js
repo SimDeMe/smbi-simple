@@ -20,6 +20,7 @@ import { syncGradients } from './render.js';
 import { openFromTable } from './viewer3d.js';
 import { renderTasks } from './tasks.js';
 import { syncWelcome } from './welcome.js';
+import { logEvent } from './log.js';
 
 const el = id => document.getElementById(id);
 
@@ -137,6 +138,7 @@ function buildEnzymeGroup() {
             rerenderEnzymes();
             setStatus(state.toggleOn ? m.toggle.on : m.toggle.off,
                       state.toggleOn ? 'error' : 'info');
+            if (state.toggleOn) logEvent('body', `${m.toggle.da} slået til: ${m.toggle.on}`);
         });
         items.push(t);
     }

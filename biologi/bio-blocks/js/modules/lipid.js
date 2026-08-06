@@ -266,6 +266,54 @@ function factRows(model, f) {
     return rows;
 }
 
+/* --- Ordbog ---------------------------------------------------------- */
+
+/* Fedtets egne fagord — de fælles står i glossary.js */
+const terms = {
+    ester: {
+        da: 'Esterbinding',
+        alt: ['esterbinding'],
+        txt: 'Bindingen mellem fedtsyrens COOH og en af glycerolens OH-grupper, dannet ved kondensation. ' +
+             'Samme reaktion som peptidbindingen og den glykosidiske binding.'
+    },
+    maettet: {
+        da: 'Mættet fedtsyre',
+        alt: ['mættet', 'mættede'],
+        txt: 'Ingen dobbeltbindinger i kulstofkæden — den er "mættet" med brint. ' +
+             'Kæden er lige, molekylerne pakkes tæt, og fedtet er fast ved stuetemperatur.'
+    },
+    umaettet: {
+        da: 'Umættet fedtsyre',
+        alt: ['enkeltumættet', 'flerumættet', 'umættet', 'umættede'],
+        txt: 'Mindst én dobbeltbinding i kæden: enkeltumættet har én, flerumættet flere. ' +
+             'Hvert knæk holder molekylerne fra hinanden, så fedtet er flydende.'
+    },
+    cis: {
+        da: 'Cis-dobbeltbinding',
+        alt: ['cis-dobbeltbinding', 'dobbeltbinding'],
+        txt: 'En dobbeltbinding hvor kæden fortsætter på samme side — derfor knækket. ' +
+             'Knækket er hele forskellen på olie og smør; hærdning retter det ud.'
+    },
+    glycerid: {
+        da: 'Mono-, di- og triglycerid',
+        alt: ['2-monoglycerid', 'monoglycerid', 'diglycerid', 'triglycerid'],
+        txt: 'Glycerol med én, to eller tre fedtsyrer på. ' +
+             'Glycerolen har kun tre pladser, og fedtsyrerne ingen, så fedt kan ikke vokse videre som en kæde.'
+    },
+    emulgere: {
+        da: 'Emulgering',
+        alt: ['emulgering', 'emulgere', 'emulgeret', 'emulgator', 'emulgeringsmiddel'],
+        txt: 'At dele en fedtdråbe op i tusindvis af små. Galde emulgerer — den spalter ingenting, ' +
+             'men den giver lipasen mange gange mere overflade at arbejde på.'
+    },
+    omega: {
+        da: 'Omega-3',
+        alt: ['omega-3'],
+        txt: 'Fedtsyrer med den første dobbeltbinding tre C-atomer fra kædens ω-ende (den modsatte af COOH). ' +
+             'Kroppen kan ikke selv sætte en dobbeltbinding så langt ude, så de er essentielle.'
+    }
+};
+
 /* --- Opgaver --------------------------------------------------------- */
 
 const tasks = [
@@ -427,6 +475,7 @@ export const lipid = {
     toggle,
     facts,
     factRows,
+    terms,
     factColour: (info, n) => n === 1
         ? mon[info.key].colour[1]
         : { mono: '#7d3c98', mono2: '#6c3483', di: '#5b2c6f', trisat: '#af601a', triunsat: '#1e8449' }[info.key],

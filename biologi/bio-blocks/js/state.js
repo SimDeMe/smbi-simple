@@ -19,5 +19,10 @@ export const state = {
     bondLog: [],              // de bindinger man selv har dannet, ældst først — se fortryd i reactions.js
     repr: 'blocks',           // hvilken af modulets repræsentationer der vises
     level: 'C',               // C | B | A — hvor mange knapper der er fremme, se levels.js
-    taskMode: false
+    taskMode: false,
+
+    // Min log: det der er sket i timen, og elevens egne svar. Hører til
+    // besøget og ikke til bordet — "Ryd bordet" rører den ikke. Se log.js
+    log: [],
+    logNotes: {}
 };
