@@ -96,11 +96,16 @@ SDF-filer i `Molecules/`. 3D-knappen skjuler sig selv i de andre moduler.
       kondensation, og som derfor kræver en ny slags kant i modellen
 
 
-## 11. Gør det muligt at vælge C, B eller A-niveau. 
-Hvor C-niveau kun viser enkle sammenhænge, B-niveau bliver mere nuanceret og A-niveau er den fulde oplevelse
+## 11. C-, B- eller A-niveau — gjort
 
-Se punkt 12: niveauvalget bør først og fremmest fjerne knapper, ikke tilføje
-indhold.
+Niveauknappen sidst i topbjælken. Den fjerner knapper i stedet for at tilføje
+indhold, så C-niveau kun viser de enkle sammenhænge (byggesten, blokke,
+kondensation og hydrolyse), B lægger form, enzymer og strukturformel oveni,
+og A er den fulde oplevelse med molekylformel og 3D. Se
+"Topbjælken viser alt på én gang" under punkt 12 for hvad der ligger hvor,
+og hvad det gør ved bjælkens højde.
+
+Til rest: opgaverne er endnu ikke mærket op med niveau.
 
 
 ## 12. Brugervenlighed og læringsudbytte for gennemsnitseleven
@@ -155,17 +160,52 @@ det tomme bord, ikke ved det første besøg.
   for at hver byggesten kan have sin navnetekst og sin note uden at de
   skriver oven i hinanden.
 
-### Topbjælken viser alt på én gang
+### Topbjælken viser alt på én gang — gjort
 
-24 knapper i tre grupperækker. Målt: 140 px høj ved 1358 px bredde, **225 px
-ved 768 px** — på en tablet i portræt æder bjælken 30 % af skærmen, og
-opgavepanelet dækker yderligere 322 px i bredden. En elev der lige er begyndt,
-ser fem enzymer og en laktoseintolerans-kontakt før den første glukose er lagt
-ud.
+Før stod der 24 knapper i tre grupperækker: 140 px høj ved 1358 px bredde,
+225 px ved 768 px. På en tablet i portræt åd bjælken 30 % af skærmen, og en
+elev der lige var begyndt, mødte fem enzymer og en laktoseintolerans-kontakt
+før den første glukose var lagt ud.
 
-Det er her punkt 11 hører hjemme, og pointen er at niveauvalget skal fjerne
-knapper: C = modul, byggesten, blokvisning, opgaver. B = + form (α/β),
-enzymer, Haworth. A = det hele.
+Niveauvalget (punkt 11) er svaret, og det **fjerner knapper** i stedet for at
+tilføje indhold:
+
+| | C | B | A |
+|---|---|---|---|
+| modul, byggesten, blokke, opgaver, C-numre, vand, ryd | ✔ | ✔ | ✔ |
+| form (α/β), hurtigbyg, enzymer + kontakt, strukturformel | | ✔ | ✔ |
+| molekylformel med vandregnskabet, 3D | | | ✔ |
+
+Målt bagefter, samme browser og samme bredder: **225 → 98 px ved 768 px**
+(bordet vokser fra 464 til 591 px i højden), og 141 → 97 px ved 1358 px.
+C er standard, for det er begynderen der har problemet.
+
+- `js/levels.js` er niveauerne og `atLeast(level)`. Kun `state.level` skiftes
+  — motoren er den samme hele vejen, så det der er skjult, er ikke slået fra.
+- `js/ui.js` spørger `atLeast()` før hver gruppe bygges, og `setLevel()`
+  rydder op i det der forsvinder: visningen falder tilbage til blokke,
+  α/β-valget og kontakten nulstilles, og enzymblokkene fjernes fra bordet —
+  ellers ville der ligge noget man hverken kunne bruge eller fjerne igen.
+  Molekylerne bliver stående: en maltose skal ikke gå tabt, fordi man vil se
+  Haworth-formlen.
+- Knapperne under molekylet følger med, ellers ville α/β komme ind ad
+  bagdøren: `render.js` udelader 👁 (3D) under A og α⇄β under B. ℹ-kortet og
+  ✂ (fuld hydrolyse) er med hele vejen — hydrolysen *er* C-stoffet.
+- Visningerne mærkes op i modulet, ikke i motoren: `level: 'B'` på
+  strukturformlen og `level: 'A'` på molekylformlen, dokumenteret i
+  `modules/index.js`. Ét valg er ikke et valg, så hele "Visning"-gruppen er
+  væk på C.
+- Statuslinjen må ikke pege på knapper der ikke er der. `intro()` i
+  `modules/index.js` vælger modulets `introC` på C-niveau — kun
+  kulhydraterne har brug for det, fordi deres introtekst nævner α/β og
+  enzymblokkene.
+- Niveauet huskes ikke mellem to besøg (ingen `localStorage`, som ellers
+  heller ikke bruges nogen steder i appen): en lærer der åbner appen på en
+  fremmed maskine, skal ikke først finde ud af hvorfor knapperne mangler.
+
+Til rest: opgavelisten er stadig den samme på alle tre niveauer. Punktet om
+at skjule opgave 4–6 på C står under Opgavemode og kan nu bygges med
+`atLeast()` og et `level`-felt på opgaven.
 
 ### Feedback
 
@@ -192,7 +232,9 @@ enzymer, Haworth. A = det hele.
       forgrening) er mærkbart sværere end 1–2. Den der går i stå på 4, når
       aldrig til 7–8, som er de mest konkrete og biologisk vedkommende
       (fordøjelse, laktoseintolerans). Enten en "spring over"-knap eller
-      niveauvalget, der skjuler 4–6 på C-niveau.
+      niveauvalget, der skjuler 4–6 på C-niveau — niveauerne findes nu
+      (`js/levels.js`), så det er et `level`-felt på opgaven og et filter i
+      `tasks.js`.
 - [ ] **Pointen om at de tre moduler kører på samme motor** får eleven kun i
       opsamlingen efter alle otte opgaver, og de færreste når dertil. Den
       kunne stå i kondensationsbeskeden hver gang, med samme ordlyd i alle tre
@@ -210,5 +252,8 @@ enzymer, Haworth. A = det hele.
 
 ### Fejl
 
-- [ ] **Hjem-knappen dækker "MODUL"-labelen.** `.smbi-home` i `index.html` er
-      `position: fixed` oven på headeren. Rettes med padding-left på `header`.
+- [x] **Hjem-knappen dækker "MODUL"-labelen.** Rettet. Pladsen reserveres som
+      et flex-element (`header::before`) og ikke som padding, for padding
+      koster på hver eneste række, og bjælken wrapper på en tablet. Under
+      900 px bliver hjem-knappen sit ikon alene, og så er 56 px nok — ellers
+      ville de 92 px koste en ekstra række netop der hvor pladsen er dyrest.

@@ -354,10 +354,10 @@ export const protein = {
     reprs: [
         { id: 'blocks', da: 'Blokke', title: 'Blokke: farven viser sidekædens type',
           msg: 'Blokke: alle aminosyrer har den samme rygrad og dermed den samme form. Farven er sidekædens type — upolær, polær, sur eller basisk.' },
-        { id: 'struct', da: 'Struktur', title: 'Strukturformel: rygraden H₂N–CαH(R)–COOH',
+        { id: 'struct', da: 'Struktur', level: 'B', title: 'Strukturformel: rygraden H₂N–CαH(R)–COOH',
           msg: 'Strukturformel: H₂N–CαH(R)–COOH. Når carboxylgruppen er bundet, står der C=O, og når aminogruppen er bundet, står der N–H. ' +
                'Tilsammen er det –CO–NH–, altså selve peptidbindingen.' },
-        { id: 'formula', da: 'Formel', title: 'Molekylformel: hver aminosyre som sumformel',
+        { id: 'formula', da: 'Formel', level: 'A', title: 'Molekylformel: hver aminosyre som sumformel',
           msg: 'Molekylformel: her har aminosyrerne ikke samme sumformel — sidekæden tæller med. Regnestykket under molekylet viser hvor meget vand der er fraspaltet.' }
     ],
     struct,

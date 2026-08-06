@@ -11,6 +11,8 @@
 
    id, da, sub          identitet og knaptekst i modulvælgeren
    intro                statuslinjen når man skifter til modulet
+   introC               valgfri: den samme tekst på C-niveau, hvor α/β og
+                        enzymerne ikke er fremme og derfor ikke må nævnes
    start                startkortet på det tomme bord — { title, steps[],
                         demo[] }, hvor demo er de monomernavne "Læg dem ud
                         for mig" lægger side om side
@@ -49,7 +51,11 @@
    nouns                { unit: [ental, flertal], bond: [ental, flertal] }
    verdict(d, a, site)  må de to pladser reagere? { ok, msg, short }
 
-   reprs []             { id, da, title, msg } — den første er default
+   reprs []             { id, da, title, msg, level } — den første er
+                        default og skal kunne vises på C-niveau. `level`
+                        ('B' eller 'A') skjuler visningen under det
+                        niveau; uden feltet er den med hele vejen. Se
+                        levels.js.
    struct()             tegner repræsentationen med id 'struct'
    decorate()           valgfri ekstra tegning oven på en blok
    blockLabels(node)    teksterne inde i blokken
@@ -65,6 +71,7 @@
    ===================================================================== */
 
 import { state } from '../state.js';
+import { atLeast } from '../levels.js';
 import { carbs } from './carbs.js';
 import { protein } from './protein.js';
 import { lipid } from './lipid.js';
@@ -73,4 +80,11 @@ export const MODULES = [carbs, protein, lipid];
 
 export function mod() {
     return MODULES.find(m => m.id === state.modId) || MODULES[0];
+}
+
+/* Introteksten hører til niveauet lige så meget som til modulet: der skal
+   ikke stå "vælg α eller β" på et C-niveau, hvor knappen ikke er der. */
+export function intro() {
+    const m = mod();
+    return (!atLeast('B') && m.introC) || m.intro;
 }

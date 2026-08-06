@@ -23,6 +23,19 @@ header {
     flex-wrap: wrap;
     z-index: 10;
 }
+/* Hjem-knappen er position:fixed i øverste venstre hjørne og lagde sig
+   oven på den første gruppes label. Pladsen reserveres som et flex-element
+   og ikke som padding på headeren: så koster den kun på den øverste række,
+   og en bjælke der wrapper på en tablet, får ikke en ekstra række. */
+header::before { content: ''; flex: none; width: 92px; }
+
+/* På en tablet koster de 92 px en hel ekstra række i bjælken. Der er
+   hjem-knappen sit ikon alene, og så er 56 px nok. */
+@media (max-width: 900px) {
+    header::before { width: 56px; }
+    .smbi-home span { display: none; }
+}
+
 .group {
     display: flex;
     gap: 6px;
@@ -69,6 +82,13 @@ header {
 }
 .seg button + button { border-left: 2px solid #2471a3; }
 .seg button.active { background: #2471a3; color: #fff; }
+
+/* Niveauvalget er grønt, fordi det ikke handler om molekylet, men om hvor
+   meget af værktøjet der er fremme */
+.seg.level { border-color: #16a085; }
+.seg.level button { color: #16a085; padding: 6px 12px; }
+.seg.level button + button { border-left-color: #16a085; }
+.seg.level button.active { background: #16a085; color: #fff; }
 
 .chip {
     border: 1px solid #dfe6e9;

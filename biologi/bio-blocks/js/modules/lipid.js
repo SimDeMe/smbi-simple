@@ -354,9 +354,9 @@ export const lipid = {
     reprs: [
         { id: 'blocks', da: 'Blokke', title: 'Blokke: kæden som zigzag, med knæk hvor der er en dobbeltbinding',
           msg: 'Blokke: zigzaggen er kulstofkæden. Et knæk betyder en cis-dobbeltbinding — og det er knækket der gør fedtet flydende.' },
-        { id: 'struct', da: 'Struktur', title: 'Strukturformel: glycerolens OH-grupper og fedtsyrens COOH',
+        { id: 'struct', da: 'Struktur', level: 'B', title: 'Strukturformel: glycerolens OH-grupper og fedtsyrens COOH',
           msg: 'Strukturformel: glycerolen har tre OH-grupper, fedtsyren en COOH. Når de reagerer, står der —O— på glycerolen og C(=O)O— på fedtsyren: det er esterbindingen.' },
-        { id: 'formula', da: 'Formel', title: 'Molekylformel: hver byggesten som sumformel',
+        { id: 'formula', da: 'Formel', level: 'A', title: 'Molekylformel: hver byggesten som sumformel',
           msg: 'Molekylformel: glycerol er C₃H₈O₃, og fedtsyrerne er lange og brintrige — derfor giver fedt mere end dobbelt så meget energi pr. gram som sukker.' }
     ],
     struct,

@@ -9,6 +9,7 @@
 
 import { state } from './state.js';
 import { mod } from './modules/index.js';
+import { atLeast } from './levels.js';
 import { molLayer, svgDefs } from './dom.js';
 import { SVG_NS, sub, text, line, rect, badge } from './svg.js';
 import { unitGroup, placedText } from './draw.js';
@@ -241,9 +242,12 @@ function drawChrome(parent, info, nodes, bonds, gridW, gridH, scale) {
     say(info.note, y, 'info-note');
     y += 26;
 
+    // Knapperne under molekylet følger niveauet ligesom topbjælken: 3D
+    // hører til A og formskiftet til B, mens faktakortet og den fulde
+    // hydrolyse er med hele vejen
     const buttons = [['ℹ', 'badge-info', 'facts', 'Faktakort: hvor findes det, rolle og fordøjelighed']];
-    if (info.sdf)             buttons.push(['👁', 'badge-3d', 'view', 'Se molekylet i 3D']);
-    if (n === 1 && m.variant) buttons.push(['α⇄β', 'badge-flip', 'flip', m.variant.flipTip]);
+    if (info.sdf && atLeast('A'))             buttons.push(['👁', 'badge-3d', 'view', 'Se molekylet i 3D']);
+    if (n === 1 && m.variant && atLeast('B')) buttons.push(['α⇄β', 'badge-flip', 'flip', m.variant.flipTip]);
     if (n > 1)                buttons.push(['✂', 'badge-cut', 'cut', 'Fuld hydrolyse til byggesten']);
 
     buttons.forEach(([glyph, cls, action, tip], i) => {

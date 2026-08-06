@@ -23,8 +23,9 @@
 <script>(function(){try{if(window.top!==window.self){var e=document.querySelector(".smbi-home");if(e)e.style.display="none";}}catch(x){}})();</script>
 
 
-<!-- Grupperne fyldes af js/ui.js ud fra det valgte modul — kun den sidste
-     gruppe er den samme for kulhydrater, proteiner og fedt. -->
+<!-- Grupperne fyldes af js/ui.js ud fra det valgte modul — kun den faste
+     gruppe er den samme for kulhydrater, proteiner og fedt. Hvor mange af
+     dem der overhovedet bliver fyldt, afgør niveauvalget: se js/levels.js. -->
 <header>
     <div class="group" id="grp-module"></div>
     <div class="group" id="grp-form"></div>
@@ -39,6 +40,9 @@
         <div class="counter">💧 Vand: <b id="water-count">0</b></div>
         <button class="spawner btn-reset" id="btn-reset">Ryd bordet</button>
     </div>
+
+    <!-- Niveauet står sidst: det er lærerens knap, ikke elevens -->
+    <div class="group" id="grp-level"></div>
 </header>
 
 <div id="game-area">

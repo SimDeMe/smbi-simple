@@ -614,6 +614,11 @@ export const carbs = {
     intro: 'Kulhydrater: vælg α eller β, læg sukkerarter på bordet og træk dem sammen. ' +
            'Klik på et O i en binding for at hydrolysere netop den, eller træk en enzymblok hen på bindingen.',
 
+    // På C-niveau er hverken α/β-valget eller enzymerne fremme, og så må
+    // teksten ikke pege på knapper der ikke er der
+    introC: 'Kulhydrater: læg sukkerarter på bordet og træk dem sammen. ' +
+            'Klik på et O i en binding for at spalte netop den igen.',
+
     start: {
         title: 'Byg dit første kulhydrat',
         steps: [
@@ -672,10 +677,10 @@ export const carbs = {
     reprs: [
         { id: 'blocks', da: 'Blokke', title: 'Blokke: form og farve viser hvilken sukkerart det er',
           msg: 'Blokke: formen viser ringstørrelsen (seksring eller femring) og farven viser sukkerarten.' },
-        { id: 'struct', da: 'Haworth', title: 'Haworth-formel: ringen med OH-grupperne tegnet i korrekt α/β-orientering',
+        { id: 'struct', da: 'Haworth', level: 'B', title: 'Haworth-formel: ringen med OH-grupperne tegnet i korrekt α/β-orientering',
           msg: 'Haworth-formel: samme molekyle, nu med OH-grupperne. Om den anomere OH peger op eller ned ER forskellen ' +
                'mellem β og α. H-atomerne er udeladt, og den glykosidiske binding tegnes vandret, så kæden kan læses.' },
-        { id: 'formula', da: 'Formel', title: 'Molekylformel: hver monomer som sumformel',
+        { id: 'formula', da: 'Formel', level: 'A', title: 'Molekylformel: hver monomer som sumformel',
           msg: 'Molekylformel: hver monomer er C₆H₁₂O₆ — glukose, fruktose og galaktose har alle samme sumformel. ' +
                'Regnestykket under molekylet viser hvor meget vand der er fraspaltet.' }
     ],

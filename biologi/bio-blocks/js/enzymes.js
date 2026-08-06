@@ -103,6 +103,15 @@ export function removeEnzyme(enz) {
     enz.remove();
 }
 
+/* Enzymerne hører til fra B-niveau. Falder niveauet til C, forsvinder
+   knapperne — og så skal blokkene på bordet også væk, ellers ligger der
+   noget man hverken kan bruge eller lægge ud igen. Molekylerne bliver. */
+export function clearEnzymes() {
+    state.enzymes.forEach(e => e.remove());
+    state.enzymes = [];
+    pvLayer.textContent = '';
+}
+
 /* Enzymets aktive sted i bordets koordinater */
 function enzymeSite(enz) {
     const p = getPos(enz);

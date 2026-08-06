@@ -5,12 +5,17 @@
    enzymer og hvilke visninger der findes, afhænger af om vi arbejder med
    kulhydrater, proteiner eller fedt. Markup'en holder derfor kun de
    tomme grupper, og indholdet kommer herfra.
+
+   Den anden ting der bestemmer hvad der står i bjælken, er niveauet:
+   `atLeast()` afgør om en gruppe overhovedet bygges. Se levels.js for
+   hvad der hører til C, B og A — og hvorfor bjælken skal være kortere.
    ===================================================================== */
 
 import { state } from './state.js';
-import { mod, MODULES } from './modules/index.js';
+import { mod, MODULES, intro } from './modules/index.js';
+import { LEVELS, atLeast, levelInfo } from './levels.js';
 import { spawn, quickBuild, clearTable, setStatus, rerenderAll } from './board.js';
-import { spawnEnzyme, syncEnzymeButtons, rerenderEnzymes } from './enzymes.js';
+import { spawnEnzyme, syncEnzymeButtons, rerenderEnzymes, clearEnzymes } from './enzymes.js';
 import { syncGradients } from './render.js';
 import { openFromTable } from './viewer3d.js';
 import { renderTasks } from './tasks.js';
@@ -60,6 +65,16 @@ function segment(id, options, current, onPick, cls = 'seg text') {
 
 /* ---------- De enkelte grupper ---------- */
 
+function buildLevelGroup() {
+    group('grp-level', 'Niveau', [
+        segment('level-seg',
+            LEVELS.map(l => ({ id: l.id, label: l.label, title: l.title })),
+            state.level,
+            o => setLevel(o.id),
+            'seg level')
+    ]);
+}
+
 function buildModuleGroup() {
     group('grp-module', 'Modul', [
         segment('module-seg',
@@ -71,7 +86,7 @@ function buildModuleGroup() {
 
 function buildFormGroup() {
     const v = mod().variant;
-    if (!v) return group('grp-form', null, []);
+    if (!v || !atLeast('B')) return group('grp-form', null, []);
 
     group('grp-form', v.da, [
         segment('variant-seg',
@@ -92,12 +107,18 @@ function buildSpawnGroup() {
     }));
 }
 
+/* Hurtigbyg springer selve bygningen over, og det er først en genvej når
+   man har lavet bindingen i hånden — derfor fra B og op. */
 function buildBuildGroup() {
+    if (!atLeast('B')) return group('grp-build', null, []);
+
     group('grp-build', 'Hurtigbyg', mod().builds.map(b =>
         button('chip', b.da, 'Byg den færdig med det samme', () => quickBuild(b.id))));
 }
 
 function buildEnzymeGroup() {
+    if (!atLeast('B')) return group('grp-enzymes', null, []);
+
     const m = mod();
     const items = Object.entries(m.enzymes).map(([key, cfg]) => {
         const b = button('spawner btn-enz', cfg.da,
@@ -123,25 +144,36 @@ function buildEnzymeGroup() {
 }
 
 function buildReprGroup() {
-    const m = mod();
-    const items = [
+    const m     = mod();
+    const reprs = visibleReprs();
+    const items = [];
+
+    // Ét valg er ikke et valg: på C-niveau er der kun blokke, og så er
+    // hele "Visning"-gruppen støj
+    if (reprs.length > 1) items.push(
         segment('repr-seg',
-            m.reprs.map(r => ({ id: r.id, label: r.da, title: r.title, msg: r.msg })),
+            reprs.map(r => ({ id: r.id, label: r.da, title: r.title, msg: r.msg })),
             state.repr,
-            o => { state.repr = o.id; rerenderAll(); setStatus(o.msg, 'info'); })
-    ];
+            o => { state.repr = o.id; rerenderAll(); setStatus(o.msg, 'info'); }));
 
     // 3D-knappen giver kun mening hvis modulet har rigtige koordinater at vise
     const has3d = Object.values(m.mon).some(c => c.sdf) || m.names.some(r => r.sdf);
-    if (has3d) items.push(button('chip', '3D',
+    if (has3d && atLeast('A')) items.push(button('chip', '3D',
         'Se molekylet i 3D med rigtige koordinater', openFromTable));
 
     group('grp-repr', 'Visning', items);
 }
 
-/* ---------- Modulskift ---------- */
+/* Modulet mærker selv sine visninger op: blokke er C, strukturformlen B,
+   molekylformlen A. Uden `level` er visningen med hele vejen. */
+function visibleReprs() {
+    return mod().reprs.filter(r => atLeast(r.level));
+}
+
+/* ---------- Niveau- og modulskift ---------- */
 
 export function buildHeader() {
+    buildLevelGroup();
     buildModuleGroup();
     buildFormGroup();
     buildSpawnGroup();
@@ -150,6 +182,28 @@ export function buildHeader() {
     buildReprGroup();
     syncEnzymeButtons();
     syncGradients();
+}
+
+/* Bordet bliver stående når niveauet skifter — det er de samme molekyler,
+   og en elev der har bygget en maltose, skal ikke miste den for at få
+   Haworth-formlen frem. Til gengæld skal de valg der forsvinder, sættes
+   tilbage til det C-niveau kan vise: ellers står man med en formelvisning
+   uden en knap til at komme ud af den igen. */
+export function setLevel(id) {
+    if (id === state.level) return;
+    state.level = id;
+
+    const m = mod();
+    if (!visibleReprs().some(r => r.id === state.repr)) state.repr = visibleReprs()[0].id;
+    if (!atLeast('B')) {
+        if (m.variant) state.variant = m.variant.options[0].id;
+        state.toggleOn = false;      // kontakten hører til enzymerne
+        clearEnzymes();              // og enzymer man ikke kan lægge ud, kan man heller ikke fjerne
+    }
+
+    buildHeader();
+    rerenderAll();               // molekylernes egne knapper følger også niveauet
+    setStatus(levelInfo(id).msg, 'info');
 }
 
 export function switchModule(id) {
@@ -164,5 +218,5 @@ export function switchModule(id) {
     buildHeader();
     renderTasks();
     syncWelcome();                 // det nye modul har sin egen vejledning
-    setStatus(mod().intro, 'info');
+    setStatus(intro(), 'info');
 }

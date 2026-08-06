@@ -17,5 +17,6 @@ export const state = {
     toggleOn: false,          // modulets kontakt: laktoseintolerans, galde …
     catalystHintShown: false,
     repr: 'blocks',           // hvilken af modulets repræsentationer der vises
+    level: 'C',               // C | B | A — hvor mange knapper der er fremme, se levels.js
     taskMode: false
 };

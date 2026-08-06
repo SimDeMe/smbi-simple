@@ -8,7 +8,7 @@
    ===================================================================== */
 
 import { state } from './state.js';
-import { mod } from './modules/index.js';
+import { mod, intro } from './modules/index.js';
 import { resetGame, rerenderAll, clampIntoView, setStatus } from './board.js';
 import { buildHeader } from './ui.js';
 import { closeViewer } from './viewer3d.js';
@@ -21,7 +21,7 @@ state.repr    = mod().reprs[0].id;
 state.variant = mod().variant ? mod().variant.options[0].id : null;
 buildHeader();
 syncWelcome();
-setStatus(mod().intro, '');
+setStatus(intro(), '');
 
 /* ---------- Det fælles ---------- */
 

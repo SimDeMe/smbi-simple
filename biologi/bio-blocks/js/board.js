@@ -4,7 +4,7 @@
    ===================================================================== */
 
 import { state } from './state.js';
-import { mod } from './modules/index.js';
+import { mod, intro } from './modules/index.js';
 import { svgSpace, fxLayer, pvLayer, statusBar, waterOut } from './dom.js';
 import { SVG_NS, text } from './svg.js';
 import { residue } from './model.js';
@@ -117,7 +117,7 @@ export function clearTable() {
 
 export function resetGame() {
     clearTable();
-    setStatus('Bordet er ryddet. ' + mod().intro, '');
+    setStatus('Bordet er ryddet. ' + intro(), '');
     taskTick();
 }
 
