@@ -6,6 +6,13 @@
    klippet). Efter hver handling får den aktuelle opgave bordet at se, og
    når den er løst, kommer forklaringen — pointen står bagefter, ikke før.
 
+   Gæt → gør → forklar: en opgave med et `predict`-felt spørger først, og
+   den viser ikke hvad man skal gøre, før der er gættet. Det er selve
+   pointen — `goal` fortæller så præcist hvad man skal gøre, at opgaven
+   ellers kan følges bogstaveligt uden at forstå noget. Gættet bliver ikke
+   bedømt med det samme: facit står i forklaringen, når bordet har afgjort
+   sagen. Sådan er det handlingen og ikke panelet, der retter.
+
    Selve opgaverne står i modulet, og hvert modul har sin egen fremgang.
    ===================================================================== */
 
@@ -20,8 +27,12 @@ export const taskEvents = new Set();
    det man har lavet med kulhydraterne */
 const progress = {};
 
+function fresh() {
+    return { index: 0, done: [], justSolved: false, guess: {} };
+}
+
 function prog() {
-    if (!progress[state.modId]) progress[state.modId] = { index: 0, done: [], justSolved: false };
+    if (!progress[state.modId]) progress[state.modId] = fresh();
     return progress[state.modId];
 }
 
@@ -33,12 +44,19 @@ function board() {
     return { mols: state.molecules.map(m => m._model), water: state.waterCount, ev: taskEvents };
 }
 
+/* Har eleven gættet, hvis opgaven spørger? Er der ikke svaret, bliver
+   bordet heller ikke tjekket: ellers kunne en opgave blive løst — og
+   forklaringen givet — mens spørgsmålet stadig stod og ventede. */
+function guessed(t, p) {
+    return !t.predict || p.guess[p.index] !== undefined;
+}
+
 /* Kun den aktuelle opgave tjekkes — så er det tydeligt hvad der bliver kigget på */
 export function taskTick() {
     if (!state.taskMode) return;
     const p = prog();
     const t = mod().tasks[p.index];
-    if (t && !p.done[p.index] && t.check(board())) {
+    if (t && !p.done[p.index] && guessed(t, p) && t.check(board())) {
         p.done[p.index] = true;
         p.justSolved = true;
     }
@@ -59,6 +77,36 @@ function nextTask() {
         setStatus(`Bordet er ryddet til opgave ${p.index + 1}: ${tasks[p.index].title}.`, 'info');
 }
 
+/* Gættet noteres, men bedømmes ikke her: eleven skal bygge for at få svar */
+function guessPanel(t, p, n) {
+    const opts = t.predict.options.map((o, i) =>
+        `<button class="tp-opt" data-i="${i}">${o}</button>`).join('');
+
+    taskDetail.innerHTML =
+        `<p class="tp-title">${n}. ${t.title}</p>
+         <p class="tp-predict">${t.predict.q}</p>
+         <div class="tp-opts">${opts}</div>
+         <p class="tp-tip">Gæt først. Du får at vide om det passer, når du har bygget det.</p>`;
+
+    taskDetail.querySelectorAll('.tp-opt').forEach(b =>
+        b.addEventListener('click', () => {
+            p.guess[p.index] = +b.dataset.i;
+            taskTick();          // bordet kan allerede se rigtigt ud
+            setStatus('Gættet er noteret. Byg det nu — bordet afgør sagen.', 'info');
+        }));
+}
+
+/* Facit efter handlingen: både det rigtige svar og det eleven troede */
+function guessVerdict(t, guess) {
+    const right = guess === t.predict.correct;
+    const said  = t.predict.options[guess];
+    const truth = t.predict.options[t.predict.correct];
+    return `<p class="tp-verdict ${right ? 'ok' : 'miss'}">` +
+           (right ? `✔ Du gættede rigtigt: ${said}`
+                  : `✘ Du gættede "${said}" — det rigtige er "${truth}"`) +
+           `</p>`;
+}
+
 export function renderTasks() {
     const tasks = mod().tasks;
     const p     = prog();
@@ -72,28 +120,48 @@ export function renderTasks() {
 
     if (all) {
         taskDetail.innerHTML =
-            `<p class="tp-title">🎓 Opsamling</p>${mod().summary(state.waterCount)}
+            `<p class="tp-title">🎓 Opsamling</p>${guessScore(tasks, p)}${mod().summary(state.waterCount)}
              <button class="tp-btn grey" id="task-restart">Start opgaverne forfra</button>`;
         document.getElementById('task-restart').addEventListener('click', () => {
-            progress[state.modId] = { index: 0, done: [], justSolved: false };
+            progress[state.modId] = fresh();
             resetGame();               // rydder også bordet, vandet og klippene
             renderTasks();
         });
         return;
     }
 
-    const t = tasks[p.index];
+    const t      = tasks[p.index];
     const solved = p.done[p.index];
+    const guess  = p.guess[p.index];
+
+    // Spørgsmålet står alene: kan man se hvad man skal gøre, er det ikke
+    // længere et gæt. Har bordet allerede løst opgaven, er toget kørt.
+    if (t.predict && guess === undefined && !solved) return guessPanel(t, p, p.index + 1);
+
+    const facit = t.predict && guess !== undefined && solved ? guessVerdict(t, guess) : '';
+    const noteret = t.predict && guess !== undefined && !solved
+        ? `<p class="tp-guessed">Dit gæt: ${t.predict.options[guess]}</p>` : '';
 
     taskDetail.innerHTML =
         `<p class="tp-title">${p.index + 1}. ${t.title}</p>` +
         (solved
-            ? `<p class="tp-solved">✔ Løst!</p><div class="tp-why">${t.why}</div>
+            ? `<p class="tp-solved">✔ Løst!</p>${facit}<div class="tp-why">${t.why}</div>
                <button class="tp-btn" id="task-next">Næste opgave →</button>`
-            : `<p class="tp-goal">${t.goal}</p>
+            : `<p class="tp-goal">${t.goal}</p>${noteret}
                <p class="tp-tip">Opgaven tjekkes automatisk, så snart bordet ser rigtigt ud.</p>`);
 
     if (solved) document.getElementById('task-next').addEventListener('click', nextTask);
+}
+
+/* Hvor mange af gættene holdt? Kun de opgaver der havde et spørgsmål, og
+   kun dem der blev gættet på — ellers ville tallet straffe den der løste en
+   opgave uden at have set spørgsmålet. */
+function guessScore(tasks, p) {
+    const asked = tasks.filter((t, i) => t.predict && p.guess[i] !== undefined);
+    if (!asked.length) return '';
+    const right = tasks.filter((t, i) => t.predict && p.guess[i] === t.predict.correct).length;
+    return `<p class="tp-goal">🔮 Du gættede rigtigt i <b>${right} ud af ${asked.length}</b> ` +
+           `af de spørgsmål du svarede på — det interessante er dem du tog fejl af.</p>`;
 }
 
 function toggleTasks() {

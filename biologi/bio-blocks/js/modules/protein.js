@@ -271,6 +271,11 @@ const classesIn = m => new Set(m.nodes.map(n => mon[n.name].cls)).size;
 const tasks = [
     {
         title: 'Byg et dipeptid',
+        predict: {
+            q: 'Gæt først: en carboxylgruppe møder en aminogruppe. Hvad bliver fraspaltet?',
+            options: ['Ét vandmolekyle', 'Ét CO₂', 'Ingenting — de klæber bare sammen'],
+            correct: 0
+        },
         goal: 'Læg to aminosyrer på bordet og træk den enes carboxylgruppe (højre side) hen til den andens aminogruppe (venstre side).',
         why: 'Peptidbindingen dannes ved kondensation, præcis som den glykosidiske binding: en OH-gruppe og et H bliver til vand. ' +
              'Samme reaktion, andre byggesten.',
@@ -278,6 +283,11 @@ const tasks = [
     },
     {
         title: 'Lav 4 vandmolekyler ved kondensation',
+        predict: {
+            q: 'Gæt først: hvor mange aminosyrer skal der til i én kæde for at danne 4 peptidbindinger?',
+            options: ['4', '5', '8'],
+            correct: 1
+        },
         goal: 'Få vandtælleren op på 4 — altså dan 4 peptidbindinger, fx en kæde på 5 aminosyrer.',
         why: 'n aminosyrer holdes sammen af n − 1 peptidbindinger og har afgivet n − 1 vandmolekyler. ' +
              'Det er nøjagtigt den samme regnskabsføring som for stivelse — makromolekyler dannes ens.',
@@ -285,6 +295,13 @@ const tasks = [
     },
     {
         title: 'Byg en kæde med mindst tre slags sidekæder',
+        predict: {
+            q: 'Gæt først: hvad afgør hvordan proteinet folder sig, og dermed hvad det kan?',
+            options: ['Hvor lang kæden er',
+                      'Rækkefølgen af sidekæderne',
+                      'Hvor mange vandmolekyler der blev afgivet'],
+            correct: 1
+        },
         goal: 'Byg et polypeptid på mindst 6 aminosyrer, hvor der indgår mindst tre af farverne: upolær, polær, sur og basisk.',
         why: 'Rækkefølgen af sidekæder er primærstrukturen, og den bestemmer resten. De upolære gemmer sig inde i midten, ' +
              'de ladede vender ud mod vandet, og sur + basisk kan holde fast i hinanden. Det er derfor ét ombyttet ' +
@@ -293,6 +310,12 @@ const tasks = [
     },
     {
         title: 'Klip inde i kæden med pepsin',
+        predict: {
+            q: 'Gæt først: du trækker pepsin hen på en binding uden en aromatisk sidekæde ved siden af. Hvad sker der?',
+            options: ['Den klipper — et enzym klipper det den kommer til',
+                      'Den klipper ikke — sidekæden skal passe i det aktive sted'],
+            correct: 1
+        },
         goal: 'Byg en kæde med mindst én phenylalanin i (eller brug Hurtigbyg → Polypeptid), og træk pepsin hen på en binding ved den.',
         why: 'Pepsin er en endopeptidase: den klipper inde i kæden, og kun hvor sidekæden passer i dens aktive sted. ' +
              'Mange snit inde i kæden giver mange nye ender, som tarmens enzymer kan arbejde videre på.',
@@ -300,6 +323,11 @@ const tasks = [
     },
     {
         title: 'Frigør en enkelt aminosyre',
+        predict: {
+            q: 'Gæt først: hvor meget frigør en exopeptidase pr. klip?',
+            options: ['Én aminosyre', 'To aminosyrer', 'Hele kæden på én gang'],
+            correct: 0
+        },
         goal: 'Træk peptidase hen på den yderste binding i kæden — den ude i N-enden til venstre.',
         why: 'Exopeptidaser klipper kun fra enden, én aminosyre ad gangen. Først som frie aminosyrer kan de optages ' +
              'gennem tarmvæggen. Endopeptidaser og exopeptidaser arbejder sammen — hver for sig kan ingen af dem gøre det færdigt.',
@@ -307,6 +335,13 @@ const tasks = [
     },
     {
         title: 'Vis hvad pH gør ved et enzym',
+        predict: {
+            q: 'Gæt først: mavesyren mangler. Hvad sker der med pepsin?',
+            options: ['Enzymet er væk',
+                      'Enzymet er der, men formen passer ikke længere',
+                      'Ingenting — enzymer er ligeglade med pH'],
+            correct: 1
+        },
         goal: 'Slå 🧪 Syrehæmmer til, og prøv derefter at klippe med pepsin.',
         why: 'Enzymet er der stadig — men et enzym er en foldet form, og formen afhænger af pH. Uden mavesyre passer ' +
              'substratet ikke i det aktive sted. Derfor har hvert enzym sit optimum: pepsin ved pH 2, trypsin ved pH 8.',

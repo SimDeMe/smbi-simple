@@ -66,7 +66,11 @@
    facts {}             faktakortenes indhold, key → data
    factRows(model, f)   rækkerne i faktakortet
    factColour(info, n)  farven på faktakortets top
-   tasks []             opgaverne
+   tasks []             opgaverne: { title, goal, why, check(board) } plus
+                        valgfrit `predict: { q, options[], correct }` —
+                        forudsigelsen eleven skal gøre *før* handlingen.
+                        Panelet viser ikke `goal`, før der er gættet, og
+                        facit kommer sammen med `why`
    summary(state)       opsamlingen når alle opgaver er løst
    ===================================================================== */
 

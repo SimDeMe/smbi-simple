@@ -271,6 +271,13 @@ function factRows(model, f) {
 const tasks = [
     {
         title: 'Sæt én fedtsyre på glycerolen',
+        predict: {
+            q: 'Gæt først: en fedtsyre bindes til glycerolen. Hvad sker der med vand?',
+            options: ['Der fraspaltes ét vandmolekyle',
+                      'Der optages ét vandmolekyle',
+                      'Vand er ikke indblandet'],
+            correct: 0
+        },
         goal: 'Læg en glycerol og en fedtsyre på bordet, og træk fedtsyrens carboxylgruppe (højre side) hen på en af glycerolens tre OH-grupper.',
         why: 'Esterbindingen dannes ved kondensation — fedtsyrens OH og glycerolens H bliver til vand. ' +
              'Nøjagtig samme reaktion som den glykosidiske binding og peptidbindingen: cellen bygger alle tre stofgrupper efter samme princip.',
@@ -278,6 +285,12 @@ const tasks = [
     },
     {
         title: 'Byg et triglycerid',
+        predict: {
+            q: 'Gæt først: kan et triglycerid vokse videre til en lang kæde, sådan som stivelse kan?',
+            options: ['Ja — der kan altid sættes en fedtsyre mere på',
+                      'Nej — glycerolen har kun tre pladser, og fedtsyrerne har ingen'],
+            correct: 1
+        },
         goal: 'Sæt fedtsyrer på alle tre af glycerolens OH-grupper.',
         why: 'Tre esterbindinger, tre vandmolekyler. Læg mærke til at fedtet ikke er en kæde: glycerolen har tre pladser, ' +
              'og fedtsyrerne har ingen — derfor kan et triglycerid ikke vokse videre, sådan som en stivelseskæde kan.',
@@ -285,6 +298,13 @@ const tasks = [
     },
     {
         title: 'Byg et fedt der er flydende',
+        predict: {
+            q: 'Gæt først: hvorfor er olie flydende, når smør er fast?',
+            options: ['Knækket på de umættede kæder gør at de ikke kan pakkes tæt',
+                      'Olie indeholder mindre energi',
+                      'Olie har kortere fedtsyrer'],
+            correct: 0
+        },
         goal: 'Byg et triglycerid hvor mindst én af fedtsyrerne er umættet (oliesyre eller linolensyre) — se knækket på kæden.',
         why: 'Cis-dobbeltbindingen sætter et knæk på kæden, og knækket gør at molekylerne ikke kan pakkes tæt sammen. ' +
              'Det er hele forskellen mellem olie og smør: samme slags molekyle, samme energiindhold, forskellig form.',
@@ -292,6 +312,12 @@ const tasks = [
     },
     {
         title: 'Fordøj fedtet med bugspytlipase',
+        predict: {
+            q: 'Gæt først: bugspytlipasen går i gang med et triglycerid. Hvad bliver der tilbage?',
+            options: ['Glycerol og tre frie fedtsyrer',
+                      'Et 2-monoglycerid og to frie fedtsyrer'],
+            correct: 1
+        },
         goal: 'Byg et triglycerid og træk bugspytlipasen hen på esterbindingerne. Prøv også den midterste.',
         why: 'Bugspytlipasen kan kun komme til C1 og C3. Tilbage bliver et 2-monoglycerid og to frie fedtsyrer, ' +
              'og det er præcis dét der optages gennem tarmvæggen — hvorefter tarmcellen bygger triglyceridet op igen.',
@@ -299,6 +325,13 @@ const tasks = [
     },
     {
         title: 'Vis hvad galde gør',
+        predict: {
+            q: 'Gæt først: hvad laver galden i tarmen?',
+            options: ['Den spalter fedtet ligesom et enzym',
+                      'Den deler fedtdråben op, så enzymet får mere overflade',
+                      'Den optager fedtet gennem tarmvæggen'],
+            correct: 1
+        },
         goal: 'Slå 🚫 Ingen galde til, og prøv at klippe et triglycerid med bugspytlipasen.',
         why: 'Galde er ikke et enzym og spalter ingenting — den emulgerer. Fedt og vand blander sig ikke, ' +
              'så uden galde ligger fedtet i store dråber, og det vandopløselige enzym kan kun nå overfladen. ' +

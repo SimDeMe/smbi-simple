@@ -494,6 +494,35 @@ header::before { content: ''; flex: none; width: 92px; }
     margin: 0 0 10px;
 }
 .tp-solved { color: #1e8449; font-weight: 900; margin: 0 0 6px; }
+
+/* Gæt → gør → forklar. Spørgsmålet står alene i panelet, indtil der er
+   svaret — derfor må det fylde som en overskrift og ikke som en note. */
+.tp-predict {
+    background: #f4f0fb;
+    border-left: 4px solid #8e44ad;
+    border-radius: 6px;
+    padding: 9px 11px;
+    margin: 0 0 10px;
+    font-weight: bold;
+}
+.tp-opts { display: flex; flex-direction: column; gap: 6px; }
+.tp-opt {
+    text-align: left;
+    border: 1px solid #d8cbe8;
+    background: #fff;
+    color: #2c3e50;
+    padding: 9px 11px;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 13px;
+    line-height: 1.35;
+    cursor: pointer;
+}
+.tp-opt:hover { background: #f4f0fb; border-color: #8e44ad; }
+.tp-guessed { color: #7f8c8d; font-size: 12px; margin: 0 0 10px; }
+.tp-verdict { margin: 0 0 8px; font-weight: bold; }
+.tp-verdict.ok   { color: #1e8449; }
+.tp-verdict.miss { color: #b9770e; }
 .tp-tip { color: #7f8c8d; font-size: 12px; margin: 10px 0 0; }
 .tp-btn {
     border: none; background: #27ae60; color: #fff;

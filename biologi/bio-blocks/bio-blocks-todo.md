@@ -117,18 +117,44 @@ sorteret efter effekt pr. arbejdstime, ikke efter hvor de hører til i koden.
 ### De tre der betyder mest
 
 - [x] **Giv appen en start.** — gjort, se nedenfor.
-- [ ] **Gæt → gør → forklar i opgavemode.** Opgaverne tester i dag handling,
-      ikke forståelse: `goal` fortæller præcis hvad man skal gøre ("træk den
-      enes C1 hen til den andens C4"), og `check()` godkender resultatet. Det
-      kan følges bogstaveligt uden at forstå noget. Tilføj et
-      forudsigelsesspørgsmål med 2–3 svarmuligheder *før* handlingen ("hvor
-      mange vandmolekyler bliver der dannet?"). Motoren er der allerede — det
-      er ét nyt felt i opgaveobjektet (`predict: { q, options, correct }`) og
-      lidt i `tasks.js`.
+- [x] **Gæt → gør → forklar i opgavemode.** — gjort, se nedenfor.
 - [ ] **Marker de frie bindingspladser på blokkene.** Eleven skal i dag vide
       at C1 er højre hjørne og C4 venstre. Kun C6 har en synlig knop
       (`drawArms` i `render.js`). Giv donorplads og modtagerplads hver sin
       markør, og lad dem lyse op mens man trækker.
+
+### Gæt → gør → forklar — gjort
+
+Før testede opgaverne handling, ikke forståelse: `goal` fortalte præcis hvad
+man skulle gøre ("træk den enes C1 hen til den andens C4"), og `check()`
+godkendte resultatet. Det kunne følges bogstaveligt uden at forstå noget.
+
+Nu spørger opgaven først. Alle 19 opgaver i de tre moduler har fået et
+`predict: { q, options[], correct }` med 2–3 svarmuligheder, og rækkefølgen
+er værnet i motoren:
+
+1. **Gæt.** Panelet viser spørgsmålet alene. `goal` står der ikke — kan man
+   se hvad man skal gøre, er det ikke længere et gæt.
+2. **Gør.** Efter svaret kommer målet frem med "Dit gæt: …" under. Gættet
+   bliver ikke bedømt her; det er handlingen der retter, ikke panelet.
+3. **Forklar.** Når bordet siger god for opgaven, kommer facit ("✘ Du gættede
+   X — det rigtige er Y") lige over `why`. Fejlgættet står altså side om side
+   med forklaringen på hvorfor det var forkert.
+
+- `js/tasks.js` holder gættene i `progress[modId].guess` sammen med resten af
+  fremgangen — pr. modul, ligesom `done`. `guessPanel()` er trin 1,
+  `guessVerdict()` er trin 3.
+- `taskTick()` tjekker ikke bordet, før der er gættet (`guessed()`). Uden den
+  spærre kunne en opgave blive løst — og forklaringen givet — mens
+  spørgsmålet stadig stod og ventede, fx hvis man havde bygget molekylet
+  inden. Til gengæld kaldes `taskTick()` i samme øjeblik svaret er givet, så
+  et bord der allerede ser rigtigt ud, godkendes med det samme.
+- Opsamlingen tæller nu gættene: "Du gættede rigtigt i 3 ud af 8 af de
+  spørgsmål du svarede på". Kun de spørgsmål der blev svaret på, tælles med —
+  ellers ville tallet straffe den, der løste en opgave uden at have set
+  spørgsmålet.
+- Feltet er valgfrit og dokumenteret i `modules/index.js`: en opgave uden
+  `predict` opfører sig præcis som før.
 
 ### Startkortet — gjort
 
