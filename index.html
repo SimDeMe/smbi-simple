@@ -1,141 +1,526 @@
 <!doctype html>
 <html lang="da">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>smbi.dk – Interaktive fag</title>
-  <link rel="stylesheet" href="style.css" />
-  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>smbi.dk — interaktive simuleringer til biologi og naturgeografi</title>
+<meta name="description" content="Interaktive simuleringer, forsøgsvejledninger, opgaver og værktøjer til biologi og naturgeografi på gymnasieniveau. Alt kører i browseren uden login.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,300..600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="forside.css">
 </head>
 <body>
 
-  <nav class="site-nav">
-    <div class="nav-inner">
-      <a href="index.html" class="nav-brand">smbi.dk</a>
-      <div class="nav-links">
-        <a href="index.html" class="nav-link active"><i class="ph ph-house"></i> Forside</a>
-        <a href="biologi.html" class="nav-link"><i class="ph ph-dna"></i> Biologi</a>
-        <a href="geografi.html" class="nav-link"><i class="ph ph-globe-hemisphere-west"></i> Geografi</a>
-        <a href="born.html" class="nav-link"><i class="ph ph-star"></i> Børn</a>
-        <a href="contact.html" class="nav-link"><i class="ph ph-envelope"></i> Kontakt</a>
-        <a href="admin.html" class="nav-link"><i class="ph ph-lock-key"></i> Admin</a>
+<header class="top">
+  <div class="rainbow"></div>
+  <div class="top-bar">
+    <div class="top-in">
+      <a href="index.html" class="brand"><span class="brand-mark"></span>smbi<em>.dk</em></a>
+      <nav class="top-nav">
+        <a href="index.html" class="is-on">Forside</a>
+        <a href="#simuleringer">Simuleringer</a>
+        <a href="#vejledninger">Vejledninger</a>
+        <a href="#opgaver">Opgaver &amp; spil</a>
+        <a href="#vaerktoj">Værktøjer</a>
+        <a href="contact.html">Kontakt</a>
+      </nav>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="hero-in">
+    <div>
+      <span class="eyebrow mono"><span class="blink"></span>Naturgeografi &amp; biologi · gymnasiet</span>
+      <h1>Skru på det,<br>og se <span class="hi hi-2" style="--hc:#9BE0F5">hvad</span> <span class="hi" style="--hc:#FFC9DD">der sker</span></h1>
+      <p class="lead">Interaktive simuleringer til biologi og naturgeografi. Kør dem på tavlen, eller lad eleverne gå i gang selv.</p>
+      <div class="hero-cta">
+        <a href="#simuleringer" class="btn btn-bio">Se simuleringerne →</a>
+        <a href="#materiale" class="btn btn-geo">Forsøg &amp; opgaver →</a>
+      </div>
+      <div class="stats">
+        <span class="stat s1"><b>10</b> simuleringer</span>
+        <span class="stat s2"><b>2</b> forsøgsvejledninger</span>
+        <span class="stat s3"><b>6</b> opgaver &amp; spil</span>
       </div>
     </div>
-  </nav>
 
-  <header class="page-hero">
-    <div class="page-hero-inner">
-      <div>
-        <div class="page-hero-eyebrow">Naturgeografi &amp; Biologi · smbi.dk</div>
-        <h1 class="page-hero-title">Interaktive <em>simuleringer</em><br>til undervisningen</h1>
-        <p class="page-hero-sub">Udforsk Jordens systemer og biologiens mekanismer med digitale simuleringer designet til gymnasieniveau.</p>
-        <div class="page-hero-actions">
-          <a href="geografi.html" class="btn btn-bronze"><i class="ph ph-globe-hemisphere-west"></i> Geografi</a>
-          <a href="biologi.html" class="btn btn-ghost"><i class="ph ph-dna"></i> Biologi</a>
-        </div>
-      </div>
-      <div class="page-hero-figure" aria-hidden="true">
-        <svg viewBox="0 0 260 260" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#C49A30" style="width:220px;height:220px;opacity:0.22;">
-          <circle cx="130" cy="130" r="118" stroke-width="0.5"/>
-          <path d="M 130,130 Q 130,68 194,68 Q 258,68 258,130 Q 258,224 158,224 Q 14,224 14,98 Q 14,6 122,6" stroke-width="2" stroke-linecap="round"/>
-          <path d="M 130,130 Q 130,96 162,96 Q 194,96 194,130 Q 194,178 150,178 Q 82,178 82,122" stroke-width="1.4" stroke-linecap="round"/>
-          <path d="M 130,130 Q 130,112 145,112 Q 161,112 161,130 Q 161,151 141,151 Q 116,151 116,128" stroke-width="0.9" stroke-linecap="round"/>
-          <circle cx="130" cy="130" r="5" fill="#C49A30"/>
-          <line x1="130" y1="12" x2="130" y2="248" stroke-width="0.3" stroke-dasharray="3,8"/>
-          <line x1="12" y1="130" x2="248" y2="130" stroke-width="0.3" stroke-dasharray="3,8"/>
-          <text x="134" y="22" fill="#C49A30" font-size="9" font-family="'Courier New'" opacity="0.5">φ</text>
-          <text x="15" y="134" fill="#C49A30" font-size="9" font-family="'Courier New'" opacity="0.5">π</text>
-        </svg>
-      </div>
-    </div>
-  </header>
+    <!-- SIGNATUR: heroen er selv en simulering -->
+    <div class="hero-art">
+      <figure class="sticker stick-b"><img src="img/dna-guld.jpg" alt="DNA-spiral"><span>Genetik</span></figure>
+      <figure class="sticker stick-a"><img src="img/petriskaal.jpg" alt="Alger i petriskål"><span>Celler</span></figure>
 
-  <main class="container">
-
-    <p class="section-label">Fagområder</p>
-
-    <div class="sim-grid">
-      <a class="sim-card" href="biologi.html" style="border-top-color: var(--forest-light);">
-        <div class="sim-card-icon-area">
-          <div class="sim-card-icon" style="background: var(--forest);"><i class="ph ph-dna"></i></div>
-          <div>
-            <div class="sim-card-eyebrow" style="color: var(--forest-light);">Fag</div>
-            <div class="sim-card-title">Biologi</div>
+      <div class="rig" id="rig">
+        <div class="rig-bar"></div>
+        <div class="rig-head">
+          <span class="rig-live"><span class="dot"></span><span class="mono">Kører nu</span></span>
+          <div class="rig-tabs" role="tablist" aria-label="Vælg simulering">
+            <button class="rig-tab" role="tab" aria-selected="true" data-mode="enzym">Enzym</button>
+            <button class="rig-tab" role="tab" aria-selected="false" data-mode="geo">Stigningsregn</button>
           </div>
         </div>
-        <div class="sim-card-body">
-          <p class="sim-card-description">Animationer og simuleringer til biologiundervisningen — osmose, enzymer, DNA og hormonregulering.</p>
-          <span class="sim-card-link" style="color: var(--forest-light);">Se materialer <i class="ph ph-arrow-right"></i></span>
-        </div>
-      </a>
 
-      <a class="sim-card" href="geografi.html">
-        <div class="sim-card-icon-area">
-          <div class="sim-card-icon"><i class="ph ph-globe-hemisphere-west"></i></div>
-          <div>
-            <div class="sim-card-eyebrow">Fag</div>
-            <div class="sim-card-title">Geografi</div>
-          </div>
-        </div>
-        <div class="sim-card-body">
-          <p class="sim-card-description">Klimasimuleringer og vejledninger til geografiundervisningen — stigningsregn, tryk og strålingsbalance.</p>
-          <span class="sim-card-link">Se materialer <i class="ph ph-arrow-right"></i></span>
-        </div>
-      </a>
+        <div class="rig-svg-wrap">
+          <svg viewBox="0 0 560 320" role="img" aria-label="Levende diagram: enzymhastighed som funktion af temperatur, eller stigningsregn over et bjerg">
+            <!-- ENZYM -->
+            <g id="fig-enzym">
+              <g id="enzym-grid" stroke="#E2EAE8" stroke-width="1"></g>
+              <path id="enzym-area" fill="var(--pink)" opacity="0.14"></path>
+              <path id="enzym-curve" fill="none" stroke="var(--pink)" stroke-width="3.4" stroke-linecap="round"></path>
+              <line id="enzym-scan" y1="40" y2="290" stroke="var(--ink)" stroke-width="1.6" stroke-dasharray="4 5" opacity="0.45"></line>
+              <circle id="enzym-dot" r="7" fill="var(--amber)" stroke="var(--ink)" stroke-width="2.2"></circle>
+              <circle id="enzym-halo" r="14" fill="none" stroke="var(--pink)" stroke-width="1.6" opacity="0.45"></circle>
+              <g id="enzym-labels"></g>
+              <text class="ax-t" x="62" y="313">Temperatur °C →</text>
+              <text class="ax-t" x="62" y="30">↑ Omsætningshastighed</text>
+            </g>
 
-      <a class="sim-card" href="born.html" style="border-top-color: var(--sepia-mid);">
-        <div class="sim-card-icon-area">
-          <div class="sim-card-icon" style="background: var(--sepia);"><i class="ph ph-game-controller"></i></div>
-          <div>
-            <div class="sim-card-eyebrow" style="color: var(--sepia-mid);">Fag</div>
-            <div class="sim-card-title">Børn</div>
-          </div>
+            <!-- STIGNINGSREGN -->
+            <g id="fig-geo" opacity="0">
+              <rect x="62" y="40" width="462" height="250" fill="#EAF6FC"></rect>
+              <line x1="62" y1="197" x2="524" y2="197" stroke="var(--grape)" stroke-width="1.6" stroke-dasharray="5 5" opacity="0.7"></line>
+              <text class="ax" x="520" y="188" text-anchor="end" fill="#7A4FD6">KONDENSATION VED 800 M</text>
+              <path id="geo-terrain" fill="var(--lime)" fill-opacity="0.35" stroke="var(--ink)" stroke-width="2.4" stroke-linejoin="round"></path>
+              <g id="geo-cloud" fill="#B8C9D4" opacity="0.85" stroke="var(--ink)" stroke-width="1.4">
+                <ellipse cx="196" cy="179" rx="46" ry="18"></ellipse>
+                <ellipse cx="237" cy="167" rx="30" ry="17"></ellipse>
+                <ellipse cx="156" cy="174" rx="25" ry="13"></ellipse>
+              </g>
+              <g id="geo-rain" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" opacity="0.8"></g>
+              <circle id="geo-parcel" r="7.5" fill="var(--coral)" stroke="var(--ink)" stroke-width="2.2"></circle>
+              <circle id="geo-parcel-halo" r="15" fill="none" stroke="var(--coral)" stroke-width="1.6" opacity="0.5"></circle>
+              <text class="ax" x="90" y="252">VINDSIDE</text>
+              <text class="ax" x="505" y="252" text-anchor="end">LÆSIDE</text>
+              <line x1="62" y1="290" x2="524" y2="290" stroke="var(--ink)" stroke-width="2"></line>
+              <text class="ax-t" x="62" y="313">Afstand →</text>
+              <text class="ax-t" x="62" y="30">↑ Højde over havet</text>
+            </g>
+          </svg>
         </div>
-        <div class="sim-card-body">
-          <p class="sim-card-description">Spil og øvelser til de yngre elever.</p>
-          <span class="sim-card-link" style="color: var(--sepia-mid);">Se materialer <i class="ph ph-arrow-right"></i></span>
+
+        <dl class="rig-out">
+          <div><dt id="out1-k">Temperatur</dt><dd id="out1-v">—</dd></div>
+          <div><dt id="out2-k">Hastighed</dt><dd id="out2-v">—</dd></div>
+          <div><dt id="out3-k">Tilstand</dt><dd id="out3-v">—</dd></div>
+        </dl>
+
+        <div class="rig-foot">
+          <span class="mono" id="rig-name">Enzymhastighed &amp; temperatur</span>
+          <a href="biologi/enzymhastighed.html" id="rig-link">Åbn simuleringen →</a>
         </div>
-      </a>
-      <a class="sim-card" href="studiekort/index.html" style="border-top-color: var(--navy-light);">
-        <div class="sim-card-icon-area">
-          <div class="sim-card-icon" style="background: var(--navy);"><i class="ph ph-cards"></i></div>
-          <div>
-            <div class="sim-card-eyebrow" style="color: var(--navy-light);">Værktøj</div>
-            <div class="sim-card-title">Studiekort</div>
-          </div>
-        </div>
-        <div class="sim-card-body">
-          <p class="sim-card-description">Lav dine egne sæt med begreber og definitioner, og træn dem som flashcards, quiz, skriveøvelse eller matchspil.</p>
-          <span class="sim-card-link" style="color: var(--navy-light);">Åbn Studiekort <i class="ph ph-arrow-right"></i></span>
-        </div>
-      </a>
-    </div>
-
-    <p class="section-label">Undervisningssider</p>
-
-    <div class="card-subtle">
-      <ul class="list">
-        <li><a href="https://sites.google.com/view/simonsbiologi/startside?authuser=0" target="_blank" rel="noopener">Biolinks</a></li>
-        <li><a href="https://sites.google.com/view/geolink/startside" target="_blank" rel="noopener">Geolinks</a></li>
-        <li><a href="https://sites.google.com/mail-mg.dk/nf2024-2025/nf-2025-2026" target="_blank" rel="noopener">NF-siden 2025</a></li>
-      </ul>
-    </div>
-
-  </main>
-
-  <footer class="footer">
-    <div class="footer-inner">
-      <div>
-        <div class="footer-brand">smbi.dk</div>
-        <div class="footer-meta">Naturgeografi &amp; Biologi · © <span id="year"></span></div>
-      </div>
-      <div class="footer-badges">
-        <span class="badge badge-cream">Cormorant Garamond</span>
-        <span class="badge badge-cream">Phosphor Icons</span>
       </div>
     </div>
-  </footer>
+  </div>
+</section>
 
-  <script src="site.js"></script>
+<!-- BILLEDBÅND -->
+<section class="band">
+  <div class="band-head">
+    <h2>Hvor skal vi hen i dag?</h2>
+    <p>Spring direkte ned i det, timen handler om.</p>
+  </div>
+  <div class="tiles">
+    <a class="tile" href="#sim-bio" style="--c:var(--lime)">
+      <img src="img/blad.jpg" alt="Nærbillede af blad">
+      <div class="tile-txt"><em>Biologi</em><h3>Celler &amp; enzymer</h3></div>
+    </a>
+    <a class="tile" href="#sim-geo" style="--c:var(--blue)">
+      <img src="img/hav.jpg" alt="Bølger på havet">
+      <div class="tile-txt"><em>Geografi</em><h3>Vand, vejr og klima</h3></div>
+    </a>
+    <a class="tile lys" href="BiologiC/NatureNurture/index.html" style="--c:var(--grape)">
+      <img src="img/dna-blaa.jpg" alt="DNA-spiraler">
+      <div class="tile-txt"><em>Biologi</em><h3>Gener &amp; arvelighed</h3></div>
+    </a>
+    <a class="tile" href="#vejledninger" style="--c:var(--teal)">
+      <img src="img/kyst.jpg" alt="Kystlinje set fra luften">
+      <div class="tile-txt"><em>Geografi</em><h3>Forsøg i felten</h3></div>
+    </a>
+  </div>
+</section>
+
+<main>
+
+<!-- FAGOMRÅDER -->
+<section class="sec wrap" id="fag">
+  <div class="sec-head">
+    <h2>Fagområder</h2>
+    <span class="tag t1">To fag · 17 materialer</span>
+    <span class="rule"></span>
+  </div>
+
+  <div class="fields">
+    <article class="field">
+      <div class="field-pic">
+        <img src="img/petriskaal.jpg" alt="Algekolonier i petriskål">
+        <span class="count mono">7 materialer</span>
+        <h3>Biologi</h3>
+      </div>
+      <div class="field-body">
+        <p>Celle, enzym, makromolekyler og hormonel regulering — bygget til at blive skruet på undervejs.</p>
+        <div class="breakdown">
+          <span class="bd" style="--bdc:var(--pink)"><b>5</b> simuleringer</span>
+          <span class="bd" style="--bdc:var(--grape)"><b>1</b> forløb</span>
+          <span class="bd" style="--bdc:var(--amber)"><b>1</b> spil</span>
+        </div>
+        <div class="field-links">
+          <a href="biologi.html" class="field-more">Åbn biologisiden →</a>
+          <a href="#sim-bio" class="field-more ghost">Simuleringerne</a>
+        </div>
+      </div>
+    </article>
+
+    <article class="field geo">
+      <div class="field-pic">
+        <img src="img/kyst.jpg" alt="Kyst med regnskov set fra luften">
+        <span class="count mono">10 materialer</span>
+        <h3>Geografi</h3>
+      </div>
+      <div class="field-body">
+        <p>Klima, tryk og vand — simuleringer, forsøgsvejledninger og opgaver med facit.</p>
+        <div class="breakdown">
+          <span class="bd" style="--bdc:var(--blue)"><b>5</b> simuleringer</span>
+          <span class="bd" style="--bdc:var(--lime)"><b>2</b> vejledninger</span>
+          <span class="bd" style="--bdc:var(--grape)"><b>3</b> opgaver</span>
+        </div>
+        <div class="field-links">
+          <a href="geografi.html" class="field-more">Åbn geografisiden →</a>
+          <a href="#sim-geo" class="field-more ghost">Simuleringerne</a>
+        </div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<!-- SIMULERINGER — hovedsektionen -->
+<section class="sec wrap" id="simuleringer">
+  <div class="sec-head">
+    <h2>Simuleringer</h2>
+    <span class="tag t1">Kernen · 10 stk</span>
+    <span class="rule"></span>
+  </div>
+  <p class="lede">Det er dem, siden handler om. Alle kører i browseren uden login — sæt dem på tavlen, eller giv eleverne linket.</p>
+
+  <div class="filters">
+    <button class="chip c-alle" aria-pressed="true" data-f="alle">Begge fag</button>
+    <button class="chip c-bio" aria-pressed="false" data-f="bio">Biologi</button>
+    <button class="chip c-geo" aria-pressed="false" data-f="geo">Geografi</button>
+  </div>
+
+  <div class="grp" id="sim-bio" data-grp="bio" style="--c:var(--pink);--t:#FFEDF3">
+    <span class="grp-mark"></span><h3>Biologi</h3>
+    <span class="n">5 simuleringer</span><span class="rule"></span>
+  </div>
+  <div class="sims" data-grp="bio">
+
+    <article class="sim">
+      <div class="sim-fig"><svg viewBox="0 0 120 64" aria-hidden="true">
+        <circle cx="60" cy="32" r="21"/><circle cx="60" cy="32" r="11" stroke-dasharray="4 5"/>
+        <path d="M12 32h20m-7-6 7 6-7 6"/><path d="M108 32H88m7-6-7 6 7 6"/>
+      </svg></div>
+      <div class="sim-body">
+        <h4><a href="biologi/osmose.html">Osmose</a></h4>
+        <p>Skru på koncentrationen, og se cellen svulme eller skrumpe.</p>
+        <div class="sim-meta"><span class="kind">Celle</span><span class="lvl lvl-C">C</span></div>
+      </div>
+    </article>
+
+    <article class="sim">
+      <div class="sim-fig"><svg viewBox="0 0 120 64" aria-hidden="true">
+        <rect x="13" y="20" width="25" height="25" rx="7"/>
+        <rect x="47" y="20" width="25" height="25" rx="7"/>
+        <rect x="81" y="20" width="25" height="25" rx="7"/>
+        <path d="M38 32.5h9M72 32.5h9"/>
+      </svg></div>
+      <div class="sim-body">
+        <h4><a href="biologi/bio-blocks.html">Bio-Blocks</a></h4>
+        <p>Byg kulhydrater, proteiner og fedt af de rigtige byggesten.</p>
+        <div class="sim-meta"><span class="kind">Makromolekyler</span><span class="lvl lvl-C">C</span></div>
+      </div>
+    </article>
+
+    <article class="sim">
+      <div class="sim-fig"><svg viewBox="0 0 120 64" aria-hidden="true">
+        <path d="M12 55h96" opacity=".3"/>
+        <path d="M14 53C34 53 40 12 60 12s26 41 46 41"/>
+        <circle cx="60" cy="12" r="4.5" fill="currentColor" stroke="none"/>
+      </svg></div>
+      <div class="sim-body">
+        <h4><a href="biologi/enzymhastighed.html">Enzymhastighed &amp; temperatur</a></h4>
+        <p>Find optimum — og se enzymet denaturere, når det bliver for varmt.</p>
+        <div class="sim-meta"><span class="kind">Enzym</span><span class="lvl lvl-C">C</span></div>
+      </div>
+    </article>
+
+    <article class="sim">
+      <div class="sim-fig"><svg viewBox="0 0 120 64" aria-hidden="true">
+        <circle cx="20" cy="20" r="7"/><circle cx="36" cy="20" r="7"/><circle cx="52" cy="20" r="7"/>
+        <path d="M27 20h2M43 20h2"/>
+        <path d="M62 27 74 39" stroke-dasharray="4 4"/>
+        <circle cx="84" cy="45" r="7"/><circle cx="104" cy="45" r="7"/>
+      </svg></div>
+      <div class="sim-body">
+        <h4><a href="bio-glass/index.html">Amylase &amp; stivelse</a></h4>
+        <p>Følg nedbrydningen over tid, og aflæs jodprøven undervejs.</p>
+        <div class="sim-meta"><span class="kind">Enzym</span><span class="lvl lvl-B">B</span></div>
+      </div>
+    </article>
+
+    <article class="sim">
+      <div class="sim-fig"><svg viewBox="0 0 120 64" aria-hidden="true">
+        <path d="M10 44C24 44 26 14 40 14s16 30 30 30 26-30 40-30"/>
+        <path d="M10 20C24 20 26 50 40 50s16-30 30-30 26 30 40 30" opacity=".45"/>
+      </svg></div>
+      <div class="sim-body">
+        <h4><a href="biologi/KvindensCyklus/FinalSim.html">Kvindens hormonelle regulering</a></h4>
+        <p>Fire hormoner over 28 dage — flyt ægløsningen, og se kurverne følge med.</p>
+        <div class="sim-meta"><span class="kind">Hormon · cyklus</span></div>
+      </div>
+    </article>
+
+  </div>
+
+  <div class="grp" id="sim-geo" data-grp="geo" style="--c:var(--blue);--t:#E7F4FB">
+    <span class="grp-mark"></span><h3>Geografi</h3>
+    <span class="n">5 simuleringer</span><span class="rule"></span>
+  </div>
+  <div class="sims" data-grp="geo">
+
+    <article class="sim geo">
+      <div class="sim-fig"><svg viewBox="0 0 120 64" aria-hidden="true">
+        <path d="M8 56h104"/><path d="M10 15h100" stroke-dasharray="6 6"/>
+        <path d="M28 20v29m0 0-6-7m6 7 6-7"/>
+        <path d="M64 50V21m0 0-6 7m6-7 6 7"/>
+        <path d="M96 21v28m0 0-6-7m6 7 6-7"/>
+      </svg></div>
+      <div class="sim-body">
+        <h4><a href="geografi/drivhuseffektenSimpel.html">Drivhuseffekten — forenklet</a></h4>
+        <p>Sollys ind, varme ud — og hvad gasserne gør ved regnskabet.</p>
+        <div class="sim-meta"><span class="kind">Klima · NV</span><span class="lvl lvl-C">C</span></div>
+        <div class="sub">
+          <a href="geografi/drivhuseffektenSimpel.html?projektor=1">Til projektor</a>
+        </div>
+      </div>
+    </article>
+
+    <article class="sim geo">
+      <div class="sim-fig"><svg viewBox="0 0 120 64" aria-hidden="true">
+        <path d="M8 56h104"/>
+        <path d="M10 13h100" stroke-dasharray="6 6"/>
+        <path d="M10 31h100" stroke-dasharray="6 6" opacity=".45"/>
+        <path d="M24 18v31m0 0-6-7m6 7 6-7"/>
+        <path d="M54 50V19m0 0-6 7m6-7 6 7"/>
+        <path d="M78 19v30m0 0-6-7m6 7 6-7"/>
+        <path d="M100 50V36m0 0-5 6m5-6 5 6"/>
+      </svg></div>
+      <div class="sim-body">
+        <h4><a href="geografi/drivhuseffekten.html">Drivhuseffekten — udvidet</a></h4>
+        <p>Albedo, tilbagestråling og feedbacks lagt oven på grundmodellen.</p>
+        <div class="sim-meta"><span class="kind">Klima · NV</span><span class="lvl lvl-C">C</span></div>
+        <div class="sub">
+          <a href="geografi/drivhuseffekten.html?mode=teach">Til tavlen</a>
+          <a href="geografi/drivhuseffekten.html?mode=explore">Udforsk selv</a>
+          <a href="geografi/drivhuseffekten.html?mode=quiz">Opgaver</a>
+        </div>
+      </div>
+    </article>
+
+    <article class="sim geo">
+      <div class="sim-fig"><svg viewBox="0 0 120 64" aria-hidden="true">
+        <path d="M8 56h104"/><path d="M16 56 54 13l40 43"/>
+        <ellipse cx="40" cy="33" rx="13" ry="7"/>
+        <path d="M34 42v6M40 42v8M46 42v6"/>
+      </svg></div>
+      <div class="sim-body">
+        <h4><a href="geografi/Stigningsregn.html">Stigningsregn &amp; føhn-effekt</a></h4>
+        <p>Send luftpakken over bjerget, og se præcis hvor regnen falder.</p>
+        <div class="sim-meta"><span class="kind">Klima</span><span class="lvl lvl-C">C</span></div>
+        <div class="sub">
+          <a href="GeoOpgaver/stigningsregn-C-niv.html">Opgave C</a>
+          <a href="GeoOpgaver/stigningsregn-HF-niv.html">Opgave HF</a>
+        </div>
+      </div>
+    </article>
+
+    <article class="sim geo">
+      <div class="sim-fig"><svg viewBox="0 0 120 64" aria-hidden="true">
+        <path d="M8 34h104" stroke-dasharray="6 6"/>
+        <path d="M10 12C36 12 48 46 72 46s26-5 38-5"/>
+        <circle cx="72" cy="46" r="4.5" fill="currentColor" stroke="none"/>
+        <path d="M97 13s-6 8-6 11.5a6 6 0 0 0 12 0C103 21 97 13 97 13z"/>
+      </svg></div>
+      <div class="sim-body">
+        <h4><a href="geografi/Dugpunkt.html">Dugpunkt</a></h4>
+        <p>Køl luften ned til dugpunktet, og se kondensationen sætte i gang.</p>
+        <div class="sim-meta"><span class="kind">Klima</span><span class="lvl lvl-C">C</span></div>
+      </div>
+    </article>
+
+    <article class="sim geo">
+      <div class="sim-fig"><svg viewBox="0 0 120 64" aria-hidden="true">
+        <path d="M8 56h104"/>
+        <ellipse cx="60" cy="30" rx="34" ry="17"/>
+        <path d="M53 9 61 13l-8 4"/><path d="M67 51 59 47l8-4"/>
+        <path d="M22 56v-7M30 56v-9M38 56v-7" opacity=".5"/>
+      </svg></div>
+      <div class="sim-body">
+        <h4><a href="geografi/TermiskTryk3.html">Termiske tryksystemer</a></h4>
+        <p>Land/hav-brise, Sibirien og monsun — hvor blæser vinden hen?</p>
+        <div class="sim-meta"><span class="kind">Tryk · vind</span><span class="lvl lvl-C">C</span></div>
+      </div>
+    </article>
+
+  </div>
+</section>
+
+<!-- ØVRIGT MATERIALE — hver type sin stak -->
+<section class="other" id="materiale">
+  <div class="other-in">
+    <div class="sec-head">
+      <h2>Resten af materialet</h2>
+      <span class="tag t2">Holdt for sig</span>
+      <span class="rule"></span>
+    </div>
+    <p class="lede" style="margin-top:-10px">Vejledninger, opgaver og spil ligger i hver sin stak — så du altid ved, hvad du åbner.</p>
+
+    <div class="other-grid">
+
+      <div class="stack" id="vejledninger" style="--c:var(--lime);--t:#EDF8E4">
+        <div class="stack-head">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6M10 3v6.2L4.8 18a2 2 0 0 0 1.7 3h10.9a2 2 0 0 0 1.7-3L14 9.2V3"/><path d="M7.4 15h9.2"/></svg>
+          <h3>Forsøgsvejledninger</h3><span class="n">2</span>
+        </div>
+        <div class="item">
+          <h4><a href="GeoVejledninger/konvektionskammer/">Konvektionskammer-forsøg</a></h4>
+          <p>Trin for trin med udstyrsliste, sikkerhed og forventet resultat.</p>
+          <div class="item-meta"><span class="fag">Geografi</span></div>
+        </div>
+        <div class="item">
+          <h4><a href="GeoVejledninger/JordUndersøgelse/">Jordundersøgelse — porøsitet &amp; permeabilitet</a></h4>
+          <p>Feltforsøg med jordprøver, målskema og databehandling.</p>
+          <div class="item-meta"><span class="fag">Geografi</span></div>
+        </div>
+      </div>
+
+      <div class="stack paa-moerk" id="opgaver" style="--c:var(--grape);--t:#F0E8FC">
+        <div class="stack-head">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2.5"/><path d="M8 8.5h8M8 12.5h8M8 16.5h5"/></svg>
+          <h3>Opgaver &amp; forløb</h3><span class="n">4</span>
+        </div>
+        <div class="item">
+          <h4><a href="GeoOpgaver/Demografisk_transition_NF.html">Demografisk transition</a></h4>
+          <p>Opgavesæt med grafer — klar til print eller skærm.</p>
+          <div class="item-meta"><span class="fag">Geografi</span><span class="lvl lvl-NF">NF</span></div>
+          <div class="sub"><a href="GeoOpgaver/Demografisk_transition_NF_SVAR.html">Med svar</a></div>
+        </div>
+        <div class="item">
+          <h4><a href="GeoOpgaver/stigningsregn-C-niv.html">Stigningsregn — opgavesæt</a></h4>
+          <p>Regn på luftpakken over bjerget: temperatur, kondensation og nedbør.</p>
+          <div class="item-meta"><span class="fag">Geografi</span><span class="lvl lvl-C">C</span></div>
+          <div class="sub"><a href="GeoOpgaver/stigningsregn-HF-niv.html">HF-udgaven</a></div>
+        </div>
+        <div class="item">
+          <h4><a href="BiologiC/NatureNurture/index.html">Nature vs. Nurture</a></h4>
+          <p>Samlet forløb om arv og miljø med tekster, øvelser og oplæg.</p>
+          <div class="item-meta"><span class="fag">Biologi</span><span class="lvl lvl-C">C</span></div>
+        </div>
+      </div>
+
+      <div class="stack" id="spil" style="--c:var(--amber);--t:#FFE9B0">
+        <div class="stack-head">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4.5"/><path d="M8.5 8.5h.01M15.5 15.5h.01M12 12h.01" stroke-width="3.4"/></svg>
+          <h3>Spil</h3><span class="n">2</span>
+        </div>
+        <div class="item">
+          <h4><a href="https://simdeme.github.io/CellSpil/" target="_blank" rel="noopener">Cellens Evolution</a></h4>
+          <p>Byg en celle op fra bunden — mutationer, udvælgelse og lidt held.</p>
+          <div class="item-meta"><span class="fag">Biologi</span><span class="lvl lvl-C">C</span></div>
+        </div>
+        <div class="item">
+          <h4><a href="ForBørn/Mathsteroids/Mathsteroids.html">Mathsteroids</a></h4>
+          <p>Skyd asteroiderne ned ved at regne den rigtige opgave først.</p>
+          <div class="item-meta"><span class="fag">Børn</span></div>
+          <div class="sub"><a href="born.html">Flere til de yngste</a></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- VÆRKTØJER -->
+<section class="sec wrap" id="vaerktoj">
+  <div class="sec-head">
+    <h2>Værktøjer</h2>
+    <span class="tag t3">Til læreren</span>
+    <span class="rule"></span>
+  </div>
+  <div class="tools">
+    <a class="tool t-pink" href="studiekort/index.html">
+      <span class="tool-ic"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="M8 3h11a2 2 0 0 1 2 2v10"/></svg></span>
+      <span class="mono">Elever</span><h4>Studiekort</h4>
+      <p>Byg sæt med begreber, og træn dem som flashcards, quiz eller matchspil.</p>
+    </a>
+    <a class="tool t-blue" href="censorUr.html">
+      <span class="tool-ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg></span>
+      <span class="mono">Eksamen</span><h4>Censor-ur</h4>
+      <p>Hold tiden ved mundtlig eksamen — forberedelse, prøve og votering.</p>
+    </a>
+    <a class="tool t-lime" href="Arbejdstidskalender_2026-27.html">
+      <span class="tool-ic"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span>
+      <span class="mono">Planlægning</span><h4>Arbejdstid</h4>
+      <p>Kalender med overblik over årets arbejdstid, 2026/27.</p>
+    </a>
+    <a class="tool t-amber" href="tid/index.html">
+      <span class="tool-ic"><svg viewBox="0 0 24 24"><path d="M6 3h12M6 21h12M7 3v4l5 5 5-5V3M7 21v-4l5-5 5 5v4"/></svg></span>
+      <span class="mono">Registrering</span><h4>Tid</h4>
+      <p>Hold styr på timerne — opgaver, historik og rapporter.</p>
+    </a>
+    <a class="tool t-grape" href="navneApp/index.html">
+      <span class="tool-ic"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 19a6 6 0 0 1 12 0"/><circle cx="17.5" cy="9.5" r="2.4"/><path d="M15 19a5 5 0 0 1 6.5-4.3"/></svg></span>
+      <span class="mono">Klassen</span><h4>Navne-app</h4>
+      <p>Træk elever tilfældigt, og fordel dem i grupper.</p>
+    </a>
+    <a class="tool t-teal" href="bio-tree.html">
+      <span class="tool-ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2.4"/><circle cx="5.5" cy="18" r="2.4"/><circle cx="18.5" cy="18" r="2.4"/><path d="M12 7.4v4.4M12 11.8 6.6 16M12 11.8 17.4 16"/></svg></span>
+      <span class="mono">Overblik</span><h4>Begrebsnetværk</h4>
+      <p>Biologi C som netværk — se hvordan emnerne hænger sammen.</p>
+    </a>
+  </div>
+</section>
+
+</main>
+
+<footer class="foot">
+  <div class="foot-in">
+    <div>
+      <div class="brand"><span class="brand-mark"></span>smbi<em style="color:#8FA29E">.dk</em></div>
+      <p class="mono">Simon Messell · naturgeografi &amp; biologi · © <span id="year"></span></p>
+    </div>
+    <div class="foot-cols">
+      <div class="foot-col">
+        <h4>Sider</h4>
+        <div class="foot-links">
+          <a href="biologi.html">Biologi</a>
+          <a href="geografi.html">Geografi</a>
+          <a href="born.html">Børn</a>
+          <a href="contact.html">Kontakt</a>
+        </div>
+      </div>
+      <div class="foot-col">
+        <h4>Undervisningssider</h4>
+        <div class="foot-links">
+          <a href="https://sites.google.com/view/simonsbiologi/startside?authuser=0" target="_blank" rel="noopener">Biolinks</a>
+          <a href="https://sites.google.com/view/geolink/startside" target="_blank" rel="noopener">Geolinks</a>
+          <a href="https://sites.google.com/mail-mg.dk/nf2024-2025/nf-2025-2026" target="_blank" rel="noopener">NF-siden</a>
+          <a href="admin.html">Admin</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="forside.js"></script>
 </body>
 </html>
