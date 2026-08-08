@@ -1,0 +1,1212 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>smbi.dk — mockup: farverigt fagligt design</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,300..600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#FFF9EE;
+  --paper-2:#FFF3DC;
+  --panel:#FFFFFF;
+  --ink:#17211F;
+  --slate:#566B68;
+  --slate-soft:#8A9A97;
+
+  /* farvepalet */
+  --pink:#E8336D;
+  --blue:#0E86C8;
+  --lime:#5FB030;
+  --amber:#FFB300;
+  --grape:#7A4FD6;
+  --coral:#FF6A3D;
+  --teal:#0FA593;
+
+  --bio:var(--pink);
+  --geo:var(--blue);
+  --warm:var(--amber);
+
+  --display:'Archivo',system-ui,sans-serif;
+  --body:'Source Serif 4',Georgia,serif;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+
+  --wide:'wdth' 118;
+  --max:1180px;
+
+  --hard:4px 4px 0 var(--ink);
+  --hard-lg:7px 7px 0 var(--ink);
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--body);
+  font-size:17px;
+  line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+a{color:inherit}
+img{display:block;max-width:100%}
+:focus-visible{outline:3px solid var(--grape);outline-offset:3px;border-radius:3px}
+
+.wrap{max-width:var(--max);margin:0 auto;padding:0 32px}
+
+.disp{font-family:var(--display);font-variation-settings:var(--wide);font-weight:700;line-height:1.05}
+.mono{
+  font-family:var(--mono);font-size:0.68rem;font-weight:500;
+  letter-spacing:0.14em;text-transform:uppercase;
+}
+
+/* ── Regnbuestribe ─────────────────────────────────────── */
+.rainbow{
+  height:7px;
+  background:linear-gradient(90deg,
+    var(--pink) 0 14.3%, var(--coral) 14.3% 28.6%, var(--amber) 28.6% 42.9%,
+    var(--lime) 42.9% 57.2%, var(--teal) 57.2% 71.5%, var(--blue) 71.5% 85.8%,
+    var(--grape) 85.8% 100%);
+}
+
+/* ── Topbjælke ─────────────────────────────────────────── */
+.top{position:sticky;top:0;z-index:60}
+.top-bar{
+  background:rgba(255,249,238,0.92);
+  backdrop-filter:blur(10px);
+  border-bottom:2px solid var(--ink);
+}
+.top-in{
+  max-width:var(--max);margin:0 auto;padding:0 32px;
+  display:flex;align-items:center;gap:24px;height:62px;
+}
+.brand{
+  font-family:var(--display);font-variation-settings:'wdth' 125;
+  font-weight:800;font-size:1.2rem;letter-spacing:-0.02em;
+  text-decoration:none;display:flex;align-items:center;gap:8px;
+}
+.brand-mark{
+  width:26px;height:26px;border-radius:9px;border:2px solid var(--ink);
+  background:conic-gradient(var(--pink),var(--amber),var(--lime),var(--blue),var(--grape),var(--pink));
+  flex-shrink:0;
+}
+.brand em{font-family:var(--mono);font-size:0.72rem;font-weight:500;font-style:normal;color:var(--slate)}
+.top-nav{display:flex;gap:2px;margin-left:auto;overflow-x:auto}
+.top-nav a{
+  font-family:var(--display);font-size:0.85rem;font-weight:600;
+  text-decoration:none;color:var(--ink);
+  padding:7px 13px;border-radius:20px;white-space:nowrap;
+  border:2px solid transparent;transition:background .15s,border-color .15s,color .15s;
+}
+.top-nav a:nth-child(1):hover,.top-nav a.is-on{background:var(--amber);border-color:var(--ink)}
+.top-nav a:nth-child(2):hover{background:#FBD3E1;border-color:var(--ink)}
+.top-nav a:nth-child(3):hover{background:#C7E6F6;border-color:var(--ink)}
+.top-nav a:nth-child(4):hover{background:#D6EFC4;border-color:var(--ink)}
+.top-nav a:nth-child(5):hover{background:#E2D6F8;border-color:var(--ink)}
+.top-nav a:nth-child(6):hover{background:#FFD9C9;border-color:var(--ink)}
+
+/* ── Hero ──────────────────────────────────────────────── */
+.hero{position:relative;padding:56px 0 52px;overflow:hidden}
+.hero::before,.hero::after{
+  content:'';position:absolute;border-radius:50%;filter:blur(70px);opacity:.55;z-index:0;
+}
+.hero::before{width:520px;height:520px;background:#FFD98A;top:-190px;left:-140px}
+.hero::after{width:460px;height:460px;background:#9BE0F5;top:60px;right:-170px}
+.hero-in{
+  position:relative;z-index:1;
+  max-width:var(--max);margin:0 auto;padding:0 32px;
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.06fr);
+  gap:52px;align-items:center;
+}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--ink);color:#FFF6E0;
+  padding:6px 14px;border-radius:20px;
+}
+.eyebrow .blink{width:8px;height:8px;border-radius:50%;background:var(--lime);animation:pulse 1.8s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.8)}}
+
+.hero h1{
+  font-family:var(--display);font-variation-settings:var(--wide);
+  font-weight:800;
+  font-size:clamp(2.5rem,5vw,4rem);
+  line-height:1.02;letter-spacing:-0.035em;
+  margin:18px 0 18px;
+}
+.hi{position:relative;display:inline-block;z-index:0;white-space:nowrap}
+.hi::before{
+  content:'';position:absolute;z-index:-1;
+  left:-8px;right:-8px;top:12%;bottom:8%;
+  background:var(--hc,var(--amber));
+  border-radius:6px;transform:rotate(-1.4deg);
+}
+.hi-2::before{transform:rotate(1.1deg)}
+.hero p.lead{font-size:1.12rem;color:#3E4E4C;max-width:38ch;margin-bottom:24px}
+
+.hero-cta{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:26px}
+.btn{
+  font-family:var(--display);font-size:0.92rem;font-weight:700;
+  text-decoration:none;padding:12px 22px;border-radius:30px;
+  display:inline-flex;align-items:center;gap:9px;
+  border:2px solid var(--ink);box-shadow:var(--hard);
+  transition:transform .12s,box-shadow .12s;
+}
+.btn:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--ink)}
+.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.btn-bio{background:var(--pink);color:#fff}
+.btn-geo{background:var(--blue);color:#fff}
+
+.stats{display:flex;gap:8px;flex-wrap:wrap}
+.stat{
+  font-family:var(--mono);font-size:0.68rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;
+  border:2px solid var(--ink);border-radius:20px;padding:5px 12px;background:#fff;
+}
+.stat b{font-family:var(--display);font-size:0.86rem;font-weight:800;letter-spacing:0}
+.stat.s1{background:#FFE9B0}.stat.s2{background:#D6EFC4}.stat.s3{background:#C7E6F6}
+
+/* stickers i heroen */
+.hero-art{position:relative}
+.sticker{
+  position:absolute;z-index:1;
+  border:2px solid var(--ink);border-radius:14px;overflow:hidden;
+  box-shadow:var(--hard);background:#fff;
+}
+.sticker img{width:100%;height:100%;object-fit:cover}
+.sticker span{
+  position:absolute;left:0;bottom:0;right:0;
+  font-family:var(--mono);font-size:0.58rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;
+  background:var(--ink);color:#FFF6E0;padding:4px 7px;
+}
+.stick-a{width:124px;height:124px;left:-46px;bottom:-30px;transform:rotate(-7deg)}
+.stick-b{width:138px;height:138px;right:-40px;top:-72px;transform:rotate(8deg)}
+.stick-b span{top:0;bottom:auto}
+
+/* ── Signatur: måle-panelet ────────────────────────────── */
+.rig{
+  --accent:var(--bio);
+  position:relative;z-index:2;
+  background:var(--panel);
+  border:2.5px solid var(--ink);
+  border-radius:18px;
+  overflow:hidden;
+  box-shadow:var(--hard-lg);
+  transform:rotate(-1deg);
+  transition:transform .3s;
+}
+.rig:hover{transform:rotate(0deg)}
+.rig-bar{height:9px;background:var(--accent);transition:background .45s}
+.rig-head{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:11px 14px;border-bottom:2px solid var(--ink);
+  background:color-mix(in srgb,var(--accent) 12%,#fff);
+}
+.rig-live{display:flex;align-items:center;gap:7px}
+.rig-live .mono{color:var(--ink);font-weight:600}
+.dot{
+  width:9px;height:9px;border-radius:50%;background:var(--accent);
+  border:1.5px solid var(--ink);
+  animation:pulse 2s ease-in-out infinite;transition:background .45s;
+}
+.rig-tabs{display:flex;gap:6px;margin-left:auto}
+.rig-tab{
+  font-family:var(--display);font-size:0.74rem;font-weight:700;
+  background:#fff;border:2px solid var(--ink);color:var(--ink);
+  padding:5px 12px;border-radius:20px;cursor:pointer;
+  transition:transform .12s,background .18s,color .18s;
+}
+.rig-tab:hover{transform:translateY(-1px)}
+.rig-tab[aria-selected="true"]{background:var(--accent);color:#fff}
+.rig svg{display:block;width:100%;height:auto}
+.rig-svg-wrap{padding:8px 8px 0;background:
+  radial-gradient(circle at 1px 1px, #E6EDEB 1px, transparent 0) 0 0/16px 16px;}
+.ax{font-family:var(--mono);font-size:9.5px;font-weight:600;letter-spacing:0.08em;fill:#6B7C79}
+.ax-t{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;fill:var(--ink)}
+
+.rig-out{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  border-top:2px solid var(--ink);
+}
+.rig-out div{padding:10px 14px;border-left:2px solid var(--ink)}
+.rig-out div:first-child{border-left:none;background:#FFF7E4}
+.rig-out div:nth-child(2){background:#EDF8E4}
+.rig-out div:nth-child(3){background:#E7F4FB}
+.rig-out dt{font-family:var(--mono);font-size:0.6rem;font-weight:600;letter-spacing:0.13em;text-transform:uppercase;color:#6B7C79;margin-bottom:1px}
+.rig-out dd{
+  font-family:var(--display);font-variation-settings:'wdth' 108;
+  font-weight:800;font-size:1.05rem;font-variant-numeric:tabular-nums;white-space:nowrap;
+}
+
+/* ── Billedbånd ────────────────────────────────────────── */
+.band{
+  background:var(--ink);
+  padding:34px 0 40px;
+  border-top:3px solid var(--ink);border-bottom:3px solid var(--ink);
+}
+.band-head{max-width:var(--max);margin:0 auto 20px;padding:0 32px;display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.band-head h2{font-family:var(--display);font-variation-settings:var(--wide);font-weight:800;font-size:1.5rem;color:#FFF6E0;letter-spacing:-0.02em}
+.band-head p{color:#A9BCB8;font-size:0.98rem}
+.tiles{
+  max-width:var(--max);margin:0 auto;padding:0 32px;
+  display:grid;grid-template-columns:repeat(4,1fr);gap:16px;
+}
+.tile{
+  --c:var(--pink);
+  position:relative;display:block;text-decoration:none;
+  border:2.5px solid #FFF6E0;border-radius:16px;overflow:hidden;
+  aspect-ratio:3/4;
+  transition:transform .22s;
+}
+.tile:nth-child(odd){transform:rotate(-1.4deg)}
+.tile:nth-child(even){transform:rotate(1.4deg)}
+.tile:hover{transform:rotate(0) translateY(-5px)}
+.tile img{width:100%;height:100%;object-fit:cover}
+.tile::after{
+  content:'';position:absolute;inset:0;
+  background:var(--c);mix-blend-mode:color;opacity:.45;
+}
+/* billeder med lys baggrund får et ekstra lag, så farven bider */
+.tile.lys::before{
+  content:'';position:absolute;inset:0;z-index:1;
+  background:var(--c);mix-blend-mode:multiply;opacity:.55;
+}
+.tile-txt{
+  position:absolute;left:0;right:0;bottom:0;z-index:2;
+  padding:34px 13px 12px;
+  background:linear-gradient(transparent,rgba(10,16,15,.88));
+}
+.tile-txt em{
+  font-style:normal;font-family:var(--mono);font-size:0.58rem;font-weight:600;
+  letter-spacing:0.14em;text-transform:uppercase;
+  background:var(--c);color:#fff;padding:2px 7px;border-radius:10px;
+}
+.tile-txt h3{
+  font-family:var(--display);font-variation-settings:'wdth' 112;
+  font-weight:800;font-size:1.05rem;color:#fff;margin-top:8px;line-height:1.15;
+}
+
+/* ── Sektionshoved ─────────────────────────────────────── */
+.sec{padding-top:52px;padding-bottom:16px;scroll-margin-top:80px}
+.sec-head{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:24px}
+.sec-head h2{
+  font-family:var(--display);font-variation-settings:var(--wide);
+  font-weight:800;font-size:1.75rem;letter-spacing:-0.028em;
+}
+.sec-head .tag{
+  font-family:var(--mono);font-size:0.64rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;
+  border:2px solid var(--ink);border-radius:20px;padding:4px 11px;
+}
+.sec-head .tag.t1{background:var(--amber)}
+.sec-head .tag.t2{background:#D6EFC4}
+.sec-head .tag.t3{background:#E2D6F8}
+.sec-head .rule{flex:1;height:3px;background:var(--ink);border-radius:2px;min-width:20px}
+
+/* ── Fagpaneler ────────────────────────────────────────── */
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.field{
+  --c:var(--pink);--tint:#FFEDF3;
+  background:var(--tint);
+  border:2.5px solid var(--ink);border-radius:20px;
+  overflow:hidden;box-shadow:var(--hard);
+  transition:transform .18s,box-shadow .18s;
+}
+.field:hover{transform:translate(-3px,-3px);box-shadow:8px 8px 0 var(--ink)}
+.field.geo{--c:var(--blue);--tint:#E7F4FB}
+.field-pic{position:relative;height:150px;border-bottom:2.5px solid var(--ink)}
+.field-pic img{width:100%;height:100%;object-fit:cover}
+.field-pic::after{content:'';position:absolute;inset:0;background:var(--c);mix-blend-mode:color;opacity:.5}
+.field-pic h3{
+  position:absolute;z-index:2;left:18px;bottom:14px;
+  font-family:var(--display);font-variation-settings:'wdth' 125;
+  font-weight:800;font-size:2rem;letter-spacing:-0.03em;color:#fff;
+  text-shadow:0 2px 12px rgba(0,0,0,.5);
+}
+.field-pic .count{
+  position:absolute;z-index:2;right:14px;top:14px;
+  font-family:var(--mono);font-size:0.62rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;
+  background:#fff;border:2px solid var(--ink);border-radius:20px;padding:4px 11px;
+}
+.field-body{padding:20px 22px 20px}
+.field-body>p{color:#3E4E4C;font-size:0.98rem;margin-bottom:16px}
+/* hvad faget rummer — opdelt på type, ikke som én lang liste */
+.breakdown{display:flex;gap:9px;flex-wrap:wrap}
+.bd{
+  display:inline-flex;align-items:center;gap:8px;
+  background:#fff;border:2px solid var(--ink);border-radius:22px;padding:6px 13px;
+  font-family:var(--mono);font-size:0.62rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;
+}
+.bd::before{content:'';width:10px;height:10px;border-radius:3px;background:var(--bdc);border:1.5px solid var(--ink)}
+.bd b{font-family:var(--display);font-size:0.88rem;font-weight:800;letter-spacing:0}
+.field-more{
+  display:inline-flex;align-items:center;gap:8px;margin-top:16px;
+  font-family:var(--display);font-weight:800;font-size:0.9rem;
+  background:var(--c);color:#fff;text-decoration:none;
+  border:2px solid var(--ink);border-radius:24px;padding:9px 18px;
+  box-shadow:3px 3px 0 var(--ink);transition:transform .12s,box-shadow .12s;
+}
+.field-more:hover{transform:translate(-2px,-2px);box-shadow:5px 5px 0 var(--ink)}
+
+/* niveau-chip */
+.lvl{
+  font-family:var(--mono);font-size:0.62rem;font-weight:600;
+  min-width:22px;height:22px;border-radius:7px;border:2px solid var(--ink);
+  display:inline-flex;align-items:center;justify-content:center;
+  flex-shrink:0;padding:0 5px;
+}
+.lvl-C{background:#D6EFC4}
+.lvl-B{background:var(--amber)}
+.lvl-A{background:var(--coral);color:#fff}
+.lvl-NF{background:#E2D6F8}
+
+/* ── Simuleringer (hovedsektionen) ─────────────────────── */
+.lede{font-size:1.04rem;color:#3E4E4C;max-width:58ch;margin:-14px 0 20px}
+
+.grp{display:flex;align-items:center;gap:12px;margin:32px 0 16px;scroll-margin-top:88px}
+.grp-mark{width:16px;height:16px;border-radius:5px;border:2px solid var(--ink);background:var(--c)}
+.grp h3{
+  font-family:var(--display);font-variation-settings:var(--wide);
+  font-weight:800;font-size:1.24rem;letter-spacing:-0.022em;
+}
+.grp .n{
+  font-family:var(--mono);font-size:0.62rem;font-weight:600;letter-spacing:0.13em;text-transform:uppercase;
+  border:2px solid var(--ink);border-radius:20px;padding:3px 11px;background:var(--t);
+}
+.grp .rule{flex:1;height:3px;background:var(--ink);opacity:.14;border-radius:2px;min-width:20px}
+.is-off{display:none!important}
+
+.sims{display:grid;grid-template-columns:repeat(auto-fill,minmax(198px,1fr));gap:18px}
+.sim{
+  --c:var(--pink);--t:#FFEDF3;
+  background:#fff;border:2.5px solid var(--ink);border-radius:18px;overflow:hidden;
+  box-shadow:var(--hard);text-decoration:none;display:flex;flex-direction:column;
+  transition:transform .16s,box-shadow .16s;
+}
+.sim:hover{transform:translate(-3px,-3px);box-shadow:8px 8px 0 var(--ink)}
+.sim.geo{--c:var(--blue);--t:#E7F4FB}
+.sim-fig{
+  background:var(--t);border-bottom:2.5px solid var(--ink);
+  height:106px;padding:12px 16px;color:var(--c);
+}
+.sim-fig svg{
+  width:100%;height:100%;display:block;
+  fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;
+}
+.sim-body{padding:14px 15px 15px;display:flex;flex-direction:column;flex:1}
+.sim h4{
+  font-family:var(--display);font-variation-settings:'wdth' 110;
+  font-weight:800;font-size:1.02rem;line-height:1.2;letter-spacing:-0.015em;
+}
+.sim p{font-size:0.85rem;color:#3E4E4C;line-height:1.45;margin:7px 0 13px}
+.sim-meta{display:flex;align-items:center;gap:8px;margin-top:auto}
+.sim-meta .kind{
+  font-family:var(--mono);font-size:0.57rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;
+  background:var(--c);color:#fff;border:2px solid var(--ink);border-radius:14px;padding:2px 9px;
+}
+.sim-meta .lvl{margin-left:auto}
+
+/* ── Øvrigt materiale: hver type sin stak ──────────────── */
+.other{
+  margin-top:56px;background:var(--paper-2);
+  border-top:3px solid var(--ink);border-bottom:3px solid var(--ink);
+  padding:44px 0 50px;
+}
+.other-in{max-width:var(--max);margin:0 auto;padding:0 32px}
+.other-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:22px;align-items:start}
+.stack{--c:var(--lime);--t:#EDF8E4;scroll-margin-top:84px}
+.stack-head{
+  display:flex;align-items:center;gap:11px;
+  background:var(--c);border:2.5px solid var(--ink);border-radius:16px;
+  padding:11px 15px;box-shadow:3px 3px 0 var(--ink);margin-bottom:16px;
+}
+.stack-head svg{
+  width:23px;height:23px;flex-shrink:0;
+  fill:none;stroke:var(--ink);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;
+}
+.stack-head h3{font-family:var(--display);font-variation-settings:'wdth' 112;font-weight:800;font-size:1.06rem}
+.stack-head .n{
+  margin-left:auto;font-family:var(--mono);font-size:0.62rem;font-weight:700;
+  background:#fff;border:2px solid var(--ink);border-radius:20px;padding:2px 10px;
+}
+.stack.paa-moerk .stack-head h3{color:#fff}
+.stack.paa-moerk .stack-head svg{stroke:#fff}
+.item{
+  display:block;text-decoration:none;background:#fff;
+  border:2.5px solid var(--ink);border-radius:14px;padding:14px 15px;
+  box-shadow:3px 3px 0 var(--ink);transition:transform .14s,box-shadow .14s;
+}
+.item+.item{margin-top:12px}
+.item:hover{transform:translate(-2px,-2px);box-shadow:5px 5px 0 var(--ink)}
+.item h4{font-family:var(--display);font-weight:800;font-size:0.98rem;line-height:1.25}
+.item p{font-size:0.84rem;color:#3E4E4C;line-height:1.45;margin:6px 0 11px}
+.item-meta{display:flex;align-items:center;gap:8px}
+.item-meta .fag{
+  font-family:var(--mono);font-size:0.57rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;
+  border:2px solid var(--ink);border-radius:14px;padding:2px 9px;background:var(--t);
+}
+.item-meta .lvl{margin-left:auto}
+
+/* ── Filterknapper ─────────────────────────────────────── */
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px}
+.chip{
+  --c:var(--ink);
+  font-family:var(--display);font-size:0.82rem;font-weight:700;
+  background:#fff;border:2px solid var(--ink);color:var(--ink);
+  padding:7px 16px;border-radius:24px;cursor:pointer;
+  box-shadow:3px 3px 0 var(--ink);
+  transition:transform .12s,box-shadow .12s,background .16s,color .16s;
+}
+.chip:hover{transform:translate(-2px,-2px);box-shadow:5px 5px 0 var(--ink)}
+.chip[aria-pressed="true"]{background:var(--c);color:#fff;transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.chip.c-alle{--c:var(--ink)}
+.chip.c-bio{--c:var(--pink)}
+.chip.c-geo{--c:var(--blue)}
+.chip.c-vej{--c:var(--lime)}
+.chip.c-opg{--c:var(--grape)}
+
+/* ── Værktøjer ─────────────────────────────────────────── */
+.tools{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:18px}
+.tool{
+  --c:var(--amber);
+  background:#fff;border:2.5px solid var(--ink);border-radius:18px;
+  padding:18px;text-decoration:none;display:block;
+  box-shadow:var(--hard);
+  transition:transform .16s,box-shadow .16s;
+}
+.tool:hover{transform:translate(-3px,-3px) rotate(-1deg);box-shadow:8px 8px 0 var(--ink)}
+.tool-ic{
+  width:46px;height:46px;border-radius:14px;border:2px solid var(--ink);
+  background:var(--c);display:grid;place-items:center;margin-bottom:12px;
+}
+.tool-ic svg{width:24px;height:24px;stroke:var(--ink);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.tool .mono{color:#6B7C79}
+.tool h4{
+  font-family:var(--display);font-variation-settings:'wdth' 112;
+  font-weight:800;font-size:1.1rem;margin:6px 0 5px;overflow-wrap:break-word;
+}
+.tool p{font-size:0.88rem;color:#3E4E4C;line-height:1.5}
+.t-pink{--c:var(--pink)}.t-blue{--c:var(--blue)}.t-lime{--c:var(--lime)}
+.t-amber{--c:var(--amber)}.t-grape{--c:var(--grape)}
+
+/* ── Kabinet (historiske plancher) ─────────────────────── */
+.cab{
+  margin-top:56px;
+  background:#2A2320;
+  border-top:3px solid var(--ink);border-bottom:3px solid var(--ink);
+  padding:40px 0 44px;
+}
+.cab-in{
+  max-width:var(--max);margin:0 auto;padding:0 32px;
+  display:grid;grid-template-columns:1fr 1fr 1.15fr;gap:26px;align-items:center;
+}
+.plate{
+  border:3px solid #E8D9B8;border-radius:10px;overflow:hidden;
+  box-shadow:0 14px 34px rgba(0,0,0,.42);
+  background:#F4E9CE;
+}
+.plate img{width:100%;height:270px;object-fit:cover;object-position:center top}
+.plate:first-child{transform:rotate(-2.2deg)}
+.plate:nth-child(2){transform:rotate(1.8deg)}
+.cab-txt h2{
+  font-family:var(--display);font-variation-settings:var(--wide);
+  font-weight:800;font-size:1.7rem;color:#F6EAD0;letter-spacing:-0.025em;margin-bottom:10px;
+}
+.cab-txt p{color:#CDBB9B;margin-bottom:18px}
+.btn-cab{background:var(--amber);color:var(--ink);border-color:#F6EAD0;box-shadow:4px 4px 0 #F6EAD0}
+.btn-cab:hover{box-shadow:6px 6px 0 #F6EAD0}
+
+/* ── Bund ──────────────────────────────────────────────── */
+.foot{background:var(--ink);color:#FFF6E0;padding:38px 0 44px}
+.foot-in{
+  max-width:var(--max);margin:0 auto;padding:0 32px;
+  display:flex;justify-content:space-between;align-items:flex-end;gap:22px;flex-wrap:wrap;
+}
+.foot .brand{color:#FFF6E0}
+.foot .mono{color:#8FA29E;margin-top:6px}
+.foot-links{display:flex;gap:10px;flex-wrap:wrap}
+.foot-links a{
+  font-family:var(--display);font-size:0.86rem;font-weight:700;text-decoration:none;
+  border:2px solid #FFF6E0;border-radius:20px;padding:6px 14px;
+  transition:background .16s,color .16s;
+}
+.foot-links a:nth-child(1):hover{background:var(--pink);border-color:var(--pink)}
+.foot-links a:nth-child(2):hover{background:var(--blue);border-color:var(--blue)}
+.foot-links a:nth-child(3):hover{background:var(--lime);border-color:var(--lime);color:var(--ink)}
+.foot-links a:nth-child(4):hover{background:var(--amber);border-color:var(--amber);color:var(--ink)}
+
+/* ── Responsivt ────────────────────────────────────────── */
+@media (max-width:980px){
+  .hero-in{grid-template-columns:1fr;gap:44px}
+  .fields{grid-template-columns:1fr}
+  .tiles{grid-template-columns:1fr 1fr}
+  .other-grid{grid-template-columns:1fr}
+  .cab-in{grid-template-columns:1fr 1fr;gap:20px}
+  .cab-txt{grid-column:1/-1}
+  .plate img{height:230px}
+  .stick-a{left:-20px}.stick-b{right:-14px}
+}
+@media (max-width:620px){
+  body{font-size:16px}
+  .wrap,.top-in,.hero-in,.foot-in,.tiles,.band-head,.cab-in,.other-in{padding-left:18px;padding-right:18px}
+  .hero{padding:36px 0 44px}
+  .top-nav a{padding:6px 9px;font-size:0.78rem}
+  .rig{transform:none}
+  .rig-out{grid-template-columns:1fr 1fr}
+  .rig-out div:nth-child(3){grid-column:1/-1;border-left:none;border-top:2px solid var(--ink)}
+  .stick-a,.stick-b{display:none}
+  .tiles{grid-template-columns:1fr 1fr;gap:12px}
+  .sims{grid-template-columns:1fr 1fr;gap:12px}
+  .sim-fig{height:88px}
+  .cab-in{grid-template-columns:1fr}
+  .plate:first-child,.plate:nth-child(2){transform:none}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+  html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="rainbow"></div>
+  <div class="top-bar">
+    <div class="top-in">
+      <a href="#" class="brand"><span class="brand-mark"></span>smbi<em>.dk</em></a>
+      <nav class="top-nav">
+        <a href="#" class="is-on">Forside</a>
+        <a href="#simuleringer">Simuleringer</a>
+        <a href="#vejledninger">Vejledninger</a>
+        <a href="#opgaver">Opgaver &amp; spil</a>
+        <a href="#vaerktoj">Værktøjer</a>
+        <a href="#">Kontakt</a>
+      </nav>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="hero-in">
+    <div>
+      <span class="eyebrow mono"><span class="blink"></span>Naturgeografi &amp; biologi · gymnasiet</span>
+      <h1>Skru på det,<br>og se <span class="hi hi-2" style="--hc:#9BE0F5">hvad</span> <span class="hi" style="--hc:#FFC9DD">der sker</span></h1>
+      <p class="lead">Interaktive simuleringer til biologi og naturgeografi. Kør dem på tavlen, eller lad eleverne gå i gang selv.</p>
+      <div class="hero-cta">
+        <a href="#simuleringer" class="btn btn-bio">Se simuleringerne →</a>
+        <a href="#vejledninger" class="btn btn-geo">Forsøg &amp; opgaver →</a>
+      </div>
+      <div class="stats">
+        <span class="stat s1"><b>10</b> simuleringer</span>
+        <span class="stat s2"><b>2</b> forsøgsvejledninger</span>
+        <span class="stat s3"><b>3</b> opgaver &amp; spil</span>
+      </div>
+    </div>
+
+    <!-- SIGNATUR: heroen er selv en simulering -->
+    <div class="hero-art">
+      <figure class="sticker stick-b"><img src="img/dna-guld.jpg" alt="DNA-spiral"><span>Genetik</span></figure>
+      <figure class="sticker stick-a"><img src="img/petriskaal.jpg" alt="Alger i petriskål"><span>Celler</span></figure>
+
+      <div class="rig" id="rig">
+        <div class="rig-bar"></div>
+        <div class="rig-head">
+          <span class="rig-live"><span class="dot"></span><span class="mono">Kører nu</span></span>
+          <div class="rig-tabs" role="tablist" aria-label="Vælg simulering">
+            <button class="rig-tab" role="tab" aria-selected="true" data-mode="enzym">Enzym</button>
+            <button class="rig-tab" role="tab" aria-selected="false" data-mode="geo">Stigningsregn</button>
+          </div>
+        </div>
+
+        <div class="rig-svg-wrap">
+          <svg viewBox="0 0 560 320" role="img" aria-label="Levende diagram: enzymhastighed som funktion af temperatur, eller stigningsregn over et bjerg">
+            <!-- ENZYM -->
+            <g id="fig-enzym">
+              <g id="enzym-grid" stroke="#E2EAE8" stroke-width="1"></g>
+              <path id="enzym-area" fill="var(--pink)" opacity="0.14"></path>
+              <path id="enzym-curve" fill="none" stroke="var(--pink)" stroke-width="3.4" stroke-linecap="round"></path>
+              <line id="enzym-scan" y1="40" y2="290" stroke="var(--ink)" stroke-width="1.6" stroke-dasharray="4 5" opacity="0.45"></line>
+              <circle id="enzym-dot" r="7" fill="var(--amber)" stroke="var(--ink)" stroke-width="2.2"></circle>
+              <circle id="enzym-halo" r="14" fill="none" stroke="var(--pink)" stroke-width="1.6" opacity="0.45"></circle>
+              <g id="enzym-labels"></g>
+              <text class="ax-t" x="62" y="313">Temperatur °C →</text>
+              <text class="ax-t" x="62" y="30">↑ Omsætningshastighed</text>
+            </g>
+
+            <!-- STIGNINGSREGN -->
+            <g id="fig-geo" opacity="0">
+              <rect x="62" y="40" width="462" height="250" fill="#EAF6FC"></rect>
+              <line x1="62" y1="197" x2="524" y2="197" stroke="var(--grape)" stroke-width="1.6" stroke-dasharray="5 5" opacity="0.7"></line>
+              <text class="ax" x="520" y="188" text-anchor="end" fill="#7A4FD6">KONDENSATION VED 800 M</text>
+              <path id="geo-terrain" fill="var(--lime)" fill-opacity="0.35" stroke="var(--ink)" stroke-width="2.4" stroke-linejoin="round"></path>
+              <g id="geo-cloud" fill="#B8C9D4" opacity="0.85" stroke="var(--ink)" stroke-width="1.4">
+                <ellipse cx="196" cy="179" rx="46" ry="18"></ellipse>
+                <ellipse cx="237" cy="167" rx="30" ry="17"></ellipse>
+                <ellipse cx="156" cy="174" rx="25" ry="13"></ellipse>
+              </g>
+              <g id="geo-rain" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" opacity="0.8"></g>
+              <circle id="geo-parcel" r="7.5" fill="var(--coral)" stroke="var(--ink)" stroke-width="2.2"></circle>
+              <circle id="geo-parcel-halo" r="15" fill="none" stroke="var(--coral)" stroke-width="1.6" opacity="0.5"></circle>
+              <text class="ax" x="90" y="252">VINDSIDE</text>
+              <text class="ax" x="505" y="252" text-anchor="end">LÆSIDE</text>
+              <line x1="62" y1="290" x2="524" y2="290" stroke="var(--ink)" stroke-width="2"></line>
+              <text class="ax-t" x="62" y="313">Afstand →</text>
+              <text class="ax-t" x="62" y="30">↑ Højde over havet</text>
+            </g>
+          </svg>
+        </div>
+
+        <dl class="rig-out">
+          <div><dt id="out1-k">Temperatur</dt><dd id="out1-v">—</dd></div>
+          <div><dt id="out2-k">Hastighed</dt><dd id="out2-v">—</dd></div>
+          <div><dt id="out3-k">Tilstand</dt><dd id="out3-v">—</dd></div>
+        </dl>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BILLEDBÅND -->
+<section class="band">
+  <div class="band-head">
+    <h2>Hvor skal vi hen i dag?</h2>
+    <p>Fire temaer, der går igen på tværs af begge fag.</p>
+  </div>
+  <div class="tiles">
+    <a class="tile" href="#simuleringer" style="--c:var(--lime)">
+      <img src="img/blad.jpg" alt="Nærbillede af blad">
+      <div class="tile-txt"><em>Biologi</em><h3>Fotosyntese &amp; stofskifte</h3></div>
+    </a>
+    <a class="tile" href="#simuleringer" style="--c:var(--blue)">
+      <img src="img/hav.jpg" alt="Bølger på havet">
+      <div class="tile-txt"><em>Geografi</em><h3>Vand, vejr og klima</h3></div>
+    </a>
+    <a class="tile lys" href="#simuleringer" style="--c:var(--grape)">
+      <img src="img/dna-blaa.jpg" alt="DNA-spiraler">
+      <div class="tile-txt"><em>Biologi</em><h3>Gener &amp; arvelighed</h3></div>
+    </a>
+    <a class="tile" href="#simuleringer" style="--c:var(--teal)">
+      <img src="img/kyst.jpg" alt="Kystlinje set fra luften">
+      <div class="tile-txt"><em>Geografi</em><h3>Landskab &amp; økosystem</h3></div>
+    </a>
+  </div>
+</section>
+
+<main>
+
+<!-- FAGOMRÅDER -->
+<section class="sec wrap" id="fag">
+  <div class="sec-head">
+    <h2>Fagområder</h2>
+    <span class="tag t1">To fag · 15 materialer</span>
+    <span class="rule"></span>
+  </div>
+
+  <div class="fields">
+    <article class="field">
+      <div class="field-pic">
+        <img src="img/petriskaal.jpg" alt="Algekolonier i petriskål">
+        <span class="count mono">7 materialer</span>
+        <h3>Biologi</h3>
+      </div>
+      <div class="field-body">
+        <p>Celle, enzym, makromolekyler og hormonel regulering — bygget til at blive skruet på undervejs.</p>
+        <div class="breakdown">
+          <span class="bd" style="--bdc:var(--pink)"><b>5</b> simuleringer</span>
+          <span class="bd" style="--bdc:var(--grape)"><b>1</b> forløb</span>
+          <span class="bd" style="--bdc:var(--amber)"><b>1</b> spil</span>
+        </div>
+        <a href="#sim-bio" class="field-more">Se biologi-simuleringerne →</a>
+      </div>
+    </article>
+
+    <article class="field geo">
+      <div class="field-pic">
+        <img src="img/kyst.jpg" alt="Kyst med regnskov set fra luften">
+        <span class="count mono">8 materialer</span>
+        <h3>Geografi</h3>
+      </div>
+      <div class="field-body">
+        <p>Klima, tryk og vand — simuleringer, forsøgsvejledninger og opgaver med facit.</p>
+        <div class="breakdown">
+          <span class="bd" style="--bdc:var(--blue)"><b>5</b> simuleringer</span>
+          <span class="bd" style="--bdc:var(--lime)"><b>2</b> vejledninger</span>
+          <span class="bd" style="--bdc:var(--grape)"><b>1</b> opgave</span>
+        </div>
+        <a href="#sim-geo" class="field-more">Se geografi-simuleringerne →</a>
+      </div>
+    </article>
+  </div>
+</section>
+
+<!-- SIMULERINGER — hovedsektionen -->
+<section class="sec wrap" id="simuleringer">
+  <div class="sec-head">
+    <h2>Simuleringer</h2>
+    <span class="tag t1">Kernen · 10 stk</span>
+    <span class="rule"></span>
+  </div>
+  <p class="lede">Det er dem, siden handler om. Alle kører i browseren uden login — sæt dem på tavlen, eller giv eleverne linket.</p>
+
+  <div class="filters">
+    <button class="chip c-alle" aria-pressed="true" data-f="alle">Begge fag</button>
+    <button class="chip c-bio" aria-pressed="false" data-f="bio">Biologi</button>
+    <button class="chip c-geo" aria-pressed="false" data-f="geo">Geografi</button>
+  </div>
+
+  <div class="grp" id="sim-bio" data-grp="bio" style="--c:var(--pink);--t:#FFEDF3">
+    <span class="grp-mark"></span><h3>Biologi</h3>
+    <span class="n">5 simuleringer</span><span class="rule"></span>
+  </div>
+  <div class="sims" data-grp="bio">
+
+    <a class="sim" href="#">
+      <div class="sim-fig"><svg viewBox="0 0 120 64" aria-hidden="true">
+        <circle cx="60" cy="32" r="21"/><circle cx="60" cy="32" r="11" stroke-dasharray="4 5"/>
+        <path d="M12 32h20m-7-6 7 6-7 6"/><path d="M108 32H88m7-6-7 6 7 6"/>
+      </svg></div>
+      <div class="sim-body">
+        <h4>Osmose</h4>
+        <p>Skru på koncentrationen, og se cellen svulme eller skrumpe.</p>
+        <div class="sim-meta"><span class="kind">Celle</span><span class="lvl lvl-C">C</span></div>
+      </div>
+    </a>
+
+    <a class="sim" href="#">
+      <div class="sim-fig"><svg viewBox="0 0 120 64" aria-hidden="true">
+        <rect x="13" y="20" width="25" height="25" rx="7"/>
+        <rect x="47" y="20" width="25" height="25" rx="7"/>
+        <rect x="81" y="20" width="25" height="25" rx="7"/>
+        <path d="M38 32.5h9M72 32.5h9"/>
+      </svg></div>
+      <div class="sim-body">
+        <h4>Bio-Blocks</h4>
+        <p>Byg kulhydrater, proteiner og fedt af de rigtige byggesten.</p>
+        <div class="sim-meta"><span class="kind">Makromolekyler</span><span class="lvl lvl-C">C</span></div>
+      </div>
+    </a>
+
+    <a class="sim" href="#">
+      <div class="sim-fig"><svg viewBox="0 0 120 64" aria-hidden="true">
+        <path d="M12 55h96" opacity=".3"/>
+        <path d="M14 53C34 53 40 12 60 12s26 41 46 41"/>
+        <circle cx="60" cy="12" r="4.5" fill="currentColor" stroke="none"/>
+      </svg></div>
+      <div class="sim-body">
+        <h4>Enzymhastighed &amp; temperatur</h4>
+        <p>Find optimum — og se enzymet denaturere, når det bliver for varmt.</p>
+        <div class="sim-meta"><span class="kind">Enzym</span><span class="lvl lvl-C">C</span></div>
+      </div>
+    </a>
+
+    <a class="sim" href="#">
+      <div class="sim-fig"><svg viewBox="0 0 120 64" aria-hidden="true">
+        <circle cx="20" cy="20" r="7"/><circle cx="36" cy="20" r="7"/><circle cx="52" cy="20" r="7"/>
+        <path d="M27 20h2M43 20h2"/>
+        <path d="M62 27 74 39" stroke-dasharray="4 4"/>
+        <circle cx="84" cy="45" r="7"/><circle cx="104" cy="45" r="7"/>
+      </svg></div>
+      <div class="sim-body">
+        <h4>Amylase &amp; stivelse</h4>
+        <p>Følg nedbrydningen over tid, og aflæs jodprøven undervejs.</p>
+        <div class="sim-meta"><span class="kind">Enzym</span><span class="lvl lvl-B">B</span></div>
+      </div>
+    </a>
+
+    <a class="sim" href="#">
+      <div class="sim-fig"><svg viewBox="0 0 120 64" aria-hidden="true">
+        <path d="M10 44C24 44 26 14 40 14s16 30 30 30 26-30 40-30"/>
+        <path d="M10 20C24 20 26 50 40 50s16-30 30-30 26 30 40 30" opacity=".45"/>
+      </svg></div>
+      <div class="sim-body">
+        <h4>Kvindens hormonelle regulering</h4>
+        <p>Fire hormoner over 28 dage — flyt ægløsningen, og se kurverne følge med.</p>
+        <div class="sim-meta"><span class="kind">Hormon · cyklus</span><span class="lvl lvl-B">B</span></div>
+      </div>
+    </a>
+
+  </div>
+
+  <div class="grp" id="sim-geo" data-grp="geo" style="--c:var(--blue);--t:#E7F4FB">
+    <span class="grp-mark"></span><h3>Geografi</h3>
+    <span class="n">5 simuleringer</span><span class="rule"></span>
+  </div>
+  <div class="sims" data-grp="geo">
+
+    <a class="sim geo" href="#">
+      <div class="sim-fig"><svg viewBox="0 0 120 64" aria-hidden="true">
+        <path d="M8 56h104"/><path d="M10 15h100" stroke-dasharray="6 6"/>
+        <path d="M28 20v29m0 0-6-7m6 7 6-7"/>
+        <path d="M64 50V21m0 0-6 7m6-7 6 7"/>
+        <path d="M96 21v28m0 0-6-7m6 7 6-7"/>
+      </svg></div>
+      <div class="sim-body">
+        <h4>Drivhuseffekten — forenklet</h4>
+        <p>Sollys ind, varme ud — og hvad gasserne gør ved regnskabet.</p>
+        <div class="sim-meta"><span class="kind">Klima · NV</span><span class="lvl lvl-C">C</span></div>
+      </div>
+    </a>
+
+    <a class="sim geo" href="#">
+      <div class="sim-fig"><svg viewBox="0 0 120 64" aria-hidden="true">
+        <path d="M8 56h104"/>
+        <path d="M10 13h100" stroke-dasharray="6 6"/>
+        <path d="M10 31h100" stroke-dasharray="6 6" opacity=".45"/>
+        <path d="M24 18v31m0 0-6-7m6 7 6-7"/>
+        <path d="M54 50V19m0 0-6 7m6-7 6 7"/>
+        <path d="M78 19v30m0 0-6-7m6 7 6-7"/>
+        <path d="M100 50V36m0 0-5 6m5-6 5 6"/>
+      </svg></div>
+      <div class="sim-body">
+        <h4>Drivhuseffekten — udvidet</h4>
+        <p>Albedo, tilbagestråling og feedbacks lagt oven på grundmodellen.</p>
+        <div class="sim-meta"><span class="kind">Klima · NV</span><span class="lvl lvl-C">C</span></div>
+      </div>
+    </a>
+
+    <a class="sim geo" href="#">
+      <div class="sim-fig"><svg viewBox="0 0 120 64" aria-hidden="true">
+        <path d="M8 56h104"/><path d="M16 56 54 13l40 43"/>
+        <ellipse cx="40" cy="33" rx="13" ry="7"/>
+        <path d="M34 42v6M40 42v8M46 42v6"/>
+      </svg></div>
+      <div class="sim-body">
+        <h4>Stigningsregn &amp; føhn-effekt</h4>
+        <p>Send luftpakken over bjerget, og se præcis hvor regnen falder.</p>
+        <div class="sim-meta"><span class="kind">Klima</span><span class="lvl lvl-C">C</span></div>
+      </div>
+    </a>
+
+    <a class="sim geo" href="#">
+      <div class="sim-fig"><svg viewBox="0 0 120 64" aria-hidden="true">
+        <path d="M8 34h104" stroke-dasharray="6 6"/>
+        <path d="M10 12C36 12 48 46 72 46s26-5 38-5"/>
+        <circle cx="72" cy="46" r="4.5" fill="currentColor" stroke="none"/>
+        <path d="M97 13s-6 8-6 11.5a6 6 0 0 0 12 0C103 21 97 13 97 13z"/>
+      </svg></div>
+      <div class="sim-body">
+        <h4>Dugpunkt</h4>
+        <p>Køl luften ned til dugpunktet, og se kondensationen sætte i gang.</p>
+        <div class="sim-meta"><span class="kind">Klima</span><span class="lvl lvl-C">C</span></div>
+      </div>
+    </a>
+
+    <a class="sim geo" href="#">
+      <div class="sim-fig"><svg viewBox="0 0 120 64" aria-hidden="true">
+        <path d="M8 56h104"/>
+        <ellipse cx="60" cy="30" rx="34" ry="17"/>
+        <path d="M53 9 61 13l-8 4"/><path d="M67 51 59 47l8-4"/>
+        <path d="M22 56v-7M30 56v-9M38 56v-7" opacity=".5"/>
+      </svg></div>
+      <div class="sim-body">
+        <h4>Termiske tryksystemer</h4>
+        <p>Varm og kold overflade side om side — hvor blæser vinden hen?</p>
+        <div class="sim-meta"><span class="kind">Tryk · vind</span><span class="lvl lvl-C">C</span></div>
+      </div>
+    </a>
+
+  </div>
+</section>
+
+<!-- ØVRIGT MATERIALE — hver type sin stak -->
+<section class="other">
+  <div class="other-in">
+    <div class="sec-head">
+      <h2>Resten af materialet</h2>
+      <span class="tag t2">Holdt for sig</span>
+      <span class="rule"></span>
+    </div>
+    <p class="lede" style="margin-top:-10px">Vejledninger, opgaver og spil ligger i hver sin stak — så du altid ved, hvad du åbner.</p>
+
+    <div class="other-grid">
+
+      <div class="stack" id="vejledninger" style="--c:var(--lime);--t:#EDF8E4">
+        <div class="stack-head">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6M10 3v6.2L4.8 18a2 2 0 0 0 1.7 3h10.9a2 2 0 0 0 1.7-3L14 9.2V3"/><path d="M7.4 15h9.2"/></svg>
+          <h3>Forsøgsvejledninger</h3><span class="n">2</span>
+        </div>
+        <a class="item" href="#">
+          <h4>Konvektionskammer-forsøg</h4>
+          <p>Trin for trin med udstyrsliste, sikkerhed og forventet resultat.</p>
+          <div class="item-meta"><span class="fag">Geografi</span><span class="lvl lvl-C">C</span></div>
+        </a>
+        <a class="item" href="#">
+          <h4>Jordundersøgelse — porøsitet &amp; permeabilitet</h4>
+          <p>Feltforsøg med jordprøver, målskema og databehandling.</p>
+          <div class="item-meta"><span class="fag">Geografi</span><span class="lvl lvl-C">C</span></div>
+        </a>
+      </div>
+
+      <div class="stack paa-moerk" id="opgaver" style="--c:var(--grape);--t:#F0E8FC">
+        <div class="stack-head">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2.5"/><path d="M8 8.5h8M8 12.5h8M8 16.5h5"/></svg>
+          <h3>Opgaver &amp; forløb</h3><span class="n">2</span>
+        </div>
+        <a class="item" href="#">
+          <h4>Demografisk transition</h4>
+          <p>Opgavesæt med grafer og facit — klar til print eller skærm.</p>
+          <div class="item-meta"><span class="fag">Geografi</span><span class="lvl lvl-NF">NF</span></div>
+        </a>
+        <a class="item" href="#">
+          <h4>Nature vs. Nurture</h4>
+          <p>Samlet forløb om arv og miljø med tekster, øvelser og oplæg.</p>
+          <div class="item-meta"><span class="fag">Biologi</span><span class="lvl lvl-C">C</span></div>
+        </a>
+      </div>
+
+      <div class="stack" id="spil" style="--c:var(--amber);--t:#FFE9B0">
+        <div class="stack-head">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4.5"/><path d="M8.5 8.5h.01M15.5 15.5h.01M12 12h.01" stroke-width="3.4"/></svg>
+          <h3>Spil</h3><span class="n">1</span>
+        </div>
+        <a class="item" href="#">
+          <h4>Cellens Evolution</h4>
+          <p>Byg en celle op fra bunden — mutationer, udvælgelse og lidt held.</p>
+          <div class="item-meta"><span class="fag">Biologi</span><span class="lvl lvl-C">C</span></div>
+        </a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- VÆRKTØJER -->
+<section class="sec wrap" id="vaerktoj">
+  <div class="sec-head">
+    <h2>Værktøjer</h2>
+    <span class="tag t3">Til læreren</span>
+    <span class="rule"></span>
+  </div>
+  <div class="tools">
+    <a class="tool t-pink" href="#">
+      <span class="tool-ic"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="M8 3h11a2 2 0 0 1 2 2v10"/></svg></span>
+      <span class="mono">Elever</span><h4>Studiekort</h4>
+      <p>Byg sæt med begreber, og træn dem som flashcards, quiz eller matchspil.</p>
+    </a>
+    <a class="tool t-blue" href="#">
+      <span class="tool-ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg></span>
+      <span class="mono">Eksamen</span><h4>Censor-ur</h4>
+      <p>Hold tiden ved mundtlig eksamen — forberedelse, prøve og votering.</p>
+    </a>
+    <a class="tool t-lime" href="#">
+      <span class="tool-ic"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span>
+      <span class="mono">Planlægning</span><h4>Arbejdstid</h4>
+      <p>Kalender med overblik over årets arbejdstid, 2026/27.</p>
+    </a>
+    <a class="tool t-amber" href="#">
+      <span class="tool-ic"><svg viewBox="0 0 24 24"><path d="M6 3h12M6 21h12M7 3v4l5 5 5-5V3M7 21v-4l5-5 5 5v4"/></svg></span>
+      <span class="mono">Undervisning</span><h4>Tid</h4>
+      <p>Timer, moduler og pauser på skærmen i klassen.</p>
+    </a>
+    <a class="tool t-grape" href="#">
+      <span class="tool-ic"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 19a6 6 0 0 1 12 0"/><circle cx="17.5" cy="9.5" r="2.4"/><path d="M15 19a5 5 0 0 1 6.5-4.3"/></svg></span>
+      <span class="mono">Klassen</span><h4>Navne-app</h4>
+      <p>Træk elever tilfældigt, og fordel dem i grupper.</p>
+    </a>
+  </div>
+</section>
+
+</main>
+
+<!-- KABINET -->
+<section class="cab">
+  <div class="cab-in">
+    <figure class="plate"><img src="img/natplade-sommerfugle.jpg" alt="Historisk planche med natsværmere og larver"></figure>
+    <figure class="plate"><img src="img/nautilus.jpg" alt="Historisk stik af perlebåd i gennemskåret skal"></figure>
+    <div class="cab-txt">
+      <h2>Kabinettet</h2>
+      <p>Gamle plancher og stik til print, plakater og forsider. Fri af ophavsret — hent dem i fuld opløsning.</p>
+      <a href="#" class="btn btn-cab">Åbn kabinettet →</a>
+    </div>
+  </div>
+</section>
+
+<footer class="foot">
+  <div class="foot-in">
+    <div>
+      <div class="brand"><span class="brand-mark"></span>smbi<em style="color:#8FA29E">.dk</em></div>
+      <p class="mono">Simon Messell · naturgeografi &amp; biologi · © 2026</p>
+    </div>
+    <div class="foot-links">
+      <a href="#">Biolinks</a><a href="#">Geolinks</a><a href="#">NF-siden</a><a href="#">Kontakt</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const rig = document.getElementById('rig');
+  const figE = document.getElementById('fig-enzym');
+  const figG = document.getElementById('fig-geo');
+  const out = {
+    k1:document.getElementById('out1-k'), v1:document.getElementById('out1-v'),
+    k2:document.getElementById('out2-k'), v2:document.getElementById('out2-v'),
+    k3:document.getElementById('out3-k'), v3:document.getElementById('out3-v')
+  };
+  const NS='http://www.w3.org/2000/svg';
+  const num = n => n.toFixed(1).replace('.',',');
+
+  /* ── Enzym: hastighed(T) ── */
+  const ex = T => 62 + (T/60)*462;
+  const ey = v => 290 - (v/100)*250;
+  const raw = T => (1/(1+Math.exp(-(T-22)/6))) * (1/(1+Math.exp((T-44)/2.2)));
+  let peak = 0;
+  for(let T=0;T<=60;T+=0.25) peak = Math.max(peak, raw(T));
+  const rate = T => 100*raw(T)/peak;
+
+  (function drawEnzym(){
+    const grid = document.getElementById('enzym-grid');
+    for(let T=0;T<=60;T+=10){
+      const l=document.createElementNS(NS,'line');
+      l.setAttribute('x1',ex(T));l.setAttribute('x2',ex(T));
+      l.setAttribute('y1',40);l.setAttribute('y2',290);
+      grid.appendChild(l);
+    }
+    for(let v=0;v<=100;v+=25){
+      const l=document.createElementNS(NS,'line');
+      l.setAttribute('y1',ey(v));l.setAttribute('y2',ey(v));
+      l.setAttribute('x1',62);l.setAttribute('x2',524);
+      grid.appendChild(l);
+    }
+    const lab = document.getElementById('enzym-labels');
+    [0,20,40,60].forEach(T=>{
+      const t=document.createElementNS(NS,'text');
+      t.setAttribute('class','ax');t.setAttribute('x',ex(T));t.setAttribute('y',303);
+      t.setAttribute('text-anchor','middle');t.textContent=T;
+      lab.appendChild(t);
+    });
+    [0,50,100].forEach(v=>{
+      const t=document.createElementNS(NS,'text');
+      t.setAttribute('class','ax');t.setAttribute('x',56);t.setAttribute('y',ey(v)+3);
+      t.setAttribute('text-anchor','end');t.textContent=v;
+      lab.appendChild(t);
+    });
+    let d='', a='M '+ex(0)+' 290';
+    for(let T=0;T<=60;T+=0.5){
+      const p = ex(T).toFixed(1)+' '+ey(rate(T)).toFixed(1);
+      d += (T===0?'M ':'L ') + p + ' ';
+      a += ' L ' + p;
+    }
+    a += ' L '+ex(60)+' 290 Z';
+    document.getElementById('enzym-curve').setAttribute('d',d);
+    document.getElementById('enzym-area').setAttribute('d',a);
+  })();
+
+  const eScan=document.getElementById('enzym-scan'),
+        eDot=document.getElementById('enzym-dot'),
+        eHalo=document.getElementById('enzym-halo');
+
+  function setEnzym(T){
+    const v = rate(T), x = ex(T), y = ey(v);
+    eScan.setAttribute('x1',x); eScan.setAttribute('x2',x);
+    eDot.setAttribute('cx',x); eDot.setAttribute('cy',y);
+    eHalo.setAttribute('cx',x); eHalo.setAttribute('cy',y);
+    out.k1.textContent='Temperatur'; out.v1.textContent=num(T)+' °C';
+    out.k2.textContent='Hastighed';  out.v2.textContent=Math.round(v)+' %';
+    out.k3.textContent='Enzymet';
+    out.v3.textContent = T<16 ? 'Træg' : T<32 ? 'Varmer op' : T<43 ? 'Optimum' : 'Denaturerer';
+  }
+
+  /* ── Stigningsregn ── */
+  const GY0=290, GSC=210/1800;
+  const gy = h => GY0 - h*GSC;
+  const PEAK=1650, SIG=66, CX=300, LCL=800;
+  const terrain = x => PEAK*Math.exp(-Math.pow(x-CX,2)/(2*SIG*SIG));
+  const RAIN_TOP=199;
+
+  (function drawTerrain(){
+    let d='M 62 290';
+    for(let x=62;x<=524;x+=3) d+=' L '+x+' '+gy(terrain(x)).toFixed(1);
+    d+=' L 524 290 Z';
+    document.getElementById('geo-terrain').setAttribute('d',d);
+    const rain=document.getElementById('geo-rain');
+    for(let i=0;i<12;i++){
+      const l=document.createElementNS(NS,'line');
+      l.dataset.x = 148 + i*6.4;
+      l.dataset.p = Math.random();
+      rain.appendChild(l);
+    }
+  })();
+
+  const gParcel=document.getElementById('geo-parcel'),
+        gHalo=document.getElementById('geo-parcel-halo'),
+        rainLines=[...document.getElementById('geo-rain').children];
+
+  const SUMMIT_T = 12-(PEAK-LCL)/200;
+  function airTemp(x){
+    const h=terrain(x);
+    if(x<=CX) return h<=LCL ? 20-h/100 : 12-(h-LCL)/200;
+    return SUMMIT_T + (PEAK-h)/100;
+  }
+  function setGeo(x, tick){
+    const h=terrain(x), y=gy(h);
+    gParcel.setAttribute('cx',x); gParcel.setAttribute('cy',y);
+    gHalo.setAttribute('cx',x); gHalo.setAttribute('cy',y);
+    const T=airTemp(x);
+    out.k1.textContent='Højde';      out.v1.textContent=Math.round(h/10)*10+' m';
+    out.k2.textContent='Temperatur'; out.v2.textContent=num(T)+' °C';
+    out.k3.textContent='Luftpakken';
+    out.v3.textContent = x>CX ? (h<250?'Varm og tør':'Synker') : h<LCL ? 'Stiger' : 'Giver nedbør';
+    rainLines.forEach(l=>{
+      const lx=+l.dataset.x, ground=gy(terrain(lx));
+      const span=Math.max(ground-RAIN_TOP,4);
+      const p=((tick*0.45 + l.dataset.p*span) % span);
+      l.setAttribute('x1',lx); l.setAttribute('x2',lx-1.5);
+      l.setAttribute('y1',RAIN_TOP+p);
+      l.setAttribute('y2',Math.min(RAIN_TOP+p+7, ground));
+    });
+  }
+
+  /* ── Tilstand & skift ── */
+  let mode='enzym', phase=0, gx=62, tick=0, userPicked=false;
+  const tabs=[...document.querySelectorAll('.rig-tab')];
+
+  function apply(m){
+    mode=m;
+    rig.style.setProperty('--accent', m==='enzym'?'var(--bio)':'var(--geo)');
+    figE.style.transition='opacity .45s'; figG.style.transition='opacity .45s';
+    figE.style.opacity = m==='enzym'?1:0;
+    figG.style.opacity = m==='geo'?1:0;
+    tabs.forEach(t=>t.setAttribute('aria-selected', String(t.dataset.mode===m)));
+    if(m==='geo') gx=62; else phase=Math.PI*1.5;
+    if(reduce){ m==='enzym' ? setEnzym(37) : setGeo(300,0); }
+  }
+  tabs.forEach(t=>t.addEventListener('click',()=>{userPicked=true;apply(t.dataset.mode);}));
+
+  if(reduce){
+    setEnzym(37);
+    setGeo(300,0);
+  }else{
+    phase=Math.PI*1.5;
+    let last=performance.now(), swap=0;
+    (function loop(now){
+      const dt=Math.min((now-last)/1000,0.05); last=now; tick+=dt*60;
+      if(mode==='enzym'){
+        phase += dt*0.55;
+        setEnzym(30 + 28*Math.sin(phase));
+      }else{
+        gx += dt*42;
+        if(gx>524) gx=62;
+        setGeo(gx, tick);
+      }
+      if(!userPicked){
+        swap+=dt;
+        if(swap>15){ swap=0; apply(mode==='enzym'?'geo':'enzym'); }
+      }
+      requestAnimationFrame(loop);
+    })(last);
+  }
+
+  /* ── Fagfilter på simuleringerne ── */
+  const chips=[...document.querySelectorAll('.chip')];
+  const blocks=[...document.querySelectorAll('[data-grp]')];
+  chips.forEach(c=>c.addEventListener('click',()=>{
+    chips.forEach(o=>o.setAttribute('aria-pressed',String(o===c)));
+    const f=c.dataset.f;
+    blocks.forEach(b=>b.classList.toggle('is-off', f!=='alle' && b.dataset.grp!==f));
+  }));
+})();
+</script>
+</body>
+</html>

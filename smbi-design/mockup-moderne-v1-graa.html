@@ -1,0 +1,713 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>smbi.dk — mockup: moderne fagligt design</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..800&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,300..600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F3F5F4;
+  --panel:#FFFFFF;
+  --rule:#DBE2E0;
+  --rule-soft:#E8EDEB;
+  --ink:#101D1C;
+  --slate:#5C6B69;
+  --slate-soft:#8B9895;
+  --bio:#A62B62;
+  --geo:#0E6A9E;
+  --warm:#B4670F;
+
+  --display:'Archivo',system-ui,sans-serif;
+  --body:'Source Serif 4',Georgia,serif;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+
+  --wide:'wdth' 118;
+  --max:1160px;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--body);
+  font-size:17px;
+  line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--geo);outline-offset:3px;border-radius:2px}
+
+.wrap{max-width:var(--max);margin:0 auto;padding:0 32px}
+
+.disp{
+  font-family:var(--display);
+  font-variation-settings:var(--wide);
+  font-weight:600;
+  letter-spacing:-0.015em;
+  line-height:1.05;
+}
+.mono{
+  font-family:var(--mono);
+  font-size:0.68rem;
+  letter-spacing:0.14em;
+  text-transform:uppercase;
+  color:var(--slate-soft);
+}
+
+/* ── Topbjælke ─────────────────────────────────────────── */
+.top{
+  position:sticky;top:0;z-index:50;
+  background:rgba(243,245,244,0.88);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--rule);
+}
+.top-in{
+  max-width:var(--max);margin:0 auto;padding:0 32px;
+  display:flex;align-items:center;gap:28px;height:60px;
+}
+.brand{
+  font-family:var(--display);
+  font-variation-settings:'wdth' 125;
+  font-weight:700;font-size:1.15rem;letter-spacing:-0.02em;
+  text-decoration:none;display:flex;align-items:baseline;gap:2px;
+}
+.brand span{font-family:var(--mono);font-size:0.7rem;font-weight:400;color:var(--slate-soft);letter-spacing:0}
+.top-nav{display:flex;gap:4px;margin-left:auto;overflow-x:auto}
+.top-nav a{
+  font-family:var(--display);font-size:0.83rem;font-weight:500;
+  text-decoration:none;color:var(--slate);
+  padding:7px 12px;border-radius:6px;white-space:nowrap;
+  transition:background .15s,color .15s;
+}
+.top-nav a:hover{background:#E7ECEA;color:var(--ink)}
+.top-nav a.is-on{color:var(--ink);background:#E2E8E6}
+
+/* ── Hero ──────────────────────────────────────────────── */
+.hero{padding:64px 0 44px}
+.hero-in{
+  max-width:var(--max);margin:0 auto;padding:0 32px;
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);
+  gap:56px;align-items:center;
+}
+.hero h1{
+  font-family:var(--display);
+  font-variation-settings:var(--wide);
+  font-weight:700;
+  font-size:clamp(2.4rem,4.6vw,3.7rem);
+  line-height:1.03;letter-spacing:-0.03em;
+  margin:14px 0 18px;
+}
+.hero h1 i{
+  font-style:normal;
+  display:inline-block;
+  border-bottom:4px solid var(--bio);
+  padding-bottom:1px;
+}
+.hero p{font-size:1.1rem;color:var(--slate);max-width:36ch;margin-bottom:26px}
+.hero-cta{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:24px}
+.btn{
+  font-family:var(--display);font-size:0.88rem;font-weight:600;
+  text-decoration:none;padding:11px 20px;border-radius:7px;
+  display:inline-flex;align-items:center;gap:8px;
+  border:1px solid transparent;transition:transform .15s,background .15s,border-color .15s;
+}
+.btn:hover{transform:translateY(-1px)}
+.btn-bio{background:var(--bio);color:#fff}
+.btn-bio:hover{background:#8E2354}
+.btn-geo{background:transparent;color:var(--ink);border-color:var(--rule)}
+.btn-geo:hover{border-color:var(--geo);color:var(--geo)}
+.hero-meta{
+  font-family:var(--mono);font-size:0.7rem;color:var(--slate-soft);
+  letter-spacing:0.06em;border-top:1px solid var(--rule);padding-top:14px;
+}
+
+/* ── Signatur: måle-panelet ────────────────────────────── */
+.rig{
+  --accent:var(--bio);
+  background:var(--panel);
+  border:1px solid var(--rule);
+  border-radius:12px;
+  overflow:hidden;
+  box-shadow:0 1px 2px rgba(16,29,28,.04),0 12px 32px -12px rgba(16,29,28,.14);
+}
+.rig-bar{height:3px;background:var(--accent);transition:background .45s}
+.rig-head{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:13px 16px;border-bottom:1px solid var(--rule-soft);
+}
+.rig-live{display:flex;align-items:center;gap:7px}
+.dot{
+  width:6px;height:6px;border-radius:50%;background:var(--accent);
+  animation:pulse 2.4s ease-in-out infinite;transition:background .45s;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+.rig-tabs{display:flex;gap:4px;margin-left:auto}
+.rig-tab{
+  font-family:var(--mono);font-size:0.66rem;letter-spacing:0.08em;text-transform:uppercase;
+  background:none;border:1px solid var(--rule);color:var(--slate);
+  padding:5px 10px;border-radius:5px;cursor:pointer;
+  transition:all .18s;
+}
+.rig-tab:hover{border-color:var(--slate-soft);color:var(--ink)}
+.rig-tab[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.rig svg{display:block;width:100%;height:auto}
+.rig-svg-wrap{padding:6px 8px 0}
+.ax{font-family:var(--mono);font-size:9px;letter-spacing:0.08em;fill:var(--slate-soft)}
+.ax-t{font-family:var(--mono);font-size:9.5px;letter-spacing:0.1em;text-transform:uppercase;fill:var(--slate)}
+
+.rig-out{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  border-top:1px solid var(--rule-soft);
+}
+.rig-out div{padding:11px 16px;border-left:1px solid var(--rule-soft)}
+.rig-out div:first-child{border-left:none}
+.rig-out dt{font-family:var(--mono);font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--slate-soft);margin-bottom:2px}
+.rig-out dd{
+  font-family:var(--display);font-variation-settings:'wdth' 108;
+  font-weight:600;font-size:1rem;font-variant-numeric:tabular-nums;white-space:nowrap;
+}
+
+/* ── Sektionshoved ─────────────────────────────────────── */
+.sec{padding-top:14px;padding-bottom:56px;scroll-margin-top:76px}
+.hero .mono{letter-spacing:0.1em}
+.sec-head{
+  display:flex;align-items:baseline;gap:16px;
+  border-bottom:1px solid var(--rule);padding-bottom:10px;margin-bottom:26px;
+}
+.sec-head h2{
+  font-family:var(--display);font-variation-settings:var(--wide);
+  font-weight:600;font-size:1.32rem;letter-spacing:-0.015em;
+}
+.sec-head .mono{margin-left:auto}
+
+/* ── Fagpaneler ────────────────────────────────────────── */
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.field{
+  --c:var(--bio);
+  background:var(--panel);border:1px solid var(--rule);border-radius:12px;
+  padding:24px 24px 18px;position:relative;overflow:hidden;
+  transition:border-color .2s,transform .2s;
+}
+.field:hover{border-color:var(--c);transform:translateY(-2px)}
+.field.geo{--c:var(--geo)}
+.field-top{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.field-mark{width:10px;height:10px;border-radius:2px;background:var(--c)}
+.field h3{
+  font-family:var(--display);font-variation-settings:var(--wide);
+  font-weight:700;font-size:1.6rem;letter-spacing:-0.025em;margin:2px 0 8px;
+}
+.field p{color:var(--slate);font-size:0.97rem;margin-bottom:16px}
+.field ul{list-style:none;border-top:1px solid var(--rule-soft)}
+.field li{border-bottom:1px solid var(--rule-soft)}
+.field li a{
+  display:flex;align-items:center;gap:10px;padding:9px 0;
+  text-decoration:none;font-size:0.95rem;transition:padding .18s,color .18s;
+}
+.field li a:hover{padding-left:6px;color:var(--c)}
+.field li a .lvl{margin-left:auto}
+.field-more{
+  display:inline-flex;align-items:center;gap:7px;margin-top:16px;
+  font-family:var(--display);font-weight:600;font-size:0.88rem;
+  color:var(--c);text-decoration:none;
+}
+.field-more:hover{gap:11px}
+
+/* niveau-chip */
+.lvl{
+  font-family:var(--mono);font-size:0.62rem;font-weight:500;
+  width:19px;height:19px;border-radius:4px;
+  display:inline-flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+.lvl-C{background:#E7ECEA;color:var(--slate)}
+.lvl-B{background:#CFD9D6;color:#33413F}
+.lvl-A{background:var(--ink);color:#fff}
+.lvl-NF{background:#E7ECEA;color:var(--slate);width:auto;padding:0 6px}
+
+/* ── Indeks ────────────────────────────────────────────── */
+.filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+.chip{
+  font-family:var(--mono);font-size:0.67rem;letter-spacing:0.1em;text-transform:uppercase;
+  background:none;border:1px solid var(--rule);color:var(--slate);
+  padding:6px 12px;border-radius:20px;cursor:pointer;transition:all .16s;
+}
+.chip:hover{border-color:var(--slate-soft);color:var(--ink)}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+
+.index{margin-top:18px;border-top:1px solid var(--rule)}
+.row{
+  display:grid;grid-template-columns:1fr auto auto;
+  align-items:center;gap:16px;
+  padding:13px 6px;border-bottom:1px solid var(--rule-soft);
+  text-decoration:none;transition:background .16s,padding .16s;
+}
+.row:hover{background:var(--panel);padding-left:12px;padding-right:12px}
+.row.is-off{display:none}
+.row-t{font-size:1rem;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.row-t em{
+  font-style:normal;font-family:var(--mono);font-size:0.62rem;
+  letter-spacing:0.1em;text-transform:uppercase;color:var(--slate-soft);
+}
+.row-k{
+  font-family:var(--mono);font-size:0.64rem;letter-spacing:0.1em;text-transform:uppercase;
+  color:var(--slate);display:flex;align-items:center;gap:7px;
+}
+.row-k::before{content:'';width:7px;height:7px;border-radius:2px;background:var(--rule)}
+.row[data-fag="bio"] .row-k::before{background:var(--bio)}
+.row[data-fag="geo"] .row-k::before{background:var(--geo)}
+.row[data-fag="tool"] .row-k::before{background:var(--warm)}
+
+/* ── Værktøjer ─────────────────────────────────────────── */
+.tools{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:14px}
+.tool{
+  background:var(--panel);border:1px solid var(--rule);border-radius:10px;
+  padding:18px;text-decoration:none;display:block;
+  transition:border-color .18s,transform .18s;
+}
+.tool:hover{border-color:var(--warm);transform:translateY(-2px)}
+.tool h4{
+  font-family:var(--display);font-variation-settings:'wdth' 112;
+  font-weight:600;font-size:1.02rem;margin:8px 0 4px;overflow-wrap:break-word;
+}
+.tool p{font-size:0.87rem;color:var(--slate);line-height:1.5}
+
+/* ── Bund ──────────────────────────────────────────────── */
+.foot{border-top:1px solid var(--rule);margin-top:20px;padding:34px 0 46px}
+.foot-in{
+  max-width:var(--max);margin:0 auto;padding:0 32px;
+  display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;
+}
+.foot-links{display:flex;gap:18px;flex-wrap:wrap}
+.foot-links a{font-size:0.92rem;color:var(--slate);text-decoration:none;border-bottom:1px solid var(--rule)}
+.foot-links a:hover{color:var(--ink);border-bottom-color:var(--ink)}
+
+/* ── Responsivt ────────────────────────────────────────── */
+@media (max-width:940px){
+  .hero-in{grid-template-columns:1fr;gap:36px}
+  .fields{grid-template-columns:1fr}
+}
+@media (max-width:620px){
+  body{font-size:16px}
+  .wrap,.top-in,.hero-in,.foot-in{padding-left:18px;padding-right:18px}
+  .hero{padding:44px 0 40px}
+  .top-nav{gap:0}
+  .top-nav a{padding:7px 8px;font-size:0.78rem}
+  .rig-out{grid-template-columns:1fr 1fr}
+  .rig-out div:nth-child(3){grid-column:1/-1;border-left:none;border-top:1px solid var(--rule-soft)}
+  .row{grid-template-columns:1fr auto}
+  .row-k{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+  html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <a href="#" class="brand">smbi<span>.dk</span></a>
+    <nav class="top-nav">
+      <a href="#" class="is-on">Forside</a>
+      <a href="#fag">Biologi</a>
+      <a href="#fag">Geografi</a>
+      <a href="#indeks">Materialer</a>
+      <a href="#vaerktoj">Værktøjer</a>
+      <a href="#">Kontakt</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="hero-in">
+    <div>
+      <p class="mono">Naturgeografi &amp; biologi · gymnasiet</p>
+      <h1>Skru på det,<br>og se hvad <i>der sker</i></h1>
+      <p>Interaktive simuleringer til biologi og naturgeografi. Kør dem på tavlen, eller lad eleverne gå i gang selv.</p>
+      <div class="hero-cta">
+        <a href="#fag" class="btn btn-bio">Åbn biologi →</a>
+        <a href="#fag" class="btn btn-geo">Åbn geografi →</a>
+      </div>
+      <p class="hero-meta">15 fagmaterialer · 5 værktøjer · niveau C · B · A</p>
+    </div>
+
+    <!-- SIGNATUR: heroen er selv en simulering -->
+    <div class="rig" id="rig">
+      <div class="rig-bar"></div>
+      <div class="rig-head">
+        <span class="rig-live"><span class="dot"></span><span class="mono">Kører nu</span></span>
+        <div class="rig-tabs" role="tablist" aria-label="Vælg simulering">
+          <button class="rig-tab" role="tab" aria-selected="true" data-mode="enzym">Enzym</button>
+          <button class="rig-tab" role="tab" aria-selected="false" data-mode="geo">Stigningsregn</button>
+        </div>
+      </div>
+
+      <div class="rig-svg-wrap">
+        <svg viewBox="0 0 560 320" role="img" aria-label="Levende diagram: enzymhastighed som funktion af temperatur, eller stigningsregn over et bjerg">
+          <defs>
+            <clipPath id="clipPlot"><rect x="62" y="40" width="462" height="250"/></clipPath>
+          </defs>
+
+          <!-- ENZYM -->
+          <g id="fig-enzym">
+            <g id="enzym-grid" stroke="#E8EDEB" stroke-width="1"></g>
+            <path id="enzym-area" fill="var(--bio)" opacity="0.07"></path>
+            <path id="enzym-curve" fill="none" stroke="var(--bio)" stroke-width="2.2" stroke-linecap="round"></path>
+            <line id="enzym-scan" y1="40" y2="290" stroke="var(--bio)" stroke-width="1" stroke-dasharray="3 4" opacity="0.55"></line>
+            <circle id="enzym-dot" r="5.5" fill="var(--bio)"></circle>
+            <circle id="enzym-halo" r="11" fill="none" stroke="var(--bio)" stroke-width="1" opacity="0.35"></circle>
+            <g id="enzym-labels"></g>
+            <text class="ax-t" x="62" y="313">Temperatur °C →</text>
+            <text class="ax-t" x="62" y="30">↑ Omsætningshastighed</text>
+          </g>
+
+          <!-- STIGNINGSREGN -->
+          <g id="fig-geo" opacity="0">
+            <line x1="62" y1="197" x2="524" y2="197" stroke="var(--geo)" stroke-width="1" stroke-dasharray="4 5" opacity="0.5"></line>
+            <text class="ax" x="520" y="188" text-anchor="end">KONDENSATION VED 800 M</text>
+            <path id="geo-terrain" fill="var(--geo)" fill-opacity="0.1" stroke="var(--geo)" stroke-width="1.8" stroke-linejoin="round"></path>
+            <g id="geo-cloud" fill="#8FA6AF" opacity="0.5">
+              <ellipse cx="196" cy="179" rx="46" ry="18"></ellipse>
+              <ellipse cx="237" cy="167" rx="30" ry="17"></ellipse>
+              <ellipse cx="156" cy="174" rx="25" ry="13"></ellipse>
+            </g>
+            <g id="geo-rain" stroke="var(--geo)" stroke-width="1.4" stroke-linecap="round" opacity="0.6"></g>
+            <circle id="geo-parcel" r="6" fill="var(--geo)"></circle>
+            <circle id="geo-parcel-halo" r="12" fill="none" stroke="var(--geo)" stroke-width="1" opacity="0.35"></circle>
+            <text class="ax" x="90" y="252">VINDSIDE</text>
+            <text class="ax" x="505" y="252" text-anchor="end">LÆSIDE</text>
+            <line x1="62" y1="290" x2="524" y2="290" stroke="#DBE2E0" stroke-width="1"></line>
+            <text class="ax-t" x="62" y="313">Afstand →</text>
+            <text class="ax-t" x="62" y="30">↑ Højde over havet</text>
+          </g>
+        </svg>
+      </div>
+
+      <dl class="rig-out">
+        <div><dt id="out1-k">Temperatur</dt><dd id="out1-v">—</dd></div>
+        <div><dt id="out2-k">Hastighed</dt><dd id="out2-v">—</dd></div>
+        <div><dt id="out3-k">Tilstand</dt><dd id="out3-v">—</dd></div>
+      </dl>
+    </div>
+  </div>
+</section>
+
+<main>
+
+<!-- FAGOMRÅDER -->
+<section class="sec wrap" id="fag">
+  <div class="sec-head">
+    <h2>Fagområder</h2>
+    <span class="mono">To fag · 15 materialer</span>
+  </div>
+
+  <div class="fields">
+    <article class="field">
+      <div class="field-top"><span class="field-mark"></span><span class="mono">Fag · 7 materialer</span></div>
+      <h3>Biologi</h3>
+      <p>Celle, enzym, makromolekyler og hormonel regulering — bygget til at blive skruet på undervejs.</p>
+      <ul>
+        <li><a href="#">Osmose <span class="lvl lvl-C">C</span></a></li>
+        <li><a href="#">Bio-Blocks: kulhydrater, proteiner og fedt <span class="lvl lvl-C">C</span></a></li>
+        <li><a href="#">Enzymhastighed &amp; temperatur <span class="lvl lvl-C">C</span></a></li>
+        <li><a href="#">Amylase &amp; stivelse <span class="lvl lvl-B">B</span></a></li>
+        <li><a href="#">Kvindens hormonelle regulering <span class="lvl lvl-B">B</span></a></li>
+      </ul>
+      <a href="#indeks" class="field-more">Se alle i biologi →</a>
+    </article>
+
+    <article class="field geo">
+      <div class="field-top"><span class="field-mark"></span><span class="mono">Fag · 8 materialer</span></div>
+      <h3>Geografi</h3>
+      <p>Klima, tryk og vand — simuleringer, forsøgsvejledninger og opgaver med facit.</p>
+      <ul>
+        <li><a href="#">Drivhuseffekten trin for trin <span class="lvl lvl-C">C</span></a></li>
+        <li><a href="#">Stigningsregn &amp; føhn-effekt <span class="lvl lvl-C">C</span></a></li>
+        <li><a href="#">Dugpunkt — kondensation &amp; skydannelse <span class="lvl lvl-C">C</span></a></li>
+        <li><a href="#">Termiske tryksystemer <span class="lvl lvl-C">C</span></a></li>
+        <li><a href="#">Konvektionskammer-forsøg <span class="lvl lvl-NF">Vejl.</span></a></li>
+      </ul>
+      <a href="#indeks" class="field-more">Se alle i geografi →</a>
+    </article>
+  </div>
+</section>
+
+<!-- INDEKS -->
+<section class="sec wrap" id="indeks">
+  <div class="sec-head">
+    <h2>Alle materialer</h2>
+    <span class="mono">Filtrér</span>
+  </div>
+
+  <div class="filters">
+    <button class="chip" aria-pressed="true" data-f="alle">Alle</button>
+    <button class="chip" aria-pressed="false" data-f="bio">Biologi</button>
+    <button class="chip" aria-pressed="false" data-f="geo">Geografi</button>
+    <button class="chip" aria-pressed="false" data-f="vejledning">Vejledninger</button>
+    <button class="chip" aria-pressed="false" data-f="opgave">Opgaver</button>
+  </div>
+
+  <div class="index">
+    <a class="row" href="#" data-fag="bio" data-type="forlob">
+      <span class="row-t">Nature vs. Nurture <em>genetik</em></span>
+      <span class="row-k">Forløb</span><span class="lvl lvl-C">C</span></a>
+    <a class="row" href="#" data-fag="bio" data-type="sim">
+      <span class="row-t">Osmose <em>celle</em></span>
+      <span class="row-k">Simulering</span><span class="lvl lvl-C">C</span></a>
+    <a class="row" href="#" data-fag="bio" data-type="sim">
+      <span class="row-t">Bio-Blocks: kulhydrater, proteiner og fedt <em>makromolekyler</em></span>
+      <span class="row-k">Simulering</span><span class="lvl lvl-C">C</span></a>
+    <a class="row" href="#" data-fag="bio" data-type="sim">
+      <span class="row-t">Enzymhastighed &amp; temperatur <em>enzym</em></span>
+      <span class="row-k">Simulering</span><span class="lvl lvl-C">C</span></a>
+    <a class="row" href="#" data-fag="bio" data-type="sim">
+      <span class="row-t">Amylase &amp; stivelse <em>enzym</em></span>
+      <span class="row-k">Simulering</span><span class="lvl lvl-B">B</span></a>
+    <a class="row" href="#" data-fag="bio" data-type="sim">
+      <span class="row-t">Kvindens hormonelle regulering <em>hormon · cyklus</em></span>
+      <span class="row-k">Simulering</span><span class="lvl lvl-B">B</span></a>
+    <a class="row" href="#" data-fag="bio" data-type="spil">
+      <span class="row-t">Cellens Evolution <em>spil</em></span>
+      <span class="row-k">Spil</span><span class="lvl lvl-C">C</span></a>
+
+    <a class="row" href="#" data-fag="geo" data-type="sim">
+      <span class="row-t">Drivhuseffekten — forenklet <em>klima · NV</em></span>
+      <span class="row-k">Simulering</span><span class="lvl lvl-C">C</span></a>
+    <a class="row" href="#" data-fag="geo" data-type="sim">
+      <span class="row-t">Drivhuseffekten — udvidet <em>klima · NV</em></span>
+      <span class="row-k">Simulering</span><span class="lvl lvl-C">C</span></a>
+    <a class="row" href="#" data-fag="geo" data-type="sim">
+      <span class="row-t">Stigningsregn &amp; føhn-effekt <em>klima</em></span>
+      <span class="row-k">Simulering</span><span class="lvl lvl-C">C</span></a>
+    <a class="row" href="#" data-fag="geo" data-type="sim">
+      <span class="row-t">Dugpunkt — kondensation &amp; skydannelse <em>klima</em></span>
+      <span class="row-k">Simulering</span><span class="lvl lvl-C">C</span></a>
+    <a class="row" href="#" data-fag="geo" data-type="sim">
+      <span class="row-t">Termiske tryksystemer <em>tryk · vind</em></span>
+      <span class="row-k">Simulering</span><span class="lvl lvl-C">C</span></a>
+    <a class="row" href="#" data-fag="geo" data-type="vejledning">
+      <span class="row-t">Konvektionskammer-forsøg <em>forsøg</em></span>
+      <span class="row-k">Vejledning</span><span class="lvl lvl-C">C</span></a>
+    <a class="row" href="#" data-fag="geo" data-type="vejledning">
+      <span class="row-t">Jordundersøgelse — porøsitet &amp; permeabilitet <em>forsøg</em></span>
+      <span class="row-k">Vejledning</span><span class="lvl lvl-C">C</span></a>
+    <a class="row" href="#" data-fag="geo" data-type="opgave">
+      <span class="row-t">Demografisk transition <em>befolkning</em></span>
+      <span class="row-k">Opgave</span><span class="lvl lvl-NF">NF</span></a>
+  </div>
+</section>
+
+<!-- VÆRKTØJER -->
+<section class="sec wrap" id="vaerktoj">
+  <div class="sec-head">
+    <h2>Værktøjer</h2>
+    <span class="mono">Til læreren</span>
+  </div>
+  <div class="tools">
+    <a class="tool" href="#"><span class="mono">Elever</span><h4>Studiekort</h4><p>Byg sæt med begreber, og træn dem som flashcards, quiz eller matchspil.</p></a>
+    <a class="tool" href="#"><span class="mono">Eksamen</span><h4>Censor-ur</h4><p>Hold tiden ved mundtlig eksamen — forberedelse, prøve og votering.</p></a>
+    <a class="tool" href="#"><span class="mono">Planlægning</span><h4>Arbejdstid</h4><p>Kalender med overblik over årets arbejdstid, 2026/27.</p></a>
+    <a class="tool" href="#"><span class="mono">Undervisning</span><h4>Tid</h4><p>Timer, moduler og pauser på skærmen i klassen.</p></a>
+    <a class="tool" href="#"><span class="mono">Klassen</span><h4>Navne-app</h4><p>Træk elever tilfældigt, og fordel dem i grupper.</p></a>
+  </div>
+</section>
+
+</main>
+
+<footer class="foot">
+  <div class="foot-in">
+    <div>
+      <div class="brand" style="margin-bottom:6px">smbi<span>.dk</span></div>
+      <p class="mono">Simon Messell · naturgeografi &amp; biologi · © 2026</p>
+    </div>
+    <div class="foot-links">
+      <a href="#">Biolinks</a><a href="#">Geolinks</a><a href="#">NF-siden</a><a href="#">Kontakt</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const rig = document.getElementById('rig');
+  const figE = document.getElementById('fig-enzym');
+  const figG = document.getElementById('fig-geo');
+  const out = {
+    k1:document.getElementById('out1-k'), v1:document.getElementById('out1-v'),
+    k2:document.getElementById('out2-k'), v2:document.getElementById('out2-v'),
+    k3:document.getElementById('out3-k'), v3:document.getElementById('out3-v')
+  };
+  const NS='http://www.w3.org/2000/svg';
+  const num = n => n.toFixed(1).replace('.',',');
+
+  /* ── Enzym: hastighed(T) ── */
+  const ex = T => 62 + (T/60)*462;
+  const ey = v => 290 - (v/100)*250;
+  const raw = T => (1/(1+Math.exp(-(T-22)/6))) * (1/(1+Math.exp((T-44)/2.2)));
+  let peak = 0;
+  for(let T=0;T<=60;T+=0.25) peak = Math.max(peak, raw(T));
+  const rate = T => 100*raw(T)/peak;
+
+  (function drawEnzym(){
+    const grid = document.getElementById('enzym-grid');
+    for(let T=0;T<=60;T+=10){
+      const l=document.createElementNS(NS,'line');
+      l.setAttribute('x1',ex(T));l.setAttribute('x2',ex(T));
+      l.setAttribute('y1',40);l.setAttribute('y2',290);
+      grid.appendChild(l);
+    }
+    for(let v=0;v<=100;v+=25){
+      const l=document.createElementNS(NS,'line');
+      l.setAttribute('y1',ey(v));l.setAttribute('y2',ey(v));
+      l.setAttribute('x1',62);l.setAttribute('x2',524);
+      grid.appendChild(l);
+    }
+    const lab = document.getElementById('enzym-labels');
+    [0,20,40,60].forEach(T=>{
+      const t=document.createElementNS(NS,'text');
+      t.setAttribute('class','ax');t.setAttribute('x',ex(T));t.setAttribute('y',303);
+      t.setAttribute('text-anchor','middle');t.textContent=T;
+      lab.appendChild(t);
+    });
+    [0,50,100].forEach(v=>{
+      const t=document.createElementNS(NS,'text');
+      t.setAttribute('class','ax');t.setAttribute('x',56);t.setAttribute('y',ey(v)+3);
+      t.setAttribute('text-anchor','end');t.textContent=v;
+      lab.appendChild(t);
+    });
+    let d='', a='M '+ex(0)+' 290';
+    for(let T=0;T<=60;T+=0.5){
+      const p = ex(T).toFixed(1)+' '+ey(rate(T)).toFixed(1);
+      d += (T===0?'M ':'L ') + p + ' ';
+      a += ' L ' + p;
+    }
+    a += ' L '+ex(60)+' 290 Z';
+    document.getElementById('enzym-curve').setAttribute('d',d);
+    document.getElementById('enzym-area').setAttribute('d',a);
+  })();
+
+  const eScan=document.getElementById('enzym-scan'),
+        eDot=document.getElementById('enzym-dot'),
+        eHalo=document.getElementById('enzym-halo');
+
+  function setEnzym(T){
+    const v = rate(T), x = ex(T), y = ey(v);
+    eScan.setAttribute('x1',x); eScan.setAttribute('x2',x);
+    eDot.setAttribute('cx',x); eDot.setAttribute('cy',y);
+    eHalo.setAttribute('cx',x); eHalo.setAttribute('cy',y);
+    out.k1.textContent='Temperatur'; out.v1.textContent=num(T)+' °C';
+    out.k2.textContent='Hastighed';  out.v2.textContent=Math.round(v)+' %';
+    out.k3.textContent='Enzymet';
+    out.v3.textContent = T<16 ? 'Træg' : T<32 ? 'Varmer op' : T<43 ? 'Optimum' : 'Denaturerer';
+  }
+
+  /* ── Stigningsregn ── */
+  const GY0=290, GSC=210/1800;
+  const gy = h => GY0 - h*GSC;
+  const PEAK=1650, SIG=66, CX=300, LCL=800;
+  const terrain = x => PEAK*Math.exp(-Math.pow(x-CX,2)/(2*SIG*SIG));
+  const RAIN_TOP=199;
+
+  (function drawTerrain(){
+    let d='M 62 290';
+    for(let x=62;x<=524;x+=3) d+=' L '+x+' '+gy(terrain(x)).toFixed(1);
+    d+=' L 524 290 Z';
+    document.getElementById('geo-terrain').setAttribute('d',d);
+    const rain=document.getElementById('geo-rain');
+    for(let i=0;i<12;i++){
+      const l=document.createElementNS(NS,'line');
+      l.dataset.x = 148 + i*6.4;
+      l.dataset.p = Math.random();
+      rain.appendChild(l);
+    }
+  })();
+
+  const gParcel=document.getElementById('geo-parcel'),
+        gHalo=document.getElementById('geo-parcel-halo'),
+        rainLines=[...document.getElementById('geo-rain').children];
+
+  const SUMMIT_T = 12-(PEAK-LCL)/200;
+  function airTemp(x){
+    const h=terrain(x);
+    if(x<=CX) return h<=LCL ? 20-h/100 : 12-(h-LCL)/200;
+    return SUMMIT_T + (PEAK-h)/100;
+  }
+  function setGeo(x, tick){
+    const h=terrain(x), y=gy(h);
+    gParcel.setAttribute('cx',x); gParcel.setAttribute('cy',y);
+    gHalo.setAttribute('cx',x); gHalo.setAttribute('cy',y);
+    const T=airTemp(x);
+    out.k1.textContent='Højde';      out.v1.textContent=Math.round(h/10)*10+' m';
+    out.k2.textContent='Temperatur'; out.v2.textContent=num(T)+' °C';
+    out.k3.textContent='Luftpakken';
+    out.v3.textContent = x>CX ? (h<250?'Varm og tør':'Synker') : h<LCL ? 'Stiger' : 'Giver nedbør';
+    rainLines.forEach(l=>{
+      const lx=+l.dataset.x, ground=gy(terrain(lx));
+      const span=Math.max(ground-RAIN_TOP,4);
+      const p=((tick*0.45 + l.dataset.p*span) % span);
+      l.setAttribute('x1',lx); l.setAttribute('x2',lx-1.5);
+      l.setAttribute('y1',RAIN_TOP+p);
+      l.setAttribute('y2',Math.min(RAIN_TOP+p+7, ground));
+    });
+  }
+
+  /* ── Tilstand & skift ── */
+  let mode='enzym', phase=0, gx=62, tick=0, userPicked=false;
+  const tabs=[...document.querySelectorAll('.rig-tab')];
+
+  function apply(m){
+    mode=m;
+    rig.style.setProperty('--accent', m==='enzym'?'var(--bio)':'var(--geo)');
+    figE.style.transition='opacity .45s'; figG.style.transition='opacity .45s';
+    figE.style.opacity = m==='enzym'?1:0;
+    figG.style.opacity = m==='geo'?1:0;
+    tabs.forEach(t=>t.setAttribute('aria-selected', String(t.dataset.mode===m)));
+    if(m==='geo') gx=62; else phase=Math.PI*1.5;
+    if(reduce){ m==='enzym' ? setEnzym(37) : setGeo(300,0); }
+  }
+  tabs.forEach(t=>t.addEventListener('click',()=>{userPicked=true;apply(t.dataset.mode);}));
+
+  if(reduce){
+    setEnzym(37);
+    setGeo(300,0);
+  }else{
+    phase=Math.PI*1.5;
+    let last=performance.now(), swap=0;
+    (function loop(now){
+      const dt=Math.min((now-last)/1000,0.05); last=now; tick+=dt*60;
+      if(mode==='enzym'){
+        phase += dt*0.55;
+        setEnzym(30 + 28*Math.sin(phase));
+      }else{
+        gx += dt*42;
+        if(gx>524) gx=62;
+        setGeo(gx, tick);
+      }
+      if(!userPicked){
+        swap+=dt;
+        if(swap>15){ swap=0; apply(mode==='enzym'?'geo':'enzym'); }
+      }
+      requestAnimationFrame(loop);
+    })(last);
+  }
+
+  /* ── Filtre ── */
+  const chips=[...document.querySelectorAll('.chip')];
+  const rows=[...document.querySelectorAll('.row')];
+  chips.forEach(c=>c.addEventListener('click',()=>{
+    chips.forEach(o=>o.setAttribute('aria-pressed',String(o===c)));
+    const f=c.dataset.f;
+    rows.forEach(r=>{
+      const on = f==='alle' || r.dataset.fag===f || r.dataset.type===f;
+      r.classList.toggle('is-off',!on);
+    });
+  }));
+})();
+</script>
+</body>
+</html>
