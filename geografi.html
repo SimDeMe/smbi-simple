@@ -1,181 +1,342 @@
 <!doctype html>
 <html lang="da">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Geografi – smbi.dk</title>
-  <link rel="stylesheet" href="style.css" />
-  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Naturgeografi — simuleringer, forsøg og opgaver — smbi.dk</title>
+<meta name="description" content="Interaktive simuleringer om klima, tryk, hav og jord til naturgeografi på gymnasieniveau — med forsøgsvejledninger og opgaver med facit.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,300..600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="forside.css">
+<style>
+  /* sidens ene accentfarve */
+  :root{--accent:var(--geo);--glow:#9BE0F5}
+</style>
 </head>
 <body>
 
-  <nav class="site-nav">
-    <div class="nav-inner">
-      <a href="index.html" class="nav-brand">smbi.dk</a>
-      <div class="nav-links">
-        <a href="index.html" class="nav-link"><i class="ph ph-house"></i> Forside</a>
-        <a href="biologi.html" class="nav-link"><i class="ph ph-dna"></i> Biologi</a>
-        <a href="geografi.html" class="nav-link active"><i class="ph ph-globe-hemisphere-west"></i> Geografi</a>
-        <a href="born.html" class="nav-link"><i class="ph ph-star"></i> Børn</a>
-        <a href="contact.html" class="nav-link"><i class="ph ph-envelope"></i> Kontakt</a>
-        <a href="admin.html" class="nav-link"><i class="ph ph-lock-key"></i> Admin</a>
+<header class="top" id="site-top">
+  <div class="rainbow"></div>
+  <div class="top-bar">
+    <div class="top-in">
+      <a href="index.html" class="brand"><span class="brand-mark"></span>smbi<em>.dk</em></a>
+      <nav class="top-nav">
+        <a href="index.html">Forside</a>
+        <a href="#simuleringer">Simuleringer</a>
+        <a href="#vejledninger">Vejledninger</a>
+        <a href="#opgaver">Opgaver</a>
+        <a href="biologi.html">Biologi</a>
+        <a href="contact.html">Kontakt</a>
+      </nav>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <div class="wrap head">
+    <div class="head-in">
+      <span class="eyebrow mono"><span class="blink"></span>Naturgeografi · gymnasiet</span>
+      <h1>Klima, tryk, hav og <span class="hi" style="--hc:#C7E6F6">jord</span></h1>
+      <p class="lead">Otte simuleringer, to forsøgsvejledninger og fire opgavesæt. Alt kører i browseren uden login — sæt dem på tavlen, eller giv eleverne linket.</p>
+      <div class="stats">
+        <span class="stat s3"><b>8</b> simuleringer</span>
+        <span class="stat s2"><b>2</b> vejledninger</span>
+        <span class="stat s1"><b>4</b> opgavesæt</span>
+      </div>
+
+      <!-- søger på tværs af hele siden, ikke kun simuleringerne -->
+      <div class="soeg">
+        <label class="sr" for="soeg">Søg på siden</label>
+        <input type="search" id="soeg" placeholder="Søg efter emne — fx nedbør, albedo, grundvand…" autocomplete="off">
+        <span class="soeg-tal mono" id="soeg-tal" aria-live="polite"></span>
       </div>
     </div>
-  </nav>
+  </div>
 
-  <header class="page-hero">
-    <div class="page-hero-inner">
-      <div>
-        <div class="page-hero-eyebrow">smbi.dk · Fag</div>
-        <h1 class="page-hero-title"><em>Geografi</em></h1>
-        <p class="page-hero-sub">Klimasimuleringer, vejledninger og opgaver til geografiundervisningen på gymnasieniveau.</p>
-      </div>
-    </div>
-  </header>
-
-  <main class="container">
-
-    <div class="search-container">
-      <input type="text" id="search-input" placeholder="Søg efter emne eller tag…" aria-label="Søg">
+  <!-- SIMULERINGER -->
+  <section class="sec wrap" id="simuleringer">
+    <div class="sec-head">
+      <h2>Simuleringer</h2>
+      <span class="tag t1">8 stk</span>
+      <span class="rule"></span>
     </div>
 
-    <p class="section-label">Animationer &amp; Simulationer</p>
-
-    <div class="card">
-      <div class="card-header">
-        <i class="ph ph-cloud-rain card-header-icon"></i>
-        <span class="card-header-title">Klima</span>
-      </div>
-      <div class="card-body">
-        <ul class="list">
-          <li>
-            <a href="geografi/drivhuseffektenSimpel.html">Drivhuseffekten trin for trin – forenklet</a>
-            <span class="tag">C</span><span class="tag">NV</span><span class="tag">klima</span>
-            <div class="list-indent">
-              ↳ <a href="geografi/drivhuseffektenSimpel.html?projektor=1">Projektorvisning til tavlen</a>
-            </div>
-          </li>
-          <li>
-            <a href="geografi/drivhuseffekten.html">Drivhuseffekten trin for trin – udvidet</a>
-            <span class="tag">C</span><span class="tag">NV</span><span class="tag">klima</span>
-            <div class="list-indent">
-              ↳ <a href="geografi/drivhuseffekten.html?mode=teach">Gennemgang til tavlen</a>
-              ↳ <a href="geografi/drivhuseffekten.html?mode=explore">Udforsk selv</a>
-              ↳ <a href="geografi/drivhuseffekten.html?mode=quiz">Opgaver med facit</a>
-            </div>
-          </li>
-          <li>
-            <a href="geografi/Stigningsregn.html">Stigningsregn &amp; Føhn-effekt</a>
-            <span class="tag">C</span><span class="tag">klima</span>
-            <div class="list-indent">
-              ↳ <a href="GeoOpgaver/stigningsregn-C-niv.html">Opgave (C-niveau)</a>
-              ↳ <a href="GeoOpgaver/stigningsregn-HF-niv.html">Opgave (HF-niveau)</a>
-            </div>
-          </li>
-          <li>
-            <a href="geografi/Dugpunkt.html">Dugpunkt – kondensation &amp; skydannelse</a>
-            <span class="tag">C</span><span class="tag">klima</span>
-          </li>
-          <li>
-            <a href="geografi/TermiskTryk3.html">Termiske tryksystemer – land/hav-brise, Sibirien &amp; monsun</a>
-            <span class="tag">C</span><span class="tag">tryk</span><span class="tag">vind</span>
-          </li>
-        </ul>
-      </div>
+    <div class="grp" id="grp-klima" style="--c:var(--blue);--t:#E7F4FB">
+      <span class="grp-mark"></span><h3>Klima &amp; energibalance</h3>
+      <span class="n">5 simuleringer</span><span class="rule"></span>
     </div>
+    <div class="sims">
 
-    <div class="card">
-      <div class="card-header">
-        <i class="ph ph-mountains card-header-icon"></i>
-        <span class="card-header-title">Jord &amp; grundvand</span>
-      </div>
-      <div class="card-body">
-        <ul class="list">
-          <li>
-            <a href="geografi/poroesitetPermeabilitet.html">Porøsitet &amp; permeabilitet – ler, silt, sand og grus</a>
-            <span class="tag">C</span><span class="tag">sediment</span><span class="tag">grundvand</span>
-            <div class="list-indent">
-              ↳ <a href="GeoVejledninger/JordUndersøgelse/">Øvelsesvejledning til det rigtige forsøg</a>
-            </div>
-          </li>
-        </ul>
-      </div>
-    </div>
-
-    <p class="section-label">Vejledninger</p>
-
-    <div class="card">
-      <div class="card-header">
-        <i class="ph ph-file-text card-header-icon"></i>
-        <span class="card-header-title">Vejledninger</span>
-      </div>
-      <div class="card-body">
-        <ul class="list">
-          <li>
-            <a href="GeoVejledninger/konvektionskammer/">Konvektionskammer-forsøg</a>
-          </li>
-          <li>
-            <a href="GeoVejledninger/JordUndersøgelse/">Jordundersøgelse – Porøsitet &amp; Permeabilitet</a>
-            <div class="list-indent">
-              ↳ <a href="geografi/poroesitetPermeabilitet.html">Simulation af de samme to forsøg</a>
-            </div>
-          </li>
-        </ul>
-      </div>
-    </div>
-
-    <p class="section-label">Opgaver NF</p>
-
-    <div class="card">
-      <div class="card-header">
-        <i class="ph ph-student card-header-icon"></i>
-        <span class="card-header-title">Opgaver NF</span>
-      </div>
-      <div class="card-body">
-        <ul class="list">
-          <li>
-            <a href="GeoOpgaver/Demografisk_transition_NF.html">Demografisk transition</a>
-          </li>
-        </ul>
-      </div>
-    </div>
-
-    <p class="section-label">Videoer</p>
-
-    <div class="card">
-      <div class="card-header">
-        <i class="ph ph-play-circle card-header-icon"></i>
-        <span class="card-header-title">Videoer</span>
-      </div>
-      <div class="card-body">
-        <div class="video-grid">
-          <div class="video-wrapper">
-            <iframe src="https://www.youtube.com/embed/bDnFoNb7jUQ" title="YouTube video 1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+      <article class="sim geo" data-sog="drivhuseffekten forenklet klima nv stråling energibalance trin">
+        <div class="sim-fig"><svg viewBox="0 0 120 64" aria-hidden="true">
+          <path d="M8 56h104"/><path d="M10 15h100" stroke-dasharray="6 6"/>
+          <path d="M28 20v29m0 0-6-7m6 7 6-7"/>
+          <path d="M64 50V21m0 0-6 7m6-7 6 7"/>
+          <path d="M96 21v28m0 0-6-7m6 7 6-7"/>
+        </svg></div>
+        <div class="sim-body">
+          <h4><a href="geografi/drivhuseffektenSimpel.html">Drivhuseffekten — forenklet</a></h4>
+          <p>Sollys ind, varme ud — og hvad gasserne gør ved regnskabet. Seks trin med figur og forklaring side om side.</p>
+          <div class="sim-meta"><span class="kind">Klima · NV</span><span class="lvl lvl-C">C</span></div>
+          <div class="sub">
+            <a href="geografi/drivhuseffektenSimpel.html?projektor=1">Til projektor</a>
           </div>
-          <div class="video-wrapper">
-            <iframe src="https://www.youtube.com/embed/We5z5-lcsbw" title="YouTube video 2" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </div>
+      </article>
+
+      <article class="sim geo" data-sog="drivhuseffekten udvidet albedo tilbagestråling feedback klima nv quiz">
+        <div class="sim-fig"><svg viewBox="0 0 120 64" aria-hidden="true">
+          <path d="M8 56h104"/>
+          <path d="M10 13h100" stroke-dasharray="6 6"/>
+          <path d="M10 31h100" stroke-dasharray="6 6" opacity=".45"/>
+          <path d="M24 18v31m0 0-6-7m6 7 6-7"/>
+          <path d="M54 50V19m0 0-6 7m6-7 6 7"/>
+          <path d="M78 19v30m0 0-6-7m6 7 6-7"/>
+          <path d="M100 50V36m0 0-5 6m5-6 5 6"/>
+        </svg></div>
+        <div class="sim-body">
+          <h4><a href="geografi/drivhuseffekten.html">Drivhuseffekten — udvidet</a></h4>
+          <p>Albedo, tilbagestråling og feedbacks lagt oven på grundmodellen — med tre tilstande til forskellige formål.</p>
+          <div class="sim-meta"><span class="kind">Klima · NV</span><span class="lvl lvl-C">C</span></div>
+          <div class="sub">
+            <a href="geografi/drivhuseffekten.html?mode=teach&amp;projektor=1">Til tavlen</a>
+            <a href="geografi/drivhuseffekten.html?mode=explore">Udforsk selv</a>
+            <a href="geografi/drivhuseffekten.html?mode=quiz">Opgaver</a>
           </div>
-          <div class="video-wrapper">
-            <iframe src="https://www.youtube.com/embed/wVSTvRJyolw" title="YouTube video 3" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </div>
+      </article>
+
+      <article class="sim geo" data-sog="stigningsregn føhn orografisk nedbør adiabatisk luftfugtighed bjerg klima">
+        <div class="sim-fig"><svg viewBox="0 0 120 64" aria-hidden="true">
+          <path d="M8 56h104"/><path d="M16 56 54 13l40 43"/>
+          <ellipse cx="40" cy="33" rx="13" ry="7"/>
+          <path d="M34 42v6M40 42v8M46 42v6"/>
+        </svg></div>
+        <div class="sim-body">
+          <h4><a href="geografi/Stigningsregn.html">Stigningsregn &amp; føhn-effekt</a></h4>
+          <p>Send luftpakken over bjerget, og se præcis hvor regnen falder — og hvorfor læsiden bliver varm og tør.</p>
+          <div class="sim-meta"><span class="kind">Klima</span><span class="lvl lvl-C">C</span></div>
+          <div class="sub">
+            <a href="GeoOpgaver/stigningsregn-C-niv.html">Opgave C</a>
+            <a href="GeoOpgaver/stigningsregn-HF-niv.html">Opgave HF</a>
+            <a href="geografi/Stigningsregn.html?projektor=1">Til projektor</a>
           </div>
-          <div class="video-wrapper">
-            <iframe src="https://www.youtube.com/embed/wWFZTrUmBqY" title="YouTube video 4" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </div>
+      </article>
+
+      <article class="sim geo" data-sog="dugpunkt kondensation skydannelse luftfugtighed mætning klima">
+        <div class="sim-fig"><svg viewBox="0 0 120 64" aria-hidden="true">
+          <path d="M8 34h104" stroke-dasharray="6 6"/>
+          <path d="M10 12C36 12 48 46 72 46s26-5 38-5"/>
+          <circle cx="72" cy="46" r="4.5" fill="currentColor" stroke="none"/>
+          <path d="M97 13s-6 8-6 11.5a6 6 0 0 0 12 0C103 21 97 13 97 13z"/>
+        </svg></div>
+        <div class="sim-body">
+          <h4><a href="geografi/Dugpunkt.html">Dugpunkt</a></h4>
+          <p>Køl luften ned til dugpunktet, og se kondensationen sætte i gang.</p>
+          <div class="sim-meta"><span class="kind">Klima</span><span class="lvl lvl-C">C</span></div>
+        </div>
+      </article>
+
+      <article class="sim geo" data-sog="strålingsbalance albedo drivhusgasser overfladetemperatur energibalance klima">
+        <div class="sim-fig"><svg viewBox="0 0 120 64" aria-hidden="true">
+          <circle cx="22" cy="19" r="8"/>
+          <path d="M22 5v3M22 30v3M8 19h3M33 19h3M12 9l2 2M30 27l2 2M32 9l-2 2M14 27l-2 2"/>
+          <path d="M6 56h108"/>
+          <path d="M56 14v34m0 0-5-6m5 6 5-6"/>
+          <path d="M80 48V16m0 0-5 6m5-6 5 6"/>
+          <path d="M100 48V16m0 0-5 6m5-6 5 6" opacity=".45"/>
+        </svg></div>
+        <div class="sim-body">
+          <h4><a href="geografi/straalingsbalance.html">Strålingsbalance</a></h4>
+          <p>Skru på albedo og drivhusgasser, og se overfladetemperaturen indstille sig på en ny ligevægt.</p>
+          <div class="sim-meta"><span class="kind">Klima · energibalance</span><span class="lvl lvl-C">C</span></div>
+        </div>
+      </article>
+
+    </div>
+
+    <div class="grp" id="grp-tryk" style="--c:var(--teal);--t:#D7F1EC">
+      <span class="grp-mark"></span><h3>Tryk, vind &amp; hav</h3>
+      <span class="n">2 simuleringer</span><span class="rule"></span>
+    </div>
+    <div class="sims">
+
+      <article class="sim geo" data-sog="termiske tryksystemer lavtryk højtryk landbrise havbrise monsun sibirien vind">
+        <div class="sim-fig"><svg viewBox="0 0 120 64" aria-hidden="true">
+          <path d="M8 56h104"/>
+          <ellipse cx="60" cy="30" rx="34" ry="17"/>
+          <path d="M53 9 61 13l-8 4"/><path d="M67 51 59 47l8-4"/>
+          <path d="M22 56v-7M30 56v-9M38 56v-7" opacity=".5"/>
+        </svg></div>
+        <div class="sim-body">
+          <h4><a href="geografi/TermiskTryk3.html">Termiske tryksystemer</a></h4>
+          <p>Land/hav-brise, det sibiriske højtryk og monsunen — hvor blæser vinden hen, og hvorfor?</p>
+          <div class="sim-meta"><span class="kind">Tryk · vind</span><span class="lvl lvl-C">C</span></div>
+          <div class="sub">
+            <a href="GeoVejledninger/konvektionskammer/">Forsøgsvejledning</a>
           </div>
+        </div>
+      </article>
+
+      <article class="sim geo" data-sog="grønlandspumpen termohalin cirkulation golfstrømmen saltholdighed hav densitet">
+        <div class="sim-fig"><svg viewBox="0 0 120 64" aria-hidden="true">
+          <path d="M10 14h62a11 11 0 0 1 0 22H34a10 10 0 0 0 0 20h76"/>
+          <path d="M58 10l5 4-5 4"/>
+          <path d="M96 52l5 4-5 4"/>
+          <path d="M14 22v7M22 22v7M18 20v9" opacity=".55"/>
+        </svg></div>
+        <div class="sim-body">
+          <h4><a href="geografi/groenlandspumpen.html">Grønlandspumpen</a></h4>
+          <p>Temperatur og saltholdighed driver den termohaline cirkulation — eller slår den fra.</p>
+          <div class="sim-meta"><span class="kind">Hav · cirkulation</span><span class="lvl lvl-C">C</span></div>
+        </div>
+      </article>
+
+    </div>
+
+    <div class="grp" id="grp-jord" style="--c:var(--lime);--t:#EDF8E4">
+      <span class="grp-mark"></span><h3>Jord &amp; grundvand</h3>
+      <span class="n">1 simulering</span><span class="rule"></span>
+    </div>
+    <div class="sims">
+
+      <article class="sim geo" data-sog="porøsitet permeabilitet ler silt sand grus grundvand jord nedsivning sediment">
+        <div class="sim-fig"><svg viewBox="0 0 120 64" aria-hidden="true">
+          <rect x="14" y="12" width="40" height="42" rx="4"/>
+          <circle cx="24" cy="24" r="3.4"/><circle cx="36" cy="21" r="4.4"/><circle cx="46" cy="29" r="3"/>
+          <circle cx="28" cy="37" r="4"/><circle cx="41" cy="42" r="3.6"/><circle cx="21" cy="47" r="3"/>
+          <path d="M70 12v34m0 0-5-6m5 6 5-6"/>
+          <path d="M88 54h20M88 44h20M88 34h20" opacity=".55"/>
+        </svg></div>
+        <div class="sim-body">
+          <h4><a href="geografi/poroesitetPermeabilitet.html">Porøsitet &amp; permeabilitet</a></h4>
+          <p>Ler, silt, sand og grus — hvor bliver regnvandet af nede i jorden?</p>
+          <div class="sim-meta"><span class="kind">Jord · grundvand</span><span class="lvl lvl-C">C</span></div>
+          <div class="sub">
+            <a href="GeoVejledninger/JordUndersøgelse/">Forsøgsvejledning</a>
+          </div>
+        </div>
+      </article>
+
+    </div>
+
+    <p class="soeg-tom" id="soeg-tom" hidden>Ingen materialer matcher søgningen.</p>
+  </section>
+
+  <!-- VEJLEDNINGER OG OPGAVER -->
+  <section class="other">
+    <div class="other-in">
+      <div class="sec-head">
+        <h2>Forsøg &amp; opgaver</h2>
+        <span class="tag t2">Til print og felt</span>
+        <span class="rule"></span>
+      </div>
+
+      <div class="other-grid other-2">
+
+        <div class="stack" id="vejledninger" style="--c:var(--lime);--t:#EDF8E4">
+          <div class="stack-head">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6M10 3v6.2L4.8 18a2 2 0 0 0 1.7 3h10.9a2 2 0 0 0 1.7-3L14 9.2V3"/><path d="M7.4 15h9.2"/></svg>
+            <h3>Forsøgsvejledninger</h3><span class="n">2</span>
+          </div>
+          <div class="item" data-sog="konvektionskammer konvektion forsøg vejledning varme">
+            <h4><a href="GeoVejledninger/konvektionskammer/">Konvektionskammer-forsøg</a></h4>
+            <p>Trin for trin med udstyrsliste, sikkerhed og forventet resultat.</p>
+            <div class="item-meta"><span class="fag">Forsøg</span></div>
+            <div class="sub"><a href="geografi/TermiskTryk3.html">Simulationen</a></div>
+          </div>
+          <div class="item" data-sog="jordundersøgelse porøsitet permeabilitet grundvand nedsivning felt jordprøver vejledning hf">
+            <h4><a href="GeoVejledninger/JordUndersøgelse/">Jordundersøgelse — porøsitet &amp; permeabilitet</a></h4>
+            <p>Feltforsøg med jordprøver, målskema og databehandling.</p>
+            <div class="item-meta"><span class="fag">Forsøg</span></div>
+            <div class="sub">
+              <a href="GeoVejledninger/JordUndersøgelse_HF/">HF-udgaven</a>
+              <a href="geografi/poroesitetPermeabilitet.html">Simulationen</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="stack paa-moerk" id="opgaver" style="--c:var(--grape);--t:#F0E8FC">
+          <div class="stack-head">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2.5"/><path d="M8 8.5h8M8 12.5h8M8 16.5h5"/></svg>
+            <h3>Opgavesæt</h3><span class="n">4</span>
+          </div>
+          <div class="item" data-sog="demografisk transition befolkningsudvikling demografi nf">
+            <h4><a href="GeoOpgaver/Demografisk_transition_NF.html">Demografisk transition</a></h4>
+            <p>Opgavesæt med grafer over befolkningsudviklingen — klar til print eller skærm.</p>
+            <div class="item-meta"><span class="fag">Opgave</span><span class="lvl lvl-NF">NF</span></div>
+            <div class="sub"><a href="GeoOpgaver/Demografisk_transition_NF_SVAR.html">Lærerløsning</a></div>
+          </div>
+          <div class="item" data-sog="stigningsregn føhn opgave regneopgave nedbør">
+            <h4><a href="GeoOpgaver/stigningsregn-C-niv.html">Stigningsregn &amp; føhn-effekt</a></h4>
+            <p>Regn på luftpakken over bjerget: temperatur, kondensation og nedbør.</p>
+            <div class="item-meta"><span class="fag">Opgave</span><span class="lvl lvl-C">C</span></div>
+            <div class="sub"><a href="GeoOpgaver/stigningsregn-HF-niv.html">HF-udgaven</a></div>
+          </div>
+          <div class="item" data-sog="vandets kredsløb fordampning nedbør afstrømning">
+            <h4><a href="GeoOpgaver/Vandets kredsløb-c-niv.html">Vandets kredsløb</a></h4>
+            <p>Fordampning, nedbør og afstrømning — sæt tal på kredsløbets poster.</p>
+            <div class="item-meta"><span class="fag">Opgave</span><span class="lvl lvl-C">C</span></div>
+          </div>
+          <div class="item" data-sog="oplande opland vandløb afstrømning topografi">
+            <h4><a href="GeoOpgaver/oplande-C-niv.html">Oplande</a></h4>
+            <p>Aflæs vandskel og oplandsgrænser på et topografisk kort.</p>
+            <div class="item-meta"><span class="fag">Opgave</span><span class="lvl lvl-C">C</span></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- VIDEOER -->
+  <section class="sec wrap" id="videoer">
+    <div class="sec-head">
+      <h2>Videoer</h2>
+      <span class="tag t3">Til klassen</span>
+      <span class="rule"></span>
+    </div>
+    <div class="videos">
+      <div class="video"><iframe src="https://www.youtube.com/embed/bDnFoNb7jUQ" title="Geografi-video 1" loading="lazy" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+      <div class="video"><iframe src="https://www.youtube.com/embed/We5z5-lcsbw" title="Geografi-video 2" loading="lazy" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+      <div class="video"><iframe src="https://www.youtube.com/embed/wVSTvRJyolw" title="Geografi-video 3" loading="lazy" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+      <div class="video"><iframe src="https://www.youtube.com/embed/wWFZTrUmBqY" title="Geografi-video 4" loading="lazy" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="foot">
+  <div class="foot-in">
+    <div>
+      <a href="index.html" class="brand"><span class="brand-mark"></span>smbi<em style="color:#8FA29E">.dk</em></a>
+      <p class="mono">Simon Messell · naturgeografi &amp; biologi · © <span id="year"></span></p>
+    </div>
+    <div class="foot-cols">
+      <div class="foot-col">
+        <h4>Sider</h4>
+        <div class="foot-links">
+          <a href="index.html">Forside</a>
+          <a href="biologi.html">Biologi</a>
+          <a href="born.html">Børn</a>
+          <a href="contact.html">Kontakt</a>
+        </div>
+      </div>
+      <div class="foot-col">
+        <h4>Undervisningssider</h4>
+        <div class="foot-links">
+          <a href="https://sites.google.com/view/geolink/startside" target="_blank" rel="noopener">Geolinks</a>
+          <a href="https://sites.google.com/mail-mg.dk/nf2024-2025/nf-2025-2026" target="_blank" rel="noopener">NF-siden</a>
+          <a href="admin.html">Admin</a>
         </div>
       </div>
     </div>
+  </div>
+</footer>
 
-  </main>
-
-  <footer class="footer">
-    <div class="footer-inner">
-      <div>
-        <div class="footer-brand">smbi.dk</div>
-        <div class="footer-meta">Naturgeografi &amp; Biologi · © <span id="year"></span></div>
-      </div>
-    </div>
-  </footer>
-
-  <script src="site.js"></script>
+<script src="fag.js"></script>
 </body>
 </html>

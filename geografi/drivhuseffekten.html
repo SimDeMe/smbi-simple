@@ -1,673 +1,965 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="da">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Drivhuseffekten trin for trin</title>
-<meta name="description" content="Interaktiv figur: drivhuseffekten trin for trin, med skydere for CO₂ og albedo samt opgaver.">
+<title>Drivhuseffekten trin for trin — udvidet — smbi.dk</title>
+<meta name="description" content="Udvidet interaktiv figur til naturgeografi C: drivhuseffektens otte trin med energibudget i W/m², skydere for CO₂ og albedo, termometer, balanceindikator og opgaver med facit.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,300..600&display=swap" rel="stylesheet">
 <style>
-/* ==========================================================================
-   Drivhuseffekten trin for trin — smbi.dk
-   Alle klassenavne er prefixet dh- så figuren kan lægges i en <iframe>
-   eller direkte på en side uden at kollidere med sidens egen CSS.
-   ========================================================================== */
+/* ─────────────────────────────────────────────────────────
+   Drivhuseffekten (udvidet) — design efter smbi.dk's forside
+   Sidens krom (topbjælke, sidehoved, signaturpanel, bund) er det samme
+   som på forsiden og de øvrige simuleringer. Figurens egne dele beholder
+   dh-præfikset, så de ikke kolliderer med sidens klasser.
 
-.dh-app {
-  /* Palette: "Ocean Gradient" */
-  --dh-morkeblaa: #21295C;
-  --dh-blaa:      #065A82;
-  --dh-teal:      #1C7293;
-  --dh-lyseblaa:  #CADCFC;
-  --dh-hvid:      #F7FAFC;
-  --dh-orange:    #E8734A;
-  /* Tekstsikre varianter (kontrast ≥ 4,5:1 på lys baggrund) */
-  --dh-orange-tekst: #A8442A;
-  --dh-lang-tekst:   #A93A2B;
-  --dh-kort-tekst:   #7A5406;
-  /* Stråling */
-  --dh-kort: #F2B134;   /* kortbølget: gul-orange, fuldt optrukket */
-  --dh-lang: #C64B3A;   /* langbølget: rød-orange, stiplet */
-  --dh-konv: #3E9BC4;   /* fordampning og opstigende varm luft */
-  --dh-groen: #1F7A55;
-  --dh-roed:  #B3341F;
+   Modellen bag figuren er uændret fra den gamle udgave — kun rammen er ny.
+   ───────────────────────────────────────────────────────── */
+:root{
+  --paper:#FFF9EE;
+  --paper-2:#FFF3DC;
+  --panel:#FFFFFF;
+  --ink:#17211F;
+  --slate:#566B68;
 
-  --dh-serif: Cambria, "Hoefler Text", Constantia, Georgia, "Times New Roman", serif;
-  --dh-sans: Calibri, "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", Arial, sans-serif;
+  --pink:#E8336D;
+  --blue:#0E86C8;
+  --lime:#5FB030;
+  --amber:#FFB300;
+  --grape:#7A4FD6;
+  --coral:#FF6A3D;
+  --teal:#0FA593;
 
-  --dh-r: 12px;
-  --dh-skygge: 0 1px 3px rgba(33,41,92,.12), 0 6px 18px rgba(33,41,92,.08);
-  --dh-basis: 16px;
+  --geo:var(--blue);
+  --accent:var(--geo);
 
-  font-family: var(--dh-sans);
-  font-size: var(--dh-basis);
-  line-height: 1.5;
-  color: var(--dh-morkeblaa);
-  background: var(--dh-hvid);
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+  --display:'Archivo',system-ui,sans-serif;
+  --body:'Source Serif 4',Georgia,serif;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+
+  --wide:'wdth' 118;
+  --max:1180px;
+
+  --hard:4px 4px 0 var(--ink);
+  --hard-lg:7px 7px 0 var(--ink);
 }
-.dh-app *, .dh-app *::before, .dh-app *::after { box-sizing: border-box; }
-.dh-app [hidden] { display: none !important; }
-.dh-app h1, .dh-app h2, .dh-app h3, .dh-app p, .dh-app ul, .dh-app ol, .dh-app figure { margin: 0; }
-.dh-app ul, .dh-app ol { padding-left: 1.2em; }
-.dh-app button { font: inherit; color: inherit; }
 
-/* Projektortilstand: ~140 % tekst. Overskrift og kort sætning løftes yderligere,
-   så de er mindst 24 pt (32 px) og kan læses fra bagerste række. */
-.dh-app[data-projektor="1"] { --dh-basis: 22px; }
-.dh-app[data-projektor="1"] .dh-trin-titel { font-size: 1.65em; }
-.dh-app[data-projektor="1"] .dh-trin-kort { font-size: 1.5em; }
-.dh-app[data-projektor="1"] .dh-scene text.dh-label { font-size: 19px; }
-.dh-app[data-projektor="1"] .dh-scene text.dh-zone { font-size: 16px; }
-.dh-app[data-projektor="1"] .dh-termo-vaerdi { font-size: 1.8em; }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--body);
+  font-size:17px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+a{color:inherit}
+[hidden]{display:none!important}
+button{font:inherit;color:inherit}
+ul,ol{padding-left:1.2em}
+:focus-visible{outline:3px solid var(--grape);outline-offset:3px;border-radius:4px}
 
-/* ── Topbjælke ─────────────────────────────────────────────────────────── */
-.dh-top {
-  display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px;
-  padding: 10px 18px;
-  background: var(--dh-morkeblaa);
-  color: var(--dh-hvid);
+.mono{
+  font-family:var(--mono);font-size:0.68rem;font-weight:500;
+  letter-spacing:0.14em;text-transform:uppercase;
 }
-.dh-top h1 {
-  font-family: var(--dh-serif);
-  font-size: 1.25em; font-weight: 700; letter-spacing: .01em;
-  margin-right: auto;
+.sr{
+  position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+  overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;
 }
-.dh-tilstande { display: flex; gap: 4px; background: rgba(247,250,252,.13); padding: 3px; border-radius: 999px; }
-.dh-tilstande button {
-  border: 0; background: transparent; color: var(--dh-hvid);
-  padding: .35em 1em; border-radius: 999px; cursor: pointer;
-  font-size: .92em; font-weight: 600;
-}
-.dh-tilstande button[aria-pressed="true"] { background: var(--dh-hvid); color: var(--dh-morkeblaa); }
-.dh-tilstande button:hover:not([aria-pressed="true"]) { background: rgba(247,250,252,.18); }
-.dh-topknapper { display: flex; gap: 6px; }
-.dh-topknapper button {
-  border: 1px solid rgba(247,250,252,.45); background: transparent; color: var(--dh-hvid);
-  padding: .35em .85em; border-radius: 8px; cursor: pointer; font-size: .85em; font-weight: 600;
-}
-.dh-topknapper button:hover { background: rgba(247,250,252,.15); }
-.dh-topknapper button[aria-pressed="true"] { background: var(--dh-orange); border-color: var(--dh-orange); }
 
-/* ── Hovedlayout ───────────────────────────────────────────────────────── */
-.dh-layout {
-  flex: 1;
-  display: grid;
-  grid-template-columns: minmax(0, 1.55fr) minmax(300px, .95fr);
-  gap: 16px;
-  padding: 16px;
-  align-items: start;
-  max-width: 1500px; width: 100%; margin: 0 auto;
+/* ── Topbjælke ─────────────────────────────────────────── */
+.rainbow{
+  height:7px;
+  background:linear-gradient(90deg,
+    var(--pink) 0 14.3%, var(--coral) 14.3% 28.6%, var(--amber) 28.6% 42.9%,
+    var(--lime) 42.9% 57.2%, var(--teal) 57.2% 71.5%, var(--blue) 71.5% 85.8%,
+    var(--grape) 85.8% 100%);
 }
-.dh-kort {
-  background: #fff;
-  border: 1px solid var(--dh-lyseblaa);
-  border-radius: var(--dh-r);
-  box-shadow: var(--dh-skygge);
+.top{position:sticky;top:0;z-index:60}
+.top-bar{
+  background:rgba(255,249,238,0.93);
+  backdrop-filter:blur(10px);
+  border-bottom:2px solid var(--ink);
 }
-.dh-venstre { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
-.dh-hoejre  { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.top-in{
+  max-width:var(--max);margin:0 auto;padding:0 32px;
+  display:flex;align-items:center;gap:16px;height:60px;
+}
+.brand{
+  font-family:var(--display);font-variation-settings:'wdth' 125;
+  font-weight:800;font-size:1.15rem;letter-spacing:-0.02em;
+  text-decoration:none;display:flex;align-items:center;gap:8px;
+}
+.brand-mark{
+  width:25px;height:25px;border-radius:9px;border:2px solid var(--ink);
+  background:conic-gradient(var(--pink),var(--amber),var(--lime),var(--blue),var(--grape),var(--pink));
+  flex-shrink:0;
+}
+.brand em{font-family:var(--mono);font-size:0.72rem;font-weight:500;font-style:normal;color:var(--slate)}
+.top-nav{display:flex;gap:6px;margin-left:auto}
+.top-nav a{
+  font-family:var(--display);font-size:0.84rem;font-weight:600;
+  text-decoration:none;color:var(--ink);white-space:nowrap;
+  padding:7px 14px;border-radius:20px;border:2px solid transparent;
+  transition:background .15s,border-color .15s;
+}
+.top-nav a:hover{background:#C7E6F6;border-color:var(--ink)}
 
-/* ── Scene ─────────────────────────────────────────────────────────────── */
-.dh-scene-boks { padding: 10px 10px 4px; position: relative; }
-.dh-scene-wrap { max-width: 100%; }
-.dh-scene-indre { position: relative; }
-.dh-scene { display: block; width: 100%; height: auto; border-radius: 8px; }
+/* ── Sidehoved ─────────────────────────────────────────── */
+.wrap{max-width:var(--max);margin:0 auto;padding:0 32px}
+.head{padding:34px 0 22px;position:relative;overflow:hidden}
+.head::before{
+  content:'';position:absolute;width:380px;height:380px;border-radius:50%;
+  background:#9BE0F5;filter:blur(70px);opacity:.5;top:-200px;right:-120px;z-index:0;
+}
+.head-in{position:relative;z-index:1}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--ink);color:#FFF6E0;padding:6px 14px;border-radius:20px;
+}
+.eyebrow .blink{width:8px;height:8px;border-radius:50%;background:var(--amber);animation:pulse 1.8s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.8)}}
+h1{
+  font-family:var(--display);font-variation-settings:var(--wide);font-weight:800;
+  font-size:clamp(2rem,4.6vw,2.9rem);line-height:1.03;letter-spacing:-0.032em;
+  margin:16px 0 14px;
+}
+.hi{position:relative;display:inline-block;z-index:0;white-space:nowrap}
+.hi::before{
+  content:'';position:absolute;z-index:-1;left:-8px;right:-8px;top:12%;bottom:8%;
+  background:var(--hc,var(--amber));border-radius:6px;transform:rotate(-1.3deg);
+}
+.lead{font-size:1.06rem;color:#3E4E4C;max-width:60ch}
 
-.dh-aflaes {
-  display: flex; flex-wrap: wrap; gap: 10px 20px; align-items: center;
-  padding: 10px 8px 8px;
-  border-top: 1px solid var(--dh-lyseblaa);
-  margin-top: 8px;
+/* ── Signaturpanel ─────────────────────────────────────── */
+.rig{
+  position:relative;
+  background:var(--panel);
+  border:2.5px solid var(--ink);border-radius:18px;overflow:hidden;
+  box-shadow:var(--hard-lg);
+  margin-top:26px;
+}
+.rig-bar{height:9px;background:var(--accent)}
+.rig-head{
+  display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap;
+  padding:11px 15px;border-bottom:2px solid var(--ink);
+  background:#E7F4FB;
+}
+.rig-live{display:flex;align-items:center;gap:7px}
+.rig-live .mono{color:var(--ink);font-weight:600}
+.dot{
+  width:9px;height:9px;border-radius:50%;background:var(--accent);
+  border:1.5px solid var(--ink);animation:pulse 2s ease-in-out infinite;
+}
+
+/* Tilstandsvælger: gennemgang / udforsk / opgaver */
+.rig-tilstande{
+  display:flex;background:#fff;border:2px solid var(--ink);border-radius:20px;
+  padding:2px;box-shadow:2px 2px 0 var(--ink);
+}
+.rig-tilstande button{
+  font-family:var(--display);font-size:0.76rem;font-weight:700;
+  border:0;background:transparent;border-radius:16px;
+  padding:4px 13px;cursor:pointer;white-space:nowrap;
+  transition:background .15s,color .15s;
+}
+.rig-tilstande button:hover:not([aria-pressed="true"]){background:#C7E6F6}
+.rig-tilstande button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+
+.rig-tools{display:flex;gap:7px;flex-wrap:wrap;margin-left:auto}
+.btn-mini{
+  font-family:var(--display);font-size:0.74rem;font-weight:700;color:var(--ink);
+  text-decoration:none;white-space:nowrap;
+  background:#fff;border:2px solid var(--ink);border-radius:18px;
+  padding:5px 13px;cursor:pointer;box-shadow:2px 2px 0 var(--ink);
+  transition:transform .12s,box-shadow .12s,background .15s;
+}
+.btn-mini:hover{transform:translate(-1px,-1px);box-shadow:3px 3px 0 var(--ink);background:var(--amber)}
+.btn-mini:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--ink)}
+.btn-mini[aria-pressed="true"]{background:var(--amber)}
+
+/* ── To spalter: figur + forklaring ────────────────────── */
+.rig-body{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(310px,.95fr);align-items:stretch}
+
+/* Venstre spalte: figuren øverst, instrumenterne under. Instrumenterne aflæser
+   figuren, så de hører til på samme side af panelet. */
+.stage-col{display:flex;flex-direction:column;border-right:2px solid var(--ink);min-width:0}
+.stage{
+  padding:10px 10px 8px;flex:1;
+  background:radial-gradient(circle at 1px 1px,#E6EDEB 1px,transparent 0) 0 0/16px 16px;
+  display:flex;flex-direction:column;justify-content:center;
+}
+.dh-scene-indre{position:relative}
+.dh-scene{display:block;width:100%;height:auto;border:2px solid var(--ink);border-radius:12px;background:#17211F}
+.dh-scene-rul{
+  display:none;padding:6px 2px 0;
+  font-family:var(--mono);font-size:0.58rem;font-weight:600;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--slate);
+}
+
+/* ── Forklaringsspalten ────────────────────────────────── */
+.side{
+  background:var(--paper-2);
+  padding:18px 20px;
+  display:flex;flex-direction:column;gap:12px;
+  min-width:0;
+}
+.side-tael{
+  display:inline-flex;align-items:center;gap:8px;align-self:flex-start;
+  font-family:var(--mono);font-size:0.6rem;font-weight:600;letter-spacing:0.12em;
+  text-transform:uppercase;color:#fff;background:var(--accent);
+  border:2px solid var(--ink);border-radius:14px;padding:3px 11px;
+}
+.side-titel{
+  font-family:var(--display);font-variation-settings:'wdth' 112;font-weight:800;
+  font-size:1.38rem;line-height:1.12;letter-spacing:-0.02em;margin-top:9px;
+}
+.side-kort{
+  font-family:var(--display);font-size:0.96rem;font-weight:700;line-height:1.35;
+  background:#fff;border:2px solid var(--ink);border-radius:12px;
+  box-shadow:3px 3px 0 var(--ink);padding:10px 13px;
+}
+.side-tekst{font-size:0.95rem}
+.side-tekst b{font-weight:600;background:#C7E6F6;box-shadow:0 0 0 2px #C7E6F6;border-radius:2px}
+
+.paspaa{
+  font-size:0.88rem;padding:11px 13px;border-radius:12px;
+  background:#FFE9DC;border:2px solid var(--ink);
+}
+.paspaa::before{
+  content:"Pas på";display:block;
+  font-family:var(--mono);font-size:0.58rem;font-weight:600;letter-spacing:0.12em;
+  text-transform:uppercase;color:#A8442A;margin-bottom:3px;
+}
+.paspaa b{font-weight:600;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:2px}
+
+/* Sløjfediagram (trin 8 og udforsk) */
+.sloejfe{border:2px dashed var(--ink);border-radius:12px;padding:8px;background:#fff}
+.sloejfe svg{display:block;width:100%;height:auto}
+
+/* Rammen har fast højde, så de korte trin har plads til overs. Den plads
+   samles ét sted: læreværktøjerne (stop op, knapper, prikker) hænger i
+   bunden, og luften lægger sig mellem elevens tekst og dem. */
+.stopop{
+  font-size:0.88rem;border:2px dashed var(--ink);border-radius:12px;padding:9px 13px;background:#fff;
+  margin-top:auto;
+}
+.stopop summary{
+  cursor:pointer;list-style:none;
+  font-family:var(--display);font-size:0.85rem;font-weight:700;
+}
+.stopop summary::-webkit-details-marker{display:none}
+.stopop summary::before{content:"▸ ";color:var(--accent)}
+.stopop[open] summary::before{content:"▾ "}
+.stopop-krop{margin-top:7px}
+
+/* ── Knapper ───────────────────────────────────────────── */
+.btn{
+  font-family:var(--display);font-size:0.86rem;font-weight:700;
+  border:2px solid var(--ink);border-radius:24px;padding:7px 16px;
+  background:#fff;color:var(--ink);cursor:pointer;box-shadow:var(--hard);
+  transition:transform .12s,box-shadow .12s,background .15s;
+}
+.btn:hover:not(:disabled){transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--ink)}
+.btn:active:not(:disabled){transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.btn:disabled{opacity:.35;cursor:not-allowed;box-shadow:2px 2px 0 var(--ink)}
+.btn-primaer{background:var(--accent);color:#fff}
+
+.nav{display:flex;gap:9px;align-items:center;padding-top:8px}
+.nav .btn-primaer{margin-left:auto}
+
+.prikker{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.prikker button{
+  width:27px;height:27px;border-radius:50%;cursor:pointer;padding:0;
+  border:2px solid var(--ink);background:#fff;
+  font-family:var(--display);font-size:0.74rem;font-weight:800;color:var(--ink);
+  transition:background .15s;
+}
+.prikker button:hover{background:#C7E6F6}
+.prikker button[aria-current="step"]{background:var(--ink);color:var(--paper)}
+
+/* ── Instrumenter ──────────────────────────────────────── */
+.gauges{
+  border-top:2px solid var(--ink);
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+}
+.gauge{padding:15px 18px 13px;min-width:0}
+.gauge + .gauge{border-left:2px solid var(--ink)}
+/* Instrumenterne kommer først undervejs i gennemgangen. Pladsen står
+   reserveret fra trin 1, så figuren ikke rykker, når de dukker op — derfor
+   visibility frem for figurens egen display:none. Selve instrumentfeltet
+   bliver stående som en tom, slukket rude; kun indholdet skjules. */
+.dh-el.gauge[data-vis="skjult"]{display:block}
+.dh-el.gauge[data-vis="skjult"] > *{visibility:hidden}
+/* Fremhævning som ring frem for farvelag, så instrumentets egen tone består */
+.gauge[data-vis="fremhaevet"]{box-shadow:inset 0 0 0 3px var(--amber)}
+.gauge-navn{
+  font-family:var(--mono);font-size:0.6rem;font-weight:600;letter-spacing:0.12em;
+  text-transform:uppercase;color:#5A6C69;
 }
 
 /* Termometer */
-.dh-termo { flex: 1 1 320px; min-width: 260px; }
-.dh-termo-hoved { display: flex; align-items: baseline; gap: 10px; font-size: .9em; }
-.dh-termo-navn { font-weight: 700; color: var(--dh-teal); }
-.dh-termo-vaerdi { font-family: var(--dh-serif); font-size: 1.5em; font-weight: 700; }
-.dh-termo-bar {
-  position: relative; height: 16px; margin-top: 32px; border-radius: 999px;
-  background: linear-gradient(90deg, #4E7FB8 0%, #8FB8D8 28%, #E8E2C8 52%, var(--dh-kort) 76%, var(--dh-lang) 100%);
-  border: 1px solid rgba(33,41,92,.25);
+.g-termo{background:#FFF1EC}
+.termo-hoved{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.termo-vaerdi{
+  font-family:var(--display);font-variation-settings:'wdth' 110;
+  font-weight:800;font-size:1.5rem;letter-spacing:-0.02em;margin-left:auto;
 }
-.dh-termo-maerke {
-  position: absolute; top: 50%; width: 18px; height: 18px; border-radius: 50%;
-  background: var(--dh-morkeblaa); border: 3px solid #fff;
-  transform: translate(-50%, -50%);
-  box-shadow: 0 0 0 1px rgba(33,41,92,.5);
+.termo-bar{
+  position:relative;height:17px;margin-top:30px;border-radius:999px;
+  border:2px solid var(--ink);
+  background:linear-gradient(90deg,#0E86C8 0%,#9BE0F5 28%,#FFF3DC 52%,var(--amber) 76%,var(--coral) 100%);
 }
-.dh-termo-spoegelse {
-  position: absolute; top: 50%; width: 14px; height: 14px; border-radius: 50%;
-  background: transparent; border: 3px dashed var(--dh-morkeblaa);
-  transform: translate(-50%, -50%); opacity: .75;
+.punkt{
+  position:absolute;top:50%;width:19px;height:19px;border-radius:50%;
+  transform:translate(-50%,-50%);
+  background:var(--ink);border:3px solid #fff;box-shadow:0 0 0 2px var(--ink);
 }
-.dh-termo-spoegelse span {
-  position: absolute; left: 50%; top: 1.15em; transform: translateX(-50%);
-  font-size: .68em; font-weight: 700; white-space: nowrap; letter-spacing: .02em;
+.punkt-maalt{background:#fff;border:3px dashed var(--ink)}
+.punkt-maalt b{
+  position:absolute;left:50%;top:1.4em;transform:translateX(-50%);white-space:nowrap;
+  font-family:var(--display);font-size:0.7rem;font-weight:800;
 }
-.dh-termo-gab {
-  position: absolute; top: -13px; height: 11px;
-  border: 2px solid var(--dh-orange-tekst); border-bottom: 0;
-  border-radius: 4px 4px 0 0;
+.gab{
+  position:absolute;top:-15px;height:13px;
+  border:2.5px solid var(--ink);border-bottom:0;border-radius:6px 6px 0 0;
 }
-.dh-termo-gab span {
-  position: absolute; left: 50%; top: -1.5em; transform: translateX(-50%);
-  font-size: .72em; font-weight: 700; color: var(--dh-orange-tekst); white-space: nowrap;
+.gab b{
+  position:absolute;left:50%;top:-1.9em;transform:translateX(-50%);white-space:nowrap;
+  font-family:var(--mono);font-size:0.58rem;font-weight:600;letter-spacing:0.1em;
+  text-transform:uppercase;color:var(--ink);
+  background:var(--amber);border:2px solid var(--ink);border-radius:12px;padding:2px 9px;
 }
-.dh-termo-skala { display: flex; justify-content: space-between; font-size: .7em; color: var(--dh-teal); margin-top: 22px; }
-.dh-termo[data-vis="fremhaevet"], .dh-balance[data-vis="fremhaevet"] {
-  box-shadow: 0 0 0 3px var(--dh-orange); border-radius: 10px; padding: 6px 8px;
+.skala{
+  display:flex;justify-content:space-between;margin-top:26px;
+  font-family:var(--mono);font-size:0.57rem;font-weight:600;letter-spacing:.08em;color:#5A6C69;
 }
 
 /* Balanceindikator */
-.dh-balance { flex: 1 1 300px; min-width: 250px; font-size: .88em; }
-.dh-balance-titel { font-weight: 700; color: var(--dh-teal); font-size: .95em; }
-.dh-balance-linje { display: flex; align-items: center; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
-.dh-chip {
-  display: inline-flex; align-items: center; gap: .4em;
-  padding: .18em .7em; border-radius: 999px; font-weight: 700; font-size: .95em;
-  border: 2px solid currentColor;
+.g-balance{background:#E7F4FB;font-size:0.88rem}
+.balance-linje{display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap}
+.balance-tal{font-family:var(--mono);font-size:0.72rem;font-weight:600;letter-spacing:.04em}
+.chip{
+  display:inline-flex;align-items:center;gap:.35em;white-space:nowrap;
+  font-family:var(--display);font-size:0.74rem;font-weight:800;
+  border:2px solid var(--ink);border-radius:20px;padding:2px 11px;
 }
-.dh-chip[data-status="ok"]   { color: var(--dh-groen); background: rgba(31,122,85,.08); }
-.dh-chip[data-status="ude"]  { color: var(--dh-roed);  background: rgba(179,52,31,.08); }
-.dh-balance-note { margin-top: 3px; color: var(--dh-roed); font-weight: 600; }
-.dh-balance-note:empty { display: none; }
+.chip[data-status="ok"]{background:#D6EFC4}
+.chip[data-status="ude"]{background:#FFD9C9}
+.balance-note{margin-top:4px;font-size:0.84rem;color:#A8442A;font-weight:600}
+.balance-note:empty{display:none}
+.balance-titel{
+  font-family:var(--mono);font-size:0.6rem;font-weight:600;letter-spacing:0.12em;
+  text-transform:uppercase;color:#5A6C69;margin-top:8px;
+}
 
-/* ── Kontrolpanel ──────────────────────────────────────────────────────── */
-.dh-kontrol { padding: 14px 16px 16px; }
-.dh-kontrol-titel {
-  font-size: .72em; font-weight: 700; text-transform: uppercase; letter-spacing: .09em;
-  color: var(--dh-teal); margin-bottom: 10px;
+/* ── Skydere ───────────────────────────────────────────── */
+.knobs{
+  border-top:2px solid var(--ink);background:var(--paper-2);
+  padding:15px 18px 16px;
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px 26px;
+  align-items:start;
 }
-.dh-skyder { margin-bottom: 14px; }
-.dh-skyder[data-laast="1"] { opacity: .5; }
-.dh-skyder-hoved { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
-.dh-skyder-navn { font-weight: 700; font-size: .95em; }
-.dh-skyder-vaerdi { margin-left: auto; font-family: var(--dh-serif); font-weight: 700; font-size: 1.15em; color: var(--dh-orange-tekst); }
-.dh-skyder-note { font-size: .78em; color: var(--dh-teal); }
-.dh-laasikon { font-size: .72em; font-weight: 700; color: var(--dh-teal); }
+.knob{min-width:0}
+.knob[data-laast="1"]{opacity:.45}
+.knob[data-fremhaev="1"]{
+  box-shadow:0 0 0 3px var(--amber),0 0 0 5px var(--ink);
+  border-radius:12px;padding:8px 10px;margin:-8px -10px;
+}
+.knob-hoved{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.knob-navn{font-family:var(--display);font-size:0.9rem;font-weight:700}
+.knob-vaerdi{
+  margin-left:auto;font-family:var(--display);font-variation-settings:'wdth' 110;
+  font-weight:800;font-size:1.05rem;
+}
+.knob-laas{
+  font-family:var(--mono);font-size:0.55rem;font-weight:600;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--slate);
+}
+.knob-note{font-size:0.82rem;color:#3E4E4C}
 
-.dh-app input[type="range"] {
-  -webkit-appearance: none; appearance: none;
-  width: 100%; height: 22px; background: transparent; cursor: pointer; margin: 2px 0 0;
+input[type=range]{
+  -webkit-appearance:none;appearance:none;
+  width:100%;height:26px;background:transparent;cursor:pointer;margin:4px 0 0;
 }
-.dh-app input[type="range"]::-webkit-slider-runnable-track {
-  height: 6px; border-radius: 3px; background: var(--dh-lyseblaa); border: 1px solid rgba(33,41,92,.2);
+input[type=range]::-webkit-slider-runnable-track{
+  height:10px;border-radius:6px;border:2px solid var(--ink);background:var(--track,#C7E6F6);
 }
-.dh-app input[type="range"]::-moz-range-track {
-  height: 6px; border-radius: 3px; background: var(--dh-lyseblaa); border: 1px solid rgba(33,41,92,.2);
+input[type=range]::-moz-range-track{
+  height:10px;border-radius:6px;border:2px solid var(--ink);background:var(--track,#C7E6F6);
 }
-.dh-app input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none; appearance: none;
-  width: 22px; height: 22px; margin-top: -9px; border-radius: 50%;
-  background: var(--dh-orange); border: 3px solid #fff; box-shadow: 0 0 0 1px rgba(33,41,92,.45);
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;
+  width:22px;height:22px;margin-top:-8px;border-radius:50%;
+  background:var(--kc,var(--accent));border:2.5px solid var(--ink);box-shadow:2px 2px 0 var(--ink);
 }
-.dh-app input[type="range"]::-moz-range-thumb {
-  width: 18px; height: 18px; border-radius: 50%;
-  background: var(--dh-orange); border: 3px solid #fff; box-shadow: 0 0 0 1px rgba(33,41,92,.45);
+input[type=range]::-moz-range-thumb{
+  width:22px;height:22px;border-radius:50%;
+  background:var(--kc,var(--accent));border:2.5px solid var(--ink);box-shadow:2px 2px 0 var(--ink);
 }
-.dh-app input[type="range"]:focus-visible { outline: 3px solid var(--dh-teal); outline-offset: 3px; border-radius: 6px; }
-.dh-app input[type="range"]:disabled { cursor: not-allowed; }
+input[type=range]:disabled{cursor:not-allowed}
 
-.dh-maerker { position: relative; height: 1.35em; font-size: .72em; margin-bottom: 2px; }
-.dh-maerke-tekst { font-size: .72em; color: var(--dh-teal); }
-.dh-maerker button {
-  position: absolute; top: 0; transform: translateX(-50%);
-  border: 0; background: transparent; padding: 0 .2em; cursor: pointer;
-  color: var(--dh-teal); font-size: 1em; white-space: nowrap;
-  border-top: 6px solid transparent;
+.maerker{position:relative;height:1.5em;margin-top:2px}
+.maerker button{
+  position:absolute;top:0;transform:translateX(-50%);
+  border:0;background:transparent;padding:3px .25em 0;cursor:pointer;
+  font-family:var(--mono);font-size:0.57rem;font-weight:600;letter-spacing:.06em;
+  color:var(--slate);white-space:nowrap;
 }
-.dh-maerker button::before {
-  content: ""; position: absolute; left: 50%; top: -6px; width: 1px; height: 5px; background: var(--dh-teal);
+.maerker button::before{
+  content:"";position:absolute;left:50%;top:-3px;width:2px;height:5px;background:var(--ink);
 }
-.dh-maerker button:hover { color: var(--dh-orange-tekst); text-decoration: underline; }
-.dh-maerker button:disabled { cursor: default; text-decoration: none; }
-
-.dh-kontrol-bund { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
-
-.dh-knap {
-  border: 2px solid var(--dh-teal); background: #fff; color: var(--dh-teal);
-  border-radius: 8px; padding: .4em 1em; cursor: pointer; font-weight: 700; font-size: .88em;
+.maerker button:hover{color:var(--ink);text-decoration:underline}
+.maerke-tekst{
+  font-family:var(--mono);font-size:0.55rem;font-weight:600;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--slate);
 }
-.dh-knap:hover { background: var(--dh-lyseblaa); }
-.dh-knap-primaer { background: var(--dh-teal); color: #fff; }
-.dh-knap-primaer:hover { background: var(--dh-blaa); border-color: var(--dh-blaa); }
-.dh-knap:disabled { opacity: .45; cursor: not-allowed; }
-.dh-app :focus-visible { outline: 3px solid var(--dh-orange); outline-offset: 2px; }
+.knobs-bund{grid-column:1/-1;display:flex;gap:9px;flex-wrap:wrap}
 
-/* ── Forklaringspanel ──────────────────────────────────────────────────── */
-.dh-forklaring { padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
-.dh-trin-tael { font-size: .74em; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--dh-orange-tekst); }
-.dh-trin-titel { font-family: var(--dh-serif); font-size: 1.45em; line-height: 1.2; color: var(--dh-morkeblaa); }
-.dh-trin-kort { font-family: var(--dh-serif); font-size: 1.1em; color: var(--dh-blaa); font-weight: 700; display: none; }
-.dh-app[data-projektor="1"] .dh-trin-kort { display: block; }
-.dh-app[data-projektor="1"] .dh-trin-tekst { display: none; }
-
-/* Udforsk: ingen trintekst, kun figuren og en "Hvad ser jeg på?"-knap */
-.dh-app:not([data-mode="explore"]) #dhUdforskKnap { display: none; }
-.dh-app[data-mode="explore"] #dhTrinTael,
-.dh-app[data-mode="explore"] .dh-trin-kort,
-.dh-app[data-mode="explore"] .dh-trin-tekst,
-.dh-app[data-mode="explore"] #dhPasPaa,
-.dh-app[data-mode="explore"] #dhStopOp,
-.dh-app[data-mode="explore"] .dh-nav,
-.dh-app[data-mode="explore"] .dh-prikker { display: none; }
-.dh-trin-tekst { font-size: 1em; }
-.dh-trin-tekst b { color: var(--dh-blaa); }
-
-.dh-pasp {
-  border-left: 5px solid var(--dh-orange); background: #FDF3EE;
-  padding: 9px 12px; border-radius: 0 8px 8px 0; font-size: .88em;
+/* ── Opgaver ───────────────────────────────────────────── */
+.dh-saet-valg{display:flex;gap:6px;flex-wrap:wrap}
+.dh-saet-valg button{
+  font-family:var(--display);font-size:0.76rem;font-weight:700;
+  border:2px solid var(--ink);border-radius:18px;background:#fff;
+  padding:4px 12px;cursor:pointer;box-shadow:2px 2px 0 var(--ink);
 }
-.dh-pasp-titel { font-weight: 700; color: var(--dh-orange-tekst); display: block; }
-
-.dh-app details.dh-stopop { border: 1px solid var(--dh-lyseblaa); border-radius: 8px; background: var(--dh-hvid); }
-.dh-app details.dh-stopop > summary {
-  cursor: pointer; padding: .5em .8em; font-weight: 700; font-size: .88em; color: var(--dh-teal); list-style: none;
+.dh-saet-valg button:hover:not([aria-pressed="true"]){background:#C7E6F6}
+.dh-saet-valg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.dh-status{
+  font-family:var(--mono);font-size:0.58rem;font-weight:600;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--slate);
 }
-.dh-app details.dh-stopop > summary::-webkit-details-marker { display: none; }
-.dh-app details.dh-stopop > summary::before { content: "? "; font-weight: 700; }
-.dh-app details.dh-stopop[open] > summary { border-bottom: 1px solid var(--dh-lyseblaa); }
-.dh-stopop-krop { padding: .6em .8em; font-size: .92em; }
-
-.dh-nav { display: flex; gap: 8px; margin-top: auto; padding-top: 8px; }
-.dh-nav button { flex: 1; }
-.dh-prikker { display: flex; gap: 5px; justify-content: center; padding-top: 8px; flex-wrap: wrap; }
-.dh-prikker button {
-  width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--dh-lyseblaa);
-  background: #fff; cursor: pointer; font-size: .72em; font-weight: 700; color: var(--dh-teal); padding: 0;
+.dh-status-bar{
+  height:10px;border-radius:999px;border:2px solid var(--ink);background:#fff;
+  overflow:hidden;margin-top:4px;
 }
-.dh-prikker button[aria-current="step"] { background: var(--dh-orange); border-color: var(--dh-orange); color: #fff; }
-
-/* Sløjfediagram */
-.dh-sloejfe { border: 1px dashed var(--dh-teal); border-radius: 10px; padding: 8px; background: var(--dh-hvid); }
-.dh-sloejfe svg { display: block; width: 100%; height: auto; }
-
-/* ── Opgaver ───────────────────────────────────────────────────────────── */
-.dh-quiz { padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
-.dh-saet-valg { display: flex; gap: 6px; flex-wrap: wrap; }
-.dh-saet-valg button {
-  border: 2px solid var(--dh-lyseblaa); background: #fff; border-radius: 8px;
-  padding: .3em .8em; cursor: pointer; font-weight: 700; font-size: .84em;
+.dh-status-bar i{display:block;height:100%;background:var(--lime)}
+.dh-opg-nr{
+  font-family:var(--mono);font-size:0.58rem;font-weight:600;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--slate);
 }
-.dh-saet-valg button[aria-pressed="true"] { background: var(--dh-morkeblaa); border-color: var(--dh-morkeblaa); color: #fff; }
-.dh-status { font-size: .8em; color: var(--dh-teal); font-weight: 700; }
-.dh-status-bar { height: 8px; border-radius: 999px; background: var(--dh-lyseblaa); overflow: hidden; margin-top: 4px; }
-.dh-status-bar i { display: block; height: 100%; background: var(--dh-teal); transition: width .3s; }
-.dh-opg-nr { font-size: .74em; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--dh-orange-tekst); }
-.dh-opg-spm { font-family: var(--dh-serif); font-size: 1.15em; line-height: 1.3; }
-.dh-svar { display: flex; flex-direction: column; gap: 7px; }
-.dh-svar label {
-  display: flex; gap: 9px; align-items: flex-start;
-  border: 2px solid var(--dh-lyseblaa); border-radius: 8px; padding: .5em .7em;
-  cursor: pointer; font-size: .95em; background: #fff;
+.dh-opg-spm{
+  font-family:var(--display);font-variation-settings:'wdth' 112;font-weight:800;
+  font-size:1.1rem;line-height:1.2;letter-spacing:-0.015em;margin-top:4px;
 }
-.dh-svar label:hover { border-color: var(--dh-teal); }
-.dh-svar label[data-mark="rigtigt"] { border-color: var(--dh-groen); background: rgba(31,122,85,.08); }
-.dh-svar label[data-mark="forkert"] { border-color: var(--dh-roed); background: rgba(179,52,31,.07); }
-.dh-svar input { margin-top: .25em; width: 1.1em; height: 1.1em; flex: none; accent-color: var(--dh-teal); }
-.dh-app textarea, .dh-app input[type="number"], .dh-app input[type="text"] {
-  font: inherit; width: 100%; border: 2px solid var(--dh-lyseblaa); border-radius: 8px;
-  padding: .45em .6em; background: #fff; color: inherit;
+.dh-svar{display:flex;flex-direction:column;gap:7px}
+.dh-svar label{
+  display:flex;gap:9px;align-items:flex-start;
+  border:2px solid var(--ink);border-radius:12px;padding:.5em .7em;
+  cursor:pointer;font-size:0.93rem;background:#fff;box-shadow:2px 2px 0 var(--ink);
 }
-.dh-app textarea { min-height: 6.5em; resize: vertical; }
-.dh-app input[type="number"] { max-width: 9em; }
-.dh-feedback { border-radius: 8px; padding: .6em .8em; font-size: .9em; border-left: 5px solid; }
-.dh-feedback[data-ok="1"] { border-color: var(--dh-groen); background: rgba(31,122,85,.08); }
-.dh-feedback[data-ok="0"] { border-color: var(--dh-roed); background: rgba(179,52,31,.07); }
-.dh-feedback[data-ok="åben"] { border-color: var(--dh-teal); background: var(--dh-lyseblaa); }
-.dh-feedback b { display: block; }
-.dh-opg-knapper { display: flex; gap: 8px; flex-wrap: wrap; }
-.dh-opsamling ul { margin-top: .4em; }
-.dh-opsamling li { margin-bottom: .25em; }
+.dh-svar label:hover{background:#C7E6F6}
+.dh-svar label[data-mark="rigtigt"]{background:#D6EFC4}
+.dh-svar label[data-mark="forkert"]{background:#FFD9C9}
+.dh-svar input{margin-top:.3em;width:1.05em;height:1.05em;flex:none;accent-color:var(--ink)}
+textarea,input[type=number],input[type=text]{
+  font:inherit;width:100%;border:2px solid var(--ink);border-radius:12px;
+  padding:.45em .6em;background:#fff;color:inherit;
+}
+textarea{min-height:6.5em;resize:vertical}
+input[type=number]{max-width:9em}
+.dh-feedback{
+  border:2px solid var(--ink);border-radius:12px;padding:.6em .8em;font-size:0.88rem;
+}
+.dh-feedback[data-ok="1"]{background:#D6EFC4}
+.dh-feedback[data-ok="0"]{background:#FFD9C9}
+.dh-feedback[data-ok="åben"]{background:#E2D6F8}
+.dh-feedback b{display:block;font-family:var(--display);font-weight:800}
+.dh-opg-knapper{display:flex;gap:8px;flex-wrap:wrap;margin-top:auto;padding-top:8px}
+.dh-opg-knapper .btn{font-size:0.8rem;padding:6px 13px}
+.dh-opsamling ul{margin-top:.4em}
+.dh-opsamling li{margin-bottom:.25em}
 
 /* Trækopgave */
-.dh-drop-lag { position: absolute; inset: 0; pointer-events: none; }
-.dh-drop {
-  position: absolute; transform: translate(-50%, -50%);
-  width: 7.2em; pointer-events: auto; line-height: 1.15;
-  border: 2px dashed var(--dh-morkeblaa); background: rgba(247,250,252,.94);
-  border-radius: 8px; padding: .3em .3em; font-size: .72em; font-weight: 700;
-  cursor: pointer; text-align: center; color: var(--dh-morkeblaa);
+.dh-drop-lag{position:absolute;inset:0;pointer-events:none}
+.dh-drop{
+  position:absolute;transform:translate(-50%,-50%);
+  width:8.2em;pointer-events:auto;line-height:1.15;
+  border:2px dashed var(--ink);background:rgba(255,249,238,.95);
+  border-radius:10px;padding:.3em;cursor:pointer;text-align:center;color:var(--ink);
+  font-family:var(--display);font-size:0.68rem;font-weight:700;
 }
-.dh-drop[data-valgt="1"] { border-style: solid; border-color: var(--dh-orange); }
-.dh-drop[data-mark="rigtigt"] { border-style: solid; border-color: var(--dh-groen); background: rgba(214,240,228,.96); }
-.dh-drop[data-mark="forkert"] { border-style: solid; border-color: var(--dh-roed); background: rgba(250,224,220,.96); }
-.dh-braet { display: flex; gap: 6px; flex-wrap: wrap; }
-.dh-brik {
-  border: 2px solid var(--dh-teal); background: #fff; border-radius: 8px;
-  padding: .3em .7em; font-size: .82em; font-weight: 700; cursor: grab; color: var(--dh-teal);
+.dh-drop[data-mark="rigtigt"]{border-style:solid;background:#D6EFC4}
+.dh-drop[data-mark="forkert"]{border-style:solid;background:#FFD9C9}
+.dh-braet{display:flex;gap:6px;flex-wrap:wrap}
+.dh-brik{
+  border:2px solid var(--ink);background:#fff;border-radius:18px;
+  padding:4px 12px;cursor:grab;box-shadow:2px 2px 0 var(--ink);
+  font-family:var(--display);font-size:0.76rem;font-weight:700;
 }
-.dh-brik[aria-pressed="true"] { background: var(--dh-orange); border-color: var(--dh-orange); color: #fff; }
-.dh-brik[data-brugt="1"] { opacity: .35; cursor: default; }
+.dh-brik[aria-pressed="true"]{background:var(--amber)}
+.dh-brik[data-brugt="1"]{opacity:.35;cursor:default}
 
-/* ── Dialog ────────────────────────────────────────────────────────────── */
-.dh-app dialog {
-  border: 0; border-radius: var(--dh-r); padding: 0; max-width: 620px; width: calc(100% - 32px);
-  box-shadow: 0 10px 50px rgba(33,41,92,.35); color: var(--dh-morkeblaa); background: #fff;
+/* ── Signaturforklaring i foden ────────────────────────── */
+.facts{
+  border-top:2px solid var(--ink);background:var(--paper);
+  padding:12px 15px;display:flex;gap:9px;flex-wrap:wrap;align-items:center;
 }
-.dh-app dialog::backdrop { background: rgba(33,41,92,.55); }
-.dh-dialog-krop { padding: 20px 22px; font-size: .95em; }
-.dh-dialog-krop h2 { font-family: var(--dh-serif); font-size: 1.35em; margin-bottom: .5em; }
-.dh-dialog-krop h3 { font-family: var(--dh-serif); font-size: 1.05em; margin: 1em 0 .2em; }
-.dh-dialog-krop p, .dh-dialog-krop ul { margin-bottom: .7em; }
-.dh-dialog-krop table { border-collapse: collapse; font-size: .9em; margin-bottom: .7em; }
-.dh-dialog-krop td, .dh-dialog-krop th { border: 1px solid var(--dh-lyseblaa); padding: .25em .6em; text-align: left; }
-
-.dh-sr {
-  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
-  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+.fact{
+  display:inline-flex;align-items:center;gap:9px;
+  background:#fff;border:2px solid var(--ink);border-radius:22px;padding:5px 13px;
+  font-family:var(--mono);font-size:0.6rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;
+}
+.fact svg{flex:none}
+.fact-txt{
+  font-family:var(--body);font-size:0.86rem;font-weight:400;letter-spacing:0;
+  text-transform:none;color:var(--slate);
 }
 
-/* ── SVG-scene ─────────────────────────────────────────────────────────── */
-.dh-scene text { font-family: var(--dh-sans); }
-.dh-el { transition: opacity .35s ease; }
-.dh-el[data-vis="skjult"] { display: none; }
-.dh-el[data-vis="tonet"] { opacity: .25; }
-.dh-el[data-vis="fremhaevet"] .dh-shaft { filter: drop-shadow(0 0 7px rgba(232,115,74,.95)); }
-.dh-el[data-vis="fremhaevet"] .dh-boks { filter: drop-shadow(0 0 7px rgba(232,115,74,.95)); }
-.dh-skyder[data-fremhaev="1"] { box-shadow: 0 0 0 3px var(--dh-orange); border-radius: 8px; padding: 4px 6px; margin-left: -6px; }
-/* Halo bag pil-labels, så de kan læses uanset hvor på baggrunden de ligger */
-.dh-label { font-size: 15px; font-weight: 700; paint-order: stroke; stroke-width: 3.5px; stroke-linejoin: round; }
-.dh-label-lys { fill: var(--dh-hvid); }
-.dh-label-moerk { fill: var(--dh-morkeblaa); }
-.dh-zone { font-size: 13px; font-weight: 700; letter-spacing: .12em; }
+/* ── Dialog ────────────────────────────────────────────── */
+dialog{
+  border:2.5px solid var(--ink);border-radius:18px;padding:0;margin:auto;
+  max-width:660px;width:calc(100% - 32px);max-height:85vh;overflow:auto;
+  background:var(--paper);color:var(--ink);box-shadow:var(--hard-lg);
+}
+dialog::backdrop{background:rgba(23,33,31,.6)}
+.dialog-krop{padding:22px 24px 6px;font-size:0.95rem}
+.dialog-krop h2{
+  font-family:var(--display);font-variation-settings:var(--wide);font-weight:800;
+  font-size:1.5rem;letter-spacing:-0.025em;margin-bottom:.5em;
+}
+.dialog-krop h3{
+  font-family:var(--display);font-weight:800;font-size:1.05rem;margin:1em 0 .2em;
+}
+.dialog-krop p,.dialog-krop ul{margin-bottom:.75em}
+.dialog-krop b{font-weight:600;background:#C7E6F6;box-shadow:0 0 0 2px #C7E6F6;border-radius:2px}
+.dialog-krop table{border-collapse:collapse;font-size:0.88rem;margin-bottom:.8em}
+.dialog-krop td{border:2px solid var(--ink);padding:.25em .7em;text-align:left}
+.dialog-fod{padding:0 24px 22px}
 
-@media (prefers-reduced-motion: reduce) {
-  .dh-app *, .dh-el { transition-duration: .001s !important; animation-duration: .001s !important; }
+/* ── Bund ──────────────────────────────────────────────── */
+.foot{margin-top:34px;background:var(--ink);color:#FFF6E0;padding:26px 0 32px}
+.foot-in{
+  max-width:var(--max);margin:0 auto;padding:0 32px;
+  display:flex;justify-content:space-between;align-items:flex-end;gap:18px;flex-wrap:wrap;
+}
+.foot .brand{color:#FFF6E0}
+.foot .mono{color:#8FA29E;margin-top:5px}
+.foot-links{display:flex;gap:8px;flex-wrap:wrap}
+.foot-links a{
+  font-family:var(--display);font-size:0.82rem;font-weight:700;text-decoration:none;
+  border:2px solid #FFF6E0;border-radius:20px;padding:5px 13px;
+  transition:background .16s,color .16s,border-color .16s;
+}
+.foot-links a:nth-child(1):hover{background:var(--blue);border-color:var(--blue)}
+.foot-links a:nth-child(2):hover{background:var(--amber);border-color:var(--amber);color:var(--ink)}
+.foot-links a:nth-child(3):hover{background:var(--lime);border-color:var(--lime);color:var(--ink)}
+
+/* ── SVG-scenen ────────────────────────────────────────── */
+.dh-scene text{font-family:var(--display)}
+.dh-el{transition:opacity .35s ease}
+.dh-el[data-vis="skjult"]{display:none}
+.dh-el[data-vis="tonet"]{opacity:.26}
+.dh-el[data-vis="fremhaevet"] .dh-glans{filter:drop-shadow(0 0 8px rgba(255,179,0,.9))}
+/* Halo bag mærkaterne, så de kan læses uanset hvor på baggrunden de ligger */
+.dh-label{
+  font-size:14px;font-weight:800;letter-spacing:-.01em;
+  paint-order:stroke;stroke-width:5px;stroke-linejoin:round;
+}
+.dh-zone{
+  font-family:'IBM Plex Mono',ui-monospace,monospace;
+  font-size:12px;font-weight:600;letter-spacing:.16em;
 }
 
-/* ── Responsivt ────────────────────────────────────────────────────────── */
-@media (max-width: 900px) {
-  .dh-layout { grid-template-columns: minmax(0, 1fr); }
-  .dh-top h1 { font-size: 1.05em; width: 100%; margin-right: 0; }
+/* ── Tilstande: udforsk og opgaver ─────────────────────── */
+body:not([data-mode="explore"]) #dhUdforskKnap{display:none}
+body[data-mode="explore"] #dhTaelChip,
+body[data-mode="explore"] .side-kort,
+body[data-mode="explore"] #dhTrinTekst,
+body[data-mode="explore"] #dhPasPaa,
+body[data-mode="explore"] #dhStopOp,
+body[data-mode="explore"] #dhForklaring .nav,
+body[data-mode="explore"] .prikker{display:none}
+
+/* ── Projektortilstand: alt krom væk, teksten op i størrelse ─ */
+body[data-projektor="1"] .top,
+body[data-projektor="1"] .head,
+body[data-projektor="1"] .foot,
+body[data-projektor="1"] .paspaa{display:none}
+body[data-projektor="1"] .wrap{max-width:none;padding:0 14px}
+body[data-projektor="1"] .rig{margin-top:14px;box-shadow:var(--hard)}
+body[data-projektor="1"] .side-titel{font-size:2rem}
+body[data-projektor="1"] .side-kort{font-size:1.35rem}
+body[data-projektor="1"] #dhTrinTekst{display:none}
+body[data-projektor="1"] .stopop{font-size:1.15rem}
+body[data-projektor="1"] .stopop summary{font-size:1.1rem}
+body[data-projektor="1"] .btn{font-size:1.05rem;padding:9px 20px}
+body[data-projektor="1"] .prikker button{width:35px;height:35px;font-size:0.95rem}
+body[data-projektor="1"] .dh-label{font-size:19px}
+body[data-projektor="1"] .dh-zone{font-size:15px}
+body[data-projektor="1"] .termo-vaerdi{font-size:2rem}
+body[data-projektor="1"] .knob-navn{font-size:1.1rem}
+body[data-projektor="1"] .knob-vaerdi{font-size:1.3rem}
+body[data-projektor="1"] .balance-tal{font-size:0.9rem}
+body[data-projektor="1"] .chip{font-size:0.95rem}
+body[data-projektor="1"] .fact{font-size:0.74rem}
+
+/* ── Responsivt ────────────────────────────────────────── */
+@media (max-width:960px){
+  .rig-body{grid-template-columns:minmax(0,1fr)}
+  .stage-col{border-right:none;border-bottom:2px solid var(--ink)}
+  .gauges{grid-template-columns:minmax(0,1fr)}
+  .gauge + .gauge{border-left:none;border-top:2px solid var(--ink)}
+  /* én spalte: højden er ikke låst, så pladsen skal heller ikke reserveres */
+  .dh-el.gauge[data-vis="skjult"]{display:none}
+  .knobs{grid-template-columns:minmax(0,1fr)}
 }
-.dh-scene-rul { display: none; font-size: .74em; color: var(--dh-teal); padding: 4px 2px 0; }
-/* På telefon ville figurens tekster blive ulæselige, hvis SVG'en blev presset ned
-   i skærmbredden. Den beholder sin mindstebredde og får sin egen vandrette
-   rulning — siden som helhed ruller stadig kun lodret. */
-@media (max-width: 700px) {
-  .dh-scene-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  .dh-scene-indre { min-width: 600px; }
-  .dh-scene-rul { display: block; }
+@media (max-width:700px){
+  /* På telefon ville figurens tekster blive ulæselige, hvis SVG'en blev
+     presset ned i skærmbredden. Den beholder sin mindstebredde og får sin
+     egen vandrette rulning — siden som helhed ruller stadig kun lodret. */
+  .dh-scene-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .dh-scene-indre{min-width:640px}
+  .dh-scene-rul{display:block}
 }
-@media (max-width: 560px) {
-  .dh-app { --dh-basis: 15px; }
-  .dh-layout { padding: 10px; gap: 10px; }
-  .dh-forklaring, .dh-quiz, .dh-kontrol { padding: 12px 13px; }
-  .dh-aflaes { gap: 14px; }
+@media (max-width:620px){
+  body{font-size:16px}
+  .wrap,.top-in,.foot-in{padding-left:16px;padding-right:16px}
+  .head{padding:24px 0 18px}
+  .rig{border-radius:14px;box-shadow:var(--hard)}
+  .side{padding:15px}
+  .side-titel{font-size:1.2rem}
+  .side-kort{font-size:0.9rem}
+  .gauge,.knobs{padding:14px 15px}
+  .rig-head{gap:8px}
+  .btn-mini{font-size:0.68rem;padding:4px 10px}
+  .rig-tilstande button{font-size:0.7rem;padding:4px 10px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
 }
 
-/* ── Print ─────────────────────────────────────────────────────────────── */
-.dh-print { display: none; }
-@media print {
-  .dh-app { display: none; }
-  .dh-print { display: block; font-family: var(--dh-sans, Calibri, sans-serif); color: #000; padding: 0; }
-  .dh-print h1 { font-family: Cambria, Georgia, serif; font-size: 20pt; margin-bottom: 2mm; }
-  .dh-print h2 { font-family: Cambria, Georgia, serif; font-size: 14pt; margin: 6mm 0 2mm; page-break-after: avoid; }
-  .dh-print .dh-p-opg { margin-bottom: 6mm; page-break-inside: avoid; font-size: 11pt; }
-  .dh-print .dh-p-spm { font-weight: 700; }
-  .dh-print .dh-p-valg { margin: 1mm 0 0 6mm; }
-  .dh-print .dh-p-linjer { border-bottom: 1px solid #999; height: 7mm; margin-top: 2mm; }
-  .dh-print .dh-p-facit { margin-top: 1.5mm; padding: 1.5mm 3mm; border-left: 3px solid #666; font-size: 10pt; }
-  body[data-print="uden"] .dh-p-facit { display: none; }
-  body[data-print="med"] .dh-p-linjer { display: none; }
-  @page { margin: 18mm 16mm; }
+/* ── Print ─────────────────────────────────────────────── */
+/* Uden data-print: det aktuelle billede på ét A4.
+   Med data-print: opgavearket i stedet for figuren. */
+.dh-print{display:none}
+@media print{
+  .top,.foot,.head,.rig-tools,.rig-tilstande,.nav,.prikker,
+  .knobs-bund,.dh-scene-rul,.dh-opg-knapper{display:none!important}
+  .dh-el.gauge[data-vis="skjult"]{display:none}   /* reserveret plads skal ikke koste papir */
+  .rig-body{min-height:0!important}
+  body{background:#fff}
+  .rig{box-shadow:none;border-width:1.5px;break-inside:avoid}
+  body[data-print] .rig{display:none}
+  body[data-print] .dh-print{
+    display:block;font-family:var(--body);color:#000;
+  }
+  .dh-print h1{font-family:var(--display);font-weight:800;font-size:20pt;margin-bottom:2mm}
+  .dh-print h2{font-family:var(--display);font-weight:800;font-size:14pt;margin:6mm 0 2mm;break-after:avoid}
+  .dh-print .dh-p-opg{margin-bottom:6mm;break-inside:avoid;font-size:11pt}
+  .dh-print .dh-p-spm{font-weight:700}
+  .dh-print .dh-p-valg{margin:1mm 0 0 6mm}
+  .dh-print .dh-p-linjer{border-bottom:1px solid #999;height:7mm;margin-top:2mm}
+  .dh-print .dh-p-facit{margin-top:1.5mm;padding:1.5mm 3mm;border-left:3px solid #666;font-size:10pt}
+  body[data-print="uden"] .dh-p-facit{display:none}
+  body[data-print="med"] .dh-p-linjer{display:none}
+  @page{margin:15mm}
 }
 </style>
 </head>
-<body>
-<!-- smbi hjem-knap -->
-<a href="/" class="smbi-home" aria-label="Til forsiden" title="Til forsiden">
-<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
-<span>Hjem</span>
-</a>
-<style>
-.smbi-home{position:fixed;top:14px;left:14px;z-index:2147483000;display:inline-flex;align-items:center;gap:6px;padding:8px 13px;font:600 14px/1 system-ui,-apple-system,"Segoe UI",sans-serif;color:#F5F0E8;background:#1C2E44;border:1px solid #2E4A6A;border-radius:999px;text-decoration:none;box-shadow:0 2px 10px rgba(0,0,0,.28);opacity:.9;transition:opacity .15s,transform .15s}
-.smbi-home:hover{opacity:1;transform:translateY(-1px)}
-.smbi-home svg{flex:none}
-@media print{.smbi-home{display:none!important}}
-</style>
-<script>(function(){try{if(window.top!==window.self){var e=document.querySelector(".smbi-home");if(e)e.style.display="none";}}catch(x){}})();</script>
+<body data-mode="teach">
 
-
-<div class="dh-app" id="dhApp" data-mode="teach">
-
-  <header class="dh-top">
-    <h1>Drivhuseffekten trin for trin</h1>
-
-    <div class="dh-tilstande" role="group" aria-label="Vælg tilstand">
-      <button type="button" data-tilstand="teach" aria-pressed="true">Gennemgang</button>
-      <button type="button" data-tilstand="explore" aria-pressed="false">Udforsk</button>
-      <button type="button" data-tilstand="quiz" aria-pressed="false">Opgaver</button>
+<header class="top" id="site-top">
+  <div class="rainbow"></div>
+  <div class="top-bar">
+    <div class="top-in">
+      <a href="/" class="brand"><span class="brand-mark"></span>smbi<em>.dk</em></a>
+      <nav class="top-nav">
+        <a href="/geografi.html">Naturgeografi</a>
+        <a href="/">Forside</a>
+      </nav>
     </div>
+  </div>
+</header>
 
-    <div class="dh-topknapper">
-      <button type="button" id="dhProjektor" aria-pressed="false" title="Forstør al tekst til projektor">Projektor</button>
-      <button type="button" id="dhOmModellen">Om modellen</button>
+<main>
+  <div class="wrap head">
+    <div class="head-in">
+      <span class="eyebrow mono"><span class="blink"></span>Naturgeografi · klima &amp; energibalance</span>
+      <h1>Drivhuseffekten <span class="hi" style="--hc:#C7E6F6">med tal på</span></h1>
+      <p class="lead">Otte trin fra sollys til selvforstærkende tilbagekobling — med energibudgettet i watt pr. kvadratmeter. Skru på CO₂ og albedo, og se temperaturen finde en ny balance. Opgaverne kan printes med eller uden facit.</p>
     </div>
-  </header>
+  </div>
 
-  <main class="dh-layout">
+  <div class="wrap">
+    <section class="rig">
+      <div class="rig-bar"></div>
 
-    <!-- ══ Venstre: scene + kontroller ══════════════════════════════════ -->
-    <div class="dh-venstre">
+      <div class="rig-head">
+        <span class="rig-live"><span class="dot"></span><span class="mono" id="dhTael">Trin 1 af 8</span></span>
 
-      <section class="dh-kort dh-scene-boks" aria-label="Figur: energistrømme i Jordens atmosfære">
-        <div class="dh-scene-wrap">
-         <div class="dh-scene-indre">
-          <svg class="dh-scene" id="dhSvg" viewBox="0 0 840 480" role="group"
-               aria-labelledby="dhSvgTitel" aria-describedby="dhSvgBesk" preserveAspectRatio="xMidYMid meet">
-            <title id="dhSvgTitel">Drivhuseffekten: energistrømme mellem Solen, atmosfæren og jordoverfladen</title>
-            <desc id="dhSvgBesk">Figuren viser kortbølget stråling fra Solen ind mod Jorden, hvor en del kastes tilbage, og langbølget varmestråling fra jordoverfladen, som drivhusgasserne optager og sender ud igen i alle retninger.</desc>
+        <div class="rig-tilstande" role="group" aria-label="Vælg tilstand">
+          <button type="button" data-tilstand="teach" aria-pressed="true">Gennemgang</button>
+          <button type="button" data-tilstand="explore" aria-pressed="false">Udforsk</button>
+          <button type="button" data-tilstand="quiz" aria-pressed="false">Opgaver</button>
+        </div>
 
-            <defs>
-              <linearGradient id="dhHimmel" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%"   stop-color="#12184A"/>
-                <stop offset="26%"  stop-color="#21295C"/>
-                <stop offset="58%"  stop-color="#3F6494"/>
-                <stop offset="100%" stop-color="#9EC2E0"/>
-              </linearGradient>
-              <linearGradient id="dhJord" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%"   stop-color="#2F6B4F"/>
-                <stop offset="100%" stop-color="#1E3F33"/>
-              </linearGradient>
-              <linearGradient id="dhAtmFyld" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%"   stop-color="#CADCFC" stop-opacity=".16"/>
-                <stop offset="100%" stop-color="#CADCFC" stop-opacity=".42"/>
-              </linearGradient>
-              <radialGradient id="dhSolGlow">
-                <stop offset="0%"   stop-color="#FFE9A8"/>
-                <stop offset="55%"  stop-color="#F2B134"/>
-                <stop offset="100%" stop-color="#F2B134" stop-opacity="0"/>
-              </radialGradient>
-            </defs>
+        <div class="rig-tools">
+          <button type="button" class="btn-mini" id="dhProjektor" aria-pressed="false" title="Forstør al tekst til projektor">Projektor</button>
+          <button type="button" class="btn-mini" id="dhOmModellen">Om modellen</button>
+          <a class="btn-mini" href="drivhuseffektenSimpel.html">Forenklet version →</a>
+        </div>
+      </div>
 
-            <!-- Baggrund -->
-            <rect x="0" y="0" width="840" height="404" fill="url(#dhHimmel)"/>
-            <rect x="0" y="404" width="840" height="76" fill="url(#dhJord)"/>
+      <div class="rig-body">
+        <!-- ══ Venstre: figuren og instrumenterne ═════════════════════════ -->
+        <div class="stage-col">
+        <div class="stage">
+          <div class="dh-scene-wrap">
+           <div class="dh-scene-indre">
+            <svg class="dh-scene" id="dhSvg" viewBox="0 0 840 480" role="group"
+                 aria-labelledby="dhSvgTitel" aria-describedby="dhSvgBesk" preserveAspectRatio="xMidYMid meet">
+              <title id="dhSvgTitel">Drivhuseffekten: energistrømme mellem Solen, atmosfæren og jordoverfladen</title>
+              <desc id="dhSvgBesk">Figuren viser kortbølget stråling fra Solen ind mod Jorden, hvor en del kastes tilbage, og langbølget varmestråling fra jordoverfladen, som drivhusgasserne optager og sender ud igen i alle retninger. Pilenes tykkelse svarer til energimængden i watt pr. kvadratmeter.</desc>
 
-            <!-- Zonelabels -->
-            <g class="dh-el" data-el="rummet">
-              <text class="dh-zone" x="820" y="26" text-anchor="end" fill="#CADCFC">RUMMET</text>
-              <g id="dhStjerner" fill="#F7FAFC" opacity=".55">
-                <circle cx="300" cy="22" r="1.6"/><circle cx="378" cy="46" r="1.2"/>
-                <circle cx="452" cy="18" r="1.4"/><circle cx="530" cy="40" r="1.1"/>
-                <circle cx="612" cy="20" r="1.5"/><circle cx="700" cy="52" r="1.2"/>
-                <circle cx="248" cy="58" r="1.1"/><circle cx="770" cy="30" r="1.3"/>
+              <defs>
+                <linearGradient id="dhHimmel" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%"   stop-color="#17211F"/>
+                  <stop offset="26%"  stop-color="#1B2E3F"/>
+                  <stop offset="60%"  stop-color="#2F6F9E"/>
+                  <stop offset="100%" stop-color="#C7E6F6"/>
+                </linearGradient>
+                <linearGradient id="dhJord" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%"   stop-color="#4C8F3C"/>
+                  <stop offset="100%" stop-color="#28502A"/>
+                </linearGradient>
+                <linearGradient id="dhAtmFyld" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%"   stop-color="#C7E6F6" stop-opacity=".14"/>
+                  <stop offset="100%" stop-color="#C7E6F6" stop-opacity=".40"/>
+                </linearGradient>
+                <radialGradient id="dhSolGlow">
+                  <stop offset="0%"   stop-color="#FFE9A8"/>
+                  <stop offset="55%"  stop-color="#FFB300"/>
+                  <stop offset="100%" stop-color="#FFB300" stop-opacity="0"/>
+                </radialGradient>
+              </defs>
+
+              <!-- Baggrund -->
+              <rect x="0" y="0" width="840" height="404" fill="url(#dhHimmel)"/>
+              <rect x="0" y="404" width="840" height="76" fill="url(#dhJord)"/>
+
+              <!-- Zonelabels -->
+              <g class="dh-el" data-el="rummet">
+                <text class="dh-zone" x="820" y="26" text-anchor="end" fill="#C7E6F6">RUMMET</text>
+                <g fill="#FFF9EE" opacity=".55">
+                  <circle cx="300" cy="22" r="1.6"/><circle cx="378" cy="46" r="1.2"/>
+                  <circle cx="452" cy="18" r="1.4"/><circle cx="530" cy="40" r="1.1"/>
+                  <circle cx="612" cy="20" r="1.5"/><circle cx="700" cy="52" r="1.2"/>
+                  <circle cx="248" cy="58" r="1.1"/><circle cx="770" cy="30" r="1.3"/>
+                </g>
               </g>
-            </g>
 
-            <!-- Toppen af atmosfæren -->
-            <g class="dh-el" data-el="toa">
-              <line x1="20" y1="150" x2="820" y2="150" stroke="#CADCFC" stroke-width="2" stroke-dasharray="9 8" opacity=".75"/>
-              <text class="dh-zone" x="470" y="172" text-anchor="middle" fill="#CADCFC" font-size="12">TOPPEN AF ATMOSFÆREN</text>
-            </g>
-
-            <!-- Solen -->
-            <g class="dh-el" data-el="sol" role="img" aria-label="Solen">
-              <title>Solen</title>
-              <circle cx="62" cy="52" r="60" fill="url(#dhSolGlow)" opacity=".55"/>
-              <circle class="dh-boks" cx="62" cy="52" r="30" fill="#F2B134" stroke="#FFE9A8" stroke-width="3"/>
-              <text class="dh-label dh-label-lys" x="62" y="112" text-anchor="middle" font-size="14">Solen</text>
-            </g>
-
-            <!-- Atmosfærelaget -->
-            <g class="dh-el" data-el="atmosfaere" role="img" aria-label="Atmosfærelaget med drivhusgasser">
-              <title>Atmosfærelaget med drivhusgasserne CO₂, H₂O og CH₄</title>
-              <rect class="dh-boks" x="24" y="214" width="792" height="104" rx="16"
-                    fill="url(#dhAtmFyld)" stroke="#CADCFC" stroke-width="2.5" stroke-dasharray="14 7"/>
-              <text class="dh-zone" x="44" y="240" fill="#F7FAFC">ATMOSFÆREN</text>
-              <g font-size="14" font-weight="700" fill="#21295C">
-                <g><circle cx="272" cy="292" r="17" fill="#CADCFC" stroke="#F7FAFC" stroke-width="1.5"/><text x="272" y="297" text-anchor="middle">H₂O</text></g>
-                <g><circle cx="482" cy="244" r="17" fill="#CADCFC" stroke="#F7FAFC" stroke-width="1.5"/><text x="482" y="249" text-anchor="middle">O₃</text></g>
-                <g><circle cx="668" cy="244" r="17" fill="#CADCFC" stroke="#F7FAFC" stroke-width="1.5"/><text x="668" y="249" text-anchor="middle">CH₄</text></g>
-                <g><circle cx="700" cy="296" r="17" fill="#CADCFC" stroke="#F7FAFC" stroke-width="1.5"/><text x="700" y="301" text-anchor="middle">N₂O</text></g>
+              <!-- Toppen af atmosfæren -->
+              <g class="dh-el" data-el="toa">
+                <line x1="20" y1="150" x2="820" y2="150" stroke="#C7E6F6" stroke-width="2" stroke-dasharray="9 8" opacity=".75"/>
+                <text class="dh-zone" x="470" y="172" text-anchor="middle" fill="#C7E6F6" font-size="11">TOPPEN AF ATMOSFÆREN</text>
               </g>
-            </g>
 
-            <!-- Genudsendelse i alle retninger -->
-            <g class="dh-el" data-el="genudsendelse" role="img" aria-label="Drivhusgassen sender varmestrålingen ud igen i alle retninger">
-              <title>En drivhusgas sender varmestrålingen ud igen i alle retninger</title>
-              <g id="dhGenud" stroke="#C64B3A" stroke-width="3.5" stroke-dasharray="5 4" stroke-linecap="round" fill="none"></g>
-              <circle class="dh-boks" cx="556" cy="266" r="19" fill="#F7FAFC" stroke="#C64B3A" stroke-width="3"/>
-              <text x="556" y="271" text-anchor="middle" font-size="13" font-weight="700" fill="#21295C">CO₂</text>
-            </g>
+              <!-- Solen -->
+              <g class="dh-el" data-el="sol" role="img" aria-label="Solen">
+                <title>Solen</title>
+                <circle cx="62" cy="52" r="60" fill="url(#dhSolGlow)" opacity=".55"/>
+                <circle class="dh-glans" cx="62" cy="52" r="30" fill="#FFB300" stroke="#17211F" stroke-width="2.5"/>
+                <text class="dh-label" x="62" y="114" text-anchor="middle" fill="#FFF9EE" stroke="#17211F">Solen</text>
+              </g>
 
-            <!-- Jordoverfladen -->
-            <g class="dh-el" data-el="overflade" role="img" aria-label="Jordoverfladen">
-              <title>Jordoverfladen</title>
-              <rect class="dh-boks" x="0" y="398" width="840" height="10" fill="#3C8A63"/>
-              <text class="dh-zone" x="420" y="446" text-anchor="middle" fill="#F7FAFC">JORDOVERFLADEN</text>
-            </g>
+              <!-- Atmosfærelaget -->
+              <g class="dh-el" data-el="atmosfaere" role="img" aria-label="Atmosfærelaget med drivhusgasser">
+                <title>Atmosfærelaget med drivhusgasserne CO₂, H₂O og CH₄</title>
+                <rect class="dh-glans" x="24" y="214" width="792" height="104" rx="16"
+                      fill="url(#dhAtmFyld)" stroke="#C7E6F6" stroke-width="2.5" stroke-dasharray="14 7"/>
+                <g font-size="13" font-weight="800" fill="#17211F">
+                  <g><circle cx="272" cy="292" r="18" fill="#C7E6F6" stroke="#17211F" stroke-width="2"/><text x="272" y="297" text-anchor="middle">H₂O</text></g>
+                  <g><circle cx="482" cy="244" r="18" fill="#C7E6F6" stroke="#17211F" stroke-width="2"/><text x="482" y="249" text-anchor="middle">O₃</text></g>
+                  <g><circle cx="668" cy="244" r="18" fill="#C7E6F6" stroke="#17211F" stroke-width="2"/><text x="668" y="249" text-anchor="middle">CH₄</text></g>
+                  <g><circle cx="700" cy="296" r="18" fill="#C7E6F6" stroke="#17211F" stroke-width="2"/><text x="700" y="301" text-anchor="middle">N₂O</text></g>
+                </g>
+              </g>
 
-            <!-- Is og sne (skrumper ved lav albedo) -->
-            <g class="dh-el" data-el="is" role="img" aria-label="Is og sne">
-              <title>Is og sne — lyse overflader med høj albedo</title>
-              <path id="dhIsVenstre" class="dh-boks" d="" fill="#F7FAFC" stroke="#CADCFC" stroke-width="2"/>
-              <path id="dhIsHoejre"  class="dh-boks" d="" fill="#F7FAFC" stroke="#CADCFC" stroke-width="2"/>
-            </g>
+              <!-- Genudsendelse i alle retninger -->
+              <g class="dh-el" data-el="genudsendelse" role="img" aria-label="Drivhusgassen sender varmestrålingen ud igen i alle retninger">
+                <title>En drivhusgas sender varmestrålingen ud igen i alle retninger</title>
+                <g class="dh-glans">
+                  <g id="dhGenud" stroke="#FF6A3D" stroke-width="3.5" stroke-dasharray="5 4" stroke-linecap="round" fill="none"></g>
+                  <circle cx="556" cy="266" r="21" fill="#FFF9EE" stroke="#17211F" stroke-width="2.5"/>
+                  <text x="556" y="271" text-anchor="middle" font-size="13" font-weight="800" fill="#17211F">CO₂</text>
+                </g>
+              </g>
 
-            <!-- Pile: udfyldes af JS -->
-            <g class="dh-el" data-el="pilInd"></g>
-            <g class="dh-el" data-el="pilReflekteret"></g>
-            <g class="dh-el" data-el="pilAbsAtm"></g>
-            <g class="dh-el" data-el="pilAbsorberet"></g>
-            <g class="dh-el" data-el="pilJordUdRum"></g>
-            <g class="dh-el" data-el="pilOverfladeUd"></g>
-            <g class="dh-el" data-el="pilKonvektion"></g>
-            <g class="dh-el" data-el="pilTilbagestraaling"></g>
-            <g class="dh-el" data-el="pilRummet"></g>
-          </svg>
+              <!-- Jordoverfladen -->
+              <g class="dh-el" data-el="overflade" role="img" aria-label="Jordoverfladen">
+                <title>Jordoverfladen</title>
+                <rect class="dh-glans" x="0" y="398" width="840" height="10" fill="#5FB030"/>
+                <text class="dh-zone" x="420" y="452" text-anchor="middle" fill="#FFF9EE">JORDOVERFLADEN</text>
+              </g>
 
-          <!-- Overlay til trækopgaven -->
-          <div class="dh-drop-lag" id="dhDropLag" hidden></div>
-         </div>
+              <!-- Is og sne (skrumper ved lav albedo) -->
+              <g class="dh-el" data-el="is" role="img" aria-label="Is og sne">
+                <title>Is og sne — lyse overflader med høj albedo</title>
+                <path id="dhIsVenstre" class="dh-glans" d="" fill="#FFF9EE" stroke="#17211F" stroke-width="2.5"/>
+                <path id="dhIsHoejre"  class="dh-glans" d="" fill="#FFF9EE" stroke="#17211F" stroke-width="2.5"/>
+              </g>
+
+              <!-- Pile: udfyldes af JS -->
+              <g class="dh-el" data-el="pilInd"></g>
+              <g class="dh-el" data-el="pilReflekteret"></g>
+              <g class="dh-el" data-el="pilAbsAtm"></g>
+              <g class="dh-el" data-el="pilAbsorberet"></g>
+              <g class="dh-el" data-el="pilJordUdRum"></g>
+              <g class="dh-el" data-el="pilOverfladeUd"></g>
+              <g class="dh-el" data-el="pilKonvektion"></g>
+              <g class="dh-el" data-el="pilTilbagestraaling"></g>
+              <g class="dh-el" data-el="pilRummet"></g>
+            </svg>
+
+            <!-- Overlay til trækopgaven -->
+            <div class="dh-drop-lag" id="dhDropLag" hidden></div>
+           </div>
+          </div>
+          <p class="dh-scene-rul">← Træk figuren til siden for at se det hele →</p>
         </div>
-        <p class="dh-scene-rul">← Træk figuren til siden for at se det hele →</p>
 
-        <div class="dh-aflaes" id="dhAflaes">
-          <div class="dh-termo dh-el" data-el="termometer">
-            <div class="dh-termo-hoved">
-              <span class="dh-termo-navn">Temperatur ved overfladen</span>
-              <span class="dh-termo-vaerdi" id="dhTempVaerdi" aria-live="polite">–</span>
+        <!-- Instrumenter: aflæser figuren, står derfor på samme side -->
+        <div class="gauges">
+          <div class="gauge g-termo dh-el" data-el="termometer">
+            <div class="termo-hoved">
+              <span class="gauge-navn">Temperatur ved overfladen</span>
+              <span class="termo-vaerdi" id="dhTempVaerdi" aria-live="polite">–</span>
             </div>
-            <div class="dh-termo-bar" id="dhTermoBar">
-              <div class="dh-termo-gab" id="dhGab" hidden><span id="dhGabTekst">33 °C mangler</span></div>
-              <div class="dh-termo-spoegelse" id="dhSpoegelse" hidden><span>målt +15 °C</span></div>
-              <div class="dh-termo-maerke" id="dhMaerke"></div>
+            <div class="termo-bar" id="dhTermoBar">
+              <div class="gab" id="dhGab" hidden><b id="dhGabTekst">33 °C mangler</b></div>
+              <div class="punkt punkt-maalt" id="dhSpoegelse" hidden><b>målt +15 °C</b></div>
+              <div class="punkt" id="dhMaerke"></div>
             </div>
-            <div class="dh-termo-skala" id="dhSkala"><span>−30 °C</span><span>0 °C</span><span>+40 °C</span></div>
+            <div class="skala" id="dhSkala"><span>−30 °C</span><span>0 °C</span><span>+40 °C</span></div>
           </div>
 
-          <div class="dh-balance dh-el" data-el="balanceIndikator">
-            <div class="dh-balance-titel">Balance i toppen af atmosfæren</div>
-            <div class="dh-balance-linje">
-              <span id="dhBalanceTekst">ind 340 = ud 100 + 240</span>
-              <span class="dh-chip" id="dhBalanceChip" data-status="ok">✓ balance</span>
+          <div class="gauge g-balance dh-el" data-el="balanceIndikator">
+            <span class="gauge-navn">Balance i toppen af atmosfæren</span>
+            <div class="balance-linje">
+              <span class="balance-tal" id="dhBalanceTekst">ind 340 = ud 100 + 240</span>
+              <span class="chip" id="dhBalanceChip" data-status="ok">✓ balance</span>
             </div>
-            <div class="dh-balance-note" id="dhBalanceNote" aria-live="polite"></div>
-            <div class="dh-balance-titel" style="margin-top:6px">Ved overfladen</div>
-            <div class="dh-balance-linje"><span id="dhOverfladeBalance">–</span></div>
+            <div class="balance-note" id="dhBalanceNote" aria-live="polite"></div>
+            <div class="balance-titel">Ved overfladen</div>
+            <div class="balance-linje"><span class="balance-tal" id="dhOverfladeBalance">–</span></div>
           </div>
         </div>
-      </section>
+        </div>
 
-      <!-- Kontrolpanel -->
-      <section class="dh-kort dh-kontrol" aria-label="Kontrolpanel">
-        <div class="dh-kontrol-titel">Skydere</div>
-
-        <div class="dh-skyder" id="dhCo2Boks">
-          <div class="dh-skyder-hoved">
-            <label class="dh-skyder-navn" for="dhCo2">CO₂ i atmosfæren</label>
-            <span class="dh-laasikon" id="dhCo2Laas" hidden>🔒 låst indtil trin 7</span>
-            <span class="dh-skyder-vaerdi" id="dhCo2Vaerdi">280 ppm</span>
+        <!-- ══ Højre: forklaring ══════════════════════════════════════════ -->
+        <section class="side" id="dhForklaring" aria-live="polite">
+          <div>
+            <span class="side-tael" id="dhTaelChip">Trin 1 af 8</span>
+            <h2 class="side-titel" id="dhTrinTitel">Sollyset rammer Jorden</h2>
           </div>
-          <input type="range" id="dhCo2" min="280" max="1120" step="10" value="280"
-                 aria-describedby="dhCo2Note">
-          <div class="dh-maerker" id="dhCo2Maerker"></div>
-          <div class="dh-skyder-note" id="dhCo2Note">CO₂ fylder kun 0,028 % af luften · ΔT = 0,0 °C</div>
-        </div>
+          <p class="side-kort" id="dhTrinKort"></p>
+          <div class="side-tekst" id="dhTrinTekst"></div>
+          <div id="dhPasPaa"></div>
+          <div id="dhSloejfeBoks"></div>
 
-        <div class="dh-skyder" id="dhAlbedoBoks">
-          <div class="dh-skyder-hoved">
-            <label class="dh-skyder-navn" for="dhAlbedo">Albedo (hvor meget lys kastes tilbage)</label>
-            <span class="dh-laasikon" id="dhAlbedoLaas" hidden>🔒 låst indtil trin 8</span>
-            <span class="dh-skyder-vaerdi" id="dhAlbedoVaerdi">0,30</span>
+          <details class="stopop" id="dhStopOp">
+            <summary>Stop op — spørgsmål til klassen</summary>
+            <div class="stopop-krop" id="dhStopOpTekst"></div>
+          </details>
+
+          <div class="nav">
+            <button type="button" class="btn" id="dhForrige">◀ Forrige</button>
+            <button type="button" class="btn btn-primaer" id="dhNaeste">Næste ▶</button>
           </div>
-          <input type="range" id="dhAlbedo" min="0.10" max="0.50" step="0.01" value="0.30"
-                 aria-describedby="dhAlbedoNote">
-          <div class="dh-maerker" id="dhAlbedoMaerker"></div>
-          <div class="dh-skyder-note" id="dhAlbedoNote">30 % af sollyset kastes tilbage af skyer, is, sne og lyse overflader.</div>
+          <div class="prikker" id="dhPrikker" role="group" aria-label="Gå til trin"></div>
+        </section>
+
+        <!-- ══ Højre: opgaver ═════════════════════════════════════════════ -->
+        <section class="side" id="dhQuiz" hidden></section>
+      </div>
+
+      <!-- ══ Skydere ════════════════════════════════════════════════════ -->
+      <div class="knobs">
+        <div class="knob" id="dhCo2Boks" style="--track:linear-gradient(90deg,#C7E6F6,#FF6A3D);--kc:#FF6A3D">
+          <div class="knob-hoved">
+            <label class="knob-navn" for="dhCo2">CO₂ i atmosfæren</label>
+            <span class="knob-laas" id="dhCo2Laas" hidden>Låst indtil trin 7</span>
+            <span class="knob-vaerdi" id="dhCo2Vaerdi">280 ppm</span>
+          </div>
+          <input type="range" id="dhCo2" min="280" max="1120" step="10" value="280" aria-describedby="dhCo2Note">
+          <div class="maerker" id="dhCo2Maerker"></div>
+          <div class="knob-note" id="dhCo2Note">CO₂ fylder kun 0,028 % af luften · ΔT = 0,0 °C</div>
         </div>
 
-        <div class="dh-kontrol-bund">
-          <button type="button" class="dh-knap" id="dhNulstil">Nulstil</button>
+        <div class="knob" id="dhAlbedoBoks" style="--track:linear-gradient(90deg,#28502A,#FFF9EE);--kc:#FFB300">
+          <div class="knob-hoved">
+            <label class="knob-navn" for="dhAlbedo">Albedo — hvor meget lys kastes tilbage</label>
+            <span class="knob-laas" id="dhAlbedoLaas" hidden>Låst indtil trin 8</span>
+            <span class="knob-vaerdi" id="dhAlbedoVaerdi">0,30</span>
+          </div>
+          <input type="range" id="dhAlbedo" min="0.10" max="0.50" step="0.01" value="0.30" aria-describedby="dhAlbedoNote">
+          <div class="maerker" id="dhAlbedoMaerker"></div>
+          <div class="knob-note" id="dhAlbedoNote">30 % af sollyset kastes tilbage af skyer, is, sne og lyse overflader.</div>
         </div>
-      </section>
+
+        <div class="knobs-bund">
+          <button type="button" class="btn" id="dhNulstil">Nulstil skyderne</button>
+        </div>
+      </div>
+
+      <!-- Signaturforklaring: farve OG stregtype, så forskellen også kan ses i
+           sort-hvid print og af farveblinde. -->
+      <div class="facts">
+        <span class="fact">
+          <svg width="42" height="12" aria-hidden="true"><line x1="1" y1="6" x2="41" y2="6" stroke="#FFB300" stroke-width="8" stroke-linecap="butt"/></svg>
+          Kortbølget — sollys
+        </span>
+        <span class="fact">
+          <svg width="42" height="12" aria-hidden="true"><line x1="1" y1="6" x2="41" y2="6" stroke="#FF6A3D" stroke-width="8" stroke-dasharray="10 6" stroke-linecap="butt"/></svg>
+          Langbølget — varme
+        </span>
+        <span class="fact">
+          <svg width="42" height="12" aria-hidden="true"><line x1="1" y1="6" x2="41" y2="6" stroke="#0E86C8" stroke-width="8" stroke-dasharray="3 4" stroke-linecap="butt"/></svg>
+          Fordampning og varm luft
+        </span>
+        <span class="fact-txt">Pilens tykkelse viser, hvor meget energi der er tale om.</span>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer class="foot">
+  <div class="foot-in">
+    <div>
+      <a href="/" class="brand"><span class="brand-mark"></span>smbi<em>.dk</em></a>
+      <div class="mono">Drivhuseffekten trin for trin · udvidet</div>
     </div>
+    <nav class="foot-links">
+      <a href="/geografi.html">Naturgeografi</a>
+      <a href="/">Alle simuleringer</a>
+      <a href="/contact.html">Kontakt</a>
+    </nav>
+  </div>
+</footer>
 
-    <!-- ══ Højre: forklaring / opgaver ══════════════════════════════════ -->
-    <div class="dh-hoejre">
+<dialog id="dhDialog">
+  <div class="dialog-krop" id="dhDialogKrop"></div>
+  <div class="dialog-fod"><button type="button" class="btn btn-primaer" id="dhDialogLuk">Luk</button></div>
+</dialog>
 
-      <section class="dh-kort dh-forklaring" id="dhForklaring" aria-live="polite">
-        <div>
-          <div class="dh-trin-tael" id="dhTrinTael">Trin 1 af 8</div>
-          <h2 class="dh-trin-titel" id="dhTrinTitel">Sollyset rammer Jorden</h2>
-        </div>
-        <p class="dh-trin-kort" id="dhTrinKort"></p>
-        <div class="dh-trin-tekst" id="dhTrinTekst"></div>
-        <div id="dhPasPaa"></div>
-        <div id="dhSloejfeBoks"></div>
+<p class="sr" aria-live="polite" id="dhSrStatus"></p>
 
-        <details class="dh-stopop" id="dhStopOp">
-          <summary>Stop op — spørgsmål til klassen</summary>
-          <div class="dh-stopop-krop" id="dhStopOpTekst"></div>
-        </details>
-
-        <div class="dh-nav">
-          <button type="button" class="dh-knap" id="dhForrige">◀ Forrige</button>
-          <button type="button" class="dh-knap dh-knap-primaer" id="dhNaeste">Næste ▶</button>
-        </div>
-        <div class="dh-prikker" id="dhPrikker" role="group" aria-label="Gå til trin"></div>
-      </section>
-
-      <section class="dh-kort dh-quiz" id="dhQuiz" hidden></section>
-    </div>
-  </main>
-
-  <dialog id="dhDialog">
-    <div class="dh-dialog-krop" id="dhDialogKrop"></div>
-    <div style="padding:0 22px 20px"><button type="button" class="dh-knap dh-knap-primaer" id="dhDialogLuk">Luk</button></div>
-  </dialog>
-
-  <p class="dh-sr" aria-live="polite" id="dhSrStatus"></p>
-</div>
-
-<!-- Printversion (bygges af JS) -->
+<!-- Printversion af opgavearket (bygges af JS) -->
 <div class="dh-print" id="dhPrint"></div>
+
+<script>
+/* skjul side-krom, når siden vises i en iframe */
+(function(){try{if(window.top!==window.self){
+  document.getElementById('site-top').style.display='none';
+  document.querySelector('.foot').style.display='none';
+  document.querySelector('.head').style.display='none';
+}}catch(x){}})();
+</script>
 
 <script>
 (function () {
@@ -951,7 +1243,7 @@ const K = DATA.constants;
 const NØGLE = "smbi.drivhus.v1";
 
 /* ==========================================================================
-   2. Fysikmotoren (vises ikke for eleverne)
+   2. Fysikmotoren (vises ikke for eleverne) — uændret fra den gamle udgave
    ========================================================================== */
 
 // Effektiv temperatur, K:  Te = ((1 - a)·S / 4 / σ)^0,25
@@ -1012,7 +1304,7 @@ const state = {
   quiz: { saet: "alle", idx: 0, svar: {}, vist: null }
 };
 
-const app = document.getElementById("dhApp");
+const app = document.body;
 const $ = id => document.getElementById(id);
 const svg = $("dhSvg");
 const reduceret = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -1033,36 +1325,46 @@ function lav(tag, attr) {
   return el;
 }
 
+const KORT = "#FFB300", LANG = "#FF6A3D", KONV = "#0E86C8", REFL = "#FFE1A0";
+const BLAEK = "#17211F";
+
 /**
- * Tegner en lodret pil med halo (så den kan ses på både mørk og lys baggrund),
- * skaft (fuldt optrukket = kortbølget, stiplet = langbølget) og spids.
+ * Tegner en lodret pil med blækkant (så den står lige så skarpt på den mørke
+ * himmel som på den lyse jord), skaft (fuldt optrukket = kortbølget, stiplet =
+ * langbølget) og spids. Kanten er stiplet efter samme mønster som skaftet,
+ * så de stiplede pile får blækrand om hver enkelt streg.
  */
 function tegnPil(gruppe, o) {
   gruppe.textContent = "";
   const w = tykkelse(o.vaerdi);
   const ned = o.y2 > o.y1;
-  const hw = Math.max(7, Math.min(17, w * 0.95));
-  const len = Math.max(13, Math.min(24, w * 1.25));
+  const hw = Math.max(8, Math.min(18, w * 1.05));
+  const len = Math.max(15, Math.min(26, w * 1.35));
   const spids = o.y2;
   const basis = ned ? o.y2 - len : o.y2 + len;
-  const skaftSlut = ned ? basis + 1 : basis - 1;
+  const skaftSlut = ned ? basis + 1.5 : basis - 1.5;
 
-  gruppe.appendChild(lav("line", {
+  const kant = lav("line", {
     x1: o.x, y1: o.y1, x2: o.x, y2: skaftSlut,
-    stroke: "#F7FAFC", "stroke-opacity": ".35", "stroke-width": w + 5, "stroke-linecap": "butt"
-  }));
+    stroke: BLAEK, "stroke-width": w + 4, "stroke-linecap": "butt"
+  });
+  if (o.stiplet) kant.setAttribute("stroke-dasharray", "13 8");
+  gruppe.appendChild(kant);
+
   const skaft = lav("line", {
     x1: o.x, y1: o.y1, x2: o.x, y2: skaftSlut,
     stroke: o.farve, "stroke-width": w, "stroke-linecap": "butt"
   });
-  skaft.setAttribute("class", "dh-shaft");
+  skaft.setAttribute("class", "dh-glans");
   if (o.stiplet) skaft.setAttribute("stroke-dasharray", "13 8");
   gruppe.appendChild(skaft);
 
-  gruppe.appendChild(lav("polygon", {
+  const pilespids = lav("polygon", {
     points: `${o.x - hw},${basis} ${o.x + hw},${basis} ${o.x},${spids}`,
-    fill: o.farve, stroke: "#F7FAFC", "stroke-opacity": ".35", "stroke-width": "2"
-  }));
+    fill: o.farve, stroke: BLAEK, "stroke-width": "2.5", "stroke-linejoin": "round"
+  });
+  pilespids.setAttribute("class", "dh-glans");
+  gruppe.appendChild(pilespids);
 
   // Label — skjules i trækopgaven, hvor tallene ellers ville afsløre facit
   if (!skjulPileTekst) {
@@ -1072,13 +1374,13 @@ function tegnPil(gruppe, o) {
     const linjer = [].concat(o.navn || []);
     const t = lav("text", {
       x: lx, y: midt - linjer.length * 6, "text-anchor": venstre ? "end" : "start",
-      fill: o.tekstFarve, stroke: o.tekstFarve === MOERK ? "#F7FAFC" : "#12184A", class: "dh-label"
+      fill: o.farve, stroke: BLAEK, class: "dh-label"
     });
     const l1 = lav("tspan", { x: lx, dy: "0" });
     l1.textContent = o.vaerdi + " W/m²";
     t.appendChild(l1);
     linjer.forEach(linje => {
-      const l = lav("tspan", { x: lx, dy: "1.15em", "font-weight": "600", "font-size": "13" });
+      const l = lav("tspan", { x: lx, dy: "1.15em", "font-weight": "700", "font-size": "12.5" });
       l.textContent = linje;
       t.appendChild(l);
     });
@@ -1091,9 +1393,6 @@ function tegnPil(gruppe, o) {
   gruppe.setAttribute("role", "img");
   gruppe.setAttribute("aria-label", `${o.aria}, ${o.vaerdi} watt pr. kvadratmeter`);
 }
-
-const KORT = "#F2B134", LANG = "#C64B3A", KONV = "#3E9BC4";
-const LYS = "#F7FAFC", MOERK = "#21295C";
 
 let sidsteSignatur = "";
 let skjulPileTekst = false;
@@ -1116,39 +1415,39 @@ function tegnScene(e, medAtm) {
   const el = navn => svg.querySelector(`[data-el="${navn}"]`);
 
   tegnPil(el("pilInd"), {
-    x: 106, y1: 88, y2: 198, vaerdi: e.ind, farve: KORT, tekstFarve: KORT,
+    x: 106, y1: 88, y2: 198, vaerdi: e.ind, farve: KORT,
     navn: "indstråling", aria: "indstråling fra Solen", labelSide: "hoejre"
   });
   tegnPil(el("pilReflekteret"), {
-    x: 226, y1: 196, y2: 86, vaerdi: e.refl, farve: "#FFE1A0", tekstFarve: "#FFE1A0",
+    x: 226, y1: 196, y2: 86, vaerdi: e.refl, farve: REFL,
     navn: "reflekteret", aria: "sollys der kastes tilbage til rummet", labelSide: "hoejre"
   });
   tegnPil(el("pilAbsorberet"), {
-    x: 106, y1: 202, y2: 396, vaerdi: e.solOverflade, farve: KORT, tekstFarve: KORT,
+    x: 106, y1: 202, y2: 396, vaerdi: e.solOverflade, farve: KORT,
     navn: ["optages ved", "overfladen"], aria: "sollys der optages ved jordoverfladen", labelSide: "hoejre"
   });
   tegnPil(el("pilAbsAtm"), {
-    x: 330, y1: 202, y2: 268, vaerdi: e.solAtm, farve: KORT, tekstFarve: KORT,
+    x: 330, y1: 202, y2: 268, vaerdi: e.solAtm, farve: KORT,
     navn: ["optages i luften"], aria: "sollys der optages i atmosfæren", labelSide: "hoejre"
   });
   tegnPil(el("pilJordUdRum"), {
-    x: 430, y1: 394, y2: 84, vaerdi: e.u, farve: LANG, tekstFarve: "#FFC9BE", stiplet: true,
+    x: 430, y1: 394, y2: 84, vaerdi: e.u, farve: LANG, stiplet: true,
     navn: ["varmestråling ud"], aria: "langbølget varmestråling fra overfladen ud i rummet", labelSide: "hoejre"
   });
   tegnPil(el("pilOverfladeUd"), {
-    x: 430, y1: 394, y2: 324, vaerdi: e.u, farve: LANG, tekstFarve: MOERK, stiplet: true,
+    x: 430, y1: 394, y2: 324, vaerdi: e.u, farve: LANG, stiplet: true,
     navn: ["overfladens", "udstråling"], aria: "langbølget udstråling fra jordoverfladen", labelSide: "venstre"
   });
   tegnPil(el("pilKonvektion"), {
-    x: 300, y1: 394, y2: 324, vaerdi: e.konv || K.konvektion, farve: KONV, tekstFarve: MOERK,
+    x: 300, y1: 394, y2: 324, vaerdi: e.konv || K.konvektion, farve: KONV,
     navn: ["fordampning", "og varm luft"], aria: "fordampning og opstigende varm luft", labelSide: "venstre"
   });
   tegnPil(el("pilTilbagestraaling"), {
-    x: 620, y1: 322, y2: 394, vaerdi: e.tilbage, farve: LANG, tekstFarve: MOERK, stiplet: true,
+    x: 620, y1: 322, y2: 394, vaerdi: e.tilbage, farve: LANG, stiplet: true,
     navn: "tilbagestråling", aria: "tilbagestråling fra atmosfæren mod jordoverfladen", labelSide: "hoejre"
   });
   tegnPil(el("pilRummet"), {
-    x: 760, y1: 206, y2: 86, vaerdi: e.udRum, farve: LANG, tekstFarve: "#FFC9BE", stiplet: true,
+    x: 760, y1: 206, y2: 86, vaerdi: e.udRum, farve: LANG, stiplet: true,
     navn: "ud i rummet", aria: "langbølget udstråling til rummet", labelSide: "venstre"
   });
 
@@ -1160,8 +1459,8 @@ function tegnGenudsendelse() {
   g.textContent = "";
   [-90, -35, 0, 35, 90, 125, 180, -125].forEach(grader => {
     const r = grader * Math.PI / 180;
-    const x1 = 556 + Math.cos(r) * 24, y1 = 266 + Math.sin(r) * 24;
-    const x2 = 556 + Math.cos(r) * 52, y2 = 266 + Math.sin(r) * 52;
+    const x1 = 556 + Math.cos(r) * 26, y1 = 266 + Math.sin(r) * 26;
+    const x2 = 556 + Math.cos(r) * 54, y2 = 266 + Math.sin(r) * 54;
     g.appendChild(lav("line", { x1, y1, x2, y2 }));
     const vr = r + Math.PI, s = 7;
     g.appendChild(lav("path", {
@@ -1292,7 +1591,6 @@ function render() {
   $("dhTempVaerdi").textContent = visTemp ? fmtTemp(visC) : "–";
   $("dhMaerke").style.left = pct(visC) + "%";
   $("dhMaerke").style.visibility = visTemp ? "visible" : "hidden";
-  $("dhSkala").innerHTML = `<span>−30 °C</span><span>0 °C</span><span>+${skalaMax} °C</span>`;
 
   const gab = state.mode === "teach" && !!t.gab;
   $("dhSpoegelse").hidden = !gab;
@@ -1322,11 +1620,6 @@ function render() {
     ? `ind ${e.solOverflade} + ${e.tilbage} = ${e.solOverflade + e.tilbage} · ud ${e.u} + ${e.konv} = ${e.u + e.konv}`
     : `ind ${e.solOverflade} · ud ${e.u}`;
 
-  // Tom aflæsningsstribe skal ikke efterlade en streg (trin 1-2)
-  $("dhAflaes").hidden =
-    document.querySelector('[data-el="termometer"]').dataset.vis === "skjult" &&
-    document.querySelector('[data-el="balanceIndikator"]').dataset.vis === "skjult";
-
   // ── Skydere ──
   const kon = state.mode === "teach" ? t.kontroller : { co2: "aktiv", albedo: "aktiv" };
   const co2Laast = kon.co2 !== "aktiv";
@@ -1350,13 +1643,14 @@ function render() {
 
   // ── Forklaringspanel ──
   if (state.mode === "teach") {
-    $("dhTrinTael").textContent = `Trin ${state.trin} af ${DATA.trin.length}`;
+    const tael = `Trin ${state.trin} af ${DATA.trin.length}`;
+    $("dhTael").textContent = tael;
+    $("dhTaelChip").textContent = tael;
     $("dhTrinTitel").textContent = t.overskrift;
     $("dhTrinKort").textContent = t.kort;
     $("dhTrinTekst").innerHTML = t.tekst;
     $("dhStopOpTekst").textContent = t.stopOp;
-    $("dhPasPaa").innerHTML = t.pasPaa
-      ? `<div class="dh-pasp"><span class="dh-pasp-titel">Pas på</span>${t.pasPaa}</div>` : "";
+    $("dhPasPaa").innerHTML = t.pasPaa ? `<div class="paspaa">${t.pasPaa}</div>` : "";
     $("dhSloejfeBoks").innerHTML = t.sloejfe ? sloejfeSvg() : "";
     $("dhForrige").disabled = state.trin === 1;
     $("dhNaeste").disabled = state.trin === DATA.trin.length;
@@ -1365,29 +1659,33 @@ function render() {
       if (n === state.trin) b.setAttribute("aria-current", "step"); else b.removeAttribute("aria-current");
     });
   } else if (state.mode === "explore") {
+    $("dhTael").textContent = "Udforsk selv";
     $("dhTrinTitel").textContent = "Udforsk figuren";
+    $("dhPasPaa").innerHTML = "";
     $("dhSloejfeBoks").innerHTML = sloejfeSvg();
+  } else {
+    $("dhTael").textContent = "Opgaver";
   }
 }
 
 function sloejfeSvg() {
-  return `<div class="dh-sloejfe"><svg viewBox="0 0 320 172" role="img" aria-label="Sløjfe: varmere fører til mindre is, som giver lavere albedo, som giver mere optaget sollys, som giver varmere">
+  return `<div class="sloejfe"><svg viewBox="0 0 320 172" role="img" aria-label="Sløjfe: varmere fører til mindre is, som giver lavere albedo, som giver mere optaget sollys, som giver varmere">
     <title>Selvforstærkende tilbagekobling</title>
-    <g font-family="Calibri, sans-serif" font-size="12" font-weight="700" fill="#21295C" text-anchor="middle">
-      <rect x="110" y="4"   width="100" height="30" rx="8" fill="#F2B134"/><text x="160" y="23">varmere</text>
-      <rect x="212" y="62"  width="102" height="30" rx="8" fill="#CADCFC"/><text x="263" y="81">mindre is</text>
-      <rect x="110" y="128" width="100" height="30" rx="8" fill="#CADCFC"/><text x="160" y="147">lavere albedo</text>
-      <rect x="6"   y="62"  width="102" height="34" rx="8" fill="#E8734A"/>
-        <text x="57" y="76" fill="#fff">mere sollys</text><text x="57" y="90" fill="#fff">optages</text>
+    <g font-family="Archivo, system-ui, sans-serif" font-size="12" font-weight="800" fill="#17211F" text-anchor="middle">
+      <rect x="110" y="4"   width="100" height="30" rx="10" fill="#FFB300" stroke="#17211F" stroke-width="2"/><text x="160" y="24">varmere</text>
+      <rect x="212" y="62"  width="102" height="30" rx="10" fill="#C7E6F6" stroke="#17211F" stroke-width="2"/><text x="263" y="82">mindre is</text>
+      <rect x="110" y="128" width="100" height="30" rx="10" fill="#C7E6F6" stroke="#17211F" stroke-width="2"/><text x="160" y="148">lavere albedo</text>
+      <rect x="6"   y="62"  width="102" height="34" rx="10" fill="#FF6A3D" stroke="#17211F" stroke-width="2"/>
+        <text x="57" y="77">mere sollys</text><text x="57" y="91">optages</text>
     </g>
-    <g fill="none" stroke="#1C7293" stroke-width="2.5">
+    <g fill="none" stroke="#17211F" stroke-width="2.5">
       <path d="M212,25 C246,30 262,42 263,58" marker-end="url(#dhPil)"/>
       <path d="M263,96 C262,112 246,124 212,140" marker-end="url(#dhPil)"/>
       <path d="M110,140 C76,132 58,116 57,100" marker-end="url(#dhPil)"/>
       <path d="M57,58 C58,42 76,30 110,25" marker-end="url(#dhPil)"/>
     </g>
     <defs><marker id="dhPil" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto">
-      <path d="M0,0 L10,5 L0,10 z" fill="#1C7293"/></marker></defs>
+      <path d="M0,0 L10,5 L0,10 z" fill="#17211F"/></marker></defs>
   </svg></div>`;
 }
 
@@ -1403,7 +1701,7 @@ function saetTrin(n, animer) {
   saetMaal(maalTemperatur(), animer !== false && skift);
   render();
   opdaterUrl();
-  $("dhSrStatus").textContent = `Trin ${n} af ${DATA.trin.length}: ${t.overskrift}`;
+  $("dhSrStatus").textContent = `Trin ${n} af ${DATA.trin.length}: ${t.overskrift}. ${t.kort}`;
 }
 
 function saetMode(m) {
@@ -1420,6 +1718,7 @@ function saetMode(m) {
   saetMaal(maalTemperatur(), false);
   render();
   opdaterUrl();
+  laasRammehojde();
 }
 
 function opdaterUrl() {
@@ -1444,6 +1743,50 @@ function laesUrl() {
   const saet = (p.get("saet") || "").toUpperCase();
   if (["A", "B", "C"].indexOf(saet) >= 0) state.quiz.saet = saet;
   if (p.get("projektor") === "1") state.projektor = true;
+}
+
+/* Rammen skal stå stille, når man klikker sig igennem: ellers bestemmer
+   mængden af tekst i hvert trin panelets højde, og figuren, knapperne og
+   trinprikkerne flytter sig for hvert klik. Vi måler alle otte trin én gang og
+   låser panelet til det højeste. Målingen gentages, når betingelserne ændrer
+   sig — ny vinduesbredde, projektortilstand eller skrifter, der først er hentet
+   efter første optegning. */
+const rigBody = document.querySelector(".rig-body");
+
+function laasRammehojde() {
+  // Under 960 px står figur og forklaring under hinanden. Så flytter intet sig
+  // alligevel, når teksten skifter længde, og en låst højde ville kun give
+  // dødt luftrum på en telefon.
+  if (window.matchMedia("(max-width:960px)").matches) {
+    rigBody.style.minHeight = "";
+    return;
+  }
+  // Højden måles på gennemgangens otte trin. Opgavepanelet er lige så højt
+  // eller højere og får samme lås, så figuren heller ikke hopper mellem
+  // opgaverne.
+  const gemtMode = state.mode, gemtTrin = state.trin;
+  const forklaringSkjult = $("dhForklaring").hidden, quizSkjult = $("dhQuiz").hidden;
+  $("dhForklaring").hidden = false;
+  $("dhQuiz").hidden = true;
+  const gemtAppMode = app.dataset.mode;
+  app.dataset.mode = "teach";
+  state.mode = "teach";
+
+  rigBody.style.minHeight = "0px";
+  let hojest = 0;
+  for (let i = 1; i <= DATA.trin.length; i++) {
+    state.trin = i;
+    render();
+    hojest = Math.max(hojest, rigBody.offsetHeight);
+  }
+
+  state.mode = gemtMode;
+  state.trin = gemtTrin;
+  app.dataset.mode = gemtAppMode;
+  $("dhForklaring").hidden = forklaringSkjult;
+  $("dhQuiz").hidden = quizSkjult;
+  render();
+  rigBody.style.minHeight = hojest + "px";
 }
 
 /* ==========================================================================
@@ -1490,10 +1833,10 @@ function tegnOpgave() {
   if (idx >= liste.length) {
     boks.innerHTML = hoved + opsamling(liste) + `
       <div class="dh-opg-knapper">
-        <button type="button" class="dh-knap dh-knap-primaer" data-handling="forfra">Tag sættet forfra</button>
-        <button type="button" class="dh-knap" data-handling="print-uden">Print opgaver</button>
-        <button type="button" class="dh-knap" data-handling="print-med">Print med facit</button>
-        <button type="button" class="dh-knap" data-handling="ryd">Ryd mine svar</button>
+        <button type="button" class="btn btn-primaer" data-handling="forfra">Tag sættet forfra</button>
+        <button type="button" class="btn" data-handling="print-uden">Print opgaver</button>
+        <button type="button" class="btn" data-handling="print-med">Print med facit</button>
+        <button type="button" class="btn" data-handling="ryd">Ryd mine svar</button>
       </div>`;
     bindQuiz();
     $("dhDropLag").hidden = true;
@@ -1528,10 +1871,10 @@ function tegnOpgave() {
         <span>${v}</span></label>`;
     }).join("") + `</div>`;
   } else if (o.type === "open") {
-    krop = `<p><label for="dhAaben" class="dh-sr">Dit svar</label>
+    krop = `<p><label for="dhAaben" class="sr">Dit svar</label>
       <textarea id="dhAaben" placeholder="Skriv dit svar her …">${gemt ? (gemt.tekst || "") : ""}</textarea></p>`;
   } else if (o.type === "drag") {
-    krop = `<p style="font-size:.88em">Vælg en mærkat, og klik derefter på den plads i figuren, hvor pilen hører til. Du kan også trække mærkaten med musen.</p>
+    krop = `<p style="font-size:.88rem">Vælg en mærkat, og klik derefter på den plads i figuren, hvor pilen hører til. Du kan også trække mærkaten med musen.</p>
       <div class="dh-braet" id="dhBraet"></div>`;
   }
 
@@ -1546,12 +1889,12 @@ function tegnOpgave() {
   }
 
   const knapper = `<div class="dh-opg-knapper">
-    ${gemt ? "" : `<button type="button" class="dh-knap dh-knap-primaer" data-handling="tjek">${o.type === "open" ? "Vis facit" : "Tjek svar"}</button>`}
-    ${gemt && o.type === "predict" && o.proev ? `<button type="button" class="dh-knap" data-handling="proev">Prøv det i figuren</button>` : ""}
-    ${gemt && !gemt.rigtigt && o.visTrin ? `<button type="button" class="dh-knap" data-handling="vis">Vis mig det i figuren</button>` : ""}
-    ${gemt && o.type === "open" && o.visTrin ? `<button type="button" class="dh-knap" data-handling="vis">Vis mig det i figuren</button>` : ""}
-    <button type="button" class="dh-knap" data-handling="forrige" ${idx === 0 ? "disabled" : ""}>◀ Forrige</button>
-    <button type="button" class="dh-knap ${gemt ? "dh-knap-primaer" : ""}" data-handling="naeste">${idx === liste.length - 1 ? "Afslut ▶" : "Næste ▶"}</button>
+    ${gemt ? "" : `<button type="button" class="btn btn-primaer" data-handling="tjek">${o.type === "open" ? "Vis facit" : "Tjek svar"}</button>`}
+    ${gemt && o.type === "predict" && o.proev ? `<button type="button" class="btn" data-handling="proev">Prøv det i figuren</button>` : ""}
+    ${gemt && !gemt.rigtigt && o.visTrin ? `<button type="button" class="btn" data-handling="vis">Vis mig det i figuren</button>` : ""}
+    ${gemt && o.type === "open" && o.visTrin ? `<button type="button" class="btn" data-handling="vis">Vis mig det i figuren</button>` : ""}
+    <button type="button" class="btn" data-handling="forrige" ${idx === 0 ? "disabled" : ""}>◀ Forrige</button>
+    <button type="button" class="btn ${gemt ? "btn-primaer" : ""}" data-handling="naeste">${idx === liste.length - 1 ? "Afslut ▶" : "Næste ▶"}</button>
   </div>`;
 
   boks.innerHTML = hoved + `
@@ -1660,7 +2003,6 @@ function tegnTraek(o, gemt) {
 }
 
 function tjekSvar(o) {
-  const liste = opgaveListe();
   let resultat = null;
   if (o.type === "mc" || o.type === "mc-multi") {
     const valgt = [...document.querySelectorAll('#dhQuiz input[name="dhSvar"]:checked')].map(i => Number(i.value));
@@ -1752,7 +2094,7 @@ function byggePrint() {
     <p style="font-size:10pt">smbi.dk · Navn: ______________________  Klasse: ________</p>`;
   ["A", "B", "C"].forEach(s => {
     h += `<h2>${saetNavn[s]}</h2>`;
-    DATA.opgaver.filter(o => o.saet === s).forEach((o, i) => {
+    DATA.opgaver.filter(o => o.saet === s).forEach(o => {
       const valgmuligheder = Array.isArray(o.svar) ? o.svar : null;
       h += `<div class="dh-p-opg"><div class="dh-p-spm">${o.id}. ${o.spoergsmaal}</div>`;
       if (valgmuligheder) h += `<div class="dh-p-valg">` + valgmuligheder.map((v, j) =>
@@ -1840,7 +2182,7 @@ function byggeMaerker() {
     co2.appendChild(b);
   });
   const legende = document.createElement("div");
-  legende.className = "dh-maerke-tekst";
+  legende.className = "maerke-tekst";
   legende.textContent = "280 = førindustrielt · 430 = i dag · 560 = fordobling";
   co2.insertAdjacentElement("afterend", legende);
 
@@ -1880,13 +2222,14 @@ function init() {
   const hvad = document.createElement("button");
   hvad.type = "button";
   hvad.id = "dhUdforskKnap";
-  hvad.className = "dh-knap";
+  hvad.className = "btn";
+  hvad.style.alignSelf = "flex-start";
   hvad.textContent = "Hvad ser jeg på?";
   hvad.addEventListener("click", () => {
     visDialog(`<h2>Hvad ser jeg på?</h2>` + DATA.trin.map(t =>
       `<h3>${t.id}. ${t.overskrift}</h3><p>${t.tekst}</p>`).join(""));
   });
-  $("dhForklaring").querySelector(".dh-nav").insertAdjacentElement("beforebegin", hvad);
+  $("dhForklaring").querySelector(".nav").insertAdjacentElement("beforebegin", hvad);
 
   // Tilstandsvælger
   document.querySelectorAll("[data-tilstand]").forEach(b =>
@@ -1918,18 +2261,23 @@ function init() {
     app.dataset.projektor = state.projektor ? "1" : "0";
     $("dhProjektor").setAttribute("aria-pressed", String(state.projektor));
     opdaterUrl();
+    laasRammehojde();
   });
   app.dataset.projektor = state.projektor ? "1" : "0";
   $("dhProjektor").setAttribute("aria-pressed", String(state.projektor));
 
   $("dhOmModellen").addEventListener("click", omModellen);
-  $("dhDialogLuk").addEventListener("click", () => $("dhDialog").close());
+  $("dhDialogLuk").addEventListener("click", () => {
+    const d = $("dhDialog");
+    try { d.close(); } catch (e) { d.removeAttribute("open"); }
+  });
 
   // Tastatur: piletaster og mellemrum til næste/forrige
   document.addEventListener("keydown", ev => {
     if (state.mode !== "teach") return;
     const t = ev.target;
     if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT" || t.isContentEditable)) return;
+    if (t && t.closest && t.closest("dialog")) return;
     if (ev.key === "ArrowRight" || ev.key === "PageDown" || (ev.key === " " && t.tagName !== "BUTTON" && t.tagName !== "SUMMARY")) {
       ev.preventDefault(); saetTrin(state.trin + 1, true);
     } else if (ev.key === "ArrowLeft" || ev.key === "PageUp") {
@@ -1944,6 +2292,27 @@ function init() {
   saetTrin(state.trin, false);
   state.visTempK = state.maalTempK = maalTemperatur();
   render();
+  laasRammehojde();
+
+  // Skrifterne hentes udefra: er de ikke nået frem ved første optegning, er
+  // linjerne brudt anderledes, end de bliver bagefter — så mål én gang til.
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(laasRammehojde);
+  }
+
+  let maaleTid;
+  window.addEventListener("resize", () => {
+    clearTimeout(maaleTid);
+    maaleTid = setTimeout(laasRammehojde, 160);
+  });
+
+  // #trin=3 kan deles og skiftes direkte i adresselinjen
+  window.addEventListener("hashchange", () => {
+    const h = /trin=(\d+)/.exec(location.hash || "");
+    if (!h) return;
+    const n = Number(h[1]);
+    if (state.mode === "teach" && n >= 1 && n <= DATA.trin.length && n !== state.trin) saetTrin(n, true);
+  });
 }
 
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);

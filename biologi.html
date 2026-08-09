@@ -1,108 +1,267 @@
 <!doctype html>
 <html lang="da">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Biologi – smbi.dk</title>
-  <link rel="stylesheet" href="style.css" />
-  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Biologi — simuleringer, forløb og spil — smbi.dk</title>
+<meta name="description" content="Interaktive simuleringer om celler, enzymer, makromolekyler, genetik og hormonel regulering til biologi på gymnasieniveau.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,300..600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="forside.css">
+<style>
+  /* sidens ene accentfarve */
+  :root{--accent:var(--bio);--glow:#FFC9DD}
+</style>
 </head>
 <body>
 
-  <nav class="site-nav">
-    <div class="nav-inner">
-      <a href="index.html" class="nav-brand">smbi.dk</a>
-      <div class="nav-links">
-        <a href="index.html" class="nav-link"><i class="ph ph-house"></i> Forside</a>
-        <a href="biologi.html" class="nav-link active"><i class="ph ph-dna"></i> Biologi</a>
-        <a href="geografi.html" class="nav-link"><i class="ph ph-globe-hemisphere-west"></i> Geografi</a>
-        <a href="born.html" class="nav-link"><i class="ph ph-star"></i> Børn</a>
-        <a href="contact.html" class="nav-link"><i class="ph ph-envelope"></i> Kontakt</a>
-        <a href="admin.html" class="nav-link"><i class="ph ph-lock-key"></i> Admin</a>
+<header class="top" id="site-top">
+  <div class="rainbow"></div>
+  <div class="top-bar">
+    <div class="top-in">
+      <a href="index.html" class="brand"><span class="brand-mark"></span>smbi<em>.dk</em></a>
+      <nav class="top-nav">
+        <a href="index.html">Forside</a>
+        <a href="#simuleringer">Simuleringer</a>
+        <a href="#forloeb">Forløb</a>
+        <a href="#spil">Spil</a>
+        <a href="geografi.html">Geografi</a>
+        <a href="contact.html">Kontakt</a>
+      </nav>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <div class="wrap head">
+    <div class="head-in">
+      <span class="eyebrow mono"><span class="blink"></span>Biologi · gymnasiet</span>
+      <h1>Celler, enzymer og <span class="hi" style="--hc:#FBD3E1">gener</span></h1>
+      <p class="lead">Syv simuleringer, et samlet forløb og et spil. Alt kører i browseren uden login — sæt dem på tavlen, eller giv eleverne linket.</p>
+      <div class="stats">
+        <span class="stat s2"><b>7</b> simuleringer</span>
+        <span class="stat s1"><b>1</b> forløb</span>
+        <span class="stat s3"><b>1</b> spil</span>
+      </div>
+
+      <!-- søger på tværs af hele siden, ikke kun simuleringerne -->
+      <div class="soeg">
+        <label class="sr" for="soeg">Søg på siden</label>
+        <input type="search" id="soeg" placeholder="Søg efter emne — fx enzym, osmose, transkription…" autocomplete="off">
+        <span class="soeg-tal mono" id="soeg-tal" aria-live="polite"></span>
       </div>
     </div>
-  </nav>
+  </div>
 
-  <header class="page-hero forest">
-    <div class="page-hero-inner">
-      <div>
-        <div class="page-hero-eyebrow">smbi.dk · Fag</div>
-        <h1 class="page-hero-title"><em>Biologi</em></h1>
-        <p class="page-hero-sub">Animationer og simuleringer til biologiundervisningen på gymnasieniveau.</p>
-      </div>
-    </div>
-  </header>
-
-  <main class="container">
-
-    <div class="search-container">
-      <input type="text" id="search-input" placeholder="Søg efter emne eller tag…" aria-label="Søg">
+  <!-- SIMULERINGER -->
+  <section class="sec wrap" id="simuleringer">
+    <div class="sec-head">
+      <h2>Simuleringer</h2>
+      <span class="tag t1">7 stk</span>
+      <span class="rule"></span>
     </div>
 
-    <p class="section-label">Forløb</p>
+    <div class="grp" id="grp-celle" style="--c:var(--pink);--t:#FFEDF3">
+      <span class="grp-mark"></span><h3>Celle &amp; enzymer</h3>
+      <span class="n">4 simuleringer</span><span class="rule"></span>
+    </div>
+    <div class="sims">
 
-    <div class="card">
-      <div class="card-header forest">
-        <i class="ph ph-book-open card-header-icon"></i>
-        <span class="card-header-title">Forløb</span>
-      </div>
-      <div class="card-body">
-        <ul class="list">
-          <li>
-            <a href="BiologiC/NatureNurture/index.html">Nature vs. Nurture</a>
-            <span class="tag">C</span><span class="tag">genetik</span>
-          </li>
-        </ul>
-      </div>
+      <article class="sim" data-sog="osmose diffusion cellemembran koncentration hypertonisk hypotonisk celle">
+        <div class="sim-fig"><svg viewBox="0 0 120 64" aria-hidden="true">
+          <circle cx="60" cy="32" r="21"/><circle cx="60" cy="32" r="11" stroke-dasharray="4 5"/>
+          <path d="M12 32h20m-7-6 7 6-7 6"/><path d="M108 32H88m7-6-7 6 7 6"/>
+        </svg></div>
+        <div class="sim-body">
+          <h4><a href="biologi/osmose.html">Osmose</a></h4>
+          <p>Skru på koncentrationen udenfor, og se cellen svulme eller skrumpe.</p>
+          <div class="sim-meta"><span class="kind">Celle</span><span class="lvl lvl-C">C</span></div>
+        </div>
+      </article>
+
+      <article class="sim" data-sog="bio-blocks kulhydrater proteiner fedt makromolekyler byggesten monomer polymer">
+        <div class="sim-fig"><svg viewBox="0 0 120 64" aria-hidden="true">
+          <rect x="13" y="20" width="25" height="25" rx="7"/>
+          <rect x="47" y="20" width="25" height="25" rx="7"/>
+          <rect x="81" y="20" width="25" height="25" rx="7"/>
+          <path d="M38 32.5h9M72 32.5h9"/>
+        </svg></div>
+        <div class="sim-body">
+          <h4><a href="biologi/bio-blocks/">Bio-Blocks</a></h4>
+          <p>Byg kulhydrater, proteiner og fedt af de rigtige byggesten.</p>
+          <div class="sim-meta"><span class="kind">Makromolekyler</span><span class="lvl lvl-C">C</span></div>
+        </div>
+      </article>
+
+      <article class="sim" data-sog="enzymhastighed temperatur optimum denaturering enzym reaktionshastighed">
+        <div class="sim-fig"><svg viewBox="0 0 120 64" aria-hidden="true">
+          <path d="M12 55h96" opacity=".3"/>
+          <path d="M14 53C34 53 40 12 60 12s26 41 46 41"/>
+          <circle cx="60" cy="12" r="4.5" fill="currentColor" stroke="none"/>
+        </svg></div>
+        <div class="sim-body">
+          <h4><a href="biologi/enzymhastighed.html">Enzymhastighed &amp; temperatur</a></h4>
+          <p>Find optimum — og se enzymet denaturere, når det bliver for varmt.</p>
+          <div class="sim-meta"><span class="kind">Enzym</span><span class="lvl lvl-C">C</span></div>
+        </div>
+      </article>
+
+      <article class="sim" data-sog="amylase stivelse jodprøve nedbrydning enzym bio-glass substrat">
+        <div class="sim-fig"><svg viewBox="0 0 120 64" aria-hidden="true">
+          <circle cx="20" cy="20" r="7"/><circle cx="36" cy="20" r="7"/><circle cx="52" cy="20" r="7"/>
+          <path d="M27 20h2M43 20h2"/>
+          <path d="M62 27 74 39" stroke-dasharray="4 4"/>
+          <circle cx="84" cy="45" r="7"/><circle cx="104" cy="45" r="7"/>
+        </svg></div>
+        <div class="sim-body">
+          <h4><a href="bio-glass/index.html">Amylase &amp; stivelse</a></h4>
+          <p>Følg nedbrydningen over tid, og aflæs jodprøven undervejs.</p>
+          <div class="sim-meta"><span class="kind">Enzym</span><span class="lvl lvl-B">B</span></div>
+        </div>
+      </article>
+
     </div>
 
-    <p class="section-label">Animationer &amp; Simulationer</p>
+    <div class="grp" id="grp-genetik" style="--c:var(--grape);--t:#F0E8FC">
+      <span class="grp-mark"></span><h3>Genetik &amp; proteinsyntese</h3>
+      <span class="n">2 simuleringer</span><span class="rule"></span>
+    </div>
+    <div class="sims">
 
-    <div class="card">
-      <div class="card-header forest">
-        <i class="ph ph-play-circle card-header-icon"></i>
-        <span class="card-header-title">Animationer &amp; Simulationer</span>
-      </div>
-      <div class="card-body">
-        <ul class="list">
-          <li>
-            <a href="biologi/osmose.html">Osmose</a>
-            <span class="tag">C</span><span class="tag">celle</span>
-          </li>
-          <li>
-            <a href="biologi/bio-blocks.html">Bio-Blocks: kulhydrater, proteiner og fedt</a>
-            <span class="tag">C</span><span class="tag">kulhydrat</span><span class="tag">protein</span><span class="tag">fedt</span>
-          </li>
-          <li>
-            <a href="biologi/enzymhastighed.html">Enzymhastighed &amp; temperatur</a>
-            <span class="tag">C</span><span class="tag">enzym</span>
-          </li>
-          <li>
-            <a href="biologi/KvindensCyklus/FinalSim.html">Kvindens hormonelle regulering</a>
-            <span class="tag">hormon</span><span class="tag">cyklus</span>
-          </li>
-          <li>
-            <a href="bio-glass/index.html">Amylase &amp; Stivelse</a>
-            <span class="tag">B</span><span class="tag">enzym</span>
-          </li>
-          <li>
-            <a href="https://simdeme.github.io/CellSpil/" target="_blank" rel="noopener">Cellens Evolution</a>
-          </li>
-        </ul>
-      </div>
+      <article class="sim" data-sog="dna bygger nukleotider baseparring komplementær streng genetik">
+        <div class="sim-fig"><svg viewBox="0 0 120 64" aria-hidden="true">
+          <path d="M10 32C24 8 46 8 60 32s36 24 50 0"/>
+          <path d="M10 32C24 56 46 56 60 32s36-24 50 0"/>
+          <path d="M26 18v28M42 14v36M78 14v36M94 18v28" opacity=".75"/>
+        </svg></div>
+        <div class="sim-body">
+          <h4><a href="biologi/DNA_Simulering.html">DNA-bygger</a></h4>
+          <p>Saml nukleotider til en streng, og byg den komplementære side selv.</p>
+          <div class="sim-meta"><span class="kind">Genetik</span><span class="lvl lvl-C">C</span></div>
+        </div>
+      </article>
+
+      <article class="sim" data-sog="transkription mrna rna-polymerase eukaryot proteinsyntese genetik">
+        <div class="sim-fig"><svg viewBox="0 0 120 64" aria-hidden="true">
+          <path d="M8 44h104"/>
+          <path d="M8 54h104" opacity=".4"/>
+          <ellipse cx="50" cy="32" rx="17" ry="12"/>
+          <path d="M64 25c9-3 15-8 21-15"/>
+          <circle cx="90" cy="8" r="3.6" fill="currentColor" stroke="none"/>
+        </svg></div>
+        <div class="sim-body">
+          <h4><a href="biologi/transkription.html">Transkription</a></h4>
+          <p>Byg mRNA ud fra DNA-skabelonen — base for base gennem genet.</p>
+          <div class="sim-meta"><span class="kind">Proteinsyntese</span><span class="lvl lvl-C">C</span></div>
+        </div>
+      </article>
+
     </div>
 
-  </main>
+    <div class="grp" id="grp-krop" style="--c:var(--coral);--t:#FFE3D8">
+      <span class="grp-mark"></span><h3>Krop &amp; regulering</h3>
+      <span class="n">1 simulering</span><span class="rule"></span>
+    </div>
+    <div class="sims">
 
-  <footer class="footer">
-    <div class="footer-inner">
-      <div>
-        <div class="footer-brand">smbi.dk</div>
-        <div class="footer-meta">Naturgeografi &amp; Biologi · © <span id="year"></span></div>
+      <article class="sim" data-sog="kvindens cyklus hormoner menstruationscyklus østrogen lh fsh progesteron ægløsning regulering">
+        <div class="sim-fig"><svg viewBox="0 0 120 64" aria-hidden="true">
+          <path d="M10 44C24 44 26 14 40 14s16 30 30 30 26-30 40-30"/>
+          <path d="M10 20C24 20 26 50 40 50s16-30 30-30 26 30 40 30" opacity=".45"/>
+        </svg></div>
+        <div class="sim-body">
+          <h4><a href="biologi/KvindensCyklus/FinalSim.html">Kvindens hormonelle regulering</a></h4>
+          <p>Fire hormoner over 28 dage — flyt ægløsningen, og se kurverne følge med.</p>
+          <div class="sim-meta"><span class="kind">Hormon · cyklus</span></div>
+        </div>
+      </article>
+
+    </div>
+
+    <p class="soeg-tom" id="soeg-tom" hidden>Ingen materialer matcher søgningen.</p>
+  </section>
+
+  <!-- FORLØB, SPIL OG OVERBLIK -->
+  <section class="other">
+    <div class="other-in">
+      <div class="sec-head">
+        <h2>Forløb &amp; øvrigt</h2>
+        <span class="tag t2">Holdt for sig</span>
+        <span class="rule"></span>
+      </div>
+
+      <div class="other-grid other-2">
+
+        <div class="stack paa-moerk" id="forloeb" style="--c:var(--grape);--t:#F0E8FC">
+          <div class="stack-head">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H12v18H6.5A2.5 2.5 0 0 1 4 18.5z"/><path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H12v18h5.5a2.5 2.5 0 0 0 2.5-2.5z"/></svg>
+            <h3>Forløb</h3><span class="n">1</span>
+          </div>
+          <div class="item" data-sog="nature nurture arv miljø genetik forløb modul dna proteinsyntese">
+            <h4><a href="BiologiC/NatureNurture/index.html">Nature vs. Nurture</a></h4>
+            <p>Samlet forløb om arv og miljø med moduler, øvelsesvejledninger, rapportvejledning og undervisningsbeskrivelse.</p>
+            <div class="item-meta"><span class="fag">Forløb</span><span class="lvl lvl-C">C</span></div>
+            <div class="sub">
+              <a href="BiologiC/NatureNurture/Forløbsplan.html">Forløbsplan</a>
+              <a href="BiologiC/NatureNurture/1_DNA/index.html">Modul 1 · DNA</a>
+              <a href="BiologiC/NatureNurture/2_Proteinsyntese/index.html">Modul 2 · Proteinsyntese</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="stack" id="spil" style="--c:var(--amber);--t:#FFE9B0">
+          <div class="stack-head">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4.5"/><path d="M8.5 8.5h.01M15.5 15.5h.01M12 12h.01" stroke-width="3.4"/></svg>
+            <h3>Spil &amp; overblik</h3><span class="n">2</span>
+          </div>
+          <div class="item" data-sog="cellens evolution spil mutation udvælgelse celle">
+            <h4><a href="https://simdeme.github.io/CellSpil/" target="_blank" rel="noopener">Cellens Evolution</a></h4>
+            <p>Byg en celle op fra bunden — mutationer, udvælgelse og lidt held.</p>
+            <div class="item-meta"><span class="fag">Spil</span><span class="lvl lvl-C">C</span></div>
+          </div>
+          <div class="item" data-sog="begrebsnetværk biologi c oversigt emner sammenhæng netværk">
+            <h4><a href="bio-tree.html">Begrebsnetværk</a></h4>
+            <p>Biologi C som netværk — se hvordan emnerne hænger sammen.</p>
+            <div class="item-meta"><span class="fag">Overblik</span><span class="lvl lvl-C">C</span></div>
+          </div>
+        </div>
+
       </div>
     </div>
-  </footer>
+  </section>
 
-  <script src="site.js"></script>
+</main>
+
+<footer class="foot">
+  <div class="foot-in">
+    <div>
+      <a href="index.html" class="brand"><span class="brand-mark"></span>smbi<em style="color:#8FA29E">.dk</em></a>
+      <p class="mono">Simon Messell · naturgeografi &amp; biologi · © <span id="year"></span></p>
+    </div>
+    <div class="foot-cols">
+      <div class="foot-col">
+        <h4>Sider</h4>
+        <div class="foot-links">
+          <a href="index.html">Forside</a>
+          <a href="geografi.html">Geografi</a>
+          <a href="born.html">Børn</a>
+          <a href="contact.html">Kontakt</a>
+        </div>
+      </div>
+      <div class="foot-col">
+        <h4>Undervisningssider</h4>
+        <div class="foot-links">
+          <a href="https://sites.google.com/view/simonsbiologi/startside?authuser=0" target="_blank" rel="noopener">Biolinks</a>
+          <a href="https://sites.google.com/mail-mg.dk/nf2024-2025/nf-2025-2026" target="_blank" rel="noopener">NF-siden</a>
+          <a href="admin.html">Admin</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="fag.js"></script>
 </body>
 </html>

@@ -57,6 +57,10 @@ a{color:inherit}
   font-family:var(--mono);font-size:0.68rem;font-weight:500;
   letter-spacing:0.14em;text-transform:uppercase;
 }
+.sr{
+  position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+  overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;
+}
 
 /* ── Topbjælke ─────────────────────────────────────────── */
 .rainbow{
@@ -146,6 +150,19 @@ h1{
 .rig-head .who{
   margin-left:auto;font-family:var(--mono);font-size:0.6rem;font-weight:600;
   letter-spacing:0.12em;text-transform:uppercase;color:#5A6C69;
+}
+.btn-mini{
+  font-family:var(--display);font-size:0.72rem;font-weight:700;
+  background:#fff;border:2px solid var(--ink);color:var(--ink);
+  padding:4px 11px;border-radius:18px;cursor:pointer;
+  box-shadow:2px 2px 0 var(--ink);
+  transition:transform .12s,box-shadow .12s,background .16s,color .16s;
+}
+.btn-mini:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--ink)}
+.btn-mini:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--ink)}
+.btn-mini[aria-pressed="true"]{
+  background:var(--accent);color:#fff;
+  transform:translate(2px,2px);box-shadow:0 0 0 var(--ink);
 }
 
 /* kanvas + overlay */
@@ -352,6 +369,23 @@ input[type=range]::-moz-range-thumb{
 .foot-links a:nth-child(2):hover{background:var(--amber);border-color:var(--amber);color:var(--ink)}
 .foot-links a:nth-child(3):hover{background:var(--lime);border-color:var(--lime);color:var(--ink)}
 
+/* ── Projektortilstand ─────────────────────────────────────
+   Sidens krom ryger væk, og alt der skal aflæses bagerst i
+   lokalet skaleres op. Slås til med knappen eller ?projektor=1. */
+body[data-projektor="1"] .top,
+body[data-projektor="1"] .head,
+body[data-projektor="1"] .foot{display:none}
+body[data-projektor="1"] .wrap{max-width:none;padding:0 14px}
+body[data-projektor="1"] .rig{margin-top:14px;box-shadow:var(--hard)}
+body[data-projektor="1"] .gauge dt{font-size:0.78rem}
+body[data-projektor="1"] .gauge dd{font-size:1.9rem}
+body[data-projektor="1"] .gauge dd small{font-size:0.95rem}
+body[data-projektor="1"] .proc-txt{font-size:1.05rem}
+body[data-projektor="1"] .knob-top .mono{font-size:0.82rem}
+body[data-projektor="1"] .knob-val{font-size:1.05rem}
+body[data-projektor="1"] .fact{font-size:0.74rem}
+body[data-projektor="1"] .fact b{font-size:0.92rem}
+
 /* ── Responsivt ────────────────────────────────────────── */
 @media (max-width:820px){
   .gauges{grid-template-columns:1fr 1fr}
@@ -406,6 +440,8 @@ input[type=range]::-moz-range-thumb{
       <div class="rig-head">
         <span class="rig-live"><span class="dot"></span><span class="mono">Live model</span></span>
         <span class="who">Tør 1,0 °C/100 m · fugtig 0,5 °C/100 m</span>
+        <button type="button" class="btn-mini" id="btn-projektor" aria-pressed="false"
+                title="Skjul sidens krom og forstør aflæsningerne">Projektor</button>
       </div>
 
       <div class="stage" id="stage" tabindex="0" role="application"
@@ -476,6 +512,11 @@ input[type=range]::-moz-range-thumb{
         <span class="fact" style="--fc:var(--coral)">Føhn: tør &amp; varm i læ</span>
       </div>
     </section>
+
+    <!-- Instrumenterne opdateres 60 gange i sekundet og kan derfor ikke selv
+         være aria-live — så ville skærmlæseren tale i ét væk. I stedet
+         opsummeres aflæsningen her, når luftpakken har stået stille et øjeblik. -->
+    <p class="sr" id="sr-status" aria-live="polite"></p>
   </div>
 </main>
 
@@ -1031,6 +1072,75 @@ function updateUI(state){
 
   // regnmåler: 0–100 mm
   animRain.style.height = Math.min(100, totalRainMm) + '%';
+
+  planlaegStatus(state);
+  gemTilstand();
+}
+
+/* ── Skærmlæser-status ──────────────────────────────────
+   Instrumenterne opdateres for hver optegning, så de kan ikke selv være
+   aria-live. I stedet opsummeres aflæsningen i det skjulte felt, men først
+   når luftpakken har stået stille i 700 ms — ellers ville skærmlæseren
+   læse op for hver eneste pixel, den flyttes. */
+const elSr = document.getElementById('sr-status');
+let srTimer = 0, srOplaest = '', srVentende = '';
+
+function planlaegStatus(state){
+  const tekst =
+    Math.round(state.alt) + ' meter over havet. ' +
+    state.temp.toFixed(1).replace('.', ',') + ' grader. ' +
+    'Relativ luftfugtighed ' + Math.round(state.rh) + ' procent. ' +
+    state.process + '. ' +
+    'Opsamlet nedbør ' + Math.floor(totalRainMm) + ' millimeter.';
+
+  if (tekst === srVentende) return;      // uændret siden sidste optegning
+  srVentende = tekst;
+  clearTimeout(srTimer);
+  if (tekst === srOplaest) return;       // tilbage til det, der allerede er læst op
+  srTimer = setTimeout(function(){
+    srOplaest = tekst;
+    elSr.textContent = tekst;
+  }, 700);
+}
+
+/* ── Deling: tilstanden ligger i adressen ───────────────
+   #t=starttemperatur, #v=start-vandindhold, #x=luftpakkens position.
+   De samme nøgler accepteres som query, så et link kan deles direkte. */
+let hashTimer = 0, hashSidste = '';
+
+function tilstandStreng(){
+  return '#t=' + inpTemp.value + '&v=' + inpWater.value + '&x=' + Math.round(dragX);
+}
+
+function gemTilstand(){
+  const h = tilstandStreng();
+  if (h === hashSidste) return;
+  hashSidste = h;
+  clearTimeout(hashTimer);
+  hashTimer = setTimeout(function(){
+    if (location.hash !== h) history.replaceState(null, '', h);
+  }, 400);
+}
+
+function laesTilstand(){
+  const p = new URLSearchParams(location.search);
+  new URLSearchParams(location.hash.replace(/^#/, '')).forEach(function(v, k){ p.set(k, v); });
+
+  function tal(raa, min, max){
+    const v = parseFloat(raa);
+    return isFinite(v) ? Math.max(min, Math.min(max, v)) : null;
+  }
+
+  const t = tal(p.get('t'), parseFloat(inpTemp.min),  parseFloat(inpTemp.max));
+  const v = tal(p.get('v'), parseFloat(inpWater.min), parseFloat(inpWater.max));
+  const x = tal(p.get('x'), 0, W);
+
+  if (t !== null) inpTemp.value  = t;
+  if (v !== null) inpWater.value = v;
+  if (x !== null){ dragX = x; hideHint(); }
+
+  // sæt udgangspunktet, så adressen først skrives, når noget faktisk ændres
+  hashSidste = tilstandStreng();
 }
 
 function resetRain(){
@@ -1080,7 +1190,19 @@ stage.addEventListener('keydown', e => {
 
 document.getElementById('btn-reset').addEventListener('click', resetRain);
 
-// Start
+// Projektortilstand: sidens krom ryger væk, og aflæsningerne skaleres op
+const btnProjektor = document.getElementById('btn-projektor');
+function saetProjektor(til){
+  document.body.setAttribute('data-projektor', til ? '1' : '0');
+  btnProjektor.setAttribute('aria-pressed', til ? 'true' : 'false');
+}
+btnProjektor.addEventListener('click', function(){
+  saetProjektor(document.body.getAttribute('data-projektor') !== '1');
+});
+if (/mode=teach|projektor=1/.test(location.search)) saetProjektor(true);
+
+// Start — ?t=25&v=12&x=400 eller #t=25&v=12&x=400 kan deles direkte
+laesTilstand();
 requestAnimationFrame(frame);
 </script>
 </body>

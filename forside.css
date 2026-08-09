@@ -34,6 +34,9 @@
 }
 
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+/* .sim og .sims sætter selv display, og det slår browserens [hidden] —
+   søgefiltret skjuler kort med attributten, så den skal have sidste ord */
+[hidden]{display:none!important}
 html{scroll-behavior:smooth}
 body{
   background:var(--paper);
@@ -54,6 +57,11 @@ img{display:block;max-width:100%}
 .mono{
   font-family:var(--mono);font-size:0.68rem;font-weight:500;
   letter-spacing:0.14em;text-transform:uppercase;
+}
+/* kun for skærmlæsere */
+.sr{
+  position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+  overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;
 }
 
 /* ── Regnbuestribe ─────────────────────────────────────── */
@@ -241,6 +249,53 @@ img{display:block;max-width:100%}
   text-decoration:none;border-bottom:2.5px solid var(--accent);transition:color .18s;
 }
 .rig-foot a:hover{color:var(--accent)}
+
+/* ── Sidehoved på undersider ───────────────────────────────
+   Fagforsiderne bruger samme krom som forsiden, men har et smalt
+   sidehoved i stedet for heroen. `--accent` sætter sidens ene farve. */
+.head{padding:40px 0 26px;position:relative;overflow:hidden}
+.head::before{
+  content:'';position:absolute;width:400px;height:400px;border-radius:50%;
+  background:var(--glow,#9BE0F5);filter:blur(70px);opacity:.5;
+  top:-210px;right:-120px;z-index:0;
+}
+.head-in{position:relative;z-index:1}
+.head h1{
+  font-family:var(--display);font-variation-settings:var(--wide);font-weight:800;
+  font-size:clamp(2rem,4.8vw,3rem);line-height:1.03;letter-spacing:-0.032em;
+  margin:16px 0 14px;
+}
+.head .lead{font-size:1.08rem;color:#3E4E4C;max-width:56ch;margin-bottom:20px}
+.head .stats{margin-top:4px}
+
+/* ── Søgefelt ──────────────────────────────────────────── */
+.soeg{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:22px}
+.head .soeg{max-width:600px;margin-top:20px;margin-bottom:0}
+.soeg input{
+  flex:1;min-width:210px;
+  font-family:var(--body);font-size:1rem;color:var(--ink);
+  background:#fff;border:2.5px solid var(--ink);border-radius:26px;
+  padding:10px 18px;box-shadow:var(--hard);
+}
+.soeg input::placeholder{color:#839592}
+.soeg-tal{
+  font-family:var(--mono);font-size:0.62rem;font-weight:600;
+  letter-spacing:0.13em;text-transform:uppercase;color:#5A6C69;
+}
+.soeg-tom{
+  background:#FFE9DC;border:2.5px solid var(--ink);border-radius:14px;
+  padding:14px 18px;box-shadow:var(--hard);margin-top:20px;
+}
+.soeg-tom[hidden]{display:none}
+
+/* ── Videoer ───────────────────────────────────────────── */
+.videos{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.video{
+  position:relative;aspect-ratio:16/9;overflow:hidden;
+  border:2.5px solid var(--ink);border-radius:16px;box-shadow:var(--hard);
+  background:var(--ink);
+}
+.video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 
 /* ── Billedbånd ────────────────────────────────────────── */
 .band{
@@ -434,6 +489,7 @@ img{display:block;max-width:100%}
 }
 .other-in{max-width:var(--max);margin:0 auto;padding:0 32px}
 .other-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:22px;align-items:start}
+.other-grid.other-2{grid-template-columns:1fr 1fr}
 .stack{--c:var(--lime);--t:#EDF8E4;scroll-margin-top:84px}
 .stack-head{
   display:flex;align-items:center;gap:11px;
@@ -534,9 +590,10 @@ img{display:block;max-width:100%}
 /* ── Responsivt ────────────────────────────────────────── */
 @media (max-width:980px){
   .hero-in{grid-template-columns:1fr;gap:44px}
+  .videos{grid-template-columns:1fr}
   .fields{grid-template-columns:1fr}
   .tiles{grid-template-columns:1fr 1fr}
-  .other-grid{grid-template-columns:1fr}
+  .other-grid,.other-grid.other-2{grid-template-columns:1fr}
   .tools{grid-template-columns:1fr 1fr}
   .stick-a{left:-20px}.stick-b{right:-14px}
 }
@@ -544,6 +601,7 @@ img{display:block;max-width:100%}
   body{font-size:16px}
   .wrap,.top-in,.hero-in,.foot-in,.tiles,.band-head,.other-in{padding-left:18px;padding-right:18px}
   .hero{padding:36px 0 44px}
+  .head{padding:26px 0 20px}
   .top-nav a{padding:6px 9px;font-size:0.78rem}
   .rig{transform:none}
   .rig-out{grid-template-columns:1fr 1fr}
@@ -556,4 +614,21 @@ img{display:block;max-width:100%}
 @media (prefers-reduced-motion:reduce){
   *{animation:none!important;transition:none!important}
   html{scroll-behavior:auto}
+}
+
+/* ── Print ─────────────────────────────────────────────────
+   Krom og navigation ryger væk, så oversigten kan komme på papir.
+   Kortene må ikke brækkes over midt i en overskrift.            */
+@media print{
+  .top,.foot,.filters,.rig-tabs,.hero-cta,.band,.soeg,.videos{display:none!important}
+  body{background:#fff;font-size:11pt}
+  .hero::before,.hero::after,.head::before{display:none}
+  .wrap,.top-in,.hero-in,.foot-in,.other-in{max-width:none;padding:0}
+  .sec{padding-top:18px;page-break-inside:auto}
+  .sim,.item,.tool,.field,.rig{
+    box-shadow:none;break-inside:avoid;page-break-inside:avoid;
+  }
+  .sims{grid-template-columns:1fr 1fr}
+  .other-grid,.tools{grid-template-columns:1fr 1fr}
+  a{text-decoration:none}
 }

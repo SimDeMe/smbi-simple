@@ -1,10 +1,13 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="da">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Hvor bliver vandet af i jorden? — porøsitet og permeabilitet</title>
-<meta name="description" content="Interaktiv simulation til naturgeografi C: ler, silt, sand og grus — sorteret og usorteret. Se hulrummene mellem kornene, mål porøsiteten og mål hvor hurtigt vandet siver igennem.">
+<title>Porøsitet &amp; permeabilitet — smbi.dk</title>
+<meta name="description" content="Interaktiv simulering af jordens hulrum: skru på kornstørrelse og sortering, hæld vand på, og se forskellen på plads til vand (porøsitet) og vej igennem (permeabilitet).">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,300..600&display=swap" rel="stylesheet">
 
 <!--
   ==========================================================================
@@ -12,6 +15,7 @@
   ==========================================================================
   Simulationen har to håndtag: kornstørrelse (ler → silt → sand → grus) og
   sortering (velsorteret → usorteret). Alt andet er beregnet ud fra dem.
+  Modellen er uændret fra den tidligere udgave af siden.
 
   KORNSTØRRELSE
   Skyderen løber over phi-skalaen (phi = -log2(d i mm)), men de fire
@@ -25,13 +29,14 @@
   SORTERING
   Sorteringen er standardafvigelsen i phi-enheder (Folk):
       sigma = 0,35 + 2,20 * u      u = 0 velsorteret, u = 1 meget dårligt sorteret
+  Skyderen viser u bagvendt som "sortering i procent": 100 % = u 0.
   Den fine ende af fordelingen er det, der styrer gennemstrømningen:
       d10 = 2^-(phi50 + 1,28*sigma)   [mm]   (10 % af prøven er finere end d10)
 
   PERMEABILITET — Hazens formel
       K = C * d10^2      C = 0,01  (K i m/s, d10 i mm)
   Hazen gælder strengt taget kun for sand. For meget fine korn overvurderer
-  den kraftigt, fordi lerpartikler er plade­formede og binder vandet
+  den kraftigt, fordi lerpartikler er pladeformede og binder vandet
   elektrostatisk. Derfor en eksplicit korrektion under d10 = 0,004 mm:
       K *= (d10/0,004)^1,6
   Kontrolværdier med modellen (velsorteret, u = 0,05):
@@ -55,513 +60,553 @@
                                       silt 0,55 · ler 0,85 (andel af porerne)
       tilbageholdt = V_prøve * n * fc      V_prøve = 40 ml (~50 g sediment)
 
-  NEDSIVNINGSFORSØGET (Darcy, samme opstilling som øvelsesvejledningen)
+  NEDSIVNINGEN (Darcy, samme opstilling som øvelsesvejledningen)
       A = 0,0040 m^2 (tragt, ca. 7 cm i diameter), L = 0,03 m (prøvetykkelse)
       Med vand stående ovenpå:  Q = K * A * (1 + h/L)
-      Når vandet er sivet ned:  eksponentiel efterdrypning mod markkapacitet
-  100 ml hældes på over 2 simulerede sekunder, præcis som i øvelsen.
+      Når vandet er sivet ned:  resten hænger fast som markkapacitet
+  100 ml hældes på over 2 simulerede sekunder. Nedsivningen foregår i det
+  SAMME billede som kornene — der er ikke længere en tragt ved siden af.
 
   TEGNINGEN AF TVÆRSNITTET
-  Kornene lægges med en simpel gravitationspakning (fald + sidelæns glid).
-  En 2D-pakning af cirkler bliver for tæt (~16 % hulrum), mens et rigtigt
-  tværsnit gennem en 3D-pakning viser den ægte rumlige porøsitet. Derfor
-  skaleres alle kornradier med en faktor k, indtil det målte hulrum på
-  billedet rammer modellens n. Målingen sker ved at tegne pakningen på et
-  lille offscreen-lærred og TÆLLE PIXELS — så det, eleven ser, og det tal,
-  der står, er det samme. To iterationer er nok (afvigelse under 0,5 %).
-  Konsekvensen er, at kornene ikke rører hinanden på billedet. Det er
-  korrekt for et tværsnit: kornene mødes uden for snitplanen.
+  Kornene lægges med en simpel gravitationspakning (fald + sidelæns glid) og
+  tegnes som cirkler. En 2D-pakning af cirkler bliver for tæt (~16 % hulrum),
+  mens et rigtigt tværsnit gennem en 3D-pakning viser den ægte rumlige
+  porøsitet. Derfor skaleres alle kornradier med en faktor k, indtil det
+  målte hulrum på billedet rammer modellens n. Målingen sker ved at tegne
+  pakningen på et lille offscreen-lærred og TÆLLE PIXELS — så det, eleven
+  ser, og det tal, der står, er det samme. Konsekvensen er, at kornene ikke
+  rører hinanden på billedet. Det er korrekt for et tværsnit: kornene mødes
+  uden for snitplanen.
+
+  Spredningen i tegningen følger sorteringsskyderen HELT i bund: ved 100 %
+  sortering er alle korn nøjagtig lige store på billedet. Det er en
+  idealisering (modellens sigma er 0,35 phi selv i den velsorterede ende),
+  men det er netop den idealisering, billedet skal vise.
+
+  Antallet af korn på tværs af billedet går fra ca. 12 (grus) til ca. 46
+  (ler). Den ægte forskel er en faktor 4000 og kan ikke tegnes — derfor
+  målestokken nederst i billedet, som viser, hvor kraftigt der er forstørret.
   ==========================================================================
 -->
 
 <style>
-.pp-app{
-  --pp-cream:#F5F0E8;
-  --pp-cream-d:#EDE5D4;
-  --pp-parch:#D4C9A8;
-  --pp-navy:#1C2E44;
-  --pp-navy-l:#2E4A6A;
-  --pp-bronze:#8B6914;
-  --pp-bronze-l:#A07820;
-  --pp-gold:#D4A840;
-  --pp-ink:#1A1610;
-  --pp-sepia:#4A3C28;
-  --pp-sepia-l:#6B5840;
-  --pp-vand:#1C6E96;
-  --pp-vand-d:#12506F;
-  --pp-vand-l:#8FCBE4;
+:root{
+  --paper:#FFF9EE;  --paper-2:#FFF3DC;  --panel:#FFFFFF;
+  --ink:#17211F;    --slate:#566B68;
 
-  --pp-serif:Cambria,"Hoefler Text",Constantia,Georgia,"Times New Roman",serif;
-  --pp-sans:Calibri,"Segoe UI",-apple-system,BlinkMacSystemFont,Roboto,"Helvetica Neue",Arial,sans-serif;
+  --pink:#E8336D; --blue:#0E86C8; --lime:#5FB030; --amber:#FFB300;
+  --grape:#7A4FD6; --coral:#FF6A3D; --teal:#0FA593;
 
-  font-family:var(--pp-sans);
-  font-size:17px;
-  line-height:1.45;
-  color:var(--pp-ink);
-  background:var(--pp-cream);
-  min-height:100vh;
-}
-html,body{margin:0;padding:0;background:#F5F0E8;}
-.pp-app *,.pp-app *::before,.pp-app *::after{box-sizing:border-box;}
-.pp-app h1,.pp-app h2,.pp-app h3,.pp-app p,.pp-app ul,.pp-app ol{margin:0;}
-.pp-app button,.pp-app select,.pp-app input{font:inherit;color:inherit;}
+  --bio:var(--pink);
+  --geo:var(--blue);
+  --accent:var(--geo);
 
-/* ── Topbjælke ────────────────────────────────────────────────────────── */
-.pp-top{
-  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
-  padding:12px 22px 12px 132px;
-  border-bottom:2px solid var(--pp-parch);
-  background:#FFFDF9;
+  --display:'Archivo',system-ui,sans-serif;
+  --body:'Source Serif 4',Georgia,serif;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+
+  --wide:'wdth' 118;
+  --max:980px;
+
+  --hard:4px 4px 0 var(--ink);
+  --hard-lg:7px 7px 0 var(--ink);
 }
-.pp-top h1{
-  font-family:var(--pp-serif);
-  font-size:29px;font-weight:700;line-height:1.15;
-  color:var(--pp-navy);flex:1 1 320px;
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--paper);color:var(--ink);
+  font-family:var(--body);font-size:17px;line-height:1.6;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden;
 }
-.pp-knap{
+a{color:inherit}
+:focus-visible{outline:3px solid var(--grape);outline-offset:3px;border-radius:4px}
+[hidden]{display:none!important}
+
+.mono{
+  font-family:var(--mono);font-size:0.68rem;font-weight:500;
+  letter-spacing:0.14em;text-transform:uppercase;
+}
+.sr{
+  position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+  overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;
+}
+
+/* ── Topbjælke ─────────────────────────────────────────── */
+.rainbow{
+  height:7px;
+  background:linear-gradient(90deg,
+    var(--pink) 0 14.3%, var(--coral) 14.3% 28.6%, var(--amber) 28.6% 42.9%,
+    var(--lime) 42.9% 57.2%, var(--teal) 57.2% 71.5%, var(--blue) 71.5% 85.8%,
+    var(--grape) 85.8% 100%);
+}
+.top{position:sticky;top:0;z-index:60}
+.top-bar{
+  background:rgba(255,249,238,0.93);
+  backdrop-filter:blur(10px);
+  border-bottom:2px solid var(--ink);
+}
+.top-in{
+  max-width:var(--max);margin:0 auto;padding:0 24px;
+  display:flex;align-items:center;gap:16px;height:60px;
+}
+.brand{
+  font-family:var(--display);font-variation-settings:'wdth' 125;
+  font-weight:800;font-size:1.15rem;letter-spacing:-0.02em;
+  text-decoration:none;display:flex;align-items:center;gap:8px;
+}
+.brand-mark{
+  width:25px;height:25px;border-radius:9px;border:2px solid var(--ink);
+  background:conic-gradient(var(--pink),var(--amber),var(--lime),var(--blue),var(--grape),var(--pink));
+  flex-shrink:0;
+}
+.brand em{font-family:var(--mono);font-size:0.72rem;font-weight:500;font-style:normal;color:var(--slate)}
+.top-nav{display:flex;gap:6px;margin-left:auto}
+.top-nav a{
+  font-family:var(--display);font-size:0.84rem;font-weight:600;
+  text-decoration:none;color:var(--ink);white-space:nowrap;
+  padding:7px 14px;border-radius:20px;border:2px solid transparent;
+  transition:background .15s,border-color .15s;
+}
+.top-nav a:hover{background:#C7E6F6;border-color:var(--ink)}
+
+/* ── Sidehoved ─────────────────────────────────────────── */
+.wrap{max-width:var(--max);margin:0 auto;padding:0 24px}
+.head{padding:34px 0 22px;position:relative;overflow:hidden}
+.head::before{
+  content:'';position:absolute;width:380px;height:380px;border-radius:50%;
+  background:#9BE0F5;filter:blur(70px);opacity:.5;top:-200px;right:-120px;z-index:0;
+}
+.head-in{position:relative;z-index:1}
+.eyebrow{
   display:inline-flex;align-items:center;gap:8px;
-  padding:9px 17px;min-height:44px;
-  border:2px solid var(--pp-navy-l);border-radius:999px;
-  background:#fff;color:var(--pp-navy-l);
-  font-weight:600;font-size:16px;cursor:pointer;
-  transition:background .15s,color .15s;
+  background:var(--ink);color:#FFF6E0;padding:6px 14px;border-radius:20px;
 }
-.pp-knap:hover{background:var(--pp-navy-l);color:#fff;}
-.pp-knap:focus-visible{outline:3px solid var(--pp-gold);outline-offset:2px;}
-.pp-knap[disabled]{opacity:.42;cursor:not-allowed;}
-.pp-knap[disabled]:hover{background:#fff;color:var(--pp-navy-l);}
-.pp-knap svg{flex:none;}
-.pp-knap-fyldt{background:var(--pp-navy);border-color:var(--pp-navy);color:#fff;}
-.pp-knap-fyldt:hover{background:var(--pp-navy-l);border-color:var(--pp-navy-l);}
+.eyebrow .blink{width:8px;height:8px;border-radius:50%;background:var(--blue);animation:pulse 1.8s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.8)}}
+h1{
+  font-family:var(--display);font-variation-settings:var(--wide);font-weight:800;
+  font-size:clamp(2rem,4.6vw,2.9rem);line-height:1.03;letter-spacing:-0.032em;
+  margin:16px 0 14px;
+}
+.hi{position:relative;display:inline-block;z-index:0;white-space:nowrap}
+.hi::before{
+  content:'';position:absolute;z-index:-1;left:-8px;right:-8px;top:12%;bottom:8%;
+  background:var(--hc,var(--amber));border-radius:6px;transform:rotate(-1.3deg);
+}
+.lead{font-size:1.06rem;color:#3E4E4C;max-width:56ch}
 
-/* ── Trin ─────────────────────────────────────────────────────────────── */
-.pp-trin{
-  display:flex;gap:0;flex-wrap:wrap;
-  padding:0 22px;background:#FFFDF9;
-  border-bottom:2px solid var(--pp-parch);
+/* ── Signaturpanel ─────────────────────────────────────── */
+.rig{
+  position:relative;background:var(--panel);
+  border:2.5px solid var(--ink);border-radius:18px;overflow:hidden;
+  box-shadow:var(--hard-lg);margin-top:26px;
 }
-.pp-trin button{
-  display:flex;align-items:center;gap:9px;
-  padding:12px 18px;min-height:52px;
-  border:none;border-bottom:4px solid transparent;
-  background:none;cursor:pointer;
-  font-size:17px;font-weight:600;color:var(--pp-sepia-l);
+.rig-bar{height:9px;background:var(--accent)}
+.rig-head{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:11px 15px;border-bottom:2px solid var(--ink);background:#E7F4FB;
 }
-.pp-trin button:hover{color:var(--pp-navy);}
-.pp-trin button:focus-visible{outline:3px solid var(--pp-gold);outline-offset:-3px;}
-.pp-trin button[aria-selected="true"]{
-  color:var(--pp-navy);border-bottom-color:var(--pp-gold);
+.rig-live{display:flex;align-items:center;gap:7px}
+.rig-live .mono{color:var(--ink);font-weight:600}
+.dot{
+  width:9px;height:9px;border-radius:50%;background:var(--accent);
+  border:1.5px solid var(--ink);animation:pulse 2s ease-in-out infinite;
 }
-.pp-trin-nr{
-  display:inline-flex;align-items:center;justify-content:center;
-  width:27px;height:27px;border-radius:50%;
-  background:var(--pp-cream-d);color:var(--pp-sepia);
-  font-size:15px;font-weight:700;flex:none;
+.rig-head .who{
+  margin-left:auto;font-family:var(--mono);font-size:0.6rem;font-weight:600;
+  letter-spacing:0.12em;text-transform:uppercase;color:#5A6C69;
 }
-.pp-trin button[aria-selected="true"] .pp-trin-nr{background:var(--pp-navy);color:#fff;}
+.btn-mini{
+  font-family:var(--display);font-size:0.72rem;font-weight:700;
+  background:#fff;border:2px solid var(--ink);color:var(--ink);
+  padding:4px 11px;border-radius:18px;cursor:pointer;
+  box-shadow:2px 2px 0 var(--ink);
+  transition:transform .12s,box-shadow .12s,background .16s,color .16s;
+}
+.btn-mini:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--ink)}
+.btn-mini:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--ink)}
+.btn-mini[aria-pressed="true"]{
+  background:var(--accent);color:#fff;
+  transform:translate(2px,2px);box-shadow:0 0 0 var(--ink);
+}
 
-/* ── Hook ─────────────────────────────────────────────────────────────── */
-.pp-hook{
-  padding:13px 22px;
-  background:var(--pp-cream);
-  border-bottom:2px solid var(--pp-parch);
-  border-left:14px solid var(--pp-gold);
-  font-family:var(--pp-serif);font-style:italic;font-size:21px;
-  color:var(--pp-navy);
+/* ── Billedet ──────────────────────────────────────────── */
+.stage{
+  position:relative;padding:10px;
+  background:radial-gradient(circle at 1px 1px,#E6EDEB 1px,transparent 0) 0 0/16px 16px;
+}
+canvas{
+  display:block;width:100%;height:auto;
+  border:2px solid var(--ink);border-radius:12px;background:var(--paper);
+}
+.badge{
+  position:absolute;right:22px;top:22px;z-index:2;pointer-events:none;
+  font-family:var(--mono);font-size:0.58rem;font-weight:600;letter-spacing:0.1em;
+  text-transform:uppercase;color:var(--ink);
+  background:rgba(255,249,238,.92);border:2px solid var(--ink);border-radius:14px;
+  padding:4px 10px;box-shadow:2px 2px 0 var(--ink);
 }
 
-/* ── Scene ────────────────────────────────────────────────────────────── */
-.pp-scene{
-  display:grid;
-  grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);
-  gap:18px;
-  padding:18px 22px 0;
-  align-items:start;
+/* ── Handling + forklaring ─────────────────────────────── */
+.tools{
+  display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  border-top:2px solid var(--ink);background:#fff;padding:14px 15px;
 }
-.pp-scene[data-bred="1"]{grid-template-columns:minmax(0,1fr);}
-.pp-boks{
-  position:relative;
-  background:#FFFDF9;
-  border:2px solid var(--pp-parch);
-  border-radius:12px;
-  overflow:hidden;
+.btn{
+  font-family:var(--display);font-size:0.92rem;font-weight:800;
+  background:var(--amber);border:2.5px solid var(--ink);color:var(--ink);
+  padding:9px 20px;border-radius:24px;cursor:pointer;flex:none;
+  box-shadow:var(--hard);
+  transition:transform .12s,box-shadow .12s,background .16s;
 }
-.pp-boks h2{
-  font-family:var(--pp-serif);font-size:17px;font-weight:700;
-  color:var(--pp-sepia);padding:9px 14px 0;
-  letter-spacing:.02em;text-transform:uppercase;
+.btn:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--ink)}
+.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.btn[disabled]{background:#EDE9E1;cursor:progress;transform:none;box-shadow:2px 2px 0 var(--ink)}
+.says{
+  flex:1 1 260px;min-height:3.2em;font-size:0.98rem;line-height:1.45;color:#3E4E4C;
 }
-.pp-boks canvas{display:block;width:100%;}
-#ppTvaersnit{height:clamp(260px,44vh,430px);}
-#ppInstrument{height:clamp(260px,44vh,430px);}
-#ppGraf{height:clamp(190px,26vh,250px);}
-#ppSammenlign{height:clamp(430px,62vh,620px);}
+.says strong{color:var(--ink)}
 
-/* ── Aflæsninger ──────────────────────────────────────────────────────── */
-.pp-tal{
-  display:flex;flex-wrap:wrap;gap:10px;
-  padding:0 22px;margin-top:14px;
+/* ── Instrumenter ──────────────────────────────────────── */
+.gauges{display:grid;grid-template-columns:repeat(4,1fr);border-top:2px solid var(--ink)}
+.gauge{
+  padding:13px 15px 14px;border-left:2px solid var(--ink);
+  display:flex;flex-direction:column;gap:9px;
 }
-.pp-tal-kort{
-  flex:1 1 165px;min-width:150px;
-  background:#FFFDF9;border:2px solid var(--pp-parch);
-  border-left:8px solid var(--pp-bronze-l);
-  border-radius:10px;padding:9px 13px 11px;
+.gauge:first-child{border-left:none}
+.g-por{background:#FFF1EC}
+.g-perm{background:#F1ECFC}
+.g-korn{background:#EDF8E4}
+.g-vand{background:#E7F4FB}
+.gauge dt{
+  font-family:var(--mono);font-size:0.57rem;font-weight:600;letter-spacing:0.12em;
+  text-transform:uppercase;color:#5A6C69;
 }
-.pp-tal-kort.pp-vandfarve{border-left-color:var(--pp-vand);}
-.pp-tal-kort .pp-tal-navn{
-  font-size:14px;font-weight:700;letter-spacing:.04em;
-  text-transform:uppercase;color:var(--pp-sepia-l);
+.gauge dd{
+  font-family:var(--display);font-variation-settings:'wdth' 108;
+  font-weight:800;font-size:1.28rem;line-height:1.15;font-variant-numeric:tabular-nums;
 }
-.pp-tal-kort .pp-tal-vaerdi{
-  font-family:var(--pp-serif);font-size:30px;font-weight:700;
-  line-height:1.1;color:var(--pp-navy);
+.gauge dd small{font-size:0.66em;font-weight:700;color:#5A6C69;margin-left:3px}
+.g-viz{display:flex;align-items:center;gap:9px;min-height:30px}
+.g-note{
+  font-family:var(--mono);font-size:0.5rem;font-weight:600;letter-spacing:0.1em;
+  text-transform:uppercase;color:#7E8F8C;display:flex;justify-content:space-between;gap:6px;
 }
-.pp-tal-kort .pp-tal-under{font-size:14px;color:var(--pp-sepia-l);line-height:1.3;}
 
-/* ── Live-forklaring ──────────────────────────────────────────────────── */
-.pp-forklar{
-  margin:16px 22px 0;
-  padding:13px 18px;
-  background:#FFFDF9;
-  border:2px solid var(--pp-parch);
-  border-radius:12px;
-  border-left:10px solid var(--pp-navy);
-  font-size:18px;color:var(--pp-ink);max-width:1000px;
+.bar{
+  position:relative;width:100%;height:17px;flex:1;
+  border:2px solid var(--ink);border-radius:9px;background:#fff;overflow:hidden;
 }
-.pp-forklar strong{color:var(--pp-navy);}
+.bar i{
+  position:absolute;left:0;top:0;bottom:0;display:block;width:0%;
+  background:var(--accent);border-right:2px solid var(--ink);
+  transition:width .15s linear;
+}
+.skala{
+  position:relative;width:100%;height:17px;flex:1;
+  border:2px solid var(--ink);border-radius:9px;overflow:hidden;
+  background:linear-gradient(90deg,#E2D6F8,#C7E6F6,#D6EFC4,#FFD9C9);
+}
+.skala i{
+  position:absolute;top:-3px;bottom:-3px;left:0;display:block;width:7px;
+  background:var(--ink);border-radius:3px;transform:translateX(-50%);
+  transition:left .15s linear;
+}
+.cls{
+  display:flex;width:100%;border:2px solid var(--ink);border-radius:9px;overflow:hidden;
+  font-family:var(--mono);font-size:0.5rem;font-weight:600;letter-spacing:0.06em;
+  text-transform:uppercase;background:#fff;
+}
+.cls span{flex:1;text-align:center;padding:3px 0;border-left:1.5px solid var(--ink);color:#7E8F8C}
+.cls span:first-child{border-left:none}
+.cls span[data-aktiv="1"]{background:var(--ink);color:#FFF6E0}
+.cyl{
+  position:relative;width:26px;height:40px;flex:none;
+  border:2px solid var(--ink);border-top:none;border-radius:0 0 8px 8px;
+  background:#fff;overflow:hidden;
+}
+.cyl i{
+  position:absolute;left:0;right:0;bottom:0;display:block;height:0%;
+  background:linear-gradient(180deg,#4FB3E8,#0E86C8);transition:height .15s linear;
+}
+.cyl u{position:absolute;left:0;right:0;height:1.5px;background:rgba(23,33,31,.35)}
+.cyl u.t1{bottom:25%}.cyl u.t2{bottom:50%}.cyl u.t3{bottom:75%}
+.g-vand .g-viz{align-items:flex-end}
+.tid{font-family:var(--mono);font-size:0.55rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#5A6C69}
 
-/* ── Kontroller ───────────────────────────────────────────────────────── */
-.pp-kontrol{
-  display:flex;gap:28px;flex-wrap:wrap;
-  margin-top:18px;padding:16px 22px 20px;
-  border-top:2px solid var(--pp-parch);
-  background:#FFFDF9;
+/* ── Skydere ───────────────────────────────────────────── */
+.knobs{
+  border-top:2px solid var(--ink);background:var(--paper-2);
+  padding:18px 15px 20px;display:grid;grid-template-columns:1fr 1fr;gap:20px 26px;
 }
-.pp-skyder{flex:1 1 300px;min-width:260px;}
-.pp-skyder label{
-  display:block;font-size:16px;font-weight:700;color:var(--pp-navy);
-  margin-bottom:2px;
+.knob{display:flex;flex-direction:column;gap:7px}
+.knob-top{display:flex;align-items:baseline;gap:10px}
+.knob-top .mono{color:#5A6C69;font-size:0.62rem}
+.knob-val{
+  margin-left:auto;font-family:var(--display);font-variation-settings:'wdth' 108;
+  font-weight:800;font-size:1rem;font-variant-numeric:tabular-nums;
+  background:#fff;border:2px solid var(--ink);border-radius:16px;padding:1px 11px;
+  white-space:nowrap;
 }
-.pp-skyder .pp-ender{
-  display:flex;justify-content:space-between;
-  font-size:14px;color:var(--pp-sepia-l);
+input[type=range]{
+  -webkit-appearance:none;appearance:none;width:100%;height:22px;background:transparent;cursor:pointer;
 }
-.pp-skyder input[type=range]{
-  width:100%;height:44px;
-  -webkit-appearance:none;appearance:none;background:transparent;cursor:pointer;
+input[type=range]::-webkit-slider-runnable-track{
+  height:10px;border:2px solid var(--ink);border-radius:9px;background:var(--track,#fff);
 }
-.pp-skyder input[type=range]:focus{outline:none;}
-.pp-skyder input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 2px var(--pp-navy),0 0 0 7px rgba(212,168,64,.65);}
-.pp-skyder input[type=range]:focus-visible::-moz-range-thumb{box-shadow:0 0 0 2px var(--pp-navy),0 0 0 7px rgba(212,168,64,.65);}
-.pp-skyder input[type=range]::-webkit-slider-runnable-track{
-  height:14px;border-radius:999px;background:var(--pp-cream-d);border:2px solid var(--pp-parch);
-}
-.pp-skyder input[type=range]::-webkit-slider-thumb{
+input[type=range]::-webkit-slider-thumb{
   -webkit-appearance:none;appearance:none;
-  width:38px;height:38px;margin-top:-14px;border-radius:50%;
-  background:var(--pp-navy);border:4px solid #fff;
-  box-shadow:0 0 0 2px var(--pp-navy);
+  width:22px;height:22px;margin-top:-8px;border-radius:50%;
+  border:2.5px solid var(--ink);background:var(--kc,var(--amber));
+  box-shadow:2px 2px 0 var(--ink);
 }
-.pp-skyder input[type=range]::-moz-range-track{
-  height:14px;border-radius:999px;background:var(--pp-cream-d);border:2px solid var(--pp-parch);
+input[type=range]::-moz-range-track{
+  height:10px;border:2px solid var(--ink);border-radius:9px;background:var(--track,#fff);
 }
-.pp-skyder input[type=range]::-moz-range-thumb{
-  width:34px;height:34px;border-radius:50%;
-  background:var(--pp-navy);border:4px solid #fff;
-  box-shadow:0 0 0 2px var(--pp-navy);
+input[type=range]::-moz-range-thumb{
+  width:20px;height:20px;border-radius:50%;
+  border:2.5px solid var(--ink);background:var(--kc,var(--amber));box-shadow:2px 2px 0 var(--ink);
 }
-.pp-zoner{display:flex;margin-top:-4px;}
-.pp-zoner button{
-  flex:1 1 0;padding:7px 2px;min-height:44px;
-  border:2px solid var(--pp-parch);border-right-width:0;
-  background:#fff;color:var(--pp-sepia);
-  font-size:15px;font-weight:600;cursor:pointer;
-}
-.pp-zoner button:first-child{border-radius:8px 0 0 8px;}
-.pp-zoner button:last-child{border-right-width:2px;border-radius:0 8px 8px 0;}
-.pp-zoner button:hover{background:var(--pp-cream-d);}
-.pp-zoner button:focus-visible{outline:3px solid var(--pp-gold);outline-offset:-2px;}
-.pp-zoner button[aria-pressed="true"]{background:var(--pp-navy);border-color:var(--pp-navy);color:#fff;}
-.pp-vaerktoej{display:flex;align-items:center;gap:11px;flex-wrap:wrap;flex:0 0 auto;}
+#inp-korn{--track:linear-gradient(90deg,#8A7B6B 0 25%,#B49A78 25% 50%,#D9B25E 50% 75%,#9C9186 75% 100%);--kc:var(--amber)}
+#inp-sort{--track:linear-gradient(90deg,#EDE7DC,#fff);--kc:var(--grape)}
 
-/* ── Hjælpepanel ──────────────────────────────────────────────────────── */
-.pp-overlay{
-  position:fixed;inset:0;z-index:60;
-  display:flex;align-items:center;justify-content:center;
-  padding:18px;background:rgba(28,46,68,.45);
+.klasser{display:flex;gap:0}
+.klasser button{
+  flex:1 1 0;font-family:var(--display);font-size:0.76rem;font-weight:700;
+  background:#fff;border:2px solid var(--ink);border-left-width:0;color:var(--ink);
+  padding:5px 4px;cursor:pointer;transition:background .15s,color .15s;
 }
-.pp-overlay[hidden]{display:none;}
-.pp-panel{
-  width:min(680px,100%);max-height:88vh;overflow:auto;
-  background:#FFFDF9;border-radius:16px;border:3px solid var(--pp-parch);
-  padding:24px 28px 28px;color:var(--pp-ink);
+.klasser button:first-child{border-left-width:2px;border-radius:14px 0 0 14px}
+.klasser button:last-child{border-radius:0 14px 14px 0}
+.klasser button:hover{background:#FFE9DC}
+.klasser button[aria-pressed="true"]{background:var(--ink);color:#FFF6E0}
+.ender{display:flex;justify-content:space-between;gap:8px}
+.ender span{
+  font-family:var(--mono);font-size:0.52rem;font-weight:600;letter-spacing:0.08em;
+  text-transform:uppercase;color:#7E8F8C;
 }
-.pp-panel h2{font-family:var(--pp-serif);font-size:25px;margin-bottom:12px;color:var(--pp-navy);}
-.pp-panel p{margin-bottom:11px;}
-.pp-legende{list-style:none;padding:0;margin:0 0 14px;}
-.pp-legende li{
-  display:flex;align-items:center;gap:15px;
-  padding:10px 0;border-bottom:1px solid var(--pp-parch);font-size:17px;
-}
-.pp-legende li:last-child{border-bottom:none;}
-.pp-legende .pp-proeve{width:38px;height:26px;border-radius:5px;border:2px solid var(--pp-sepia);flex:none;}
 
-/* ── Udfoldelige afsnit ───────────────────────────────────────────────── */
-.pp-mere{padding:0 22px 34px;background:var(--pp-cream);}
-.pp-mere details{
-  border-top:2px solid var(--pp-parch);
+/* ── Signaturforklaring ────────────────────────────────── */
+.facts{
+  border-top:2px solid var(--ink);background:#fff;
+  padding:12px 15px;display:flex;gap:9px;flex-wrap:wrap;align-items:center;
 }
-.pp-mere summary{
-  cursor:pointer;padding:15px 0;
-  font-family:var(--pp-serif);font-size:22px;font-weight:700;color:var(--pp-navy);
+.fact{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--paper);border:2px solid var(--ink);border-radius:22px;padding:5px 13px;
+  font-family:var(--mono);font-size:0.6rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;
 }
-.pp-mere summary:focus-visible{outline:3px solid var(--pp-gold);outline-offset:3px;}
-.pp-mere details > div{padding-bottom:18px;max-width:960px;}
-.pp-ord{
-  display:grid;gap:11px;
-  grid-template-columns:repeat(auto-fit,minmax(255px,1fr));
-  max-width:1000px;
+.fact::before{content:'';width:10px;height:10px;border-radius:3px;background:var(--fc,var(--slate));border:1.5px solid var(--ink)}
+.fact b{font-family:var(--display);font-size:0.84rem;font-weight:800;letter-spacing:0}
+.zoomnote{
+  font-family:var(--mono);font-size:0.55rem;font-weight:500;letter-spacing:0.08em;
+  text-transform:uppercase;color:#7E8F8C;flex:1 1 200px;
 }
-.pp-ord div{
-  background:#FFFDF9;border:2px solid var(--pp-parch);border-radius:10px;
-  padding:12px 15px;
-}
-.pp-ord h3{font-family:var(--pp-serif);font-size:19px;color:var(--pp-navy);margin-bottom:3px;}
-.pp-ord p{font-size:16px;}
-.pp-opg{list-style:none;padding:0;display:grid;gap:12px;max-width:960px;}
-.pp-opg li{
-  background:#FFFDF9;border:2px solid var(--pp-parch);border-radius:10px;
-  padding:13px 17px;
-}
-.pp-opg h3{font-family:var(--pp-serif);font-size:18px;color:var(--pp-navy);margin-bottom:4px;}
-.pp-opg p{font-size:16px;}
-.pp-opg .pp-knap{margin-top:9px;padding:6px 17px;min-height:44px;font-size:15px;}
-.pp-mere ul.pp-punkter{padding-left:22px;}
-.pp-mere ul.pp-punkter li{margin-bottom:7px;}
 
-.pp-skjult{
-  position:absolute;width:1px;height:1px;overflow:hidden;
-  clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;
+/* ── Bund ──────────────────────────────────────────────── */
+.foot{margin-top:34px;background:var(--ink);color:#FFF6E0;padding:26px 0 32px}
+.foot-in{
+  max-width:var(--max);margin:0 auto;padding:0 24px;
+  display:flex;justify-content:space-between;align-items:flex-end;gap:18px;flex-wrap:wrap;
 }
-[hidden]{display:none !important;}
+.foot .brand{color:#FFF6E0}
+.foot .mono{color:#8FA29E;margin-top:5px}
+.foot-links{display:flex;gap:8px;flex-wrap:wrap}
+.foot-links a{
+  font-family:var(--display);font-size:0.82rem;font-weight:700;text-decoration:none;
+  border:2px solid #FFF6E0;border-radius:20px;padding:5px 13px;
+  transition:background .16s,color .16s,border-color .16s;
+}
+.foot-links a:nth-child(1):hover{background:var(--blue);border-color:var(--blue)}
+.foot-links a:nth-child(2):hover{background:var(--amber);border-color:var(--amber);color:var(--ink)}
+.foot-links a:nth-child(3):hover{background:var(--lime);border-color:var(--lime);color:var(--ink)}
 
-@media (max-width:900px){
-  .pp-top{padding-left:22px;padding-top:56px;}
-  .pp-top h1{font-size:24px;}
-  .pp-scene{grid-template-columns:minmax(0,1fr);}
-  .pp-hook{font-size:19px;}
+/* ── Projektortilstand ─────────────────────────────────── */
+body[data-projektor="1"] .top,
+body[data-projektor="1"] .head,
+body[data-projektor="1"] .foot{display:none}
+body[data-projektor="1"] .wrap{max-width:none;padding:0 14px}
+body[data-projektor="1"] .rig{margin-top:14px;box-shadow:var(--hard)}
+body[data-projektor="1"] .gauge dt{font-size:0.78rem}
+body[data-projektor="1"] .gauge dd{font-size:1.9rem}
+body[data-projektor="1"] .gauge dd small{font-size:0.95rem}
+body[data-projektor="1"] .says{font-size:1.2rem}
+body[data-projektor="1"] .knob-top .mono{font-size:0.82rem}
+body[data-projektor="1"] .knob-val{font-size:1.05rem}
+body[data-projektor="1"] .fact{font-size:0.74rem}
+body[data-projektor="1"] .fact b{font-size:0.92rem}
+
+/* ── Responsivt ────────────────────────────────────────── */
+@media (max-width:820px){
+  .gauges{grid-template-columns:1fr 1fr}
+  .gauge:nth-child(3){border-left:none}
+  .gauge:nth-child(n+3){border-top:2px solid var(--ink)}
 }
-@media (max-width:520px){
-  .pp-app{font-size:16px;}
-  .pp-top,.pp-trin,.pp-hook,.pp-scene,.pp-tal,.pp-kontrol,.pp-mere{padding-left:13px;padding-right:13px;}
-  .pp-forklar{margin-left:13px;margin-right:13px;}
-  .pp-trin button{padding:10px 11px;font-size:15px;}
-  .pp-zoner button{font-size:13px;}
+@media (max-width:620px){
+  body{font-size:16px}
+  .wrap,.top-in,.foot-in{padding-left:16px;padding-right:16px}
+  .head{padding:24px 0 18px}
+  .rig{border-radius:14px;box-shadow:var(--hard)}
+  .knobs{grid-template-columns:1fr}
+  .gauge dd{font-size:1.1rem}
+  .badge{right:16px;top:16px}
+  .says{min-height:0}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+@media print{
+  .top,.foot,.tools .btn,#btn-projektor{display:none!important}
+  .rig{box-shadow:none;break-inside:avoid}
 }
 </style>
 </head>
 <body>
 
-<!-- smbi hjem-knap -->
-<a href="/" class="smbi-home" aria-label="Til forsiden" title="Til forsiden">
-<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
-<span>Hjem</span>
-</a>
-<style>
-.smbi-home{position:fixed;top:14px;left:14px;z-index:2147483000;display:inline-flex;align-items:center;gap:6px;padding:8px 13px;font:600 14px/1 system-ui,-apple-system,"Segoe UI",sans-serif;color:#F5F0E8;background:#1C2E44;border:1px solid #2E4A6A;border-radius:999px;text-decoration:none;box-shadow:0 2px 10px rgba(0,0,0,.28);opacity:.9;transition:opacity .15s,transform .15s}
-.smbi-home:hover{opacity:1;transform:translateY(-1px)}
-.smbi-home svg{flex:none}
-@media print{.smbi-home{display:none!important}}
-</style>
-<script>(function(){try{if(window.top!==window.self){var e=document.querySelector(".smbi-home");if(e)e.style.display="none";}}catch(x){}})();</script>
-
-
-<div class="pp-app" id="ppApp">
-
-  <header class="pp-top">
-    <h1>Hvor bliver vandet af, når det regner?</h1>
-    <button type="button" class="pp-knap" id="ppHjaelp" aria-haspopup="dialog">
-      <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.4 9.2a2.7 2.7 0 0 1 5.2.9c0 1.8-2.6 2.2-2.6 3.9"/><path d="M12 17.4h.01"/></svg>
-      Sådan læser du billedet
-    </button>
-    <button type="button" class="pp-knap" id="ppForfra">
-      <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 12a8.5 8.5 0 1 1 2.6 6.1"/><path d="M3.2 6.4v5h5"/></svg>
-      Forfra
-    </button>
-  </header>
-
-  <nav class="pp-trin" id="ppTrinNav" role="tablist" aria-label="Trin i simulationen">
-    <button type="button" role="tab" data-trin="1" aria-selected="true"><span class="pp-trin-nr">1</span>Kornene</button>
-    <button type="button" role="tab" data-trin="2" aria-selected="false"><span class="pp-trin-nr">2</span>Mål porøsiteten</button>
-    <button type="button" role="tab" data-trin="3" aria-selected="false"><span class="pp-trin-nr">3</span>Mål permeabiliteten</button>
-    <button type="button" role="tab" data-trin="4" aria-selected="false"><span class="pp-trin-nr">4</span>Sammenlign</button>
-  </nav>
-
-  <p class="pp-hook" id="ppHook">Zoom helt ind i jorden. Hvor meget af den er faktisk … ingenting?</p>
-
-  <div class="pp-scene" id="ppSceneGrid">
-
-    <div class="pp-boks" id="ppBoksTvaersnit">
-      <h2>Tværsnit gennem jorden — kraftigt forstørret</h2>
-      <canvas id="ppTvaersnit"></canvas>
+<header class="top" id="site-top">
+  <div class="rainbow"></div>
+  <div class="top-bar">
+    <div class="top-in">
+      <a href="/" class="brand"><span class="brand-mark"></span>smbi<em>.dk</em></a>
+      <nav class="top-nav">
+        <a href="/geografi.html">Naturgeografi</a>
+        <a href="/">Forside</a>
+      </nav>
     </div>
-
-    <div class="pp-boks" id="ppBoksInstrument">
-      <h2 id="ppInstrumentTitel">Prøven</h2>
-      <canvas id="ppInstrument"></canvas>
-    </div>
-
-    <div class="pp-boks" id="ppBoksGraf" hidden style="grid-column:1/-1">
-      <h2>Nedsivet vand over tid</h2>
-      <canvas id="ppGraf"></canvas>
-    </div>
-
-    <div class="pp-boks" id="ppBoksSammenlign" hidden style="grid-column:1/-1">
-      <h2>De fire sedimenttyper side om side</h2>
-      <canvas id="ppSammenlign"></canvas>
-    </div>
-
   </div>
+</header>
 
-  <div class="pp-tal" id="ppTal"></div>
-
-  <p class="pp-forklar" id="ppForklar" role="status" aria-live="polite">Træk i skyderne og se, hvad der sker med hulrummene mellem kornene.</p>
-
-  <div class="pp-kontrol">
-    <div class="pp-skyder">
-      <label for="ppSkyderKorn">Hvor store er kornene?</label>
-      <input type="range" id="ppSkyderKorn" min="0" max="1" step="0.002" value="0.62">
-      <div class="pp-zoner" id="ppZoner">
-        <button type="button" data-p="0.125" aria-pressed="false">Ler</button>
-        <button type="button" data-p="0.375" aria-pressed="false">Silt</button>
-        <button type="button" data-p="0.625" aria-pressed="true">Sand</button>
-        <button type="button" data-p="0.875" aria-pressed="false">Grus</button>
-      </div>
-    </div>
-
-    <div class="pp-skyder">
-      <label for="ppSkyderSort">Er kornene lige store?</label>
-      <input type="range" id="ppSkyderSort" min="0" max="1" step="0.002" value="0.08">
-      <div class="pp-ender">
-        <span>Velsorteret — alle korn ens</span>
-        <span>Usorteret — alt blandet</span>
-      </div>
-    </div>
-
-    <div class="pp-vaerktoej">
-      <label class="pp-skjult" for="ppProeve">Vælg en jordprøve</label>
-      <select id="ppProeve" class="pp-knap" style="padding:9px 13px">
-        <option value="" disabled selected>Vælg en dansk jordprøve …</option>
-        <option value="smeltevandssand">Smeltevandssand</option>
-        <option value="moraeneler">Moræneler</option>
-        <option value="aadalsler">Ler fra en ådal</option>
-        <option value="raastofgrus">Grusgrav</option>
-      </select>
-      <button type="button" class="pp-knap pp-knap-fyldt" id="ppKoer" hidden>
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M7 4.5 19.5 12 7 19.5z"/></svg>
-        <span id="ppKoerTekst">Start målingen</span>
-      </button>
+<main>
+  <div class="wrap head">
+    <div class="head-in">
+      <span class="eyebrow mono"><span class="blink"></span>Naturgeografi · jord &amp; grundvand</span>
+      <h1>Porøsitet og <span class="hi" style="--hc:#C7E6F6">permeabilitet</span></h1>
+      <p class="lead">Zoom ind mellem kornene. Skru på kornstørrelse og sortering, hæld vand på — og se forskellen på, hvor meget <em>plads</em> der er til vand, og hvor let vandet kommer <em>igennem</em>.</p>
     </div>
   </div>
 
-  <div class="pp-mere">
+  <div class="wrap">
+    <section class="rig">
+      <div class="rig-bar"></div>
+      <div class="rig-head">
+        <span class="rig-live"><span class="dot"></span><span class="mono" id="status">Tør prøve</span></span>
+        <span class="who">Porøsitet talt på billedet · Hazen &amp; Darcy</span>
+        <button type="button" class="btn-mini" id="btn-projektor" aria-pressed="false"
+                title="Skjul sidens krom og forstør aflæsningerne">Projektor</button>
+      </div>
 
-    <details id="ppFag">
-      <summary>Fagordene — det du lige har set</summary>
-      <div class="pp-ord">
-        <div>
-          <h3>Porøsitet</h3>
-          <p>Hvor stor en del af jordens rumfang der er hulrum (porer) mellem kornene. Angives i procent. Det er jordens <em>plads</em> til vand.</p>
+      <div class="stage">
+        <canvas id="laerred" width="1000" height="560" role="img"
+                aria-label="Tværsnit gennem jorden, kraftigt forstørret. Kornene ligger som cirkler med hulrum imellem; når der hældes vand på, siver det ned gennem hulrummene."></canvas>
+        <div class="badge" id="badge" hidden>Tidslup</div>
+      </div>
+
+      <div class="tools">
+        <button type="button" class="btn" id="btn-vand">Hæld 100 ml vand på</button>
+        <p class="says" id="says"></p>
+      </div>
+
+      <dl class="gauges">
+        <div class="gauge g-por">
+          <dt>Porøsitet — plads til vand</dt>
+          <div class="g-viz"><div class="bar"><i id="anim-por"></i></div></div>
+          <dd id="val-por">36<small>%</small></dd>
         </div>
-        <div>
-          <h3>Permeabilitet</h3>
-          <p>Hvor let vandet kan komme <em>igennem</em> jorden. Det handler ikke om, hvor meget plads der er, men om hvor brede forbindelserne mellem porerne er.</p>
+
+        <div class="gauge g-perm">
+          <dt>Permeabilitet — vej igennem</dt>
+          <div class="g-viz"><div class="skala"><i id="anim-perm"></i></div></div>
+          <dd id="val-perm">90 m<small>pr. døgn</small></dd>
+          <div class="g-note"><span>Langsomt</span><span>Hurtigt</span></div>
         </div>
-        <div>
-          <h3>Sortering</h3>
-          <p>Om kornene er lige store. Velsorteret = ensartede korn (aflejret af vand eller vind). Usorteret = alt fra ler til sten blandet (aflejret direkte af is).</p>
+
+        <div class="gauge g-korn">
+          <dt>Kornstørrelse</dt>
+          <div class="g-viz">
+            <div class="cls" id="anim-cls">
+              <span data-k="Ler">Ler</span><span data-k="Silt">Silt</span><span data-k="Sand">Sand</span><span data-k="Grus">Grus</span>
+            </div>
+          </div>
+          <dd id="val-korn">0,50<small>mm</small></dd>
         </div>
-        <div>
-          <h3>Markkapacitet</h3>
-          <p>Det vand, jorden holder fast på, efter at resten er sivet væk. Det er dét vand, planterne kan leve af i en tør periode.</p>
+
+        <div class="gauge g-vand">
+          <dt>Sivet igennem</dt>
+          <div class="g-viz">
+            <div class="cyl"><i id="anim-vand"></i><u class="t1"></u><u class="t2"></u><u class="t3"></u></div>
+            <span class="tid" id="val-tid">—</span>
+          </div>
+          <dd id="val-vand">0<small>af 100 ml</small></dd>
         </div>
-        <div>
-          <h3>Kornstørrelser</h3>
-          <p>Ler under 0,002 mm · silt 0,002–0,063 mm · sand 0,063–2 mm · grus over 2 mm. Fra det ene til det andet er der en faktor 30.</p>
+      </dl>
+
+      <div class="knobs">
+        <div class="knob">
+          <label class="knob-top" for="inp-korn">
+            <span class="mono">Kornstørrelse</span>
+            <span class="knob-val" id="lbl-korn">Sand</span>
+          </label>
+          <input type="range" id="inp-korn" min="0" max="1" step="0.002" value="0.62"
+                 aria-describedby="lbl-korn">
+          <div class="klasser" id="klasser" role="group" aria-label="Spring til en kornstørrelse">
+            <button type="button" data-p="0.125" aria-pressed="false">Ler</button>
+            <button type="button" data-p="0.375" aria-pressed="false">Silt</button>
+            <button type="button" data-p="0.625" aria-pressed="true">Sand</button>
+            <button type="button" data-p="0.875" aria-pressed="false">Grus</button>
+          </div>
         </div>
-        <div>
-          <h3>Grundvandsmagasin</h3>
-          <p>Et lag, der både har plads til vand (porøsitet) og kan aflevere det igen (permeabilitet). Sand og grus er gode magasiner. Ler er ikke.</p>
+
+        <div class="knob">
+          <label class="knob-top" for="inp-sort">
+            <span class="mono">Sortering</span>
+            <span class="knob-val" id="lbl-sort">92 %</span>
+          </label>
+          <input type="range" id="inp-sort" min="0" max="100" step="1" value="92"
+                 aria-describedby="lbl-sort">
+          <div class="ender">
+            <span>0 % · alt blandet</span>
+            <span>100 % · alle korn lige store</span>
+          </div>
         </div>
       </div>
-    </details>
 
-    <details id="ppGeo">
-      <summary>Hvor i Danmark ser man det her?</summary>
-      <div>
-        <ul class="pp-punkter">
-          <li><strong>Smeltevandssletterne i Vestjylland.</strong> Smeltevandsfloder sorterede materialet: det fine blev ført videre, det grove blev liggende. Resultatet er velsorteret sand — Danmarks bedste grundvandsmagasiner. Men vandet siver hurtigt: der er kort vej fra en marksprøjte til drikkevandet.</li>
-          <li><strong>Moræneleret på Østsjælland og Fyn.</strong> Isen skubbede alt med sig og smed det af i én blanding: ler, silt, sand og sten mellem hinanden. Usorteret. Det fine fylder hullerne mellem det grove, så både porøsiteten og permeabiliteten falder. Til gengæld er det god landbrugsjord, fordi den holder på vandet — og det beskytter grundvandet nedenunder.</li>
-          <li><strong>Grusgravene i de gamle smeltevandsdale.</strong> Kraftigt strømmende vand efterlod kun det groveste. Velsorteret grus: vandet fosser igennem.</li>
-          <li><strong>Ådalene og de gamle havbunde.</strong> Stillestående vand aflejrer det aller­fineste ler. Meget stor porøsitet — men vandet sidder fast. Derfor ligger der ofte vand på overfladen på lerjord efter regn: det kan ikke komme ned.</li>
-        </ul>
+      <div class="facts">
+        <span class="fact" id="fact-korn" style="--fc:#D9B25E">Korn</span>
+        <span class="fact" style="--fc:#FFF3DC">Hulrum</span>
+        <span class="fact" style="--fc:#0E86C8">Vand</span>
+        <span class="zoomnote">Billedet er zoomet ind — et gruskorn er i virkeligheden ca. 4000× bredere end et lerkorn</span>
       </div>
-    </details>
+    </section>
 
-    <details id="ppOpgaver">
-      <summary>Elevopgaver</summary>
-      <div>
-        <ol class="pp-opg">
-          <li>
-            <h3>1 — Se efter</h3>
-            <p>Sæt skyderen på sand, velsorteret. Beskriv med dine egne ord, hvad du ser mellem kornene. Skub så skyderen over på ler. Hvad ændrer sig — og hvad ændrer sig <em>ikke</em>?</p>
-            <button type="button" class="pp-knap" data-forudsaet="sand">Sæt op</button>
-          </li>
-          <li>
-            <h3>2 — Forudsig først</h3>
-            <p>Skriv ned, <em>før</em> du måler: har ler mere eller mindre plads til vand end grus? Gå så til trin 2 og mål porøsiteten på begge. Passede det?</p>
-            <button type="button" class="pp-knap" data-forudsaet="ler">Sæt op</button>
-          </li>
-          <li>
-            <h3>3 — Det store spring</h3>
-            <p>Mål nedsivningen (trin 3) på grus og på ler. Hvor mange gange hurtigere siver vandet gennem grus? Brug tallene i trin 4.</p>
-            <button type="button" class="pp-knap" data-forudsaet="grus">Sæt op</button>
-          </li>
-          <li>
-            <h3>4 — Én ting ad gangen</h3>
-            <p>Behold sand, men træk sorteringsskyderen fra velsorteret til usorteret. Kornstørrelsen i midten er den samme hele vejen. Hvorfor falder både porøsiteten og permeabiliteten alligevel?</p>
-            <button type="button" class="pp-knap" data-forudsaet="usorteret">Sæt op</button>
-          </li>
-          <li>
-            <h3>5 — Drikkevandet</h3>
-            <p>En landmand sprøjter på sin mark. Under den ene mark ligger smeltevandssand, under den anden moræneler. Hvor er grundvandet mest udsat? Brug både porøsitet, permeabilitet og markkapacitet i dit svar.</p>
-          </li>
-          <li>
-            <h3>6 — Tilbage til øvelsen</h3>
-            <p>Sammenlign simulationens kurve i trin 3 med jeres egen måling fra nedsivningsforsøget. Hvor ligner de hinanden, og hvor gør de ikke? Nævn to fejlkilder i det rigtige forsøg, som simulationen ikke har.</p>
-          </li>
-        </ol>
-      </div>
-    </details>
-
+    <!-- Instrumenterne opdateres mange gange i sekundet og kan derfor ikke selv
+         være aria-live. I stedet opsummeres aflæsningen her, når skyderne har
+         stået stille et øjeblik. -->
+    <p class="sr" id="sr-status" aria-live="polite"></p>
   </div>
-</div>
+</main>
 
-<div class="pp-overlay" id="ppOverlay" hidden>
-  <div class="pp-panel" role="dialog" aria-modal="true" aria-labelledby="ppPanelTitel">
-    <h2 id="ppPanelTitel">Sådan læser du billedet</h2>
-    <ul class="pp-legende">
-      <li><span class="pp-proeve" style="background:#D9B25E"></span> <span><strong>Korn.</strong> De faste partikler. Farven skifter med kornstørrelsen — grå-brun for ler, gul for sand, grå for grus.</span></li>
-      <li><span class="pp-proeve" style="background:#EFE7D8"></span> <span><strong>Hulrum (porer).</strong> Mellemrummene. I tør jord er de fyldt med luft.</span></li>
-      <li><span class="pp-proeve" style="background:#1C6E96"></span> <span><strong>Vand.</strong> Blåt. Læg mærke til, at vandet kun kan være dér, hvor der er hulrum.</span></li>
-    </ul>
-    <p>Billedet er et <strong>tværsnit</strong> — en skive gennem jorden. Derfor rører kornene ikke altid hinanden på billedet: de mødes uden for snitfladen. Til gengæld er andelen af blåt og hvidt på skiven præcis den samme som andelen i hele rumfanget. Det er derfor, man kan måle porøsiteten på et tværsnit.</p>
-    <p>Målestokken nederst til venstre viser, hvor meget billedet er forstørret. Den ændrer sig, når du skifter kornstørrelse — ellers ville lerkornene være usynlige.</p>
-    <p><strong>Tallet for porøsiteten er talt på billedet.</strong> Computeren tæller, hvor mange af billedets punkter der ligger i et hulrum. Så det, du ser, og det, der står, er det samme.</p>
-    <button type="button" class="pp-knap" id="ppLuk">Luk</button>
+<footer class="foot">
+  <div class="foot-in">
+    <div>
+      <a href="/" class="brand"><span class="brand-mark"></span>smbi<em>.dk</em></a>
+      <div class="mono">Porøsitet &amp; permeabilitet</div>
+    </div>
+    <nav class="foot-links">
+      <a href="/geografi.html">Naturgeografi</a>
+      <a href="/">Alle simuleringer</a>
+      <a href="/contact.html">Kontakt</a>
+    </nav>
   </div>
-</div>
+</footer>
+
+<script>
+/* skjul side-krom, når siden vises i en iframe */
+(function(){try{if(window.top!==window.self){
+  document.getElementById('site-top').style.display='none';
+  document.querySelector('.foot').style.display='none';
+  document.querySelector('.head').style.display='none';
+}}catch(x){}})();
+</script>
 
 <script>
 "use strict";
@@ -599,19 +644,21 @@ var K = {
   FC_GRUS: 0.05, FC_SAND: 0.22, FC_SILT: 0.55, FC_LER: 0.85,
   FC_USORTERET: 0.25,       // lægges til ved fuld usortering
 
-  /* Nedsivningsforsøget — samme opstilling som i øvelsesvejledningen      */
+  /* Nedsivningen — samme opstilling som i øvelsesvejledningen             */
   VAND_ML: 100,             // vand der hældes på
   PROEVE_ML: 40,            // ca. 50 g sediment
   TRAGT_AREAL: 0.0040,      // m^2  (ca. 7 cm i diameter)
   PROEVE_TYKKELSE: 0.03,    // m
   HAELDETID: 2.0,           // simulerede sekunder til at hælde 100 ml på
-  SKAERMTID: 20,            // så længe må en måling vare på skærmen (sekunder)
+  SKAERMTID: 20,            // så længe må en nedsivning vare på skærmen (sekunder)
 
   /* Tegningen                                                             */
-  KORN_PR_BREDDE: 26,       // hvor mange middelkorn der skal være på tværs
-  MIN_RADIUS_PX: 1.8,
+  KORN_FINT: 46,            // antal korn på tværs ved det fineste ler
+  KORN_GROVT: 12,           // antal korn på tværs ved det groveste grus
+  SIGMA_TEGN: 2.0,          // spredning i tegningen ved fuld usortering
+  MIN_RADIUS_PX: 2.2,
   MAALE_BREDDE: 300,        // opløsning på det offscreen-lærred der tæller pixels
-  DRAABER: 26               // antal vanddråber i animationen
+  DRAABER: 22               // antal vanddråber i animationen
 };
 
 /* ════════════════════════════════════════════════════════════════════════
@@ -641,15 +688,16 @@ function gauss(rng){
   return Math.sqrt(-2*Math.log(u)) * Math.cos(2*Math.PI*v);
 }
 
-/* Kornstørrelse i læsbar form */
-function formatKorn(mm){
-  if(mm >= 10)   return dk(mm,0) + " mm";
-  if(mm >= 1)    return dk(mm,1) + " mm";
-  if(mm >= 0.1)  return dk(mm,2) + " mm";
-  if(mm >= 0.01) return dk(mm*1000,0) + " µm";
-  if(mm >= 0.001)return dk(mm*1000,1) + " µm";
-  return dk(mm*1000,2) + " µm";
+/* Kornstørrelse i læsbar form — returnerer [tal, enhed] */
+function kornDele(mm){
+  if(mm >= 10)   return [dk(mm,0), "mm"];
+  if(mm >= 1)    return [dk(mm,1), "mm"];
+  if(mm >= 0.1)  return [dk(mm,2), "mm"];
+  if(mm >= 0.01) return [dk(mm*1000,0), "µm"];
+  if(mm >= 0.001)return [dk(mm*1000,1), "µm"];
+  return [dk(mm*1000,2), "µm"];
 }
+function formatKorn(mm){ var d = kornDele(mm); return d[0] + " " + d[1]; }
 
 /* Tid i læsbar form */
 function formatTid(s){
@@ -659,34 +707,26 @@ function formatTid(s){
   if(s < 63072000)return dk(s/86400,s/86400<10?1:0) + " døgn";
   return dk(s/31557600,1) + " år";
 }
+/* … uden det afsluttende punktum, når tiden står midt i en sætning */
+function tidIndi(s){ return formatTid(s).replace(/\.$/, ""); }
 
-/* Hvor langt siver vandet på et døgn? Det mest håndgribelige mål for K. */
-function formatSivning(Kms){
+/* Hvor langt siver vandet på et døgn? Det mest håndgribelige mål for K.
+   Returnerer [tal, enhed].                                                */
+function sivningDele(Kms){
   var pr = Kms * 86400;                       // m pr. døgn
-  if(pr >= 1000) return dk(pr/1000,pr/1000<10?1:0) + " km pr. døgn";
-  if(pr >= 1)    return dk(pr,pr<10?1:0) + " m pr. døgn";
-  if(pr >= 0.01) return dk(pr*100,pr*100<10?1:0) + " cm pr. døgn";
+  if(pr >= 1000) return [dk(pr/1000,pr/1000<10?1:0) + " km", "pr. døgn"];
+  if(pr >= 1)    return [dk(pr,pr<10?1:0) + " m", "pr. døgn"];
+  if(pr >= 0.01) return [dk(pr*100,pr*100<10?1:0) + " cm", "pr. døgn"];
   var aar = pr * 365.25;                      // m pr. år
-  if(aar >= 1)   return dk(aar,1) + " m pr. år";
-  if(aar >= 0.01)return dk(aar*100,aar*100<10?1:0) + " cm pr. år";
-  if(aar >= 0.001)return dk(aar*1000,1) + " mm pr. år";
-  return "under 1 mm pr. år";
+  if(aar >= 1)   return [dk(aar,1) + " m", "pr. år"];
+  if(aar >= 0.01)return [dk(aar*100,aar*100<10?1:0) + " cm", "pr. år"];
+  if(aar >= 0.001)return [dk(aar*1000,1) + " mm", "pr. år"];
+  return ["under 1 mm", "pr. år"];
 }
-
-/* K skrevet som fysikere gør det */
-function formatK(Kms){
-  var e = Math.floor(Math.log10(Kms));
-  var m = Kms / Math.pow(10,e);
-  return dk(m,1) + " · 10" + hoejtTal(e) + " m/s";
-}
-function hoejtTal(n){
-  var op = {"-":"⁻","0":"⁰","1":"¹","2":"²","3":"³",
-            "4":"⁴","5":"⁵","6":"⁶","7":"⁷","8":"⁸","9":"⁹"};
-  return String(n).split("").map(function(c){ return op[c] || c; }).join("");
-}
+function formatSivning(Kms){ var d = sivningDele(Kms); return d[0] + " " + d[1]; }
 
 /* ════════════════════════════════════════════════════════════════════════
-   MODELLEN — fra de to skydere til alle tal
+   MODELLEN — fra de to skydere til alle tal (uændret)
    ════════════════════════════════════════════════════════════════════════ */
 
 /* Skyderposition 0-1  ->  phi (og dermed kornstørrelse) */
@@ -758,25 +798,16 @@ function blandFarve(a,b,t){
                   Math.round(lerp(A[1],B[1],t)) + "," +
                   Math.round(lerp(A[2],B[2],t)) + ")";
 }
-function moerkere(rgb, f){
-  var m = rgb.match(/\d+/g);
-  return "rgb(" + Math.round(m[0]*f) + "," + Math.round(m[1]*f) + "," + Math.round(m[2]*f) + ")";
-}
 
 /* ════════════════════════════════════════════════════════════════════════
    PAKNINGEN — kornene lægges på plads med tyngdekraft
    ════════════════════════════════════════════════════════════════════════ */
 
-/* Ét korn tegnes som en blød, uregelmæssig klump, ikke en perfekt cirkel */
-function kornForm(rng){
-  var m = 11, pts = [];
-  for(var i=0;i<m;i++){
-    var a = (i/m)*Math.PI*2;
-    var rr = 1 + (rng()-0.5)*0.16;              // middelværdi 1 -> arealet bevares
-    pts.push([Math.cos(a)*rr, Math.sin(a)*rr]);
-  }
-  return pts;
-}
+/* Hvor mange korn skal der være på tværs af billedet?
+   Den ægte forskel mellem ler og grus er en faktor 4000 — den kan ikke
+   tegnes. Her komprimeres den til ca. en faktor 4, og målestokken nederst
+   i billedet fortæller, hvor kraftigt der er forstørret.                  */
+function kornPrBredde(p){ return lerp(K.KORN_FINT, K.KORN_GROVT, klem(p,0,1)); }
 
 /*  Bygger en pakning i kassen (0..W) x (yTop..H).
     Kornene falder ned oppefra og glider sidelæns, indtil de sidder fast.
@@ -785,26 +816,29 @@ function kornForm(rng){
       · et gitter til nabosøgning (ingen O(n^2))
       · hvert korn starter faldet lige over den nuværende overflade,
         ikke oppe fra toppen af billedet                                   */
-function byg(W, H, yTop, m, seed){
+function byg(W, H, yTop, p, u, seed){
   var rng = froe(seed);
 
-  /* rMiddel svarer til d50 og sætter målestokken (ca. KORN_PR_BREDDE på tværs) */
-  var rMiddel = klem((W / K.KORN_PR_BREDDE) / 2, K.MIN_RADIUS_PX, W/9);
+  /* rMiddel svarer til d50 og sætter målestokken */
+  var rMiddel = klem((W / kornPrBredde(p)) / 2, K.MIN_RADIUS_PX, W/9);
 
-  /*  Sorteringen (sigma) er en VÆGTfordeling — sådan måler man en jordprøve.
+  /*  Spredningen i tegningen følger sorteringsskyderen helt i bund: ved
+      100 % sortering er sigmaTegn 0, og så bliver ALLE korn nøjagtig lige
+      store på billedet.
+
+      Sorteringen er ellers en VÆGTfordeling — sådan måler man en jordprøve.
       Men et billede viser ANTAL korn, og ét stort korn vejer lige så meget
       som tusind små. Regner man om fra vægt til antal, rykker medianen
       3*sigma^2*ln2 phi-enheder mod det finere. Uden den omregning bliver en
       usorteret prøve tegnet som en håndfuld kampesten i stedet for som
-      mange små korn mellem nogle få store.
-      Både forskydningen og spredningen får et loft, så antallet af korn
-      holder sig et sted, hvor billedet stadig kan læses og tegnes hurtigt. */
-  var sigmaTegn = Math.min(m.sigma, 1.7);
-  var skift = Math.min(3 * m.sigma * m.sigma * Math.LN2, 1.6);
+      mange små korn mellem nogle få store.                                */
+  var sigmaTegn = Math.min(K.SIGMA_TEGN * u, 1.7);
+  var skift = Math.min(3 * sigmaTegn * sigmaTegn * Math.LN2, 1.6);
   var rMedian = rMiddel * Math.pow(2, -skift);
   var rLoft = klem(rMedian * Math.pow(2, 1.7*sigmaTegn), rMiddel*1.15, W/7);
 
   function traekRadius(){
+    if(sigmaTegn <= 0) return rMedian;              // alle korn lige store
     var g = klem(gauss(rng), -1.7, 1.7);
     return klem(rMedian * Math.pow(2, -g*sigmaTegn), K.MIN_RADIUS_PX, rLoft);
   }
@@ -855,7 +889,7 @@ function byg(W, H, yTop, m, seed){
   }
 
   var loft = 0;
-  while(korn.length < 4000 && loft++ < 6000){
+  while(korn.length < 3000 && loft++ < 5000){
     /*  Kornene falder overvejende ned i den kolonne, der er kommet kortest,
         ellers bygger bunken en spids i midten og lader kanterne stå tomme. */
     var li = laveste();
@@ -883,7 +917,7 @@ function byg(W, H, yTop, m, seed){
       if(skridt > 0.8){ skridt *= 0.5; continue; }
       break;
     }
-    var g = { x:x, y:y, r:r, form:kornForm(rng) };
+    var g = { x:x, y:y, r:r };
     korn.push(g);
     boks[celleIndex(x,y)].push(g);
 
@@ -894,30 +928,28 @@ function byg(W, H, yTop, m, seed){
   }
 
   /* Den dybeste overflade — måleruden skal ligge under den, så tom luft
-     over bunken ikke bliver talt med som hulrum.                          */
-  var dybest = -Infinity;
-  for(i=0;i<kolonner;i++) if(overflade[i] > dybest) dybest = overflade[i];
+     over bunken ikke bliver talt med som hulrum.
+     Den højeste bruges, når vandet skal tegnes helt op om de korn, der
+     stikker op over jordoverfladen.                                       */
+  var dybest = -Infinity, hoejest = Infinity;
+  for(i=0;i<kolonner;i++){
+    if(overflade[i] > dybest)  dybest  = overflade[i];
+    if(overflade[i] < hoejest) hoejest = overflade[i];
+  }
 
   return { korn:korn, overflade:overflade, kolonner:kolonner,
-           W:W, H:H, rMiddel:rMiddel, snit:dybest };
+           W:W, H:H, rMiddel:rMiddel, snit:dybest, top:hoejest };
 }
 
 /* Tegner kornene (bruges både til skærmen og til pixeltællingen) */
-function tegnKorn(ctx, pak, skala, k, ensfarvet){
+function tegnKorn(ctx, pak, skala, k){
   var korn = pak.korn;
   for(var i=0;i<korn.length;i++){
     var g = korn[i];
-    var r = g.r*k*skala, cx = g.x*skala, cy = g.y*skala;
-    if(r < 0.35) continue;
+    var r = g.r*k*skala;
+    if(r < 0.3) continue;
     ctx.beginPath();
-    var f = g.form, n = f.length;
-    for(var j=0;j<=n;j++){
-      var a = f[j%n], b = f[(j+1)%n];
-      var mx = (a[0]+b[0])/2*r + cx, my = (a[1]+b[1])/2*r + cy;
-      if(j===0) ctx.moveTo(mx,my);
-      else ctx.quadraticCurveTo(a[0]*r+cx, a[1]*r+cy, mx, my);
-    }
-    ctx.closePath();
+    ctx.arc(g.x*skala, g.y*skala, r, 0, 6.2832);
     ctx.fill();
   }
 }
@@ -939,7 +971,7 @@ function maalFastStof(pak, k, yTop){
   maaleCtx.setTransform(1,0,0,1,0,0);
   maaleCtx.clearRect(0,0,bredde,hoejde);
   maaleCtx.fillStyle = "#000";
-  tegnKorn(maaleCtx, pak, skala, k, true);
+  tegnKorn(maaleCtx, pak, skala, k);
 
   /* Måleruden holdes godt inde i pakningen, væk fra kanter og overflade */
   var kant = Math.max(3, Math.round(pak.rMiddel*skala*2));
@@ -955,7 +987,7 @@ function maalFastStof(pak, k, yTop){
 }
 
 /*  Skalerer kornene, så det MÅLTE hulrum på billedet rammer modellens
-    porøsitet. To omgange er nok.                                        */
+    porøsitet. Tre omgange er rigeligt.                                  */
 function kalibrer(pak, maalN, yTop){
   /*  k > 1 er tilladt: en dårligt sorteret prøve skal pakkes tættere, end
       nedfaldet af sig selv når, og så må kornene godt overlappe lidt. På et
@@ -974,887 +1006,199 @@ function kalibrer(pak, maalN, yTop){
    TILSTAND
    ════════════════════════════════════════════════════════════════════════ */
 var S = {
-  trin: 1,
-  p: 0.62,
-  u: 0.08,
-  m: null,                  // modelværdier
-  pak: null, k: 1, nMaalt: 0.38,
-  pakBredde: 0, pakHoejde: 0, yTop: 0,
-  harRoert: false,          // har eleven rørt ved noget endnu?
-
-  /* Trin 2 — porøsitetsmålingen */
-  t2: { fase:"klar", t:0 },
-
-  /* Trin 3 — nedsivningsforsøget */
-  t3: { koerer:false, faerdig:false, tSim:0, paahaeldt:0, staaende:0,
-        iJorden:0, udloebt:0, front:0, draen:0, faktor:1, data:[], draaber:[] }
+  p: 0.62,                 // kornstørrelse (skyderposition)
+  u: 0.08,                 // 1 - sortering
+  m: null,                 // modelværdier
+  pak: null, k: 1, nMaalt: 0.36,
+  vand: { koerer:false, faerdig:false, tSim:0, paahaeldt:0, staaende:0,
+          iJorden:0, udloebt:0, front:0, draen:1, faktor:1,
+          draaber:[], udDraaber:[] }
 };
 
 /* ════════════════════════════════════════════════════════════════════════
-   LÆRREDER
+   LÆRREDET — fast opløsning, CSS skalerer det. Så afhænger billedet ikke
+   af vinduets bredde, og der skal ikke bygges om ved resize.
    ════════════════════════════════════════════════════════════════════════ */
-function opsaet(id){
-  var c = document.getElementById(id);
-  return { c:c, x:c.getContext("2d"), w:0, h:0 };
-}
-var Lt = opsaet("ppTvaersnit");
-var Li = opsaet("ppInstrument");
-var Lg = opsaet("ppGraf");
-var Ls = opsaet("ppSammenlign");
+var laerred = document.getElementById("laerred");
+var ctx = laerred.getContext("2d");
+var W = laerred.width, H = laerred.height;
 
-function tilpas(L){
-  var dpr = Math.min(window.devicePixelRatio||1, 2);
-  var b = L.c.clientWidth, h = L.c.clientHeight;
-  if(b<2 || h<2) return false;
-  if(L.c.width !== Math.round(b*dpr) || L.c.height !== Math.round(h*dpr)){
-    L.c.width = Math.round(b*dpr); L.c.height = Math.round(h*dpr);
-  }
-  L.w = b; L.h = h;
-  L.x.setTransform(dpr,0,0,dpr,0,0);
-  return true;
-}
+var Y_TOP  = Math.round(H*0.19);      // her begynder jorden
+var Y_BUND = Math.round(H*0.92);      // her hører prøven op
 
-/* ════════════════════════════════════════════════════════════════════════
-   OPBYGNING AF PRØVEN — kaldes når skyderne ændres eller vinduet skifter
-   ════════════════════════════════════════════════════════════════════════ */
-var LUFT_ANDEL = 0.26;      // øverste del af tværsnittet er luft/vand over jorden
+var FARVE_PORE = "#FFF3DC";
+var FARVE_LUFT = "#FFF9EE";
+var FARVE_VAND = "#0E86C8";
+var FARVE_VAND_LYS = "#9BE0F5";
+var INK = "#17211F";
 
 function nyPakning(){
-  if(!tilpas(Lt)) return;
-  var W = Lt.w, H = Lt.h;
-  S.pakBredde = W; S.pakHoejde = H;
-  S.yTop = Math.round(H*LUFT_ANDEL);
   S.m = beregn(S.p, S.u);
   /* Frøet afhænger kun af indstillingen -> samme billede hver gang */
-  var seed = Math.round(S.p*997)*7919 + Math.round(S.u*997)*104729 + Math.round(W);
-  S.pak = byg(W, H, S.yTop, S.m, seed);
+  var seed = Math.round(S.p*997)*7919 + Math.round(S.u*997)*104729;
+  S.pak = byg(W, Y_BUND, Y_TOP, S.p, S.u, seed);
   /* Måleruden lægges under den faktiske overflade — nåede bunken ikke helt
-     op til yTop, må vi ikke tælle den tomme luft med som hulrum.          */
-  var kal = kalibrer(S.pak, S.m.n, Math.max(S.yTop, S.pak.snit));
+     op til Y_TOP, må vi ikke tælle den tomme luft med som hulrum.         */
+  var kal = kalibrer(S.pak, S.m.n, Math.max(Y_TOP, S.pak.snit));
   S.k = kal.k;
   S.nMaalt = kal.nMaalt;
 }
 
 /* Overfladens højde ved en given x (til vandet der står ovenpå) */
 function overfladeVed(x){
-  if(!S.pak) return S.yTop;
+  if(!S.pak) return Y_TOP;
   var i = klem(Math.floor(x/S.pak.W*S.pak.kolonner), 0, S.pak.kolonner-1);
   return S.pak.overflade[i];
 }
 
 /* ════════════════════════════════════════════════════════════════════════
-   TEGN TVÆRSNITTET
+   TEGNINGEN
    ════════════════════════════════════════════════════════════════════════ */
-var FARVE_PORE = "#EFE7D8";
-var FARVE_LUFT = "#FBF7EF";
-var FARVE_VAND = "#1C6E96";
-var FARVE_VAND_LYS = "#8FCBE4";
-
-function tegnTvaersnit(){
+function tegn(){
   if(!S.pak) return;
-  var x = Lt.x, W = Lt.w, H = Lt.h;
-  x.clearRect(0,0,W,H);
+  ctx.clearRect(0,0,W,H);
 
-  /* Luft over jorden, porerum under */
-  x.fillStyle = FARVE_LUFT; x.fillRect(0,0,W,H);
-  x.fillStyle = FARVE_PORE; x.fillRect(0, S.yTop-2, W, H-S.yTop+2);
+  /* Luft over jorden, porerum i prøven, og en stribe nederst hvor vandet
+     forsvinder ned mod grundvandet.                                       */
+  ctx.fillStyle = FARVE_LUFT; ctx.fillRect(0,0,W,H);
+  ctx.fillStyle = FARVE_PORE; ctx.fillRect(0, Y_TOP-2, W, Y_BUND-Y_TOP+2);
 
-  /* --- Vandet, tegnet BAG kornene, så det kun ses i hulrummene --- */
-  if(S.trin === 2) tegnVandTrin2(x, W, H);
-  if(S.trin === 3) tegnVandTrin3(x, W, H);
+  /* Vandet tegnes BAG kornene, så det kun kan ses i hulrummene */
+  tegnVand();
 
-  /* --- Kornene --- */
-  x.fillStyle = S.m.farve;
-  tegnKorn(x, S.pak, 1, S.k, false);
+  /* Kornene */
+  ctx.fillStyle = S.m.farve;
+  tegnKorn(ctx, S.pak, 1, S.k);
+  /* Blækkant på de korn, der er store nok til at bære den */
+  if(S.pak.rMiddel*S.k > 9){
+    ctx.strokeStyle = "rgba(23,33,31,.30)";
+    ctx.lineWidth = 1.6;
+    var korn = S.pak.korn;
+    for(var i=0;i<korn.length;i++){
+      var g = korn[i], r = g.r*S.k;
+      if(r < 7) continue;
+      ctx.beginPath(); ctx.arc(g.x, g.y, r, 0, 6.2832); ctx.stroke();
+    }
+  }
 
-  /* Et strejf af dybde: mørk kant langs bunden af hvert korn er for dyrt,
-     så i stedet lægges en blød skygge over hele prøven.                   */
-  var grad = x.createLinearGradient(0, S.yTop, 0, H);
-  grad.addColorStop(0, "rgba(74,60,40,0)");
-  grad.addColorStop(1, "rgba(74,60,40,0.16)");
-  x.fillStyle = grad; x.fillRect(0, S.yTop, W, H-S.yTop);
-
-  /* Dråber i bevægelse under nedsivningen */
-  if(S.trin === 3 && S.t3.koerer) tegnDraaber(x);
-
-  tegnMaalestok(x, W, H);
-  tegnEtiket(x, W);
+  tegnBundstribe();
+  tegnMaalestok();
 }
 
-/* Trin 2: vandet stiger op nedefra og fylder hulrummene */
-function tegnVandTrin2(x, W, H){
-  var f = S.t2;
-  var andel = 0;
-  if(f.fase === "haelder")      andel = klem(f.t/1.6, 0, 1);
-  else if(f.fase !== "klar")    andel = 1;
-  if(andel <= 0) return;
-  var top = lerp(H, S.yTop-4, andel);
-  x.fillStyle = FARVE_VAND;
-  x.fillRect(0, top, W, H-top);
-  /* En lille lysning i vandoverfladen, så den kan ses */
-  x.fillStyle = "rgba(143,203,228,.55)";
-  x.fillRect(0, top, W, 3);
-}
+/*  Vandet: det står først oven på jorden, og en våd front vandrer nedad.
+    Bag fronten er porerne mættet (fuldt blåt). Når nedsivningen er slut,
+    tømmes porerne, og kun markkapaciteten bliver tilbage — det ses som en
+    svagere blå tone.                                                      */
+function tegnVand(){
+  var t = S.vand;
 
-/*  Trin 3: en våd front vandrer nedad. Mens vandet løber, er alt bag
-    fronten mættet (fuldt blåt). Når forsøget er slut, tømmes porerne, og
-    kun markkapaciteten bliver tilbage — det ses som en svagere blå tone.  */
-function tegnVandTrin3(x, W, H){
-  var t = S.t3;
-  var yFront = lerp(S.yTop, H, t.front);
+  /* Vandet må kunne ses stå oven på jorden — også når der er hældt 100 ml på,
+     så søjlen ikke løber ud over billedets overkant.                       */
+  var yLoft = Math.min(Y_TOP-3, S.pak.top);
 
   /* Vand der står oven på jorden */
   if(t.staaende > 0.3){
-    var hMax = (H-S.yTop)*0.45;
+    var hMax = Math.min((Y_BUND-Y_TOP)*0.42, Y_TOP-18);
     var h = klem(t.staaende / K.VAND_ML, 0, 1) * hMax;
-    x.fillStyle = FARVE_VAND;
-    x.beginPath();
-    x.moveTo(0, S.yTop-h);
-    x.lineTo(W, S.yTop-h);
-    for(var i=40;i>=0;i--) x.lineTo(i/40*W, overfladeVed(i/40*W)+2);
-    x.closePath();
-    x.fill();
-    x.fillStyle = "rgba(143,203,228,.6)";
-    x.fillRect(0, S.yTop-h, W, 3);
+    ctx.fillStyle = FARVE_VAND;
+    ctx.beginPath();
+    ctx.moveTo(0, Y_TOP-h);
+    ctx.lineTo(W, Y_TOP-h);
+    for(var i=40;i>=0;i--) ctx.lineTo(i/40*W, overfladeVed(i/40*W)+2);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "rgba(155,224,245,.75)";
+    ctx.fillRect(0, Y_TOP-h, W, 4);
   }
 
-  if(t.front <= 0) return;
+  if(t.front > 0){
+    var yFront = lerp(Y_TOP, Y_BUND, t.front);
+    var restTone = klem(0.15 + S.m.fc*0.75, 0, 0.95);
+    ctx.globalAlpha = lerp(1, restTone, klem(t.draen,0,1));
+    ctx.fillStyle = FARVE_VAND;
+    ctx.fillRect(0, yLoft, W, yFront-yLoft);
+    ctx.globalAlpha = 1;
+  }
 
-  /*  draen går fra 0 (mættet) til 1 (drænet) lige efter målingen.
-      Den tilbageblevne blå tone er markkapaciteten.                       */
-  var restTone = klem(0.15 + S.m.fc*0.75, 0, 0.95);
-  var alfa = lerp(1, restTone, klem(t.draen,0,1));
-  x.globalAlpha = alfa;
-  x.fillStyle = FARVE_VAND;
-  x.fillRect(0, S.yTop-3, W, yFront-S.yTop+3);
-  x.globalAlpha = 1;
+  /* Dråber i bevægelse */
+  if(t.koerer){
+    ctx.fillStyle = FARVE_VAND_LYS;
+    for(var j=0;j<t.draaber.length;j++){
+      var d = t.draaber[j];
+      ctx.beginPath(); ctx.arc(d.x, d.y, d.r, 0, 6.2832); ctx.fill();
+    }
+  }
 }
 
-function tegnDraaber(x){
-  var t = S.t3;
-  x.fillStyle = FARVE_VAND_LYS;
-  for(var i=0;i<t.draaber.length;i++){
-    var d = t.draaber[i];
-    x.beginPath();
-    x.arc(d.x, d.y, d.r, 0, 6.2832);
-    x.fill();
+/* Stribe nederst: her forlader vandet prøven */
+function tegnBundstribe(){
+  ctx.fillStyle = FARVE_LUFT;
+  ctx.fillRect(0, Y_BUND, W, H-Y_BUND);
+  ctx.strokeStyle = INK; ctx.lineWidth = 2;
+  ctx.setLineDash([7,6]);
+  ctx.beginPath(); ctx.moveTo(0, Y_BUND+1); ctx.lineTo(W, Y_BUND+1); ctx.stroke();
+  ctx.setLineDash([]);
+
+  /* Dråber på vej ud af prøven */
+  var t = S.vand;
+  ctx.fillStyle = FARVE_VAND;
+  for(var i=0;i<t.udDraaber.length;i++){
+    var d = t.udDraaber[i];
+    ctx.beginPath(); ctx.arc(d.x, d.y, d.r, 0, 6.2832); ctx.fill();
   }
+
+  ctx.fillStyle = "#7E8F8C";
+  ctx.font = "600 15px " + monoFont();
+  ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  ctx.fillText("NED MOD GRUNDVANDET", W-16, (Y_BUND+H)/2 + 1);
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
 }
 
 /* Målestok, så eleven kan se hvor kraftigt der er forstørret */
-function tegnMaalestok(x, W, H){
+function tegnMaalestok(){
   var mmPrPx = S.m.d50 / (S.pak.rMiddel*2);
-  /* Vælg en pæn længde mellem 15 % og 40 % af bredden */
-  var maalMm = mmPrPx * W * 0.28;
+  /* Vælg en pæn længde på højst 30 % af bredden */
+  var maalMm = mmPrPx * W * 0.30;
   var e = Math.floor(Math.log10(maalMm));
   var kandidater = [1,2,5];
   var valgt = Math.pow(10,e);
   for(var i=0;i<kandidater.length;i++){
     var v = kandidater[i]*Math.pow(10,e);
-    if(v <= mmPrPx*W*0.40) valgt = v;
+    if(v <= maalMm) valgt = v;
   }
   var px = valgt / mmPrPx;
-  var x0 = 14, y0 = H-16;
+  var x0 = 20, y0 = Y_BUND - 20;
 
-  x.fillStyle = "rgba(255,253,249,.9)";
-  x.fillRect(x0-8, y0-24, px+16, 34);
-  x.strokeStyle = "#1C2E44"; x.lineWidth = 2.5;
-  x.beginPath();
-  x.moveTo(x0, y0-9); x.lineTo(x0, y0); x.lineTo(x0+px, y0); x.lineTo(x0+px, y0-9);
-  x.stroke();
-  x.fillStyle = "#1C2E44";
-  x.font = "600 13px " + fontSans();
-  x.textAlign = "center"; x.textBaseline = "bottom";
-  x.fillText(formatKorn(valgt), x0+px/2, y0-3);
-  x.textAlign = "left"; x.textBaseline = "alphabetic";
+  ctx.fillStyle = "rgba(255,249,238,.92)";
+  ctx.fillRect(x0-10, y0-30, px+20, 42);
+  ctx.strokeStyle = INK; ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(x0, y0-11); ctx.lineTo(x0, y0); ctx.lineTo(x0+px, y0); ctx.lineTo(x0+px, y0-11);
+  ctx.stroke();
+  ctx.fillStyle = INK;
+  ctx.font = "600 15px " + monoFont();
+  ctx.textAlign = "center"; ctx.textBaseline = "bottom";
+  /* Ingen versaler her: "µm" bliver til "ΜM" og forveksles med millimeter */
+  ctx.fillText(formatKorn(valgt), x0+px/2, y0-5);
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
 }
 
-function tegnEtiket(x, W){
-  var tekst = S.m.klasse + " · " + (S.u < 0.33 ? "velsorteret" : (S.u < 0.66 ? "middelsorteret" : "usorteret"));
-  x.font = "700 15px " + fontSans();
-  var b = x.measureText(tekst).width;
-  x.fillStyle = "rgba(28,46,68,.92)";
-  rundtRekt(x, W-b-30, 10, b+20, 30, 8);
-  x.fill();
-  x.fillStyle = "#F5F0E8";
-  x.textBaseline = "middle";
-  x.fillText(tekst, W-b-20, 26);
-  x.textBaseline = "alphabetic";
-}
-
-function fontSans(){ return 'Calibri,"Segoe UI",system-ui,-apple-system,sans-serif'; }
-function fontSerif(){ return 'Cambria,Georgia,"Times New Roman",serif'; }
-
-function rundtRekt(x, a, b, w, h, r){
-  x.beginPath();
-  x.moveTo(a+r,b);
-  x.arcTo(a+w,b,a+w,b+h,r);
-  x.arcTo(a+w,b+h,a,b+h,r);
-  x.arcTo(a,b+h,a,b,r);
-  x.arcTo(a,b,a+w,b,r);
-  x.closePath();
-}
+function monoFont(){ return '"IBM Plex Mono",ui-monospace,monospace'; }
 
 /* ════════════════════════════════════════════════════════════════════════
-   INSTRUMENTPANELET
+   NEDSIVNINGEN — Darcy, uændret regnskab
    ════════════════════════════════════════════════════════════════════════ */
-function tegnInstrument(){
-  if(!tilpas(Li)) return;
-  var x = Li.x, W = Li.w, H = Li.h;
-  x.clearRect(0,0,W,H);
-  if(S.trin === 1) tegnKornfordeling(x, W, H);
-  else if(S.trin === 2) tegnMaaleglas(x, W, H);
-  else if(S.trin === 3) tegnTragt(x, W, H);
+function nulstilVand(){
+  var t = S.vand;
+  t.koerer = false; t.faerdig = false;
+  t.tSim = 0; t.paahaeldt = 0; t.staaende = 0;
+  t.iJorden = 0; t.udloebt = 0; t.front = 0; t.draen = 0;
+  t.draaber = []; t.udDraaber = [];
+  t.faktor = vaelgTidsfaktor();
 }
 
-/* --- Trin 1: de fire klasser i rigtigt indbyrdes størrelsesforhold --- */
-function tegnKornfordeling(x, W, H){
-  var pad = 22, top = 46;
-  x.fillStyle = "#4A3C28";
-  x.font = "600 14px " + fontSans();
-  x.fillText("Kornene i virkelig størrelse (samme forstørrelse)", pad, 32);
-
-  var raekker = [
-    { navn:"Ler",  mm:0.002 },
-    { navn:"Silt", mm:0.02 },
-    { navn:"Sand", mm:0.5 },
-    { navn:"Grus", mm:8 }
-  ];
-  var raekkeH = (H-top-76)/raekker.length;
-  var maxD = 8;
-  var maxPx = Math.min(raekkeH*0.78, W*0.30);
-  var aktiv = S.m.klasse;
-
-  for(var i=0;i<raekker.length;i++){
-    var r = raekker[i];
-    var y = top + raekkeH*i + raekkeH/2;
-    var raa = r.mm/maxD * maxPx;
-    var d = Math.max(K.MIN_RADIUS_PX, raa);
-    var erAktiv = (r.navn === aktiv);
-
-    if(erAktiv){
-      x.fillStyle = "#F5EEDC";
-      rundtRekt(x, pad-10, y-raekkeH/2+3, W-2*pad+20, raekkeH-6, 8); x.fill();
-    }
-    x.fillStyle = erAktiv ? "#1C2E44" : "#6B5840";
-    x.font = (erAktiv?"700 ":"600 ") + "16px " + fontSans();
-    x.textBaseline = "middle";
-    x.fillText(r.navn, pad, y);
-
-    x.fillStyle = K.KLASSER[i].farve;
-    x.beginPath(); x.arc(W*0.52, y, d/2, 0, 6.2832); x.fill();
-    if(raa < K.MIN_RADIUS_PX){
-      /* Kornet ville være mindre end en skærmpixel. Vi tegner det, hvor det
-         hører hjemme, og sætter en stiplet ring om det, så man kan finde det. */
-      x.strokeStyle = "#8C7860"; x.lineWidth = 1;
-      x.setLineDash([2,2]);
-      x.beginPath(); x.arc(W*0.52, y, 7, 0, 6.2832); x.stroke();
-      x.setLineDash([]);
-    }
-
-    x.fillStyle = "#6B5840";
-    x.font = "400 14px " + fontSans();
-    x.textAlign = "right";
-    x.fillText(formatKorn(r.mm), W-pad, y);
-    x.textAlign = "left";
-  }
-  x.textBaseline = "alphabetic";
-
-  x.fillStyle = "#6B5840";
-  x.font = "italic 400 14px " + fontSerif();
-  wrapTekst(x, "Et gruskorn er ca. 4000 gange bredere end et lerkorn. De stiplede ringe er korn, der er for små til at se ved samme forstørrelse — derfor må tværsnittet zoome.", pad, H-52, W-2*pad, 17);
-}
-
-/* --- Trin 2: måleglasset fra øvelsen --- */
-function tegnMaaleglas(x, W, H){
-  var f = S.t2;
-  var gb = Math.min(W*0.42, 150);           // glasbredde
-  var gx = W*0.30 - gb/2;
-  var gy = 42, gh = H - gy - 40;
-  var mlMax = 110;                          // glasset rummer 110 ml
-
-  function yAf(ml){ return gy + gh - (ml/mlMax)*gh; }
-
-  /* Glasset */
-  x.fillStyle = "#FFFFFF";
-  x.fillRect(gx, gy, gb, gh);
-  x.strokeStyle = "#8C7860"; x.lineWidth = 2.5;
-  x.beginPath(); x.moveTo(gx, gy); x.lineTo(gx, gy+gh); x.lineTo(gx+gb, gy+gh); x.lineTo(gx+gb, gy); x.stroke();
-
-  /*  Regnskabet i glasset, målt i ml på glassets skala:
-        50 ml tør prøve indeholder 50*n hulrum og 50*(1-n) fast stof.
-        Der hældes 50 ml vand i. 50*n forsvinder ned i hulrummene,
-        og resten — 50*(1-n) — bliver stående som rent vand ovenpå.
-        Søjlens samlede top er derfor 100 - 50*n hele vejen igennem.       */
-  var n = S.nMaalt;
-  var top = 100 - 50*n;                    // vandspejlets højde efter påhældning
-  var sedimentTop, vandTop, rentVand = 0;
-
-  if(f.fase === "klar"){
-    sedimentTop = 50; vandTop = 0;
-  } else if(f.fase === "haelder"){
-    /* Vandet hældes i: noget forsvinder ned mellem kornene undervejs */
-    var a = klem(f.t/1.6, 0, 1);
-    sedimentTop = 50;
-    vandTop = 50 + a*(top-50);
-  } else if(f.fase === "roerer"){
-    /* Alt hvirvler rundt — hele søjlen er uklar helt op til vandspejlet */
-    sedimentTop = top; vandTop = top;
-  } else {
-    /* Bundfældning: sedimentsøjlen synker fra top ned til sine 50 ml igen */
-    var s = klem(f.t/2.4, 0, 1);
-    sedimentTop = lerp(top, 50, s);
-    vandTop = top;
-    rentVand = top - sedimentTop;
-  }
-  if(f.fase === "faerdig"){ sedimentTop = 50; vandTop = top; rentVand = top - 50; }
-
-  /* Vandet */
-  if(vandTop > 0){
-    x.fillStyle = FARVE_VAND;
-    x.fillRect(gx+1, yAf(vandTop), gb-2, yAf(0)-yAf(vandTop));
-  }
-  /* Sedimentet */
-  if(sedimentTop > 0){
-    x.fillStyle = (f.fase==="roerer") ? blandFarve("#8A7B6B", "#1C6E96", 0.35) : S.m.farve;
-    x.fillRect(gx+1, yAf(sedimentTop), gb-2, yAf(0)-yAf(sedimentTop));
-    /* Ru overflade på sedimentet */
-    x.beginPath();
-    x.moveTo(gx+1, yAf(sedimentTop));
-    for(var i=0;i<=10;i++){
-      var xx = gx+1 + (gb-2)*i/10;
-      x.lineTo(xx, yAf(sedimentTop) + Math.sin(i*1.9)*2.2);
-    }
-    x.lineTo(gx+gb-1, yAf(sedimentTop)+6); x.lineTo(gx+1, yAf(sedimentTop)+6);
-    x.closePath(); x.fill();
-  }
-
-  /* Skalastreger */
-  x.strokeStyle = "#8C7860"; x.lineWidth = 1.4;
-  x.fillStyle = "#6B5840"; x.font = "400 12px " + fontSans();
-  for(var ml=0; ml<=100; ml+=25){
-    var y = yAf(ml);
-    x.beginPath(); x.moveTo(gx+gb-13, y); x.lineTo(gx+gb, y); x.stroke();
-    x.textBaseline = "middle";
-    x.fillText(ml+"", gx+gb+5, y);
-  }
-  x.textBaseline = "alphabetic";
-
-  /* Måleklamme på det rene vand */
-  if(rentVand > 0.5 && (f.fase === "bundfaelder" || f.fase === "faerdig")){
-    var yA = yAf(vandTop), yB = yAf(sedimentTop);
-    var kx = gx - 14;
-    x.strokeStyle = "#1C6E96"; x.lineWidth = 2.5;
-    x.beginPath();
-    x.moveTo(kx+7, yA); x.lineTo(kx, yA); x.lineTo(kx, yB); x.lineTo(kx+7, yB);
-    x.stroke();
-  }
-
-  /* Forklaringstekst til højre */
-  var tx = W*0.60, ty = 58;
-  x.fillStyle = "#1C2E44";
-  x.font = "700 16px " + fontSans();
-  var overskrift = { klar:"Klar", haelder:"Hælder 50 ml vand i", roerer:"Rører rundt", bundfaelder:"Kornene bundfælder sig", faerdig:"Aflæs" }[f.fase];
-  x.fillText(overskrift, tx, ty);
-  x.font = "400 15px " + fontSans();
-  x.fillStyle = "#4A3C28";
-  var forklaring = {
-    klar:"50 ml tør prøve i måleglasset.",
-    haelder:"Vandet forsvinder ned mellem kornene.",
-    roerer:"Al luften mellem kornene skal ud.",
-    bundfaelder:"Det groveste falder først.",
-    faerdig:"Vandet oven på sedimentet er det, der ikke kunne være i porerne."
-  }[f.fase];
-  var yy = wrapTekst(x, forklaring, tx, ty+24, W-tx-18, 19);
-
-  if(f.fase === "faerdig"){
-    x.fillStyle = "#1C6E96";
-    x.font = "700 15px " + fontSans();
-    x.fillText("Rent vand: " + dk(rentVand,0) + " ml", tx, yy+16);
-    x.fillStyle = "#4A3C28";
-    x.font = "400 14px " + fontSans();
-    wrapTekst(x, "Porevolumen = 50 ml − " + dk(rentVand,0) + " ml = " + dk(50-rentVand,0) + " ml", tx, yy+38, W-tx-18, 18);
-  }
-}
-
-/*  --- Trin 3: tragt med filter over et måleglas ---
-    Tallene står i kortene under scenen; her skal man kunne SE opstillingen,
-    så apparatet fylder panelet, og kun stopuret ligger som en lille etiket. */
-function tegnTragt(x, W, H){
-  var t = S.t3;
-
-  /* Stopuret som en stribe øverst — så apparatet kan stå frit nedenunder */
-  x.fillStyle = "#6B5840";
-  x.font = "600 12px " + fontSans();
-  x.fillText("STOPUR", 16, 26);
-  x.fillStyle = "#1C2E44";
-  x.font = "700 25px " + fontSerif();
-  x.fillText(formatTid(t.tSim), 16, 52);
-  x.fillStyle = "#6B5840"; x.font = "400 13px " + fontSans();
-  x.textAlign = "right";
-  x.fillText(t.faktor > 1.01
-      ? "Tidslup: " + kortFaktor(t.faktor) + " × hurtigere end i virkeligheden"
-      : "Kører i virkelig hastighed", W-16, 48);
-  x.textAlign = "left";
-  x.strokeStyle = "#EDE5D4"; x.lineWidth = 1;
-  x.beginPath(); x.moveTo(16, 64); x.lineTo(W-16, 64); x.stroke();
-
-  var cx = W*0.5;
-
-  /* Mål der skalerer med panelet */
-  var tb = klem(W*0.48, 110, 200);            // tragtens bredde foroven
-  var tHalv = tb/2;
-  var tHoejde = klem((H-64)*0.30, 54, 100);   // keglens højde
-  var halsB = klem(tb*0.12, 7, 13);
-  var halsH = klem((H-64)*0.07, 13, 24);
-  var tY = 82;
-  var pTop = tY + tHoejde*0.30;               // prøvens overside i keglen
-  var pBund = tY + tHoejde*0.82;              // prøvens underside
-
-  /* Keglens omrids som sti — bruges både til udklip og til stregen */
-  function tragtSti(){
-    x.beginPath();
-    x.moveTo(cx-tHalv, tY);
-    x.lineTo(cx-halsB, tY+tHoejde);
-    x.lineTo(cx-halsB, tY+tHoejde+halsH);
-    x.lineTo(cx+halsB, tY+tHoejde+halsH);
-    x.lineTo(cx+halsB, tY+tHoejde);
-    x.lineTo(cx+tHalv, tY);
-    x.closePath();
-  }
-
-  x.fillStyle = "#FFFFFF"; tragtSti(); x.fill();
-
-  /* Indholdet klippes til keglen */
-  x.save();
-  tragtSti(); x.clip();
-
-  /* Prøven */
-  x.fillStyle = S.m.farve;
-  x.fillRect(cx-tHalv, pTop, tb, pBund-pTop);
-
-  /* Den våde del af prøven — svagere, når vandet er drænet fra igen */
-  if(t.front > 0){
-    x.globalAlpha = lerp(0.62, klem(0.10+S.m.fc*0.48,0,0.62), klem(t.draen,0,1));
-    x.fillStyle = FARVE_VAND;
-    x.fillRect(cx-tHalv, pTop, tb, klem(t.front,0,1)*(pBund-pTop));
-    x.globalAlpha = 1;
-  }
-
-  /* Vand der står oven på prøven */
-  if(t.staaende > 0.3){
-    var hh = klem(t.staaende/K.VAND_ML, 0, 1) * (pTop - tY);
-    x.fillStyle = FARVE_VAND;
-    x.fillRect(cx-tHalv, pTop-hh, tb, hh);
-    x.fillStyle = "rgba(143,203,228,.6)";
-    x.fillRect(cx-tHalv, pTop-hh, tb, 2.5);
-  }
-  x.restore();
-
-  x.strokeStyle = "#8C7860"; x.lineWidth = 2.5;
-  tragtSti(); x.stroke();
-
-  /* Etiket på prøven */
-  x.fillStyle = "#4A3C28"; x.font = "600 12px " + fontSans();
-  x.textAlign = "right";
-  x.fillText("50 g prøve", cx-tHalv-9, (pTop+pBund)/2 - 6);
-  x.fillText("i kaffefilter", cx-tHalv-9, (pTop+pBund)/2 + 9);
-  x.textAlign = "left";
-
-  /* Måleglasset nedenunder */
-  var gb = klem(W*0.30, 66, 118);
-  var gx = cx - gb/2;
-  var gy = tY + tHoejde + halsH + klem((H-64)*0.10, 20, 40);
-  var gh = Math.max(60, H - gy - 26);
-  var mlMax = 100;
-  x.fillStyle = "#FFFFFF"; x.fillRect(gx, gy, gb, gh);
-
-  var vh = klem(t.udloebt/mlMax,0,1)*gh;
-  x.fillStyle = FARVE_VAND;
-  x.fillRect(gx+1, gy+gh-vh, gb-2, vh);
-  if(vh > 2){ x.fillStyle="rgba(143,203,228,.6)"; x.fillRect(gx+1, gy+gh-vh, gb-2, 2.5); }
-
-  x.strokeStyle = "#8C7860"; x.lineWidth = 2.5;
-  x.beginPath(); x.moveTo(gx,gy); x.lineTo(gx,gy+gh); x.lineTo(gx+gb,gy+gh); x.lineTo(gx+gb,gy); x.stroke();
-
-  x.strokeStyle = "#8C7860"; x.lineWidth = 1.3;
-  x.fillStyle = "#6B5840"; x.font = "400 12px " + fontSans();
-  x.textBaseline = "middle";
-  for(var ml=0; ml<=100; ml+=25){
-    var y = gy+gh - ml/mlMax*gh;
-    x.beginPath(); x.moveTo(gx+gb-11, y); x.lineTo(gx+gb, y); x.stroke();
-    x.fillText(ml+"", gx+gb+5, y);
-  }
-  x.textBaseline = "alphabetic";
-
-  /* En dråbe på vej ned fra tragtens hals */
-  if(t.koerer && t.udloebt > 0.2){
-    var fra = tY + tHoejde + halsH + 3;
-    var fase = (performance.now()/340) % 1;
-    x.fillStyle = FARVE_VAND;
-    x.beginPath();
-    x.arc(cx, fra + fase*(gy-fra), 3.6, 0, 6.2832);
-    x.fill();
-  }
-}
-
-function kortFaktor(f){
-  if(f >= 1e6) return dk(f/1e6, (f/1e6)%1?1:0) + " mio.";
-  if(f >= 1000) return dk(f/1000, (f/1000)%1?1:0) + " tusind";
-  return dk(f, f%1?1:0);
-}
-
-/* Tekstombrydning på lærred */
-function wrapTekst(x, tekst, px, py, bredde, linje){
-  var ord = String(tekst).split(" "), l = "", y = py;
-  for(var i=0;i<ord.length;i++){
-    var proev = l ? l+" "+ord[i] : ord[i];
-    if(x.measureText(proev).width > bredde && l){
-      x.fillText(l, px, y); y += linje; l = ord[i];
-    } else l = proev;
-  }
-  if(l){ x.fillText(l, px, y); y += linje; }
-  return y;
-}
-
-/* ════════════════════════════════════════════════════════════════════════
-   GRAFEN — nedsivet vand over tid
-   ════════════════════════════════════════════════════════════════════════ */
-function tegnGraf(){
-  if(!tilpas(Lg)) return;
-  var x = Lg.x, W = Lg.w, H = Lg.h;
-  x.clearRect(0,0,W,H);
-
-  var m = { v:52, h:22, o:30, n:44 };
-  var pw = W-m.v-m.h, ph = H-m.o-m.n;
-  var d = S.t3.data;
-  var tMax = Math.max(1e-9, S.t3.tSim, 1);
-
-  /* Akser: recessive, tynde */
-  x.strokeStyle = "#E0D5C0"; x.lineWidth = 1;
-  x.fillStyle = "#6B5840"; x.font = "400 12px " + fontSans();
-  x.textAlign = "right"; x.textBaseline = "middle";
-  for(var v=0; v<=100; v+=25){
-    var y = m.o + ph - v/100*ph;
-    x.beginPath(); x.moveTo(m.v, y); x.lineTo(m.v+pw, y); x.stroke();
-    x.fillText(v+"", m.v-8, y);
-  }
-  x.textAlign = "center"; x.textBaseline = "top";
-  for(var i=0;i<=4;i++){
-    var tx = m.v + pw*i/4;
-    x.fillText(i===0 ? "0" : formatTid(tMax*i/4), tx, m.o+ph+8);
-  }
-  x.textAlign = "left"; x.textBaseline = "alphabetic";
-
-  /* Aksetekster */
-  x.fillStyle = "#4A3C28"; x.font = "600 13px " + fontSans();
-  x.fillText("Nedsivet vand (ml)", m.v-40, m.o-12);
-  x.textAlign = "right";
-  x.fillText("Tid", m.v+pw, H-8);
-  x.textAlign = "left";
-
-  if(d.length < 2){
-    x.fillStyle = "#8C7860"; x.font = "italic 400 15px " + fontSerif();
-    x.fillText("Tryk på »Start målingen« — kurven tegner sig selv.", m.v+10, m.o+ph/2);
-    return;
-  }
-
-  /* Kurven */
-  x.strokeStyle = "#1C6E96"; x.lineWidth = 2; x.lineJoin = "round";
-  x.beginPath();
-  for(var j=0;j<d.length;j++){
-    var px = m.v + klem(d[j][0]/tMax,0,1)*pw;
-    var py = m.o + ph - klem(d[j][1]/100,0,1)*ph;
-    if(j===0) x.moveTo(px,py); else x.lineTo(px,py);
-  }
-  x.stroke();
-
-  /* Slutpunkt med direkte etiket */
-  var sid = d[d.length-1];
-  var sx = m.v + klem(sid[0]/tMax,0,1)*pw;
-  var sy = m.o + ph - klem(sid[1]/100,0,1)*ph;
-  x.fillStyle = "#FFFDF9"; x.beginPath(); x.arc(sx,sy,5.5,0,6.2832); x.fill();
-  x.fillStyle = "#1C6E96"; x.beginPath(); x.arc(sx,sy,4,0,6.2832); x.fill();
-  x.font = "700 13px " + fontSans();
-  var mrk = dk(sid[1],0)+" ml";
-  var br = x.measureText(mrk).width;
-  x.fillText(mrk, Math.min(sx+10, m.v+pw-br), sy-9);
-
-  /* Vandret linje for markkapaciteten, når forsøget er kørt færdigt */
-  if(S.t3.faerdig){
-    var yl = m.o + ph - klem((K.VAND_ML-S.m.holdt)/100,0,1)*ph;
-    x.strokeStyle = "#8B6914"; x.lineWidth = 1.5;
-    x.setLineDash([5,4]);
-    x.beginPath(); x.moveTo(m.v, yl); x.lineTo(m.v+pw, yl); x.stroke();
-    x.setLineDash([]);
-    x.fillStyle = "#8B6914"; x.font = "600 12px " + fontSans();
-    /* Ligger linjen højt oppe, ville etiketten støde ind i aksetitlen */
-    x.textAlign = "right";
-    x.fillText("resten sidder fast i jorden", m.v+pw-6, (yl-m.o < 22) ? yl+15 : yl-6);
-    x.textAlign = "left";
-  }
-}
-
-/* ════════════════════════════════════════════════════════════════════════
-   TRIN 4 — de fire sedimenttyper side om side
-   ════════════════════════════════════════════════════════════════════════ */
-var REFERENCER = [
-  { navn:"Ler",                p:0.125, u:0.06 },
-  { navn:"Silt",               p:0.375, u:0.10 },
-  { navn:"Sand (velsorteret)", p:0.625, u:0.06 },
-  { navn:"Grus (velsorteret)", p:0.875, u:0.06 },
-  /*  Moræneler: en finkornet matrix med alt fra ler til sten i.
-      Med d50 i siltområdet og næsten ingen sortering lander modellen på
-      ca. 32 % porøsitet og 7·10⁻⁸ m/s — begge dele som i tabellerne.      */
-  { navn:"Moræneler (usorteret)", p:0.44, u:0.93 }
-];
-
-function tegnSammenlign(){
-  if(!tilpas(Ls)) return;
-  var x = Ls.x, W = Ls.w, H = Ls.h;
-  x.clearRect(0,0,W,H);
-
-  var raekker = REFERENCER.map(function(r){
-    var m = beregn(r.p, r.u);
-    return { navn:r.navn, m:m, egen:false };
-  });
-  raekker.push({ navn:"Din prøve", m:S.m, egen:true });
-
-  var etiketB = Math.min(Math.max(W*0.30, 118), 190);
-  var pad = 18;
-  var halv = (H - 30) / 2;
-
-  tegnSoejler(x, raekker, pad, 16, W-pad*2, halv-30, etiketB);
-  tegnPrikker(x, raekker, pad, 16+halv, W-pad*2, halv-16, etiketB);
-}
-
-/* Øverst: porøsitet som søjler — de har en ægte nulpunkt */
-function tegnSoejler(x, raekker, px, py, pw, ph, etiketB){
-  x.fillStyle = "#1C2E44"; x.font = "700 16px " + fontSerif();
-  x.fillText("Plads til vand — porøsitet", px, py+14);
-  x.fillStyle = "#6B5840"; x.font = "400 13px " + fontSans();
-  x.fillText("hvor stor en del af jorden der er hulrum", px, py+32);
-
-  var top = py + 44;
-  var plotX = px + etiketB;
-  var plotB = pw - etiketB - 58;
-  var rH = (ph - 48) / raekker.length;
-  var maxN = 0.60;
-
-  /* Lodrette hjælpelinjer */
-  x.strokeStyle = "#EDE5D4"; x.lineWidth = 1;
-  x.fillStyle = "#8C7860"; x.font = "400 12px " + fontSans();
-  x.textAlign = "center";
-  for(var v=0; v<=60; v+=20){
-    var gx = plotX + v/100/maxN*plotB;
-    x.beginPath(); x.moveTo(gx, top); x.lineTo(gx, top+rH*raekker.length); x.stroke();
-    x.fillText(v+" %", gx, top+rH*raekker.length+16);
-  }
-  x.textAlign = "left";
-
-  for(var i=0;i<raekker.length;i++){
-    var r = raekker[i];
-    var y = top + rH*i + rH/2;
-    var b = r.m.n/maxN*plotB;
-
-    x.fillStyle = r.egen ? "#1C2E44" : "#4A3C28";
-    x.font = (r.egen?"700 ":"400 ") + "14px " + fontSans();
-    x.textBaseline = "middle";
-    x.fillText(r.navn, px, y);
-
-    /* Lille kornprøve som farvemærke */
-    x.fillStyle = r.m.farve;
-    x.beginPath(); x.arc(plotX-13, y, 5, 0, 6.2832); x.fill();
-
-    x.fillStyle = "#8B6914";
-    rundtRekt(x, plotX, y-rH*0.28, Math.max(4,b), rH*0.56, 4); x.fill();
-    if(r.egen){
-      x.strokeStyle = "#1C2E44"; x.lineWidth = 2;
-      rundtRekt(x, plotX-1.5, y-rH*0.28-1.5, Math.max(4,b)+3, rH*0.56+3, 5); x.stroke();
-    }
-
-    x.fillStyle = "#1C2E44"; x.font = "700 14px " + fontSans();
-    x.fillText(dk(r.m.n*100,0)+" %", plotX+b+9, y);
-  }
-  x.textBaseline = "alphabetic";
-}
-
-/* Nederst: permeabilitet på en logaritmisk skala — prikker, ikke søjler,
-   fordi skalaen ikke har et nulpunkt.                                    */
-function tegnPrikker(x, raekker, px, py, pw, ph, etiketB){
-  x.fillStyle = "#1C2E44"; x.font = "700 16px " + fontSerif();
-  x.fillText("Vej igennem — permeabilitet", px, py+14);
-  x.fillStyle = "#6B5840"; x.font = "400 13px " + fontSans();
-  x.fillText("hvert trin på skalaen er 10 gange hurtigere", px, py+32);
-
-  var top = py + 44;
-  var plotX = px + etiketB;
-  var plotB = pw - etiketB - 78;
-  var rH = (ph - 48) / raekker.length;
-  var loMin = -10, loMax = 0;                 // log10(K) fra 1e-10 til 1 m/s
-
-  x.strokeStyle = "#EDE5D4"; x.lineWidth = 1;
-  x.fillStyle = "#8C7860"; x.font = "400 11px " + fontSans();
-  x.textAlign = "center";
-  for(var e=loMin; e<=loMax; e+=2){
-    var gx = plotX + (e-loMin)/(loMax-loMin)*plotB;
-    x.beginPath(); x.moveTo(gx, top); x.lineTo(gx, top+rH*raekker.length); x.stroke();
-    x.fillText("10" + hoejtTal(e), gx, top+rH*raekker.length+16);
-  }
-  x.textAlign = "left";
-  x.fillStyle = "#6B5840"; x.font = "400 12px " + fontSans();
-  x.fillText("m/s", plotX+plotB+8, top+rH*raekker.length+20);
-
-  for(var i=0;i<raekker.length;i++){
-    var r = raekker[i];
-    var y = top + rH*i + rH/2;
-    var lo = klem(Math.log10(Math.max(r.m.Kms,1e-11)), loMin, loMax);
-    var cx = plotX + (lo-loMin)/(loMax-loMin)*plotB;
-
-    x.fillStyle = r.egen ? "#1C2E44" : "#4A3C28";
-    x.font = (r.egen?"700 ":"400 ") + "14px " + fontSans();
-    x.textBaseline = "middle";
-    x.fillText(r.navn, px, y);
-
-    /* Linje fra venstre kant til prikken, så øjet kan følge den */
-    x.strokeStyle = "#CFE3EE"; x.lineWidth = 2;
-    x.beginPath(); x.moveTo(plotX, y); x.lineTo(cx, y); x.stroke();
-
-    x.fillStyle = "#FFFDF9"; x.beginPath(); x.arc(cx,y,7,0,6.2832); x.fill();
-    x.fillStyle = "#1C6E96"; x.beginPath(); x.arc(cx,y,5,0,6.2832); x.fill();
-    if(r.egen){
-      x.strokeStyle = "#1C2E44"; x.lineWidth = 2;
-      x.beginPath(); x.arc(cx,y,9,0,6.2832); x.stroke();
-    }
-
-    x.fillStyle = "#1C2E44"; x.font = "600 13px " + fontSans();
-    var t = formatSivning(r.m.Kms);
-    var br = x.measureText(t).width;
-    var lx = cx + 13;
-    if(lx + br > px+pw) lx = cx - 13 - br;
-    x.fillText(t, lx, y);
-  }
-  x.textBaseline = "alphabetic";
-}
-
-/* ════════════════════════════════════════════════════════════════════════
-   AFLÆSNINGER OG TEKST
-   ════════════════════════════════════════════════════════════════════════ */
-var elTal = document.getElementById("ppTal");
-var elForklar = document.getElementById("ppForklar");
-var elHook = document.getElementById("ppHook");
-var elInstrumentTitel = document.getElementById("ppInstrumentTitel");
-
-function kort(navn, vaerdi, under, vand){
-  return '<div class="pp-tal-kort' + (vand?" pp-vandfarve":"") + '">' +
-    '<div class="pp-tal-navn">' + navn + '</div>' +
-    '<div class="pp-tal-vaerdi">' + vaerdi + '</div>' +
-    '<div class="pp-tal-under">' + under + '</div></div>';
-}
-
-function opdaterTal(){
-  var m = S.m, h = "";
-  if(S.trin === 1){
-    h += kort("Kornstørrelse", formatKorn(m.d50), m.klasse + " (midt i prøven)");
-    h += kort("Hulrum på billedet", dk(S.nMaalt*100,0) + " %", "talt på tværsnittet");
-    h += kort("Sortering", sorteringsOrd(), "spredning " + dk(m.sigma,1) + " phi");
-  } else if(S.trin === 2){
-    h += kort("Porøsitet", (S.t2.fase === "faerdig" ? dk(S.nMaalt*100,0) + " %" : "…"),
-              S.t2.fase === "faerdig" ? "af prøvens rumfang er hulrum" : "kør målingen færdig");
-    h += kort("Porevolumen", (S.t2.fase === "faerdig" ? dk(50*S.nMaalt,0) + " ml" : "…"), "i 50 ml prøve", true);
-    h += kort("Kornstørrelse", formatKorn(m.d50), m.klasse);
-  } else if(S.trin === 3){
-    h += kort("Nedsivet", dk(S.t3.udloebt,0) + " ml", "af " + K.VAND_ML + " ml", true);
-    h += kort("Vandet siver", formatSivning(m.Kms), "permeabilitet " + formatK(m.Kms));
-    h += kort("Markkapacitet", dk(m.holdt,0) + " ml", "bliver hængende i jorden");
-    h += kort("Tid", formatTid(S.t3.tSim), S.t3.faerdig ? "til vandet var løbet igennem" : "siden vandet blev hældt på");
-  } else {
-    h += kort("Din prøve", m.klasse + ", " + sorteringsOrd().toLowerCase(), formatKorn(m.d50));
-    h += kort("Porøsitet", dk(m.n*100,0) + " %", "plads til vand");
-    h += kort("Permeabilitet", formatSivning(m.Kms), formatK(m.Kms), true);
-    h += kort("Markkapacitet", dk(m.holdt,0) + " ml", "af " + dk(m.poreVol,0) + " ml porer");
-  }
-  elTal.innerHTML = h;
-}
-
-function sorteringsOrd(){
-  if(S.u < 0.20) return "Velsorteret";
-  if(S.u < 0.45) return "Godt sorteret";
-  if(S.u < 0.72) return "Middelsorteret";
-  return "Usorteret";
-}
-
-var HOOKS = {
-  1:"Zoom helt ind i jorden. Hvor meget af den er faktisk … ingenting?",
-  2:"Hvor meget vand kan der overhovedet være i jorden? Vi hælder vand i og ser, hvor meget der forsvinder.",
-  3:"Nu handler det ikke om plads, men om fart. Hvor hurtigt kommer vandet igennem?",
-  4:"Én af de fire har mest plads til vand — og slipper alligevel næsten intet igennem. Hvilken?"
-};
-
-function opdaterForklaring(){
-  var m = S.m, t = "";
-
-  if(S.trin === 1){
-    t = "Kornene er <strong>" + formatKorn(m.d50) + "</strong> — det er " + m.klasse.toLowerCase() + ". ";
-    if(S.u < 0.25){
-      t += "De er næsten lige store, så de kan ikke pakke sig helt tæt: der bliver <strong>" +
-           dk(S.nMaalt*100,0) + " %</strong> hulrum tilbage.";
-    } else if(S.u < 0.6){
-      t += "Nogle af kornene er mindre end de andre, og de små lægger sig ned i hullerne. Hulrummet er faldet til <strong>" +
-           dk(S.nMaalt*100,0) + " %</strong>.";
-    } else {
-      t += "Alt er blandet sammen. De fine korn propper hullerne mellem de grove, så der kun er <strong>" +
-           dk(S.nMaalt*100,0) + " %</strong> hulrum tilbage. Sådan ser moræneler ud.";
-    }
-    if(m.klasse === "Ler") t += " Læg mærke til, at der er <em>mere</em> hulrum i ler end i grus — ikke mindre.";
-
-  } else if(S.trin === 2){
-    if(S.t2.fase === "klar"){
-      t = "Vi gør præcis som i øvelsen: 50 ml tør prøve, 50 ml vand ovenpå, rør rundt, og lad det bundfælde. Tryk på <strong>Start målingen</strong>.";
-    } else if(S.t2.fase === "faerdig"){
-      t = "Der står <strong>" + dk(50 - 50*S.nMaalt,0) + " ml</strong> rent vand oven på sedimentet. Resten — <strong>" +
-          dk(50*S.nMaalt,0) + " ml</strong> — er forsvundet ned i hulrummene. Porøsiteten er derfor <strong>" +
-          dk(S.nMaalt*100,0) + " %</strong>.";
-    } else {
-      t = "Hold øje med, hvor meget vand der bliver stående oven på sedimentet.";
-    }
-
-  } else if(S.trin === 3){
-    if(!S.t3.koerer && !S.t3.faerdig){
-      t = "100 ml vand hældes ned i tragten. Gæt først: hvor lang tid går der, før det er løbet igennem? Tryk så på <strong>Start målingen</strong>.";
-    } else if(S.t3.faerdig){
-      t = "Der løb <strong>" + dk(S.t3.udloebt,0) + " ml</strong> igennem på <strong>" + formatTid(S.t3.tSim) +
-          "</strong>. De sidste <strong>" + dk(K.VAND_ML - S.t3.udloebt,0) +
-          " ml</strong> sidder fast som vandhinder om kornene — det er markkapaciteten, og det er dét vand, planterne kan bruge.";
-      if(m.Kms < 1e-7) t += " I ler har vandet næsten ingen vej at komme igennem: porerne er der, men de er alt for smalle.";
-      if(m.Kms > 1e-2) t += " I grus er porerne så brede, at vandet nærmest falder lige igennem — men så holder jorden heller ikke på noget.";
-    } else {
-      t = "Vandet arbejder sig ned gennem prøven. Se på tværsnittet til venstre, hvor fronten er nået til.";
-    }
-
-  } else {
-    t = "Ler har den <strong>største</strong> porøsitet af dem alle — masser af plads til vand. Og den <strong>mindste</strong> permeabilitet: " +
-        "vandet kan ikke komme igennem, fordi porerne er mikroskopisk smalle. Plads og fremkommelighed er to forskellige ting. " +
-        "Moræneleret er dårligt stillet på begge punkter, fordi de fine korn fylder hullerne mellem de grove.";
-  }
-  elForklar.innerHTML = t;
-}
-
-/* ════════════════════════════════════════════════════════════════════════
-   ANIMATIONEN
-   ════════════════════════════════════════════════════════════════════════ */
-var sidst = performance.now();
-
-function nulstilT3(){
-  S.t3.koerer = false; S.t3.faerdig = false;
-  S.t3.tSim = 0; S.t3.paahaeldt = 0; S.t3.staaende = 0;
-  S.t3.iJorden = 0; S.t3.udloebt = 0; S.t3.front = 0; S.t3.draen = 0;
-  S.t3.data = []; S.t3.draaber = [];
-  S.t3.faktor = vaelgTidsfaktor();
-}
-
-/* Hvor meget skal tiden skrues op, for at målingen kan ses på skærmen?
-   Skønnet bygger på Darcy med en middelhøjde af vandet i tragten.        */
+/* Hvor meget skal tiden skrues op, for at nedsivningen kan ses på skærmen?
+   Skønnet bygger på Darcy med en middelhøjde af vandet oven på prøven.    */
 function vaelgTidsfaktor(){
   var m = S.m;
   /*  Med q = K*A*(1 + h/L) og h = V/A kan tiden løses eksakt:
@@ -1875,24 +1219,15 @@ function vaelgTidsfaktor(){
   return Math.pow(10,e+1);
 }
 
-function skridtT2(dt){
-  var f = S.t2;
-  if(f.fase === "klar") return;
-  f.t += dt;
-  if(f.fase === "haelder"    && f.t > 1.7){ f.fase = "roerer";      f.t = 0; }
-  else if(f.fase === "roerer"      && f.t > 1.4){ f.fase = "bundfaelder"; f.t = 0; }
-  else if(f.fase === "bundfaelder" && f.t > 2.6){ f.fase = "faerdig";     f.t = 0; opdaterForklaring(); opdaterKnap(); }
-}
-
-/*  Vandregnskabet holdes i fire poster, der altid summer til det påhældte:
-      staaende  — vand der står i tragten oven på prøven
+/*  Vandregnskabet holdes i tre poster, der altid summer til det påhældte:
+      staaende  — vand der står oven på prøven
       iJorden   — vand der hænger fast i prøven (op til markkapaciteten)
-      udloebt   — vand i måleglasset
+      udloebt   — vand der er sivet helt igennem
     Prøven fyldes først op til markkapaciteten; derefter går alt videre
     igennem. Det er en grov, men gennemskuelig stempelmodel.               */
-function skridtT3(dt){
-  var t = S.t3, m = S.m;
-  /* Efter målingen løber det overskydende vand ud af porerne på ca. 1 sek. */
+function skridtVand(dt){
+  var t = S.vand, m = S.m;
+  /* Efter nedsivningen løber det overskydende vand ud af porerne på ca. 1 sek. */
   if(t.faerdig && t.draen < 1) t.draen = Math.min(1, t.draen + dt/1.0);
   if(!t.koerer) return;
   var dtSim = dt * t.faktor;
@@ -1904,7 +1239,7 @@ function skridtT3(dt){
   t.staaende += paa;
 
   /* Darcy: q = K * A * (1 + h/L). Uden vand ovenpå er gradienten 1. */
-  var h = (t.staaende*1e-6) / K.TRAGT_AREAL;                  // vandsøjle i m
+  var h = (t.staaende*1e-6) / K.TRAGT_AREAL;                        // vandsøjle i m
   var q = m.Kms * K.TRAGT_AREAL * (1 + h/K.PROEVE_TYKKELSE) * 1e6;  // ml/s
   var flyt = Math.min(q*dtSim, t.staaende);
   t.staaende -= flyt;
@@ -1915,249 +1250,317 @@ function skridtT3(dt){
   t.iJorden += iPore;
   t.udloebt += (flyt - iPore);
 
-  /* Den våde front i tværsnittet: hvor langt er vandet nået ned? */
+  /* Den våde front: hvor langt er vandet nået ned? */
   var nedsivet = t.paahaeldt - t.staaende;
   t.front = klem(nedsivet / Math.max(0.5, m.poreVol), 0, 1);
 
   opdaterDraaber(dt);
 
-  /* Log til grafen — ca. 200 punkter uanset hvor lang målingen er */
-  if(t.data.length === 0 || t.tSim - t.data[t.data.length-1][0] > t.tSim/200 + 1e-9){
-    t.data.push([t.tSim, t.udloebt]);
-    if(t.data.length > 1200) t.data.splice(0, 600);
-  }
-
-  /* Færdig, når der ikke står vand tilbage i tragten */
+  /* Færdig, når der ikke står vand tilbage oven på prøven */
   if(t.paahaeldt >= K.VAND_ML - 1e-9 && t.staaende <= 0.02){
     t.staaende = 0;
     t.udloebt = K.VAND_ML - m.holdt;
     t.iJorden = m.holdt;
     t.front = 1;
-    t.data.push([t.tSim, t.udloebt]);
     t.koerer = false; t.faerdig = true;
-    opdaterForklaring(); opdaterKnap();
+    t.draaber = [];
+    opdaterKnap();
+    fortael();
+    opdaterSr();
   }
 }
 
 function opdaterDraaber(dt){
-  var t = S.t3;
-  if(!S.pak) return;
-  var fart = klem(20 + Math.log10(S.m.Kms*1e10+1)*26, 12, 150);
+  var t = S.vand;
+  /* Farten følger permeabiliteten, så forskellen mellem ler og grus ses */
+  var fart = klem(20 + Math.log10(S.m.Kms*1e10+1)*26, 12, 150) * (H/540);
   while(t.draaber.length < K.DRAABER){
-    t.draaber.push({ x:Math.random()*S.pakBredde,
-                     y:S.yTop + Math.random()*(S.pakHoejde-S.yTop),
-                     r:1.6+Math.random()*1.9,
+    t.draaber.push({ x:Math.random()*W,
+                     y:Y_TOP + Math.random()*(Y_BUND-Y_TOP),
+                     r:2+Math.random()*2.4,
                      v:fart*(0.6+Math.random()*0.8) });
   }
   for(var i=t.draaber.length-1;i>=0;i--){
     var d = t.draaber[i];
     d.y += d.v*dt;
-    if(d.y > lerp(S.yTop, S.pakHoejde, t.front) || d.y > S.pakHoejde){
-      t.draaber.splice(i,1);
-    }
+    if(d.y > lerp(Y_TOP, Y_BUND, t.front) || d.y > Y_BUND) t.draaber.splice(i,1);
+  }
+
+  /* Dråber der forlader prøven forneden — kun når der faktisk løber vand ud */
+  if(t.udloebt > 0.2 && t.udDraaber.length < 6 && Math.random() < 0.25){
+    t.udDraaber.push({ x:60 + Math.random()*(W-160), y:Y_BUND+3, r:3.4, v:130 });
+  }
+  for(i=t.udDraaber.length-1;i>=0;i--){
+    var e = t.udDraaber[i];
+    e.y += e.v*dt;
+    if(e.y > H+6) t.udDraaber.splice(i,1);
   }
 }
+
+/* ════════════════════════════════════════════════════════════════════════
+   AFLÆSNINGER
+   ════════════════════════════════════════════════════════════════════════ */
+var el = {
+  status: document.getElementById("status"),
+  badge:  document.getElementById("badge"),
+  says:   document.getElementById("says"),
+  sr:     document.getElementById("sr-status"),
+  por:    document.getElementById("val-por"),
+  animPor:document.getElementById("anim-por"),
+  perm:   document.getElementById("val-perm"),
+  animPerm:document.getElementById("anim-perm"),
+  korn:   document.getElementById("val-korn"),
+  cls:    document.getElementById("anim-cls"),
+  vand:   document.getElementById("val-vand"),
+  animVand:document.getElementById("anim-vand"),
+  tid:    document.getElementById("val-tid"),
+  factKorn:document.getElementById("fact-korn"),
+  lblKorn:document.getElementById("lbl-korn"),
+  lblSort:document.getElementById("lbl-sort"),
+  inpKorn:document.getElementById("inp-korn"),
+  inpSort:document.getElementById("inp-sort"),
+  klasser:document.getElementById("klasser"),
+  btnVand:document.getElementById("btn-vand")
+};
+
+function sorteringsOrd(){
+  if(S.u < 0.20) return "velsorteret";
+  if(S.u < 0.45) return "godt sorteret";
+  if(S.u < 0.72) return "middelsorteret";
+  return "usorteret";
+}
+
+function opdaterInstrumenter(){
+  var m = S.m, t = S.vand;
+
+  el.por.innerHTML = dk(S.nMaalt*100,0) + '<small>%</small>';
+  el.animPor.style.width = klem(S.nMaalt/0.60,0,1)*100 + "%";
+
+  var sd = sivningDele(m.Kms);
+  el.perm.innerHTML = sd[0] + '<small>' + sd[1] + '</small>';
+  var lo = klem((Math.log10(Math.max(m.Kms,1e-11)) + 10)/10, 0, 1);
+  el.animPerm.style.left = lo*100 + "%";
+
+  var kd = kornDele(m.d50);
+  el.korn.innerHTML = kd[0] + '<small>' + kd[1] + '</small>';
+  var s = el.cls.children;
+  for(var i=0;i<s.length;i++){
+    if(s[i].dataset.k === m.klasse) s[i].setAttribute("data-aktiv","1");
+    else s[i].removeAttribute("data-aktiv");
+  }
+
+  el.vand.innerHTML = dk(t.udloebt,0) + '<small>af 100 ml</small>';
+  el.animVand.style.height = klem(t.udloebt/K.VAND_ML,0,1)*100 + "%";
+  el.tid.textContent = (t.koerer || t.faerdig) ? formatTid(t.tSim) : "—";
+
+  el.factKorn.style.setProperty("--fc", m.farve);
+  el.lblKorn.textContent = m.klasse;
+  el.lblSort.textContent = Math.round((1-S.u)*100) + " %";
+
+  var knapper = el.klasser.children;
+  for(i=0;i<knapper.length;i++){
+    knapper[i].setAttribute("aria-pressed",
+      knapper[i].textContent === m.klasse ? "true" : "false");
+  }
+
+  el.status.textContent = t.koerer ? "Vandet siver ned"
+                        : t.faerdig ? "Drænet" : "Tør prøve";
+  if(t.koerer && t.faktor > 1.01){
+    el.badge.hidden = false;
+    el.badge.textContent = "Tidslup · " + kortFaktor(t.faktor) + "× hurtigere end i virkeligheden";
+  } else if(t.koerer){
+    el.badge.hidden = false;
+    el.badge.textContent = "Kører i virkelig hastighed";
+  } else {
+    el.badge.hidden = true;
+  }
+}
+
+function kortFaktor(f){
+  if(f >= 1e6) return dk(f/1e6, (f/1e6)%1?1:0) + " mio.";
+  if(f >= 1000) return dk(f/1000, (f/1000)%1?1:0) + " tusind";
+  return dk(f, f%1?1:0);
+}
+
+/* Én sætning der forklarer, hvad man lige har set */
+function fortael(){
+  var m = S.m, t = S.vand, s;
+
+  if(t.koerer){
+    s = "Vandet arbejder sig ned gennem hulrummene. Læg mærke til farten — " +
+        "den er permeabiliteten.";
+  } else if(t.faerdig){
+    s = "Der løb <strong>" + dk(t.udloebt,0) + " ml</strong> igennem på <strong>" +
+        tidIndi(t.tSim) + "</strong>. De sidste <strong>" + dk(K.VAND_ML-t.udloebt,0) +
+        " ml</strong> sidder fast som vandhinder om kornene.";
+    if(m.Kms < 1e-7) s += " I ler er porerne der — de er bare alt for smalle.";
+    else if(m.Kms > 1e-2) s += " I grus falder vandet nærmest lige igennem.";
+  } else {
+    s = "<strong>" + m.klasse + "</strong>, " + sorteringsOrd() + ". " +
+        "<strong>" + dk(S.nMaalt*100,0) + " %</strong> af billedet er hulrum, og vandet siver <strong>" +
+        formatSivning(m.Kms) + "</strong>.";
+    if(m.klasse === "Ler") s += " Ler har mest plads til vand af dem alle — og slipper alligevel næsten intet igennem.";
+    else if(S.u > 0.6) s += " De fine korn propper hullerne mellem de grove. Sådan ser moræneler ud.";
+  }
+  el.says.innerHTML = s;
+}
+
+/* Skærmlæser: skrives først, når skyderne har stået stille et øjeblik */
+var srTimer = 0, srSidste = "";
+function opdaterSr(){
+  var m = S.m;
+  var tekst = m.klasse + ", " + formatKorn(m.d50) + ", " + sorteringsOrd() +
+    ". Porøsitet " + dk(S.nMaalt*100,0) + " procent. Vandet siver " + formatSivning(m.Kms) + ".";
+  if(S.vand.faerdig){
+    tekst += " " + dk(S.vand.udloebt,0) + " ml sivede igennem på " + tidIndi(S.vand.tSim) +
+             "; " + dk(K.VAND_ML-S.vand.udloebt,0) + " ml blev hængende.";
+  }
+  if(tekst === srSidste) return;
+  clearTimeout(srTimer);
+  srTimer = setTimeout(function(){ srSidste = tekst; el.sr.textContent = tekst; }, 700);
+}
+
+function opdaterKnap(){
+  var t = S.vand;
+  el.btnVand.disabled = t.koerer;
+  el.btnVand.textContent = t.koerer ? "Vandet siver …"
+                         : t.faerdig ? "Hæld vand på igen" : "Hæld 100 ml vand på";
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   LØKKEN
+   ════════════════════════════════════════════════════════════════════════ */
+var sidst = performance.now();
+var skalTegne = true;
 
 function loop(nu){
   var dt = Math.min((nu - sidst)/1000, 0.05);
   sidst = nu;
+  var t = S.vand;
+  var aktiv = t.koerer || (t.faerdig && t.draen < 1) || t.udDraaber.length > 0;
 
-  if(S.trin === 2) skridtT2(dt);
-  if(S.trin === 3) skridtT3(dt);
-
-  if(S.trin !== 4){
-    tegnTvaersnit();
-    tegnInstrument();
+  if(aktiv){
+    skridtVand(dt);
+    if(!t.koerer){
+      /* efterdrypning: dråberne skal stadig falde færdigt */
+      for(var i=t.udDraaber.length-1;i>=0;i--){
+        var e = t.udDraaber[i]; e.y += e.v*dt;
+        if(e.y > H+6) t.udDraaber.splice(i,1);
+      }
+    }
+    opdaterInstrumenter();
+    skalTegne = true;
   }
-  if(S.trin === 3){ tegnGraf(); opdaterTal(); }
-  if(S.trin === 2 && S.t2.fase !== "klar") opdaterTal();
-  if(S.trin === 4) tegnSammenlign();
-
+  if(skalTegne){ tegn(); skalTegne = false; }
   requestAnimationFrame(loop);
 }
 
 /* ════════════════════════════════════════════════════════════════════════
-   BRUGERFLADEN
+   BETJENING
    ════════════════════════════════════════════════════════════════════════ */
-var elSkyderKorn = document.getElementById("ppSkyderKorn");
-var elSkyderSort = document.getElementById("ppSkyderSort");
-var elZoner = document.getElementById("ppZoner");
-var elKoer = document.getElementById("ppKoer");
-var elKoerTekst = document.getElementById("ppKoerTekst");
-var elProeve = document.getElementById("ppProeve");
-var elTrinNav = document.getElementById("ppTrinNav");
-var elGrid = document.getElementById("ppSceneGrid");
-var elBoksTvaer = document.getElementById("ppBoksTvaersnit");
-var elBoksInstr = document.getElementById("ppBoksInstrument");
-var elBoksGraf = document.getElementById("ppBoksGraf");
-var elBoksSaml = document.getElementById("ppBoksSammenlign");
-
-function opdaterZoner(){
-  var knapper = elZoner.querySelectorAll("button");
-  var aktiv = S.m.klasse;
-  for(var i=0;i<knapper.length;i++){
-    knapper[i].setAttribute("aria-pressed", knapper[i].textContent === aktiv ? "true" : "false");
-  }
-}
-
-function opdaterKnap(){
-  if(S.trin === 2){
-    elKoer.hidden = false;
-    elKoerTekst.textContent = (S.t2.fase === "klar") ? "Start målingen"
-                            : (S.t2.fase === "faerdig") ? "Kør igen" : "Måler …";
-    elKoer.disabled = (S.t2.fase !== "klar" && S.t2.fase !== "faerdig");
-  } else if(S.trin === 3){
-    elKoer.hidden = false;
-    elKoerTekst.textContent = S.t3.koerer ? "Måler …" : (S.t3.faerdig ? "Kør igen" : "Start målingen");
-    elKoer.disabled = S.t3.koerer;
-  } else {
-    elKoer.hidden = true;
-  }
-}
-
-function skiftTrin(n){
-  S.trin = n;
-  var knapper = elTrinNav.querySelectorAll("button");
-  for(var i=0;i<knapper.length;i++){
-    knapper[i].setAttribute("aria-selected", knapper[i].dataset.trin === String(n) ? "true" : "false");
-  }
-  elHook.textContent = HOOKS[n];
-
-  elBoksTvaer.hidden = (n === 4);
-  elBoksInstr.hidden = (n === 4);
-  elBoksGraf.hidden  = (n !== 3);
-  elBoksSaml.hidden  = (n !== 4);
-  elGrid.dataset.bred = (n === 4) ? "1" : "0";
-
-  elInstrumentTitel.textContent = n===1 ? "Så store er kornene i virkeligheden"
-                                : n===2 ? "Måleglasset — porøsitetsforsøget"
-                                : "Tragt, filter og måleglas — nedsivningsforsøget";
-
-  if(n === 2){ S.t2.fase = "klar"; S.t2.t = 0; }
-  if(n === 3){ nulstilT3(); }
-  if(n >= 2 && !document.getElementById("ppFag").open) document.getElementById("ppFag").open = true;
-
-  opdaterKnap();
-  opdaterTal();
-  opdaterForklaring();
-  requestAnimationFrame(function(){ nyPakning(); });
-}
-
-var ventPaaPakning = null;
+var venter = 0;
 function skyderneAendret(){
-  S.harRoert = true;
-  S.p = parseFloat(elSkyderKorn.value);
-  S.u = parseFloat(elSkyderSort.value);
+  S.p = parseFloat(el.inpKorn.value);
+  S.u = klem(1 - parseFloat(el.inpSort.value)/100, 0, 1);
   S.m = beregn(S.p, S.u);
-  opdaterZoner();
-  /* Nulstil målingerne — prøven er jo en anden nu */
-  S.t2.fase = "klar"; S.t2.t = 0;
-  nulstilT3();
+  nulstilVand();
   opdaterKnap();
-  /* Pakningen er det dyre; den laves i næste billede, så skyderen ikke hakker */
-  if(ventPaaPakning) cancelAnimationFrame(ventPaaPakning);
-  ventPaaPakning = requestAnimationFrame(function(){
+  opdaterInstrumenter();
+  /* Pakningen er det dyre; den bygges i næste billede, så skyderen ikke hakker */
+  if(venter) cancelAnimationFrame(venter);
+  venter = requestAnimationFrame(function(){
+    venter = 0;
     nyPakning();
-    opdaterTal();
-    opdaterForklaring();
+    opdaterInstrumenter();
+    fortael();
+    opdaterSr();
+    skalTegne = true;
   });
-  opdaterTal();
-  opdaterForklaring();
+  fortael();
+  gemTilstand();
 }
 
-elSkyderKorn.addEventListener("input", skyderneAendret);
-elSkyderSort.addEventListener("input", skyderneAendret);
+el.inpKorn.addEventListener("input", skyderneAendret);
+el.inpSort.addEventListener("input", skyderneAendret);
 
-elZoner.addEventListener("click", function(e){
+el.klasser.addEventListener("click", function(e){
   var b = e.target.closest("button");
   if(!b) return;
-  elSkyderKorn.value = b.dataset.p;
+  el.inpKorn.value = b.dataset.p;
   skyderneAendret();
 });
 
-elTrinNav.addEventListener("click", function(e){
-  var b = e.target.closest("button");
-  if(!b) return;
-  skiftTrin(parseInt(b.dataset.trin,10));
-});
-
-elKoer.addEventListener("click", function(){
-  if(S.trin === 2){
-    S.t2.fase = "haelder"; S.t2.t = 0;
-  } else if(S.trin === 3){
-    nulstilT3();
-    S.t3.koerer = true;
-  }
+el.btnVand.addEventListener("click", function(){
+  nulstilVand();
+  S.vand.koerer = true;
   opdaterKnap();
-  opdaterForklaring();
+  fortael();
+  opdaterInstrumenter();
 });
 
-/* Danske jordprøver som genveje */
-var PROEVER = {
-  smeltevandssand: { p:0.64, u:0.07, trin:3 },
-  moraeneler:      { p:0.44, u:0.93, trin:1 },
-  aadalsler:       { p:0.12, u:0.14, trin:2 },
-  raastofgrus:     { p:0.88, u:0.09, trin:3 }
-};
-elProeve.addEventListener("change", function(){
-  var v = PROEVER[elProeve.value];
-  if(!v) return;
-  saetOp(v.p, v.u);
-});
-
-/* Genveje fra elevopgaverne */
-var FORUDSAET = {
-  sand:      { p:0.62, u:0.06, trin:1 },
-  ler:       { p:0.12, u:0.08, trin:2 },
-  grus:      { p:0.88, u:0.06, trin:3 },
-  usorteret: { p:0.62, u:0.90, trin:1 }
-};
-document.getElementById("ppOpgaver").addEventListener("click", function(e){
-  var b = e.target.closest("button[data-forudsaet]");
-  if(!b) return;
-  var v = FORUDSAET[b.dataset.forudsaet];
-  if(!v) return;
-  saetOp(v.p, v.u, v.trin);
-  document.getElementById("ppSceneGrid").scrollIntoView({ behavior:"smooth", block:"start" });
-});
-
-function saetOp(p, u, trin){
-  elSkyderKorn.value = p;
-  elSkyderSort.value = u;
-  skyderneAendret();
-  if(trin) skiftTrin(trin);
+/* Projektortilstand */
+var btnProjektor = document.getElementById("btn-projektor");
+function saetProjektor(til){
+  document.body.setAttribute("data-projektor", til ? "1" : "0");
+  btnProjektor.setAttribute("aria-pressed", til ? "true" : "false");
 }
-
-/* Hjælp */
-var elOverlay = document.getElementById("ppOverlay");
-document.getElementById("ppHjaelp").addEventListener("click", function(){ elOverlay.hidden = false; });
-document.getElementById("ppLuk").addEventListener("click", function(){ elOverlay.hidden = true; });
-elOverlay.addEventListener("click", function(e){ if(e.target === elOverlay) elOverlay.hidden = true; });
-document.addEventListener("keydown", function(e){ if(e.key === "Escape") elOverlay.hidden = true; });
-
-/* Forfra */
-document.getElementById("ppForfra").addEventListener("click", function(){
-  elProeve.selectedIndex = 0;
-  saetOp(0.62, 0.08, 1);
+btnProjektor.addEventListener("click", function(){
+  saetProjektor(document.body.getAttribute("data-projektor") !== "1");
 });
 
-/* Ændret vinduesstørrelse -> ny pakning (den afhænger af lærredets bredde) */
-var venterResize = null;
-window.addEventListener("resize", function(){
-  clearTimeout(venterResize);
-  venterResize = setTimeout(function(){ nyPakning(); }, 160);
-});
+/* ── Deling: tilstanden ligger i adressen ───────────────
+   #k=kornstørrelse (0-1), #s=sortering i procent.
+   De samme nøgler accepteres som query, så et link kan deles direkte. */
+var hashTimer = 0, hashSidste = "";
+function tilstandStreng(){
+  return "#k=" + parseFloat(el.inpKorn.value) + "&s=" + parseFloat(el.inpSort.value);
+}
+function gemTilstand(){
+  var h = tilstandStreng();
+  if(h === hashSidste) return;
+  hashSidste = h;
+  clearTimeout(hashTimer);
+  hashTimer = setTimeout(function(){
+    if(location.hash !== h) history.replaceState(null, "", h);
+  }, 400);
+}
+function laesTilstand(){
+  var p = new URLSearchParams(location.search);
+  new URLSearchParams(location.hash.replace(/^#/, "")).forEach(function(v,k){ p.set(k,v); });
+
+  function tal(raa, min, max){
+    var v = parseFloat(raa);
+    return isFinite(v) ? Math.max(min, Math.min(max, v)) : null;
+  }
+  var k = tal(p.get("k"), 0, 1);
+  var s = tal(p.get("s"), 0, 100);
+  if(k !== null) el.inpKorn.value = k;
+  if(s !== null) el.inpSort.value = s;
+
+  S.p = parseFloat(el.inpKorn.value);
+  S.u = klem(1 - parseFloat(el.inpSort.value)/100, 0, 1);
+  hashSidste = tilstandStreng();
+
+  if(/mode=teach|projektor=1/.test(location.search)) saetProjektor(true);
+}
 
 /* ════════════════════════════════════════════════════════════════════════
    START
    ════════════════════════════════════════════════════════════════════════ */
+laesTilstand();
 S.m = beregn(S.p, S.u);
-skiftTrin(1);
 nyPakning();
-opdaterZoner();
-opdaterTal();
-opdaterForklaring();
+nulstilVand();
+opdaterKnap();
+opdaterInstrumenter();
+fortael();
+opdaterSr();
 requestAnimationFrame(loop);
+
+/* Målestokkens skrift er IBM Plex Mono — tegn igen, når den er hentet */
+if(document.fonts && document.fonts.ready){
+  document.fonts.ready.then(function(){ skalTegne = true; });
+}
 
 })();
 </script>
