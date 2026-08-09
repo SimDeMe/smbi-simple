@@ -4,7 +4,7 @@ Status pr. 9. august 2026. Skabelonen er beskrevet i `CLAUDE.md`.
 Forlæg: `index.html` + `forside.css`, `geografi/Stigningsregn.html`,
 `geografi/drivhuseffektenSimpel.html`.
 
-**Lagt om: 7 sider. Tilbage: 41.**
+**Lagt om: 8 sider. Tilbage: 40.**
 
 Rækkefølgen nedenfor er valgt efter, hvad eleverne og du selv møder oftest,
 ikke efter hvad der er nemmest.
@@ -55,7 +55,7 @@ Nye/ændrede tokens i `forside.css`: `.head`, `.soeg`, `.videos`, `.sr`,
 
 ## Etape 2 — de tunge geografi-simulationer
 
-De resterende fire har deres eget ad-hoc-formsprog med filspecifikt præfiks
+De resterende tre har deres eget ad-hoc-formsprog med filspecifikt præfiks
 (`--dh-*`, `--gp-*` …) og den gamle flydende `.smbi-home`-knap.
 
 > **Krav ved hver enkelt:** modellen skal være **uændret**. Kontrollér mod den
@@ -123,9 +123,39 @@ printarket. Kun rammen er ny.
   tre temperaturer, plus `DATA.trin` og `DATA.opgaver` ord for ord, målt mod
   udgaven i `HEAD`.
 
+### ✅ 5 — `geografi/TermiskTryk3.html` (færdig)
+
+Lagt om fra 1210 til 1625 linjer. Vintage-temaet (`--cream`, `--navy`,
+Cormorant Garamond) og de tre løse spalter er væk; alt bor nu i ét `.rig`.
+
+* **Panelet i rækkefølge:** `.rig-bar`, `.rig-head` (status, `Fri simulation` /
+  `Trin for trin`, `Nulstil case`, `Projektor`), case-rækken med beskrivelsen,
+  `.stage` med kanvasset, trin-navigationen, kausalkæden, `.gauges`, `.knobs`
+  og `.facts`. Den flydende `.smbi-home` er erstattet af topbjælken.
+* **Kausalkæden er blevet knapper** i to spalter — de kan nås med tastatur,
+  markerer det aktive trin med `aria-current` og dæmper de trin, man endnu
+  ikke er nået til.
+* **Instrumenterne** er fire: venstre felt, højre felt, ΔT med udslag til
+  begge sider af nulpunktet og overfladevinden. Hver med sin lyse baggrund.
+* **Figuren er malet om i sidens palette** — blækstreger, papirfarver, H/L som
+  runde mærker med både bogstav og ordet *højtryk*/*lavtryk*, uforstyrret
+  reference stiplet over for den fuldt optrukne trykflade. Himlen fylder hele
+  figuren, så nattetonen ikke efterlader en lys ramme.
+* **Rammen står stille:** case-teksten, vindteksten og statuslinjen måles over
+  alle varianter ved indlæsning og låses; målingen gentages ved `resize`,
+  projektorskift og `document.fonts.ready`. Panelet står på 1741 px gennem
+  alle fire cases og alle seks trin.
+* `Fysikken bag`, `Tjek dig selv` og `Til underviseren` er fjernet.
+* Deling: `#case=sibirien&trin=4&t=2.00`, som også accepteres som query.
+  `?projektor=1` / `?mode=teach` virker som på `Stigningsregn.html`.
+* Modellen er **uændret: 0 afvigelser over 298.543 sammenlignede værdier
+  fordelt på 96.182 inputkombinationer** — `stepTemps`, `derive`, `jumpToTime`,
+  `surfTempAt`, `dispAt`, `crossoverZ` og `cellVel` over alle fire cases hen
+  over døgnet, alle ni overfladekombinationer, ekspert-ΔT fra −15 til +15 og
+  alle gate-trin, målt mod udgaven i `HEAD`.
+
 | # | Fil | Linjer | Indhold | Bemærkning |
 | --- | --- | --- | --- | --- |
-| 5 | `geografi/TermiskTryk3.html` | 1210 | canvas + svg, 6 skydere | Klassisk `.rig`-opsætning — `Stigningsregn.html` passer næsten 1:1. |
 | 6 | `geografi/groenlandspumpen.html` | 1153 | canvas + 15 svg, 2 skydere | Mange SVG-lag; afsæt tid til `<title>`/`<desc>` og stregtype som andet signal end farve. |
 | 7 | `geografi/straalingsbalance.html` | 966 | 2 svg, 6 skydere | Ren instrumentside — `.gauges` + `.knobs`. |
 | 8 | `geografi/Dugpunkt.html` | 324 | canvas + svg, 2 skydere | Mindst af dem. God at tage som opvarmning, hvis etape 2 skal deles op. |
@@ -230,11 +260,10 @@ side i stedet for som en separat runde.
 
 ## Næste arbejdsgang
 
-**Etape 2, punkt 5:** `TermiskTryk3.html` (1210 linjer). Klassisk
-`.rig`-opsætning med canvas og seks skydere — `Stigningsregn.html` passer
-næsten 1:1, så den burde være hurtigere end de tre foregående. Modellen skal
-stadig kontrolleres mod den gamle udgave over et gitter af inputkombinationer,
-før den kaldes færdig.
+**Etape 2, punkt 6:** `groenlandspumpen.html` (1153 linjer). Mange SVG-lag —
+afsæt tid til `<title>`/`<desc>` og til at give hvert lag et andet signal end
+farven. Modellen skal kontrolleres mod den gamle udgave over et gitter af
+inputkombinationer, før den kaldes færdig.
 
 Alternativt `Dugpunkt.html` (324 linjer) som en kort omgang, hvis der kun er
 tid til én.

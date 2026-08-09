@@ -208,22 +208,6 @@ canvas{
   display:block;width:100%;
   border:2px solid var(--ink);border-radius:12px;background:var(--paper);
 }
-.proc{
-  position:absolute;left:24px;top:24px;z-index:2;pointer-events:none;
-  display:inline-flex;align-items:center;gap:9px;max-width:min(70%,460px);
-  background:#fff;border:2px solid var(--ink);border-radius:22px;
-  padding:6px 14px 6px 11px;box-shadow:3px 3px 0 var(--ink);
-}
-.proc-dot{
-  width:11px;height:11px;border-radius:4px;flex:none;
-  border:1.5px solid var(--ink);background:var(--pc,var(--accent));
-}
-.proc-txt{font-family:var(--display);font-size:0.8rem;font-weight:700;line-height:1.25}
-.proc-tag{
-  font-family:var(--mono);font-size:0.56rem;font-weight:600;letter-spacing:0.12em;
-  text-transform:uppercase;color:var(--ink);background:var(--paper-2);
-  border:1.5px solid var(--ink);border-radius:12px;padding:2px 8px;flex:none;
-}
 
 /* ── Trin-navigation ───────────────────────────────────── */
 .steps{
@@ -426,7 +410,7 @@ body[data-projektor="1"] .gauge dd{font-size:1.9rem}
 body[data-projektor="1"] .gauge dd small{font-size:0.95rem}
 body[data-projektor="1"] .g-sub{font-size:0.68rem}
 body[data-projektor="1"] .g-sub b{font-size:0.95rem}
-body[data-projektor="1"] .proc-txt{font-size:1.05rem}
+body[data-projektor="1"] .rig-live .mono{font-size:0.9rem}
 body[data-projektor="1"] .chain-btn{font-size:1.02rem}
 body[data-projektor="1"] .case-desc{font-size:1.05rem}
 body[data-projektor="1"] .knob-top .mono{font-size:0.8rem}
@@ -443,7 +427,6 @@ body[data-projektor="1"] .fact b{font-size:0.92rem}
   .gauges{grid-template-columns:1fr 1fr}
   .gauge:nth-child(3){border-left:none}
   .gauge:nth-child(n+3){border-top:2px solid var(--ink)}
-  .proc{max-width:calc(100% - 48px)}
 }
 @media (max-width:620px){
   body{font-size:16px}
@@ -451,8 +434,7 @@ body[data-projektor="1"] .fact b{font-size:0.92rem}
   .head{padding:24px 0 18px}
   .rig{border-radius:14px;box-shadow:var(--hard)}
   .stage{padding:10px}
-  .proc{left:18px;top:18px;padding:5px 11px 5px 9px}
-  .proc-txt{font-size:0.72rem}
+  .rig-live .mono{font-size:0.6rem}
   .gauge dd{font-size:1.1rem}
   .two-col{grid-template-columns:1fr}
 }
@@ -495,7 +477,7 @@ body[data-projektor="1"] .fact b{font-size:0.92rem}
       <div class="rig-bar"></div>
 
       <div class="rig-head">
-        <span class="rig-live"><span class="dot"></span><span class="mono">Live model</span></span>
+        <span class="rig-live"><span class="dot"></span><span class="mono" id="live-txt">Lillebælt · land/hav-brise · kl. 13:00</span></span>
         <button type="button" class="btn-mini" id="mode-fri" aria-pressed="true">Fri simulation</button>
         <button type="button" class="btn-mini" id="mode-trin" aria-pressed="false">Trin for trin</button>
         <button type="button" class="btn-mini" id="btn-reset">Nulstil case</button>
@@ -518,11 +500,6 @@ body[data-projektor="1"] .fact b{font-size:0.92rem}
       <div class="stage" id="stage">
         <canvas id="stage-canvas" role="img"
                 aria-label="Vertikalt snit gennem atmosfæren fra jorden til 3 km. To overflader side om side, trykflader, høj- og lavtryk samt cirkulationspile. Aflæsningerne står i instrumenterne under figuren."></canvas>
-        <div class="proc" id="proc" style="--pc:var(--accent)">
-          <span class="proc-dot"></span>
-          <span class="proc-txt" id="proc-txt">Lillebælt · land/hav-brise</span>
-          <span class="proc-tag" id="proc-clock">kl. 13:00</span>
-        </div>
       </div>
 
       <div class="steps">
@@ -772,7 +749,8 @@ const stageEl = document.getElementById('stage');
 const ctx = canvas.getContext('2d');
 let W = 900, H = 480, DPR = 1;
 
-const PAD = { l: 52, r: 62, t: 14 };
+// t giver luft over den øverste trykflade, så H/L i højden ikke klemmes op mod kanten
+const PAD = { l: 52, r: 62, t: 40 };
 const GROUND_H = 56;
 let plotW, plotH, groundY;
 
@@ -1027,7 +1005,7 @@ function drawSky() {
   if (t > 5.5 && t < 18.5) {
     // sol vandrer hen over himlen
     const sx = X(clamp((t - 6) / 12, 0.02, 0.98));
-    const sy = PAD.t + 28;
+    const sy = 24;               // solen står i luftrummet over snittet
     ctx.strokeStyle = '#17211F';
     ctx.lineWidth = 2;
     for (let i = 0; i < 12; i++) {
@@ -1044,7 +1022,7 @@ function drawSky() {
     // måne
     const mt = (t < 6 ? t + 24 : t); // 18.5..30
     const mx = X(clamp((mt - 19) / 10, 0.02, 0.98));
-    const my = PAD.t + 28;
+    const my = 24;
     ctx.save();
     ctx.beginPath(); ctx.arc(mx, my, 11, 0, 7);
     ctx.fillStyle = '#FFF6E0'; ctx.fill();
@@ -1060,13 +1038,15 @@ function drawSky() {
 function drawHeatGlow(s) {
   if (Math.abs(s) < 0.03) return;
   const warmLeft = s > 0;
+  // rund glød, så den toner ud til alle sider og ikke efterlader synlige kanter
   [[0.25, warmLeft], [0.75, !warmLeft]].forEach(([cx, isWarm]) => {
-    const g = ctx.createLinearGradient(0, groundY, 0, groundY - plotH * 0.30);
+    const r = Math.max(plotW * 0.24, plotH * 0.34);
+    const g = ctx.createRadialGradient(X(cx), groundY, 0, X(cx), groundY, r);
     const col = isWarm ? '255,106,61' : '14,134,200';
     g.addColorStop(0, `rgba(${col},${0.26 * Math.abs(s)})`);
     g.addColorStop(1, `rgba(${col},0)`);
     ctx.fillStyle = g;
-    ctx.fillRect(X(cx - 0.24), groundY - plotH * 0.30, plotW * 0.48, plotH * 0.30);
+    ctx.fillRect(X(cx) - r, groundY - r, r * 2, r);
   });
 }
 
@@ -1255,8 +1235,7 @@ function tempFarve(t) {
 function updateReadouts(d) {
   const ur = clockStr();
   $('clock').textContent = ur;
-  $('proc-clock').textContent = ur;
-  $('proc-txt').textContent = CASE_NAVNE[state.caseId];
+  $('live-txt').textContent = CASE_NAVNE[state.caseId] + ' · ' + ur;
   $('inst-name-l').textContent = state.labelL;
   $('inst-name-r').textContent = state.labelR;
   $('temp-l').innerHTML = fmt1(state.tL) + '<small>°C</small>';
@@ -1355,7 +1334,18 @@ const VIND_TEKSTER = [
   'Havbrise — pålandsvind (hav → land)',
   'Landbrise — fralandsvind (land → hav)',
 ];
+function maalBredeste(el, tekster) {
+  const org = el.textContent;
+  el.style.minWidth = '';
+  let maks = 0;
+  tekster.forEach(t => { el.textContent = t; maks = Math.max(maks, el.offsetWidth); });
+  el.textContent = org;
+  el.style.minWidth = maks + 'px';
+}
+
 function laasHoejder() {
+  // statuslinjen må ikke ombryde forskelligt fra case til case
+  maalBredeste($('live-txt'), Object.values(CASE_NAVNE).map(n => n + ' · kl. 00:00'));
   maalHoejeste($('case-desc'), Object.values(CASES).map(c => c.desc));
   maalHoejeste($('wind-name'), VIND_TEKSTER.concat([
     'Overfladevind mod ' + state.labelL,

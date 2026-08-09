@@ -30,8 +30,9 @@ skal følge skabelonen herunder. Kopiér fra en side, der allerede er lagt om.
 | `geografi/Stigningsregn.html` | simulering med canvas + skydere + instrumenter |
 | `geografi/drivhuseffektenSimpel.html` | trinvis SVG-figur med forklaringsspalte |
 
-Lagt om indtil videre: forsiden, `Stigningsregn.html`,
-`drivhuseffektenSimpel.html`. Resten af `geografi/`, `biologi/` og
+Lagt om indtil videre: forsiden, fagforsiderne, `Stigningsregn.html`,
+`drivhuseffektenSimpel.html`, `drivhuseffekten.html`,
+`poroesitetPermeabilitet.html`, `TermiskTryk3.html`. Resten af `geografi/`, `biologi/` og
 `style.css`-siderne kører stadig det gamle design — rør dem kun, når opgaven
 handler om dem.
 
