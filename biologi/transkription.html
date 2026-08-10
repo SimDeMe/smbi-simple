@@ -1,712 +1,1634 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="da">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Transkription i Eukaryote Celler</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f7f6;
-            color: #333;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin: 0;
-            height: 100vh;
-            overflow: hidden;
-            user-select: none;
-        }
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fra gen til protein — smbi.dk</title>
+<meta name="description" content="Interaktiv figur til biologi C: det centrale dogme fra DNA over mRNA til protein — transkription, transport ud af kernen, translation og virkningen af en mutation.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,300..600&display=swap" rel="stylesheet">
+<style>
+/* ─────────────────────────────────────────────────────────
+   Fra gen til protein — det centrale dogme, trin for trin.
+   Sidens krom (topbjælke, sidehoved, signaturpanel, bund) følger
+   smbi.dk's designskabelon. Figurens egne dele har cd-præfiks
+   (centrale dogme), så de ikke kolliderer med sidens klasser.
+   ───────────────────────────────────────────────────────── */
+:root{
+  --paper:#FFF9EE;
+  --paper-2:#FFF3DC;
+  --panel:#FFFFFF;
+  --ink:#17211F;
+  --slate:#566B68;
 
-        header {
-            background: #fff;
-            width: 100%;
-            padding: 15px 0;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            text-align: center;
-            position: relative;
-            z-index: 10;
-        }
+  --pink:#E8336D;
+  --blue:#0E86C8;
+  --lime:#5FB030;
+  --amber:#FFB300;
+  --grape:#7A4FD6;
+  --coral:#FF6A3D;
+  --teal:#0FA593;
 
-        h1 { margin: 0; font-size: 1.5rem; color: #2c3e50; }
-        .subtitle { font-size: 0.9rem; color: #7f8c8d; margin-top: 5px; }
+  --bio:var(--pink);
+  --accent:var(--bio);
 
-        /* Status Bar */
-        #status-bar {
-            margin-top: 10px;
-            display: flex;
-            gap: 20px;
-            font-size: 0.9rem;
-            font-weight: bold;
-            color: #bdc3c7;
-        }
-        .status-step { padding: 5px 10px; border-radius: 15px; transition: all 0.3s; }
-        .status-step.active { background-color: #3498db; color: white; box-shadow: 0 2px 5px rgba(52, 152, 219, 0.4); }
+  --display:'Archivo',system-ui,sans-serif;
+  --body:'Source Serif 4',Georgia,serif;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
 
-        /* Game Area */
-        #game-container {
-            flex-grow: 1;
-            width: 100%;
-            max-width: 1000px;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
+  --wide:'wdth' 118;
+  --max:1180px;
 
-        svg {
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle at center, #ffffff 0%, #f0f2f5 100%);
-            border-radius: 8px;
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.02);
-        }
+  --hard:4px 4px 0 var(--ink);
+  --hard-lg:7px 7px 0 var(--ink);
+}
 
-        /* Inventory / Tools */
-        #inventory {
-            background: #fff;
-            width: 100%;
-            padding: 15px 0;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
-            display: flex;
-            justify-content: center;
-            gap: 30px;
-            z-index: 10;
-            height: 120px;
-        }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--body);
+  font-size:17px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+a{color:inherit}
+[hidden]{display:none!important}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--grape);outline-offset:3px;border-radius:4px}
 
-        .tool-group {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-            padding: 0 15px;
-            border-right: 1px solid #eee;
-        }
-        .tool-group:last-child { border-right: none; }
-        .tool-label { font-size: 0.8rem; color: #7f8c8d; text-transform: uppercase; letter-spacing: 1px; }
+.mono{
+  font-family:var(--mono);font-size:0.68rem;font-weight:500;
+  letter-spacing:0.14em;text-transform:uppercase;
+}
+.sr{
+  position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+  overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;
+}
 
-        /* Draggable Items (DOM overlay for inventory, but we use SVG for game) 
-           Actually, we will draw inventory items in SVG to allow seamless drag from bottom to top.
-           So #inventory is just a visual container background.
-        */
-        #inventory { position: absolute; bottom: 0; }
+/* ── Topbjælke ─────────────────────────────────────────── */
+.rainbow{
+  height:7px;
+  background:linear-gradient(90deg,
+    var(--pink) 0 14.3%, var(--coral) 14.3% 28.6%, var(--amber) 28.6% 42.9%,
+    var(--lime) 42.9% 57.2%, var(--teal) 57.2% 71.5%, var(--blue) 71.5% 85.8%,
+    var(--grape) 85.8% 100%);
+}
+.top{position:sticky;top:0;z-index:60}
+.top-bar{
+  background:rgba(255,249,238,0.93);
+  backdrop-filter:blur(10px);
+  border-bottom:2px solid var(--ink);
+}
+.top-in{
+  max-width:var(--max);margin:0 auto;padding:0 32px;
+  display:flex;align-items:center;gap:16px;height:60px;
+}
+.brand{
+  font-family:var(--display);font-variation-settings:'wdth' 125;
+  font-weight:800;font-size:1.15rem;letter-spacing:-0.02em;
+  text-decoration:none;display:flex;align-items:center;gap:8px;
+}
+.brand-mark{
+  width:25px;height:25px;border-radius:9px;border:2px solid var(--ink);
+  background:conic-gradient(var(--pink),var(--amber),var(--lime),var(--blue),var(--grape),var(--pink));
+  flex-shrink:0;
+}
+.brand em{font-family:var(--mono);font-size:0.72rem;font-weight:500;font-style:normal;color:var(--slate)}
+.top-nav{display:flex;gap:6px;margin-left:auto}
+.top-nav a{
+  font-family:var(--display);font-size:0.84rem;font-weight:600;
+  text-decoration:none;color:var(--ink);white-space:nowrap;
+  padding:7px 14px;border-radius:20px;border:2px solid transparent;
+  transition:background .15s,border-color .15s;
+}
+.top-nav a:hover{background:#FBD3E1;border-color:var(--ink)}
 
-        /* Tooltip */
-        #tooltip {
-            position: absolute;
-            background: rgba(44, 62, 80, 0.9);
-            color: white;
-            padding: 8px 12px;
-            border-radius: 4px;
-            font-size: 0.85rem;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.2s;
-            z-index: 100;
-            max-width: 200px;
-        }
+/* ── Sidehoved ─────────────────────────────────────────── */
+.wrap{max-width:var(--max);margin:0 auto;padding:0 32px}
+.head{padding:34px 0 22px;position:relative;overflow:hidden}
+.head::before{
+  content:'';position:absolute;width:380px;height:380px;border-radius:50%;
+  background:#FBD3E1;filter:blur(70px);opacity:.6;top:-200px;right:-120px;z-index:0;
+}
+.head-in{position:relative;z-index:1}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--ink);color:#FFF6E0;padding:6px 14px;border-radius:20px;
+}
+.eyebrow .blink{width:8px;height:8px;border-radius:50%;background:var(--amber);animation:pulse 1.8s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.8)}}
+h1{
+  font-family:var(--display);font-variation-settings:var(--wide);font-weight:800;
+  font-size:clamp(2rem,4.6vw,2.9rem);line-height:1.03;letter-spacing:-0.032em;
+  margin:16px 0 14px;
+}
+.hi{position:relative;display:inline-block;z-index:0;white-space:nowrap}
+.hi::before{
+  content:'';position:absolute;z-index:-1;left:-8px;right:-8px;top:12%;bottom:8%;
+  background:var(--hc,var(--amber));border-radius:6px;transform:rotate(-1.3deg);
+}
+.lead{font-size:1.06rem;color:#3E4E4C;max-width:58ch}
 
-        /* Reset Button */
-        #btn-reset {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: #e74c3c;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        #btn-reset:hover { background: #c0392b; }
+/* ── Signaturpanelet ───────────────────────────────────── */
+.rig{
+  position:relative;
+  background:var(--panel);
+  border:2.5px solid var(--ink);border-radius:18px;overflow:hidden;
+  box-shadow:var(--hard-lg);
+  margin-top:26px;
+}
+.rig-bar{height:9px;background:var(--accent)}
+.rig-head{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:11px 15px;border-bottom:2px solid var(--ink);
+  background:#FBD3E1;
+}
+.rig-live{display:flex;align-items:center;gap:7px}
+.rig-live .mono{color:var(--ink);font-weight:600}
+.dot{
+  width:9px;height:9px;border-radius:50%;background:var(--accent);
+  border:1.5px solid var(--ink);animation:pulse 2s ease-in-out infinite;
+}
+.rig-tools{display:flex;gap:7px;flex-wrap:wrap;margin-left:auto}
+.btn-mini{
+  font-family:var(--display);font-size:0.74rem;font-weight:700;color:var(--ink);
+  text-decoration:none;white-space:nowrap;
+  background:#fff;border:2px solid var(--ink);border-radius:18px;
+  padding:5px 13px;cursor:pointer;box-shadow:2px 2px 0 var(--ink);
+  transition:transform .12s,box-shadow .12s,background .15s;
+}
+.btn-mini:hover{transform:translate(-1px,-1px);box-shadow:3px 3px 0 var(--ink);background:var(--amber)}
+.btn-mini:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--ink)}
+.btn-mini[aria-pressed="true"]{background:var(--amber)}
+.btn-mini:disabled{opacity:.35;cursor:not-allowed;box-shadow:1px 1px 0 var(--ink);transform:none}
 
-        /* SVG Styles */
-        .dna-backbone { stroke: #2980b9; stroke-width: 4; fill: none; stroke-linecap: round; }
-        .dna-base-line { stroke: #bdc3c7; stroke-width: 2; }
-        .dna-text { font-family: monospace; font-weight: bold; font-size: 14px; fill: #2c3e50; text-anchor: middle; dominant-baseline: middle; }
-        
-        .rna-backbone { stroke: #e67e22; stroke-width: 4; fill: none; stroke-linecap: round; }
-        .rna-text { font-family: monospace; font-weight: bold; font-size: 14px; fill: #d35400; text-anchor: middle; dominant-baseline: middle; }
+/* ── To spalter: figur + forklaring ────────────────────── */
+.rig-body{display:grid;grid-template-columns:minmax(0,1.62fr) minmax(302px,.9fr);align-items:stretch}
 
-        .molecule { cursor: grab; transition: filter 0.2s; }
-        .molecule:hover { filter: brightness(1.1); }
-        .molecule:active { cursor: grabbing; }
-        
-        .highlight-zone { fill: rgba(46, 204, 113, 0.2); stroke: #2ecc71; stroke-dasharray: 5; display: none; }
-        .highlight-zone.visible { display: block; animation: pulse 1.5s infinite; }
+.stage{
+  position:relative;              /* basemenuen placeres i forhold til denne */
+  padding:10px 10px 8px;
+  border-right:2px solid var(--ink);
+  background:radial-gradient(circle at 1px 1px,#E6EDEB 1px,transparent 0) 0 0/16px 16px;
+  display:flex;flex-direction:column;justify-content:center;
+}
+.cd-scene{display:block;width:100%;height:auto;border:2px solid var(--ink);border-radius:12px;background:#FFFDF7}
+.cd-scene-rul{
+  display:none;padding:6px 2px 0;
+  font-family:var(--mono);font-size:0.58rem;font-weight:600;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--slate);
+}
 
-        @keyframes pulse {
-            0% { opacity: 0.3; }
-            50% { opacity: 0.7; }
-            100% { opacity: 0.3; }
-        }
+/* ── Forklaringsspalten ────────────────────────────────── */
+.side{
+  background:var(--paper-2);
+  padding:18px 20px 18px;
+  display:flex;flex-direction:column;gap:12px;
+}
+.side-tael{
+  display:inline-flex;align-items:center;gap:8px;align-self:flex-start;
+  font-family:var(--mono);font-size:0.6rem;font-weight:600;letter-spacing:0.12em;
+  text-transform:uppercase;color:#fff;background:var(--accent);
+  border:2px solid var(--ink);border-radius:14px;padding:3px 11px;
+}
+.side-titel{
+  font-family:var(--display);font-variation-settings:'wdth' 112;font-weight:800;
+  font-size:1.4rem;line-height:1.12;letter-spacing:-0.02em;margin-top:7px;
+}
+.side-kort{
+  font-family:var(--display);font-size:0.96rem;font-weight:700;line-height:1.35;
+  background:#fff;border:2px solid var(--ink);border-radius:12px;
+  box-shadow:3px 3px 0 var(--ink);padding:10px 13px;
+}
+.side-tekst{font-size:0.96rem}
+.side-tekst b{font-weight:600;background:#FBD3E1;box-shadow:0 0 0 2px #FBD3E1;border-radius:2px}
 
-        .fade-in { animation: fadeIn 0.5s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+.paspaa{
+  font-size:0.89rem;padding:11px 13px;border-radius:12px;
+  background:#FFE9DC;border:2px solid var(--ink);
+}
+.paspaa::before{
+  content:"Pas på";display:block;
+  font-family:var(--mono);font-size:0.58rem;font-weight:600;letter-spacing:0.12em;
+  text-transform:uppercase;color:#A8442A;margin-bottom:3px;
+}
+.paspaa b{font-weight:600;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:2px}
 
-    </style>
+/* ── Mutationsboksen (kun trin 5) ──────────────────────── */
+.mut{
+  background:#fff;border:2px solid var(--ink);border-radius:12px;
+  box-shadow:3px 3px 0 var(--ink);padding:11px 13px 12px;
+}
+.mut.er-skjult{display:none}
+.mut-h{
+  font-family:var(--mono);font-size:0.58rem;font-weight:600;letter-spacing:0.12em;
+  text-transform:uppercase;color:var(--slate);
+}
+.mut-raekke{display:flex;gap:4px;flex-wrap:wrap;align-items:center;margin-top:4px;min-height:2.9em}
+.mut-raekke.er-tom{visibility:hidden}
+.mut-navn{
+  font-family:var(--mono);font-size:0.55rem;font-weight:600;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--slate);width:34px;flex:none;
+}
+.chip{
+  font-family:var(--display);font-size:0.7rem;font-weight:700;
+  border:1.5px solid var(--ink);border-radius:9px;padding:1px 6px;background:#FFF3DC;
+}
+.chip.er-stop{background:#FFD9C9}
+.chip.er-aendret{background:var(--amber);box-shadow:2px 2px 0 var(--ink)}
+.chip.er-vaek{background:#fff;border-style:dashed;color:var(--slate)}
+/* Hvilken base der er byttet, står for sig selv på én linje, så dommen
+   nedenunder kan holdes kort. Pladsen til den længste dom står reserveret,
+   så panelet ikke vokser, når man klikker. */
+.mut-hvor{margin-top:8px;color:var(--slate);min-height:1.7em}
+.mut-dom{
+  margin-top:4px;font-size:0.89rem;line-height:1.4;min-height:2.9em;
+}
+.mut-dom b{font-weight:600}
+.mut-dom .stempel{
+  display:inline-block;font-family:var(--display);font-weight:800;font-size:0.78rem;
+  border:2px solid var(--ink);border-radius:9px;padding:0 7px;margin-right:5px;
+  background:var(--dom,#FFF3DC);
+}
+
+/* Læreværktøjerne hænger i bunden, så luften på de korte trin
+   samler sig ét sted i stedet for at flytte knapperne rundt. */
+.stopop{
+  font-size:0.89rem;border:2px dashed var(--ink);border-radius:12px;padding:9px 13px;background:#fff;
+  margin-top:auto;
+}
+.stopop summary{
+  cursor:pointer;list-style:none;
+  font-family:var(--display);font-size:0.85rem;font-weight:700;
+}
+.stopop summary::-webkit-details-marker{display:none}
+.stopop summary::before{content:"▸ ";color:var(--accent)}
+.stopop[open] summary::before{content:"▾ "}
+.stopop-krop{margin-top:7px}
+
+.nav{display:flex;gap:9px;align-items:center;padding-top:6px}
+.btn{
+  font-family:var(--display);font-size:0.88rem;font-weight:700;
+  border:2px solid var(--ink);border-radius:24px;padding:8px 17px;
+  background:#fff;color:var(--ink);cursor:pointer;box-shadow:var(--hard);
+  transition:transform .12s,box-shadow .12s,background .15s;
+}
+.btn:hover:not(:disabled){transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--ink)}
+.btn:active:not(:disabled){transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.btn:disabled{opacity:.35;cursor:not-allowed;box-shadow:2px 2px 0 var(--ink)}
+.btn-primaer{background:var(--accent);color:#fff;margin-left:auto}
+
+.prikker{display:flex;gap:7px;justify-content:center}
+.prikker button{
+  width:28px;height:28px;border-radius:50%;cursor:pointer;padding:0;
+  border:2px solid var(--ink);background:#fff;
+  font-family:var(--display);font-size:0.76rem;font-weight:800;color:var(--ink);
+  transition:background .15s,transform .12s;
+}
+.prikker button:hover{background:#FBD3E1}
+.prikker button[aria-current="true"]{background:var(--ink);color:var(--paper)}
+
+/* ── Instrumenter ──────────────────────────────────────── */
+.gauges{
+  border-top:2px solid var(--ink);
+  display:grid;grid-template-columns:repeat(4,1fr);
+}
+.gauge{
+  padding:9px 13px 10px;background:var(--g,#fff);
+  border-left:2px solid var(--ink);
+}
+.gauge:first-child{border-left:0}
+.gauge dt{
+  font-family:var(--mono);font-size:0.56rem;font-weight:600;letter-spacing:0.11em;
+  text-transform:uppercase;color:#5A6C69;
+}
+.gauge dd{
+  font-family:var(--display);font-variation-settings:'wdth' 108;
+  font-weight:800;font-size:1.28rem;letter-spacing:-0.02em;line-height:1.2;margin-top:1px;
+}
+.gauge dd small{font-size:0.72rem;font-weight:700;color:var(--slate)}
+
+/* ── Skydere og genknap ────────────────────────────────── */
+.knobs{
+  border-top:2px solid var(--ink);background:var(--paper-2);
+  padding:11px 15px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+}
+.knob{display:flex;align-items:center;gap:9px;flex:1 1 240px;min-width:220px}
+.knob label{
+  font-family:var(--mono);font-size:0.58rem;font-weight:600;letter-spacing:0.11em;
+  text-transform:uppercase;color:#5A6C69;white-space:nowrap;
+}
+.knob output{font-family:var(--display);font-weight:800;font-size:0.84rem;width:2.6em}
+input[type=range]{
+  -webkit-appearance:none;appearance:none;background:transparent;
+  flex:1;height:22px;cursor:pointer;
+}
+input[type=range]::-webkit-slider-runnable-track{
+  height:10px;border-radius:6px;border:2px solid var(--ink);
+  background:var(--track,linear-gradient(90deg,#FBD3E1,var(--pink)));
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;
+  width:22px;height:22px;border-radius:50%;margin-top:-8px;
+  background:var(--kc,#fff);border:2px solid var(--ink);box-shadow:2px 2px 0 var(--ink);
+}
+input[type=range]::-moz-range-track{
+  height:10px;border-radius:6px;border:2px solid var(--ink);
+  background:var(--track,linear-gradient(90deg,#FBD3E1,var(--pink)));
+}
+input[type=range]::-moz-range-thumb{
+  width:18px;height:18px;border-radius:50%;
+  background:var(--kc,#fff);border:2px solid var(--ink);box-shadow:2px 2px 0 var(--ink);
+}
+.knob-hint{
+  font-family:var(--mono);font-size:0.58rem;font-weight:600;letter-spacing:0.1em;
+  text-transform:uppercase;color:#5A6C69;margin-left:auto;
+  display:flex;align-items:center;gap:9px;
+}
+
+/* ── Signaturforklaring ────────────────────────────────── */
+.facts{
+  border-top:2px solid var(--ink);background:var(--paper);
+  padding:12px 15px;display:flex;gap:9px;flex-wrap:wrap;align-items:center;
+}
+.fact{
+  display:inline-flex;align-items:center;gap:8px;
+  background:#fff;border:2px solid var(--ink);border-radius:22px;padding:5px 13px;
+  font-family:var(--mono);font-size:0.6rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;
+}
+.fact i{
+  width:15px;height:15px;border:2px solid var(--ink);border-radius:4px;
+  background:var(--f,#fff);flex:none;font-style:normal;
+}
+.fact i.rund{border-radius:50%}
+.fact-txt{
+  font-family:var(--body);font-size:0.85rem;font-weight:400;letter-spacing:0;
+  text-transform:none;color:var(--slate);
+}
+
+/* ── Kodontabellen: flyder over panelet, så rammen står stille ─ */
+.kodontabel{
+  position:absolute;z-index:12;right:14px;top:64px;
+  width:min(452px,calc(100% - 28px));max-height:calc(100% - 92px);overflow:auto;
+  background:var(--paper);border:2.5px solid var(--ink);border-radius:14px;
+  box-shadow:var(--hard-lg);padding:13px 15px 15px;
+}
+.kt-top{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+.kt-top h2{
+  font-family:var(--display);font-variation-settings:'wdth' 112;
+  font-weight:800;font-size:1rem;letter-spacing:-0.02em;
+}
+.kt-top .btn-mini{margin-left:auto}
+.kt table{border-collapse:collapse;width:100%;font-family:var(--mono);font-size:0.56rem}
+.kt th{
+  font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#5A6C69;
+  padding:2px 3px;border-bottom:2px solid var(--ink);
+}
+.kt td{padding:1px 3px;border-bottom:1px solid #E2DCCD;white-space:nowrap}
+.kt td.kt-b1,.kt td.kt-b3{
+  font-weight:600;color:#5A6C69;text-align:center;border-right:2px solid var(--ink);
+}
+.kt td.kt-b3{border-right:0;border-left:2px solid var(--ink)}
+.kt .kt-c{border-radius:4px}
+.kt .kt-c b{font-weight:600}
+.kt .kt-c i{font-style:normal;color:#5A6C69}
+.kt .kt-c.er-start{background:#D6EFC4}
+.kt .kt-c.er-stop{background:#FFD9C9}
+.kt .kt-c.er-nu{background:var(--amber);outline:2px solid var(--ink)}
+.kt-fod{margin-top:8px;font-size:0.8rem;font-family:var(--body);color:var(--slate)}
+
+/* ── Basemenu: bytter én base ud ───────────────────────── */
+.basemenu{
+  position:absolute;z-index:14;transform:translateX(-50%);
+  background:var(--paper);border:2.5px solid var(--ink);border-radius:12px;
+  box-shadow:var(--hard);padding:8px 10px 9px;
+}
+.basemenu p{
+  font-family:var(--mono);font-size:0.55rem;font-weight:600;letter-spacing:0.1em;
+  text-transform:uppercase;color:#5A6C69;margin-bottom:5px;white-space:nowrap;
+}
+.basemenu-knapper{display:flex;gap:5px}
+.basemenu button{
+  width:32px;height:32px;border-radius:8px;cursor:pointer;padding:0;
+  border:2px solid var(--ink);background:var(--bf,#fff);
+  font-family:var(--display);font-size:0.9rem;font-weight:800;
+  box-shadow:2px 2px 0 var(--ink);transition:transform .12s,box-shadow .12s;
+}
+.basemenu button:hover{transform:translate(-1px,-1px);box-shadow:3px 3px 0 var(--ink)}
+.basemenu button:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--ink)}
+
+/* ── Dialog ────────────────────────────────────────────── */
+dialog{
+  border:2.5px solid var(--ink);border-radius:18px;padding:0;margin:auto;
+  max-width:640px;width:calc(100% - 32px);
+  background:var(--paper);color:var(--ink);box-shadow:var(--hard-lg);
+}
+dialog::backdrop{background:rgba(23,33,31,.6)}
+.dialog-krop{padding:22px 24px 6px;font-size:0.97rem}
+.dialog-krop h2{
+  font-family:var(--display);font-variation-settings:var(--wide);font-weight:800;
+  font-size:1.5rem;letter-spacing:-0.025em;margin-bottom:.5em;
+}
+.dialog-krop p,.dialog-krop ul{margin-bottom:.75em}
+.dialog-krop ul{padding-left:1.2em}
+.dialog-krop b{font-weight:600;background:#FBD3E1;box-shadow:0 0 0 2px #FBD3E1;border-radius:2px}
+.dialog-fod{padding:0 24px 22px}
+
+/* ── Bund ──────────────────────────────────────────────── */
+.foot{margin-top:34px;background:var(--ink);color:#FFF6E0;padding:26px 0 32px}
+.foot-in{
+  max-width:var(--max);margin:0 auto;padding:0 32px;
+  display:flex;justify-content:space-between;align-items:flex-end;gap:18px;flex-wrap:wrap;
+}
+.foot .brand{color:#FFF6E0}
+.foot .mono{color:#8FA29E;margin-top:5px}
+.foot-links{display:flex;gap:8px;flex-wrap:wrap}
+.foot-links a{
+  font-family:var(--display);font-size:0.82rem;font-weight:700;text-decoration:none;
+  border:2px solid #FFF6E0;border-radius:20px;padding:5px 13px;
+  transition:background .16s,color .16s,border-color .16s;
+}
+.foot-links a:nth-child(1):hover{background:var(--pink);border-color:var(--pink)}
+.foot-links a:nth-child(2):hover{background:var(--amber);border-color:var(--amber);color:var(--ink)}
+.foot-links a:nth-child(3):hover{background:var(--lime);border-color:var(--lime);color:var(--ink)}
+
+/* ── SVG-scenen ────────────────────────────────────────── */
+.cd-scene text{font-family:var(--display)}
+.cd-b{font-weight:800;font-size:14px;fill:var(--ink)}
+.cd-lbl{
+  font-family:'IBM Plex Mono',ui-monospace,monospace;
+  font-size:10px;font-weight:600;letter-spacing:.12em;fill:#566B68;
+}
+.cd-tag{
+  font-family:'IBM Plex Mono',ui-monospace,monospace;
+  font-size:9.5px;font-weight:600;letter-spacing:.05em;fill:var(--ink);
+  paint-order:stroke;stroke:#FFFDF7;stroke-width:3.5px;stroke-linejoin:round;
+}
+.cd-aa{font-weight:800;font-size:11.5px;fill:var(--ink)}
+.cd-celle{cursor:default}
+.cd-klik{cursor:pointer}
+.cd-klik .cd-flade{transition:filter .12s}
+.cd-klik:hover .cd-flade{filter:brightness(.92)}
+.cd-lag{transition:opacity .3s ease}
+.cd-lag[data-vis="skjult"]{opacity:0;pointer-events:none}
+.cd-mrna-lag{transition:transform .55s ease,opacity .3s ease}
+.cd-glid{transition:transform .5s ease}
+
+/* ── Projektortilstand ─────────────────────────────────── */
+body[data-projektor="1"] .top,
+body[data-projektor="1"] .head,
+body[data-projektor="1"] .foot,
+body[data-projektor="1"] .paspaa{display:none}
+body[data-projektor="1"] .wrap{max-width:none;padding:0 14px}
+body[data-projektor="1"] .rig{margin-top:14px;box-shadow:var(--hard)}
+body[data-projektor="1"] .side-titel{font-size:2rem}
+body[data-projektor="1"] .side-kort{font-size:1.32rem}
+body[data-projektor="1"] .side-tekst{font-size:1.22rem}
+body[data-projektor="1"] .mut-dom{font-size:1.1rem}
+body[data-projektor="1"] .chip{font-size:0.92rem}
+body[data-projektor="1"] .stopop{font-size:1.15rem}
+body[data-projektor="1"] .stopop summary{font-size:1.1rem}
+body[data-projektor="1"] .btn{font-size:1.1rem;padding:10px 22px}
+body[data-projektor="1"] .prikker button{width:36px;height:36px;font-size:1rem}
+body[data-projektor="1"] .gauge dd{font-size:1.7rem}
+body[data-projektor="1"] .cd-b{font-size:18px}
+body[data-projektor="1"] .cd-lbl{font-size:12px}
+body[data-projektor="1"] .cd-tag{font-size:11px}
+body[data-projektor="1"] .cd-aa{font-size:13px}
+body[data-projektor="1"] .fact{font-size:0.72rem}
+
+/* ── Responsivt ────────────────────────────────────────── */
+@media (max-width:960px){
+  .rig-body{grid-template-columns:minmax(0,1fr)}
+  .stage{border-right:none;border-bottom:2px solid var(--ink)}
+  .gauges{grid-template-columns:repeat(2,1fr)}
+  .gauge:nth-child(3){border-left:0}
+  .gauge:nth-child(n+3){border-top:2px solid var(--ink)}
+}
+@media (max-width:700px){
+  /* Presses figuren ned i telefonbredde, bliver baserne ulæselige. Den
+     beholder sin mindstebredde og får sin egen vandrette rulning —
+     siden som helhed ruller stadig kun lodret. */
+  .cd-scene-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .cd-scene-indre{min-width:660px}
+  .cd-scene-rul{display:block}
+  .kodontabel{position:fixed;inset:auto 12px 12px;top:auto;width:auto;max-height:72vh}
+}
+@media (max-width:620px){
+  body{font-size:16px}
+  .wrap,.top-in,.foot-in{padding-left:16px;padding-right:16px}
+  .head{padding:24px 0 18px}
+  .rig{border-radius:14px;box-shadow:var(--hard)}
+  .side{padding:15px 15px}
+  .side-titel{font-size:1.22rem}
+  .side-kort{font-size:0.91rem}
+  .gauges{grid-template-columns:repeat(2,1fr)}
+  .gauge dd{font-size:1.1rem}
+  .rig-head{gap:8px}
+  .btn-mini{font-size:0.68rem;padding:4px 10px}
+  .knob-hint{margin-left:0}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+
+/* ── Print: det aktuelle trin på ét A4 ─────────────────── */
+@media print{
+  .top,.foot,.nav,.prikker,.cd-scene-rul,.rig-tools,.knobs,.kodontabel,.basemenu{display:none!important}
+  .rig-body{min-height:0!important;grid-template-columns:minmax(0,1.62fr) minmax(0,.9fr)}
+  body{background:#fff}
+  .rig{box-shadow:none;border-width:1.5px;break-inside:avoid}
+  @page{margin:15mm}
+}
+</style>
 </head>
 <body>
-<!-- smbi hjem-knap -->
-<a href="/" class="smbi-home" aria-label="Til forsiden" title="Til forsiden">
-<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
-<span>Hjem</span>
-</a>
-<style>
-.smbi-home{position:fixed;top:14px;left:14px;z-index:2147483000;display:inline-flex;align-items:center;gap:6px;padding:8px 13px;font:600 14px/1 system-ui,-apple-system,"Segoe UI",sans-serif;color:#F5F0E8;background:#1C2E44;border:1px solid #2E4A6A;border-radius:999px;text-decoration:none;box-shadow:0 2px 10px rgba(0,0,0,.28);opacity:.9;transition:opacity .15s,transform .15s}
-.smbi-home:hover{opacity:1;transform:translateY(-1px)}
-.smbi-home svg{flex:none}
-@media print{.smbi-home{display:none!important}}
-</style>
-<script>(function(){try{if(window.top!==window.self){var e=document.querySelector(".smbi-home");if(e)e.style.display="none";}}catch(x){}})();</script>
 
-
-<header>
-    <h1>Transkription i Eukaryote Celler</h1>
-    <div class="subtitle">Byg mRNA ud fra DNA-skabelonen</div>
-    
-    <div id="status-bar">
-        <div id="step-init" class="status-step active">1. Initiering</div>
-        <div id="step-elong" class="status-step">2. Elongering</div>
-        <div id="step-term" class="status-step">3. Terminering</div>
+<header class="top" id="site-top">
+  <div class="rainbow"></div>
+  <div class="top-bar">
+    <div class="top-in">
+      <a href="/" class="brand"><span class="brand-mark"></span>smbi<em>.dk</em></a>
+      <nav class="top-nav">
+        <a href="/biologi.html">Biologi</a>
+        <a href="/">Forside</a>
+      </nav>
     </div>
-    <button id="btn-reset" onclick="resetSim()">Nulstil</button>
+  </div>
 </header>
 
-<div id="game-container">
-    <svg id="sim-svg" viewBox="0 0 800 500" preserveAspectRatio="xMidYMid slice">
-        <defs>
-            <!-- Glow Filter -->
-            <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-                <feGaussianBlur stdDeviation="3" result="blur" />
-                <feComposite in="SourceGraphic" in2="blur" operator="over" />
-            </filter>
-        </defs>
-        
-        <!-- Background Elements -->
-        <g id="dna-layer"></g>
-        <g id="rna-layer"></g>
-        <g id="enzyme-layer"></g>
-        
-        <!-- Interactive Layer -->
-        <g id="drag-layer"></g>
-        
-        <!-- Inventory Backgrounds (Visual only) -->
-        <line x1="0" y1="380" x2="800" y2="380" stroke="#eee" stroke-width="2" />
-        <text x="100" y="480" text-anchor="middle" fill="#95a5a6" font-size="12">TRANSKRIPTIONS-<br>FAKTORER</text>
-        <text x="250" y="480" text-anchor="middle" fill="#95a5a6" font-size="12">RNA POLYMERASE</text>
-        <text x="550" y="480" text-anchor="middle" fill="#95a5a6" font-size="12">RNA NUKLEOTIDER</text>
-    </svg>
-</div>
+<main>
+  <div class="wrap head">
+    <div class="head-in">
+      <span class="eyebrow mono"><span class="blink"></span>Biologi C · genetik &amp; proteinsyntese</span>
+      <h1>Fra gen til <span class="hi" style="--hc:#FBD3E1">protein</span></h1>
+      <p class="lead">Følg det centrale dogme hele vejen: DNA skrives om til mRNA, mRNA'et sendes ud af kernen, og ribosomet oversætter det til en aminosyrekæde. Til sidst kan du bytte en enkelt base ud i DNA'et og se, hvad det gør ved proteinet.</p>
+    </div>
+  </div>
 
-<div id="tooltip">Info</div>
+  <div class="wrap">
+    <section class="rig" id="rig">
+      <div class="rig-bar"></div>
+      <div class="rig-head">
+        <span class="rig-live"><span class="dot"></span><span class="mono" id="cdTael">Trin 1 af 5</span></span>
+        <div class="rig-tools">
+          <button type="button" class="btn-mini" id="cdAfspil">↻ Afspil trinnet</button>
+          <button type="button" class="btn-mini" id="cdTabelKnap" aria-expanded="false" aria-controls="cdTabel">Kodontabel</button>
+          <button type="button" class="btn-mini" id="cdProjektor" aria-pressed="false" title="Forstør al tekst til projektor">Projektor</button>
+          <button type="button" class="btn-mini" id="cdOm">Om figuren</button>
+        </div>
+      </div>
+
+      <div class="rig-body">
+        <!-- ══ Venstre: figuren ═══════════════════════════════════════════ -->
+        <div class="stage">
+          <div class="cd-scene-wrap">
+           <div class="cd-scene-indre">
+            <svg class="cd-scene" id="cdSvg" viewBox="0 0 760 580" role="group"
+                 aria-labelledby="cdSvgTitel" aria-describedby="cdSvgBesk" preserveAspectRatio="xMidYMid meet">
+              <title id="cdSvgTitel">Fra gen til protein: DNA i cellekernen, mRNA og ribosomets oversættelse til en aminosyrekæde</title>
+              <desc id="cdSvgBesk">Figuren viser øverst et gen i cellekernen med en kodende streng og en skabelonstreng, dernæst det mRNA som RNA-polymerasen bygger, og nederst i cytoplasmaet ribosomet, der læser mRNA'et tre baser ad gangen, mens tRNA leverer aminosyrer til den voksende proteinkæde.</desc>
+
+              <!-- Lagene tegnes af scriptet, så baser og kodoner kan bygges ud fra genet -->
+              <g id="cdLagKerne"></g>
+              <g id="cdLagRibosom" class="cd-lag"></g>
+              <g id="cdLagPromotor"></g>
+              <g id="cdLagStiger"></g>
+              <g id="cdLagKodende"></g>
+              <g id="cdLagSkabelon"></g>
+              <g id="cdLagPolymerase" class="cd-lag"></g>
+              <g id="cdLagMrna" class="cd-mrna-lag"></g>
+              <g id="cdLagTrna" class="cd-lag"></g>
+              <g id="cdLagProtein"></g>
+              <g id="cdLagTekst"></g>
+            </svg>
+           </div>
+          </div>
+          <p class="cd-scene-rul">Figuren kan rulles til siden →</p>
+
+          <!-- Basemenuen bygges af scriptet og lægger sig oven på figuren -->
+        </div>
+
+        <!-- ══ Højre: forklaringen ════════════════════════════════════════ -->
+        <section class="side" aria-label="Forklaring til trinnet">
+          <span class="side-tael" id="cdTaelChip">Trin 1 af 5</span>
+          <h2 class="side-titel" id="cdTitel"></h2>
+          <p class="side-kort" id="cdKort"></p>
+          <p class="side-tekst" id="cdTekst"></p>
+          <p class="paspaa" id="cdPasPaa" hidden></p>
+
+          <div class="mut er-skjult" id="cdMut">
+            <span class="mut-h">Proteinet før og efter</span>
+            <div class="mut-raekke" id="cdFoer"><span class="mut-navn">Før</span></div>
+            <div class="mut-raekke er-tom" id="cdEfter"><span class="mut-navn">Efter</span></div>
+            <p class="mut-hvor mono" id="cdHvor"></p>
+            <p class="mut-dom" id="cdDom"></p>
+          </div>
+
+          <details class="stopop" id="cdStopOp">
+            <summary>Stop op og tænk</summary>
+            <p class="stopop-krop" id="cdStopOpTekst"></p>
+          </details>
+
+          <div class="nav">
+            <button type="button" class="btn" id="cdForrige">◀ Forrige</button>
+            <button type="button" class="btn btn-primaer" id="cdNaeste">Næste ▶</button>
+          </div>
+          <div class="prikker" id="cdPrikker" role="group" aria-label="Gå til trin"></div>
+        </section>
+      </div>
+
+      <!-- Instrumenter -->
+      <dl class="gauges">
+        <div class="gauge" style="--g:#E7F4FB"><dt>mRNA-baser</dt><dd id="cdGbaser">0 <small>/ 24</small></dd></div>
+        <div class="gauge" style="--g:#F1ECFC"><dt>Kodoner læst</dt><dd id="cdGkodon">0 <small>/ 8</small></dd></div>
+        <div class="gauge" style="--g:#EDF8E4"><dt>Aminosyrer</dt><dd id="cdGas">0</dd></div>
+        <div class="gauge" style="--g:#FFF1EC"><dt>Genet</dt><dd id="cdGgen">Uændret</dd></div>
+      </dl>
+
+      <!-- Skydere -->
+      <div class="knobs">
+        <div class="knob" style="--track:linear-gradient(90deg,#FBD3E1,#E8336D);--kc:#FBD3E1">
+          <label for="cdTempo">Tempo</label>
+          <input type="range" id="cdTempo" min="0.5" max="3" step="0.25" value="1">
+          <output id="cdTempoUd">1,0×</output>
+        </div>
+        <div class="knob-hint">
+          <span>Klik på en base i DNA'et for at mutere genet</span>
+          <button type="button" class="btn-mini" id="cdNulstilGen" disabled>Nulstil genet</button>
+        </div>
+      </div>
+
+      <!-- Signaturforklaring: farve OG bogstav/form, så figuren også kan læses i
+           sort-hvid print og af farveblinde. -->
+      <div class="facts">
+        <span class="fact"><i style="--f:#C7E6F6"></i>A</span>
+        <span class="fact"><i style="--f:#FFD9C9"></i>T</span>
+        <span class="fact"><i style="--f:#FBD3E1"></i>U — kun i RNA</span>
+        <span class="fact"><i style="--f:#D6EFC4"></i>G</span>
+        <span class="fact"><i style="--f:#E2D6F8"></i>C</span>
+        <span class="fact"><i class="rund" style="--f:#FFF3DC"></i>Aminosyre</span>
+        <span class="fact-txt">Bogstavet er signalet — farven hjælper bare øjet.</span>
+      </div>
+
+      <!-- Kodontabellen flyder over panelet, så rammen ikke flytter sig -->
+      <div class="kodontabel kt" id="cdTabel" role="region" aria-label="Kodontabel" hidden>
+        <div class="kt-top">
+          <h2>Kodontabel</h2>
+          <button type="button" class="btn-mini" id="cdTabelLuk">Luk</button>
+        </div>
+        <div id="cdTabelKrop"></div>
+        <p class="kt-fod">Aflæses i mRNA'ets baser. <b>AUG</b> er både start og methionin; de tre stopkodoner koder ikke for nogen aminosyre.</p>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer class="foot">
+  <div class="foot-in">
+    <div>
+      <a href="/" class="brand"><span class="brand-mark"></span>smbi<em>.dk</em></a>
+      <div class="mono">Fra gen til protein · det centrale dogme</div>
+    </div>
+    <nav class="foot-links">
+      <a href="/biologi.html">Biologi</a>
+      <a href="/">Alle simuleringer</a>
+      <a href="/contact.html">Kontakt</a>
+    </nav>
+  </div>
+</footer>
+
+<dialog id="cdDialog">
+  <div class="dialog-krop" id="cdDialogKrop"></div>
+  <div class="dialog-fod"><button type="button" class="btn btn-primaer" id="cdDialogLuk" style="margin:0">Luk</button></div>
+</dialog>
+
+<p class="sr" aria-live="polite" id="cdStatus"></p>
 
 <script>
-    const svg = document.getElementById('sim-svg');
-    const dnaLayer = document.getElementById('dna-layer');
-    const rnaLayer = document.getElementById('rna-layer');
-    const enzymeLayer = document.getElementById('enzyme-layer');
-    const dragLayer = document.getElementById('drag-layer');
-    const tooltip = document.getElementById('tooltip');
-    const svgNS = "http://www.w3.org/2000/svg";
+/* skjul side-krom, når siden vises i en iframe */
+(function(){try{if(window.top!==window.self){
+  document.getElementById('site-top').style.display='none';
+  document.querySelector('.foot').style.display='none';
+  document.querySelector('.head').style.display='none';
+}}catch(x){}})();
+</script>
 
-    // --- CONFIGURATION ---
-    // Template Strand (3' -> 5' direction for reading, but we draw left to right)
-    // Let's say left is 3' end of template.
-    // Sequence: Promoter region ... Gene ... Terminator
-    const sequence = "ATATTT" + "TACGCATCG" + "ACT"; 
-    // Coding:   TATAAA   ATGCGTAGC   TGA
-    // mRNA:              AUGCGUAGC   UGA
-    
-    const promoterIndex = 0; // Start of TATA box
-    const geneStartIndex = 6; // Start of transcription
-    const terminatorIndex = sequence.length - 3;
+<script>
+(function () {
+"use strict";
 
-    const baseX = 50;
-    const baseY = 200;
-    const baseSpacing = 40;
+/* ==========================================================================
+   1. DATA — genet, den genetiske kode og alle tekster
+   ========================================================================== */
 
-    // State
-    let state = 'INIT_TF'; // INIT_TF, INIT_POL, ELONGATION, TERMINATED
-    let transcriptionIndex = 0; // Relative to geneStartIndex
-    let rnaSequence = "";
-    
-    // Dragging
-    let draggedElement = null;
-    let dragOffset = { x: 0, y: 0 };
-    let originalPos = { x: 0, y: 0 };
+/* Genet: 8 kodoner. Kort nok til at hele kæden kan stå på skærmen på én gang,
+   og valgt så alle tre slags punktmutationer kan findes af eleverne:
+     ATG TTC GGA AAG TCA CAT GTG TGA
+     Met Phe Gly Lys Ser His Val STOP                                        */
+const GEN_START = "ATGTTCGGAAAGTCACATGTGTGA";
+const ANTAL_KODONER = GEN_START.length / 3;
 
-    // Objects
-    let tfBound = false;
-    let polBound = false;
-    let polymeraseObj = null;
+const KOMPL_DNA = { A:"T", T:"A", G:"C", C:"G" };
+const KOMPL_RNA = { A:"U", U:"A", G:"C", C:"G" };
+const BASEFARVE = { A:"#C7E6F6", T:"#FFD9C9", U:"#FBD3E1", G:"#D6EFC4", C:"#E2D6F8" };
 
-    function init() {
-        drawDNA();
-        spawnInventory();
-        updateStatus('INIT_TF');
+/* Den genetiske kode. Rækkefølgen er den faste U-C-A-G på alle tre pladser,
+   så et kodon slås op med indeks 16·b1 + 4·b2 + b3. */
+const BASE_ORDEN = "UCAG";
+const KODE_ENBOGSTAV =
+  "FFLLSSSSYY**CC*W" +
+  "LLLLPPPPHHQQRRRR" +
+  "IIIMTTTTNNKKSSRR" +
+  "VVVVAAAADDEEGGGG";
+const AMINOSYRER = {
+  F:["Phe","Phenylalanin"], L:["Leu","Leucin"],   S:["Ser","Serin"],
+  Y:["Tyr","Tyrosin"],      C:["Cys","Cystein"],  W:["Trp","Tryptofan"],
+  P:["Pro","Prolin"],       H:["His","Histidin"], Q:["Gln","Glutamin"],
+  R:["Arg","Arginin"],      I:["Ile","Isoleucin"],M:["Met","Methionin"],
+  T:["Thr","Threonin"],     N:["Asn","Asparagin"],K:["Lys","Lysin"],
+  V:["Val","Valin"],        A:["Ala","Alanin"],   D:["Asp","Asparaginsyre"],
+  E:["Glu","Glutaminsyre"], G:["Gly","Glycin"],   "*":["Stop","Stopkodon"]
+};
+
+function kodonTilBogstav(kodon) {
+  const i = BASE_ORDEN.indexOf(kodon[0]) * 16 +
+            BASE_ORDEN.indexOf(kodon[1]) * 4 +
+            BASE_ORDEN.indexOf(kodon[2]);
+  return i < 0 ? "*" : KODE_ENBOGSTAV[i];
+}
+function kodonTilKort(kodon) { return AMINOSYRER[kodonTilBogstav(kodon)][0]; }
+function kodonTilNavn(kodon) { return AMINOSYRER[kodonTilBogstav(kodon)][1]; }
+
+const TRIN = [
+  {
+    overskrift: "Genet ligger i DNA'et",
+    kort: "Et gen er det stykke DNA, der beskriver ét protein.",
+    tekst: "DNA'ets to strenge passer sammen to og to: A over for T, G over for C. Foran genet sidder en " +
+           "<b>promotor</b> — startsignalet, der viser hvor aflæsningen begynder, og at det er den nederste " +
+           "streng, <b>skabelonstrengen</b>, der skal aflæses. Genet her er kun 24 baser langt; et rigtigt " +
+           "gen fylder mange tusinde.",
+    pasPaa: "Et gen er ikke et helt kromosom. Det er <b>ét afsnit</b> af DNA'et — strengen fortsætter både " +
+            "til højre og til venstre for figuren.",
+    stopOp: "Rækkefølgen på den ene streng bestemmer rækkefølgen på den anden. Hvorfor er det nok at aflæse den ene?"
+  },
+  {
+    overskrift: "Transkription: DNA skrives om til mRNA",
+    kort: "RNA-polymerase løber langs skabelonstrengen og bygger mRNA base for base.",
+    tekst: "Enzymet <b>RNA-polymerase</b> binder til promotoren, skiller strengene og lægger RNA-baser på efter " +
+           "samme parringsregel som i DNA'et — med én forskel: RNA bruger <b>U (uracil)</b>, hvor DNA bruger T. " +
+           "En A i skabelonen giver altså U, T giver A, G giver C og C giver G.",
+    pasPaa: "Det er <b>skabelonstrengen</b>, der aflæses — men mRNA'et kommer til at ligne den <b>kodende</b> " +
+            "streng, bare med U i stedet for T.",
+    stopOp: "Skabelonstrengen begynder med T-A-C. Hvad kommer der til at stå i mRNA'ets første tre baser — og hvad betyder det?"
+  },
+  {
+    overskrift: "mRNA'et forlader kernen",
+    kort: "Arbejdskopien sendes ud gennem kernemembranen til cytoplasmaet.",
+    tekst: "DNA'et forlader aldrig kernen — det er cellens original. mRNA'et er en <b>arbejdskopi</b>, der " +
+           "sendes ud gennem hullerne i kernemembranen til <b>cytoplasmaet</b>. Det er her, ribosomerne ligger, " +
+           "og her beskeden skal læses. Cellen kan sende mange kopier ud på én gang, hvis der er brug for meget " +
+           "af proteinet.",
+    stopOp: "Bakterier har ingen cellekerne. Hvad betyder det for rækkefølgen af transkription og translation hos dem?"
+  },
+  {
+    overskrift: "Translation: mRNA oversættes til aminosyrer",
+    kort: "Ribosomet læser tre baser ad gangen — et kodon — og får leveret én aminosyre pr. kodon.",
+    tekst: "Ribosomet sætter sig ved startkodonet <b>AUG</b> og rykker tre baser frem ad gangen. For hvert kodon " +
+           "kommer et <b>tRNA</b> med et <b>anticodon</b>, der passer — og netop den aminosyre, kodonet står for. " +
+           "Hvad hvert kodon betyder, står i <b>kodontabellen</b>; slå den op med knappen foroven.",
+    pasPaa: "Aminosyren sidder på <b>tRNA'et</b> — ikke på mRNA'et. mRNA'et er kun opskriften.",
+    stopOp: "Der er fire baser og tre pladser i et kodon. Hvor mange forskellige kodoner giver det — og hvorfor er det mere end nok til 20 aminosyrer?"
+  },
+  {
+    overskrift: "Proteinet er færdigt — prøv nu en mutation",
+    kort: "Ved stopkodonet slipper ribosomet kæden. Klik på en base i DNA'et, og se hvad der sker.",
+    tekst: "Det sidste kodon, <b>UGA</b>, er et stopkodon. Der findes ingen tRNA, der passer til det, så ribosomet " +
+           "slipper kæden. Rækkefølgen af aminosyrer er altså bestemt hele vejen tilbage af baserne i DNA'et.",
+    stopOp: "Hvorfor er en mutation i den <b>første</b> base af et kodon typisk værre end en mutation i den tredje?"
+  }
+];
+
+const OM_TEKST =
+  "<h2>Om figuren</h2>" +
+  "<p>Figuren følger <b>det centrale dogme</b>: DNA → mRNA → protein, i en eukaryot celle. " +
+  "Genet er opdigtet og kun 24 baser langt, så alle otte kodoner kan stå på skærmen samtidig. " +
+  "Kodontabellen og parringsreglerne er derimod de rigtige.</p>" +
+  "<p>Sådan er der forenklet, for at figuren kan bruges på C-niveau:</p>" +
+  "<ul>" +
+  "<li>Der er ingen <b>splejsning</b>: genet har hverken introner eller exoner, og mRNA'et får hverken hætte eller poly-A-hale.</li>" +
+  "<li>Kun ét ribosom arbejder ad gangen, og tRNA'erne kommer ét ad gangen. I virkeligheden sidder mange ribosomer på det samme mRNA.</li>" +
+  "<li>Proteinet vises som en lige kæde af aminosyrer. Det folder sig bagefter sammen til sin egen form — og det er formen, der bestemmer, hvad proteinet kan.</li>" +
+  "<li>Aflæsningsretningen (5' → 3') er skrevet på, men strengene er tegnet lige over hinanden, så baseparrene er nemme at aflæse.</li>" +
+  "</ul>" +
+  "<p>Mutationen er en <b>punktmutation</b>: én base byttes ud. Indsættelse og tab af baser (forskydningsmutationer) " +
+  "er ikke med — de ville flytte hele læserammen.</p>" +
+  "<p class='mono' style='color:#566B68'>Biologi C · smbi.dk</p>";
+
+/* ==========================================================================
+   2. Modellen — fra DNA-streng til færdigt protein
+   ========================================================================== */
+
+const state = {
+  trin: 1,
+  kodende: GEN_START.split(""),   // den kodende streng, som eleven kan ændre
+  muteret: -1,                    // indeks på den ændrede base, -1 = uændret
+  tProg: 0,                       // antal mRNA-baser bygget (0–24)
+  pProg: 0,                       // antal kodoner læst (0–8)
+  tempo: 1
+};
+
+/* Regner hele vejen fra den kodende streng til den færdige aminosyrekæde. */
+function afled(kodende) {
+  const skabelon = kodende.map(function (b) { return KOMPL_DNA[b]; });
+  const mrna = kodende.map(function (b) { return b === "T" ? "U" : b; });
+
+  const kodoner = [];
+  for (let i = 0; i < mrna.length; i += 3) kodoner.push(mrna.slice(i, i + 3).join(""));
+
+  const res = {
+    kodende: kodende, skabelon: skabelon, mrna: mrna, kodoner: kodoner,
+    start: kodoner[0] === "AUG",
+    as: [],          // aminosyrernes tre-bogstavskoder, kodon for kodon
+    stopIdx: -1      // indeks på det kodon, hvor kæden slippes
+  };
+  if (!res.start) return res;
+  for (let i = 0; i < kodoner.length; i++) {
+    if (kodonTilBogstav(kodoner[i]) === "*") { res.stopIdx = i; break; }
+    res.as.push(kodonTilKort(kodoner[i]));
+  }
+  return res;
+}
+
+const ORIGINAL = afled(GEN_START.split(""));
+let nu = afled(state.kodende);      // den aktuelle udregning
+
+/* Hvor mange kodoner ribosomet når at behandle, inkl. stopkodonet */
+function kodonTrin(m) {
+  if (!m.start) return 0;
+  return m.stopIdx >= 0 ? m.stopIdx + 1 : m.kodoner.length;
+}
+
+/* ==========================================================================
+   3. Scenen — geometrien
+   ========================================================================== */
+
+const SVGNS = "http://www.w3.org/2000/svg";
+const $ = function (id) { return document.getElementById(id); };
+
+function lav(tag, attr, forael) {
+  const el = document.createElementNS(SVGNS, tag);
+  for (const k in attr) el.setAttribute(k, attr[k]);
+  if (forael) forael.appendChild(el);
+  return el;
+}
+function tekst(forael, x, y, txt, klasse, anker) {
+  const t = lav("text", { x: x, y: y, class: klasse || "cd-lbl" }, forael);
+  if (anker) t.setAttribute("text-anchor", anker);
+  t.textContent = txt;
+  return t;
+}
+
+const X0 = 26, PITCH = 26, BREDDE = 23;   // cellernes gitter
+const PROM_CELLER = 3;                    // promotoren fylder tre celler
+const Y_KODENDE = 62, Y_SKABELON = 114, Y_MRNA = 194, Y_MRNA_UD = 326;
+const Y_ANTI = 366, Y_BEAD = 506;
+const H_CELLE = 30, INK = "#17211F";
+
+function celleX(i) { return X0 + PITCH * (PROM_CELLER + i); }       // base nr. i i genet
+function baseMidt(i) { return celleX(i) + BREDDE / 2; }
+function kodonMidt(k) { return baseMidt(3 * k + 1); }
+
+/* En base tegnet som firkant med bogstav. Ringen bruges til at markere
+   den base, eleven har ændret. */
+function bygCelle(lag, x, y, h, klikbar) {
+  const g = lav("g", { class: "cd-celle" + (klikbar ? " cd-klik" : "") }, lag);
+  const r = lav("rect", {
+    x: x, y: y, width: BREDDE, height: h, rx: 6,
+    fill: "#fff", stroke: INK, "stroke-width": 2, class: "cd-flade"
+  }, g);
+  const t = lav("text", {
+    x: x + BREDDE / 2, y: y + h / 2 + 5, "text-anchor": "middle", class: "cd-b"
+  }, g);
+  const ring = lav("rect", {
+    x: x - 4, y: y - 4, width: BREDDE + 8, height: h + 8, rx: 9,
+    fill: "none", stroke: "#7A4FD6", "stroke-width": 3, "stroke-dasharray": "6 4",
+    visibility: "hidden"
+  }, g);
+  return { g: g, rect: r, txt: t, ring: ring };
+}
+
+const lagKerne = $("cdLagKerne"), lagRibosom = $("cdLagRibosom"),
+      lagPromotor = $("cdLagPromotor"), lagStiger = $("cdLagStiger"),
+      lagKodende = $("cdLagKodende"), lagSkabelon = $("cdLagSkabelon"),
+      lagPolymerase = $("cdLagPolymerase"), lagMrna = $("cdLagMrna"),
+      lagTrna = $("cdLagTrna"), lagProtein = $("cdLagProtein"), lagTekst = $("cdLagTekst");
+
+/* ── Kernen og cytoplasmaet ── */
+lav("rect", { x: 12, y: 26, width: 736, height: 224, rx: 22,
+              fill: "#FDF3F7", stroke: INK, "stroke-width": 3 }, lagKerne);
+lav("rect", { x: 19, y: 33, width: 722, height: 210, rx: 17,
+              fill: "none", stroke: INK, "stroke-width": 1.2, opacity: ".45" }, lagKerne);
+tekst(lagKerne, 740, 48, "CELLEKERNE", "cd-lbl", "end");
+tekst(lagKerne, 740, 288, "CYTOPLASMA", "cd-lbl", "end");
+
+/* ── Promotoren ── */
+const promBredde = PITCH * PROM_CELLER - (PITCH - BREDDE);
+lav("rect", { x: X0, y: Y_KODENDE, width: promBredde, height: (Y_SKABELON + H_CELLE) - Y_KODENDE,
+              rx: 8, fill: "#FFE9DC", stroke: INK, "stroke-width": 2 }, lagPromotor);
+tekst(lagPromotor, X0 + promBredde / 2, Y_KODENDE + 45, "PROMOTOR", "cd-tag", "middle");
+tekst(lagPromotor, X0 + promBredde / 2, Y_KODENDE + 59, "start her", "cd-tag", "middle");
+
+/* ── De to DNA-strenge og stigetrinnene mellem dem ── */
+const cKodende = [], cSkabelon = [], cStiger = [];
+for (let i = 0; i < GEN_START.length; i++) {
+  const x = celleX(i);
+  cStiger.push(lav("line", {
+    x1: x + BREDDE / 2, y1: Y_KODENDE + H_CELLE, x2: x + BREDDE / 2, y2: Y_SKABELON,
+    stroke: INK, "stroke-width": 2, "stroke-dasharray": "3 3"
+  }, lagStiger));
+  cKodende.push(bygCelle(lagKodende, x, Y_KODENDE, H_CELLE, true));
+  cSkabelon.push(bygCelle(lagSkabelon, x, Y_SKABELON, H_CELLE, true));
+}
+
+/* ── mRNA'et: ét lag, der glider ned gennem kernemembranen ── */
+const cMrna = [];
+for (let i = 0; i < GEN_START.length; i++) {
+  cMrna.push(bygCelle(lagMrna, celleX(i), Y_MRNA, H_CELLE, false));
+}
+/* Kodonklammer under mRNA'et, så de tre baser ses som én enhed */
+const klammer = [];
+for (let k = 0; k < ANTAL_KODONER; k++) {
+  const x1 = celleX(3 * k), x2 = celleX(3 * k + 2) + BREDDE;
+  klammer.push(lav("path", {
+    d: "M" + x1 + "," + (Y_MRNA + H_CELLE + 3) + " v5 H" + x2 + " v-5",
+    fill: "none", stroke: INK, "stroke-width": 1.6, opacity: ".55"
+  }, lagMrna));
+}
+
+/* ── RNA-polymerasen ── */
+const polyBredde = 106;
+const polyG = lav("g", {}, lagPolymerase);
+lav("rect", { x: -polyBredde / 2, y: 52, width: polyBredde, height: 104, rx: 20,
+              fill: "#0FA593", "fill-opacity": ".22", stroke: INK, "stroke-width": 2.5 }, polyG);
+tekst(polyG, 0, 107, "RNA-POLYMERASE", "cd-tag", "middle");
+polyG.setAttribute("role", "img");
+lav("title", {}, polyG).textContent = "RNA-polymerase";
+
+/* ── Ribosomet: en klamme om det kodon, der læses ── */
+const riboBredde = 116;
+const riboG = lav("g", {}, lagRibosom);
+lav("rect", { x: -riboBredde / 2, y: 308, width: riboBredde, height: 168, rx: 30,
+              fill: "#C7E6F6", "fill-opacity": ".7", stroke: INK, "stroke-width": 2.5 }, riboG);
+/* mærkatet står over ribosomet — nede i bunden ville tRNA'ets stilk krydse det */
+tekst(riboG, 0, 302, "RIBOSOM", "cd-tag", "middle");
+riboG.setAttribute("role", "img");
+lav("title", {}, riboG).textContent = "Ribosom";
+
+/* ── tRNA'et med sit anticodon ── */
+const trnaG = lav("g", {}, lagTrna);
+const cAnti = [];
+for (let i = 0; i < 3; i++) {
+  cAnti.push(bygCelle(trnaG, -BREDDE / 2 - PITCH + PITCH * i, Y_ANTI, 26, false));
+}
+lav("path", {
+  d: "M-30,394 h60 a8,8 0 0 1 8,8 v20 a8,8 0 0 1 -8,8 h-24 v12 h-12 v-12 h-24 a8,8 0 0 1 -8,-8 v-20 a8,8 0 0 1 8,-8 z",
+  fill: "#E2D6F8", stroke: INK, "stroke-width": 2, "stroke-linejoin": "round"
+}, trnaG);
+tekst(trnaG, 0, 416, "tRNA", "cd-tag", "middle");
+lav("line", { x1: 0, y1: 442, x2: 0, y2: 487, stroke: INK, "stroke-width": 2 }, trnaG);
+trnaG.setAttribute("role", "img");
+lav("title", {}, trnaG).textContent = "tRNA med anticodon og aminosyre";
+
+/* ── Proteinkæden: én perle under hvert kodon ── */
+const kaedeLinjer = [], perler = [];
+for (let k = 0; k < ANTAL_KODONER; k++) {
+  if (k > 0) {
+    kaedeLinjer.push(lav("line", {
+      x1: kodonMidt(k - 1) + 19, y1: Y_BEAD, x2: kodonMidt(k) - 19, y2: Y_BEAD,
+      stroke: INK, "stroke-width": 4, visibility: "hidden"
+    }, lagProtein));
+  }
+  const g = lav("g", { visibility: "hidden" }, lagProtein);
+  const perle = lav("circle", { cx: kodonMidt(k), cy: Y_BEAD, r: 19,
+                                fill: "#FFF3DC", stroke: INK, "stroke-width": 2.5 }, g);
+  const stop = lav("rect", { x: kodonMidt(k) - 27, y: Y_BEAD - 15, width: 54, height: 30, rx: 8,
+                             fill: "#FFD9C9", stroke: INK, "stroke-width": 2.5, visibility: "hidden" }, g);
+  const t = tekst(g, kodonMidt(k), Y_BEAD + 4.5, "", "cd-aa", "middle");
+  const ring = lav("circle", { cx: kodonMidt(k), cy: Y_BEAD, r: 25, fill: "none",
+                               stroke: "#7A4FD6", "stroke-width": 3, "stroke-dasharray": "6 4",
+                               visibility: "hidden" }, g);
+  perler.push({ g: g, perle: perle, stop: stop, txt: t, ring: ring });
+}
+
+/* ── Faste mærkater ── */
+tekst(lagTekst, X0, 48, "DNA · KODENDE STRENG 5'→3'");
+tekst(lagTekst, X0, Y_SKABELON + H_CELLE + 16, "DNA · SKABELONSTRENG 3'→5'");
+const lblMrna = tekst(lagTekst, X0, Y_MRNA - 8, "mRNA 5'→3'");
+tekst(lagTekst, X0, 552, "PROTEIN · AMINOSYREKÆDE");
+
+/* ==========================================================================
+   4. Optegning ud fra state
+   ========================================================================== */
+
+function saetLag(lag, synlig) { lag.setAttribute("data-vis", synlig ? "vis" : "skjult"); }
+
+function tegn() {
+  const t = state.trin;
+  const m = nu;
+
+  /* — DNA'et: bogstaver, farver og markering af den muterede base — */
+  for (let i = 0; i < m.kodende.length; i++) {
+    const b = m.kodende[i], s = m.skabelon[i];
+    cKodende[i].txt.textContent = b;
+    cKodende[i].rect.setAttribute("fill", BASEFARVE[b]);
+    cSkabelon[i].txt.textContent = s;
+    cSkabelon[i].rect.setAttribute("fill", BASEFARVE[s]);
+    const mark = (state.muteret === i) ? "visible" : "hidden";
+    cKodende[i].ring.setAttribute("visibility", mark);
+    cSkabelon[i].ring.setAttribute("visibility", mark);
+
+    const ariaK = "Kodende streng, base " + (i + 1) + " af 24: " + b + ". Klik for at bytte basen ud.";
+    cKodende[i].g.setAttribute("aria-label", ariaK);
+    cSkabelon[i].g.setAttribute("aria-label",
+      "Skabelonstreng, base " + (i + 1) + " af 24: " + s + ". Klik for at bytte basen ud.");
+  }
+
+  /* — mRNA'et: kun de baser, der er nået at blive bygget — */
+  const vist = (t === 1) ? 0 : (t === 2 ? state.tProg : m.mrna.length);
+  for (let i = 0; i < m.mrna.length; i++) {
+    const b = m.mrna[i];
+    cMrna[i].txt.textContent = b;
+    cMrna[i].rect.setAttribute("fill", BASEFARVE[b]);
+    cMrna[i].g.setAttribute("visibility", i < vist ? "visible" : "hidden");
+    cMrna[i].ring.setAttribute("visibility", (state.muteret === i && i < vist) ? "visible" : "hidden");
+  }
+  klammer.forEach(function (kl, k) {
+    /* klammerne hører til translationen — de dukker først op i cytoplasmaet */
+    kl.setAttribute("visibility", (t >= 4 && 3 * k + 2 < vist) ? "visible" : "hidden");
+  });
+  lagMrna.setAttribute("transform", t >= 3 ? "translate(0," + (Y_MRNA_UD - Y_MRNA) + ")" : "translate(0,0)");
+  lagMrna.setAttribute("opacity", vist ? "1" : "0");
+  lblMrna.setAttribute("y", t >= 3 ? Y_MRNA_UD - 8 : Y_MRNA - 8);
+  lblMrna.setAttribute("visibility", vist ? "visible" : "hidden");
+
+  /* — RNA-polymerasen: står på promotoren og kører hen over genet — */
+  const polySynlig = (t === 2);
+  saetLag(lagPolymerase, polySynlig);
+  const polyX = state.tProg === 0
+    ? X0 + promBredde / 2
+    : baseMidt(Math.min(state.tProg, m.mrna.length) - 1) + 8;
+  if (polySynlig) polyG.setAttribute("transform", "translate(" + polyX + ",0)");
+  /* Inde i polymerasen er strengene skilt ad — så der er ingen stigetrin */
+  cStiger.forEach(function (l, i) {
+    const inde = polySynlig && Math.abs(baseMidt(i) - polyX) < polyBredde / 2 - 6;
+    l.setAttribute("visibility", inde ? "hidden" : "visible");
+  });
+
+  /* — Ribosomet og tRNA'et — */
+  const laest = (t === 4) ? state.pProg : (t === 5 ? kodonTrin(m) : 0);
+  const aktivt = laest - 1;                     // det kodon, der lige er læst
+  /* På det sidste trin bliver ribosomet stående på stopkodonet — der er ingen
+     tRNA, der passer, og det er netop derfor kæden slippes. */
+  const riboSynlig = (t === 4 && laest > 0) || t === 5;
+  saetLag(lagRibosom, riboSynlig);
+  if (riboSynlig) {
+    riboG.setAttribute("transform", "translate(" + kodonMidt(Math.max(0, aktivt)) + ",0)");
+  }
+
+  const stopHer = (aktivt >= 0 && aktivt === m.stopIdx);
+  const trnaSynlig = t === 4 && aktivt >= 0 && !stopHer && m.start;
+  saetLag(lagTrna, trnaSynlig);
+  if (trnaSynlig) {
+    trnaG.setAttribute("transform", "translate(" + kodonMidt(aktivt) + ",0)");
+    const kodon = m.kodoner[aktivt];
+    for (let i = 0; i < 3; i++) {
+      const a = KOMPL_RNA[kodon[i]];
+      cAnti[i].txt.textContent = a;
+      cAnti[i].rect.setAttribute("fill", BASEFARVE[a]);
     }
+    trnaG.querySelector("title").textContent =
+      "tRNA med anticodon " + kodon.split("").map(function (b) { return KOMPL_RNA[b]; }).join("") +
+      " og aminosyren " + kodonTilNavn(kodon);
+  }
 
-    function resetSim() {
-        dnaLayer.innerHTML = '';
-        rnaLayer.innerHTML = '';
-        enzymeLayer.innerHTML = '';
-        dragLayer.innerHTML = '';
-        state = 'INIT_TF';
-        transcriptionIndex = 0;
-        rnaSequence = "";
-        tfBound = false;
-        polBound = false;
-        polymeraseObj = null;
-        init();
+  /* — Proteinkæden — */
+  for (let k = 0; k < ANTAL_KODONER; k++) {
+    const p = perler[k];
+    let vis = false, erStop = false, txt = "";
+    if (!m.start && k === 0 && t >= 4) {
+      vis = true; erStop = true; txt = "INGEN START";
+    } else if (m.start && k < laest) {
+      vis = true;
+      if (k === m.stopIdx) { erStop = true; txt = "STOP"; }
+      else { txt = m.as[k]; }
     }
-
-    // --- DRAWING ---
-    function drawDNA() {
-        // Draw two strands
-        // Top Strand (Coding 5'->3') - Visual only mostly
-        // Bottom Strand (Template 3'->5') - The active one
-
-        let pathTop = `M ${baseX} ${baseY - 20}`;
-        let pathBot = `M ${baseX} ${baseY + 20}`;
-
-        for (let i = 0; i < sequence.length; i++) {
-            const x = baseX + i * baseSpacing;
-            
-            // Base pairs
-            const templateBase = sequence[i];
-            const codingBase = getComplementDNA(templateBase);
-
-            // Draw crossbars (hydrogen bonds)
-            const line = document.createElementNS(svgNS, "line");
-            line.setAttribute("x1", x);
-            line.setAttribute("y1", baseY - 15);
-            line.setAttribute("x2", x);
-            line.setAttribute("y2", baseY + 15);
-            line.setAttribute("class", "dna-base-line");
-            line.id = `bond-${i}`;
-            dnaLayer.appendChild(line);
-
-            // Text Top
-            const tTop = document.createElementNS(svgNS, "text");
-            tTop.setAttribute("x", x);
-            tTop.setAttribute("y", baseY - 28);
-            tTop.textContent = codingBase;
-            tTop.setAttribute("class", "dna-text");
-            tTop.style.fontSize = "12px";
-            dnaLayer.appendChild(tTop);
-
-            // Text Bottom
-            const tBot = document.createElementNS(svgNS, "text");
-            tBot.setAttribute("x", x);
-            tBot.setAttribute("y", baseY + 32);
-            tBot.textContent = templateBase;
-            tBot.setAttribute("class", "dna-text");
-            tBot.id = `template-base-${i}`;
-            dnaLayer.appendChild(tBot);
-
-            // Highlight TATA box
-            if (i >= promoterIndex && i < promoterIndex + 6) {
-                const rect = document.createElementNS(svgNS, "rect");
-                rect.setAttribute("x", x - 15);
-                rect.setAttribute("y", baseY - 45);
-                rect.setAttribute("width", 30);
-                rect.setAttribute("height", 90);
-                rect.setAttribute("fill", "rgba(241, 196, 15, 0.2)");
-                rect.setAttribute("stroke", "none");
-                dnaLayer.insertBefore(rect, line);
-            }
-
-            pathTop += ` L ${x} ${baseY - 20}`;
-            pathBot += ` L ${x} ${baseY + 20}`;
-        }
-
-        // Draw Backbones
-        // We draw them as simple lines for now, but we might bend them later
-        const bbTop = document.createElementNS(svgNS, "path");
-        bbTop.setAttribute("d", pathTop);
-        bbTop.setAttribute("class", "dna-backbone");
-        bbTop.id = "backbone-top";
-        dnaLayer.insertBefore(bbTop, dnaLayer.firstChild);
-
-        const bbBot = document.createElementNS(svgNS, "path");
-        bbBot.setAttribute("d", pathBot);
-        bbBot.setAttribute("class", "dna-backbone");
-        bbBot.id = "backbone-bot";
-        dnaLayer.insertBefore(bbBot, dnaLayer.firstChild);
-
-        // Labels
-        const labelProm = document.createElementNS(svgNS, "text");
-        labelProm.setAttribute("x", baseX + 2 * baseSpacing);
-        labelProm.setAttribute("y", baseY - 60);
-        labelProm.textContent = "Promotor (TATA)";
-        labelProm.setAttribute("class", "dna-text");
-        labelProm.style.fill = "#f39c12";
-        dnaLayer.appendChild(labelProm);
+    p.g.setAttribute("visibility", vis ? "visible" : "hidden");
+    p.perle.setAttribute("visibility", vis && !erStop ? "visible" : "hidden");
+    p.stop.setAttribute("visibility", erStop ? "visible" : "hidden");
+    p.stop.setAttribute("width", txt === "INGEN START" ? 88 : 54);
+    p.stop.setAttribute("x", kodonMidt(k) - (txt === "INGEN START" ? 44 : 27));
+    p.txt.textContent = txt;
+    if (txt.length > 4) p.txt.setAttribute("font-size", "9.5px");
+    else p.txt.removeAttribute("font-size");
+    const aendret = vis && !erStop && ORIGINAL.as[k] !== txt;
+    p.ring.setAttribute("visibility", aendret ? "visible" : "hidden");
+    p.g.setAttribute("aria-label", vis ? (erStop ? txt : "Aminosyre " + kodonTilNavn(m.kodoner[k])) : "");
+    if (k > 0) {
+      const forbundet = m.start && k < laest && k <= (m.stopIdx < 0 ? 99 : m.stopIdx);
+      kaedeLinjer[k - 1].setAttribute("visibility", forbundet ? "visible" : "hidden");
     }
+  }
 
-    function spawnInventory() {
-        // 1. Transcription Factor (TFIID)
-        createDraggable("tf", 100, 420, "Transkriptionsfaktor", "#27ae60", "rect", {w:50, h:30, r:10});
+  opdaterInstrumenter(vist, laest, m);
+  opdaterTabelMarkering(t === 4 && aktivt >= 0 ? m.kodoner[aktivt] : null);
+}
 
-        // 2. RNA Polymerase
-        createDraggable("pol", 250, 410, "RNA Polymerase", "#8e44ad", "ellipse", {rx:40, ry:25});
+function opdaterInstrumenter(vist, laest, m) {
+  $("cdGbaser").innerHTML = vist + " <small>/ 24</small>";
+  $("cdGkodon").innerHTML = Math.max(0, laest) + " <small>/ 8</small>";
+  const antalAs = m.start ? Math.min(m.as.length, Math.max(0, laest)) : 0;
+  $("cdGas").textContent = String(antalAs);
+  $("cdGgen").textContent = state.muteret < 0 ? "Uændret" : "Muteret";
+}
 
-        // 3. Nucleotides
-        const nucs = ['A', 'U', 'C', 'G'];
-        nucs.forEach((n, i) => {
-            createDraggable("nuc", 450 + i*60, 420, n, getNucColor(n), "circle", {r:18}, n);
-        });
+/* ==========================================================================
+   5. Trinnene
+   ========================================================================== */
+
+let ur = null;
+function stopUr() { if (ur) { clearTimeout(ur); ur = null; } }
+
+/* Transkriptionen og translationen kører af sig selv, når man kommer til
+   trinnet. Tempoet styres af skyderen. */
+function afspil() {
+  stopUr();
+  const t = state.trin;
+  if (t === 2) {
+    state.tProg = 0;
+    tegn();
+    const tik = function () {
+      state.tProg++;
+      tegn();
+      if (state.tProg < nu.mrna.length) ur = setTimeout(tik, 210 / state.tempo);
+      else { ur = null; sig("Transkriptionen er færdig. mRNA'et er 24 baser langt."); }
+    };
+    ur = setTimeout(tik, 420 / state.tempo);
+  } else if (t === 4) {
+    state.pProg = 0;
+    tegn();
+    const maks = kodonTrin(nu);
+    const tik = function () {
+      state.pProg++;
+      tegn();
+      if (state.pProg < maks) ur = setTimeout(tik, 950 / state.tempo);
+      else { ur = null; sig("Translationen er færdig. Proteinet er " + nu.as.length + " aminosyrer langt."); }
+    };
+    ur = setTimeout(tik, 500 / state.tempo);
+  } else if (t === 3) {
+    /* mRNA'et glider ud gennem membranen — ren overgang, intet at tælle */
+    tegn();
+  }
+}
+
+/* Skærmlæseren skal ikke have besked om de tilstande, vi kigger forbi,
+   mens panelets højde måles. */
+let maaler = false;
+function sig(txt) { if (!maaler) $("cdStatus").textContent = txt; }
+
+/* stille = true bruges kun, når højden måles: så skal hverken adresselinjen,
+   skærmlæseren eller afspilningen have besked om de trin, vi kigger forbi. */
+function visTrin(n, stille) {
+  state.trin = Math.min(Math.max(n, 1), TRIN.length);
+  const t = TRIN[state.trin - 1];
+
+  if (!stille) stopUr();
+  /* Alt før det aktuelle trin står færdigt */
+  state.tProg = state.trin === 1 ? 0 : nu.mrna.length;
+  state.pProg = state.trin >= 4 ? kodonTrin(nu) : 0;
+
+  const tael = "Trin " + state.trin + " af " + TRIN.length;
+  $("cdTael").textContent = tael;
+  $("cdTaelChip").textContent = tael;
+  $("cdTitel").textContent = t.overskrift;
+  $("cdKort").textContent = t.kort;
+  $("cdTekst").innerHTML = t.tekst;
+
+  const pas = $("cdPasPaa");
+  pas.hidden = !t.pasPaa;
+  pas.innerHTML = t.pasPaa || "";
+
+  $("cdStopOpTekst").innerHTML = t.stopOp;
+  $("cdStopOp").open = false;
+
+  $("cdMut").classList.toggle("er-skjult", state.trin !== 5);
+  if (state.trin === 5) tegnMutation();
+
+  $("cdAfspil").disabled = !(state.trin === 2 || state.trin === 4);
+
+  $("cdForrige").disabled = state.trin === 1;
+  const naeste = $("cdNaeste");
+  naeste.disabled = state.trin === TRIN.length;
+  naeste.textContent = state.trin === TRIN.length - 1 ? "Proteinet ▶" : "Næste ▶";
+
+  Array.prototype.forEach.call($("cdPrikker").children, function (b, i) {
+    b.setAttribute("aria-current", i + 1 === state.trin ? "true" : "false");
+  });
+
+  lukBasemenu();
+
+  if (stille) { tegn(); return; }
+
+  if (state.trin === 2 || state.trin === 4) afspil(); else tegn();
+
+  sig(tael + ": " + t.overskrift + ". " + t.kort);
+  if (location.hash !== "#trin=" + state.trin) {
+    history.replaceState(null, "", "#trin=" + state.trin);
+  }
+}
+
+/* Rammen skal stå stille, når man klikker sig igennem: ellers bestemmer
+   mængden af tekst i hvert trin panelets højde, og figuren, knapperne og
+   trinprikkerne flytter sig for hvert klik. Vi måler alle trin én gang og
+   låser panelet til det højeste. Målingen gentages, når betingelserne
+   ændrer sig — ny vinduesbredde, projektortilstand eller skrifter, der
+   først er hentet efter første optegning. */
+const rigBody = document.querySelector(".rig-body");
+
+/* Én mutation af hver slags: ændret aminosyre, stop væk, intet startkodon,
+   nonsens og stille. Bruges kun til at måle, hvor høj boksen kan blive. */
+const MAALE_MUTATIONER = [[11, "C"], [22, "C"], [0, "C"], [13, "A"], [5, "T"]];
+
+function laasRammehojde() {
+  /* Under 960 px står figur og forklaring under hinanden. Så flytter intet
+     sig alligevel, og en låst højde ville kun give dødt luftrum. */
+  if (window.matchMedia("(max-width:960px)").matches) {
+    rigBody.style.minHeight = "";
+    return;
+  }
+  const gemtTrin = state.trin, gemtT = state.tProg, gemtP = state.pProg;
+  maaler = true;
+  rigBody.style.minHeight = "0px";
+  let hojest = 0;
+  for (let i = 1; i <= TRIN.length; i++) {
+    visTrin(i, true);
+    hojest = Math.max(hojest, rigBody.offsetHeight);
+    /* Mutationsboksen fylder mere, når der først er muteret — og forskelligt
+       fra mutation til mutation. Trin 5 måles derfor med én mutation af hver
+       slags, så panelet ikke vokser, første gang eleven klikker på en base. */
+    if (i === 5) {
+      const gemtGen = state.kodende.slice(), gemtMut = state.muteret;
+      MAALE_MUTATIONER.forEach(function (pr) {
+        state.kodende = GEN_START.split("");
+        state.kodende[pr[0]] = pr[1];
+        state.muteret = pr[0];
+        nu = afled(state.kodende);
+        tegnMutation();
+        hojest = Math.max(hojest, rigBody.offsetHeight);
+      });
+      state.kodende = gemtGen; state.muteret = gemtMut;
+      nu = afled(state.kodende);
+      tegnMutation();
     }
+  }
+  visTrin(gemtTrin, true);          /* sætter også mutationsteksten på plads igen */
+  state.tProg = gemtT; state.pProg = gemtP;
+  tegn();
+  rigBody.style.minHeight = hojest + "px";
+  maaler = false;
+}
 
-    function createDraggable(type, x, y, title, color, shape, dims, textContent = "") {
-        const g = document.createElementNS(svgNS, "g");
-        g.setAttribute("transform", `translate(${x}, ${y})`);
-        g.setAttribute("class", "molecule");
-        g.dataset.type = type;
-        g.dataset.title = title;
-        if(textContent) g.dataset.base = textContent;
+/* ==========================================================================
+   6. Mutationen
+   ========================================================================== */
 
-        // Shape
-        let el;
-        if (shape === "rect") {
-            el = document.createElementNS(svgNS, "rect");
-            el.setAttribute("x", -dims.w/2); el.setAttribute("y", -dims.h/2);
-            el.setAttribute("width", dims.w); el.setAttribute("height", dims.h);
-            el.setAttribute("rx", dims.r);
-        } else if (shape === "ellipse") {
-            el = document.createElementNS(svgNS, "ellipse");
-            el.setAttribute("rx", dims.rx); el.setAttribute("ry", dims.ry);
-        } else if (shape === "circle") {
-            el = document.createElementNS(svgNS, "circle");
-            el.setAttribute("r", dims.r);
-        }
-        
-        el.setAttribute("fill", color);
-        el.setAttribute("stroke", "rgba(0,0,0,0.2)");
-        el.setAttribute("stroke-width", "2");
-        g.appendChild(el);
+function chip(txt, klasse) {
+  const s = document.createElement("span");
+  s.className = "chip" + (klasse ? " " + klasse : "");
+  s.textContent = txt;
+  return s;
+}
 
-        // Text
-        if (textContent) {
-            const t = document.createElementNS(svgNS, "text");
-            t.textContent = textContent;
-            t.setAttribute("dy", "5");
-            t.setAttribute("text-anchor", "middle");
-            t.setAttribute("fill", "white");
-            t.setAttribute("font-weight", "bold");
-            t.setAttribute("pointer-events", "none");
-            g.appendChild(t);
-        } else if (type === 'tf') {
-            const t = document.createElementNS(svgNS, "text");
-            t.textContent = "TF";
-            t.setAttribute("dy", "5");
-            t.setAttribute("text-anchor", "middle");
-            t.setAttribute("fill", "white");
-            t.setAttribute("font-size", "12px");
-            t.setAttribute("pointer-events", "none");
-            g.appendChild(t);
-        } else if (type === 'pol') {
-             const t = document.createElementNS(svgNS, "text");
-            t.textContent = "Pol II";
-            t.setAttribute("dy", "5");
-            t.setAttribute("text-anchor", "middle");
-            t.setAttribute("fill", "white");
-            t.setAttribute("font-size", "14px");
-            t.setAttribute("pointer-events", "none");
-            g.appendChild(t);
-        }
+function fyldRaekke(el, navn, m, sammenlign) {
+  el.innerHTML = "";
+  const n = document.createElement("span");
+  n.className = "mut-navn";
+  n.textContent = navn;
+  el.appendChild(n);
 
-        // Events
-        g.addEventListener("mousedown", startDrag);
-        g.addEventListener("mouseenter", showTooltip);
-        g.addEventListener("mouseleave", hideTooltip);
+  if (!m.start) {
+    el.appendChild(chip("Intet protein", "er-stop"));
+    return;
+  }
+  for (let i = 0; i < m.as.length; i++) {
+    const anderledes = sammenlign && sammenlign.as[i] !== m.as[i];
+    el.appendChild(chip(m.as[i], anderledes ? "er-aendret" : ""));
+  }
+  if (m.stopIdx >= 0) el.appendChild(chip("STOP", "er-stop"));
+  else el.appendChild(chip("… ingen stop", "er-vaek"));
+}
 
-        dragLayer.appendChild(g);
-    }
+function tegnMutation() {
+  const m = nu;
+  fyldRaekke($("cdFoer"), "Før", ORIGINAL, null);
 
-    // --- DRAG SYSTEM ---
-    function startDrag(e) {
-        if (state === 'TERMINATED') return;
-        
-        draggedElement = e.currentTarget;
-        
-        // If it's a nucleotide, clone it so the bin stays full
-        if (draggedElement.dataset.type === 'nuc') {
-            const clone = draggedElement.cloneNode(true);
-            clone.addEventListener("mousedown", startDrag);
-            clone.addEventListener("mouseenter", showTooltip);
-            clone.addEventListener("mouseleave", hideTooltip);
-            dragLayer.appendChild(clone);
-            // We drag the clone
-            draggedElement = clone;
-        }
+  const efter = $("cdEfter");
+  const dom = $("cdDom");
 
-        const pt = getMousePos(e);
-        const tf = getTransform(draggedElement);
-        originalPos = { x: tf.x, y: tf.y };
-        dragOffset = { x: pt.x - tf.x, y: pt.y - tf.y };
+  if (state.muteret < 0) {
+    efter.classList.add("er-tom");
+    efter.innerHTML = "<span class='mut-navn'>Efter</span>";
+    $("cdHvor").textContent = "";
+    dom.innerHTML = "<b>Klik på en base i DNA'et</b> og byt den ud. Hele kæden regnes igennem igen — " +
+                    "men en ændret base ændrer ikke altid proteinet.";
+    return;
+  }
+  efter.classList.remove("er-tom");
+  fyldRaekke(efter, "Efter", m, ORIGINAL);
 
-        window.addEventListener("mousemove", doDrag);
-        window.addEventListener("mouseup", endDrag);
-    }
+  const pos = state.muteret;
+  const hvor = "Base " + (pos + 1) + " · kodon " + (Math.floor(pos / 3) + 1) + " · " +
+               ORIGINAL.kodende[pos] + " → " + m.kodende[pos];
+  $("cdHvor").textContent = hvor;
 
-    function doDrag(e) {
-        if (!draggedElement) return;
-        e.preventDefault();
-        const pt = getMousePos(e);
-        setTransform(draggedElement, pt.x - dragOffset.x, pt.y - dragOffset.y);
-    }
+  let stempel, farve, forklaring;
+  if (!m.start) {
+    stempel = "Intet protein"; farve = "#FFD9C9";
+    forklaring = "Startkodonet er ødelagt. Ribosomet kan ikke sætte sig.";
+  } else if (m.stopIdx < 0) {
+    stempel = "Stop væk"; farve = "#FFD9C9";
+    forklaring = "Ribosomet kører videre ud over genet og laver et for langt protein.";
+  } else if (m.as.length < ORIGINAL.as.length) {
+    stempel = "Nonsens"; farve = "#FFD9C9";
+    forklaring = "Nyt stopkodon midt i genet: kæden knækker over efter " + m.as.length +
+                 " i stedet for " + ORIGINAL.as.length + " aminosyrer.";
+  } else if (m.as.join("-") === ORIGINAL.as.join("-")) {
+    stempel = "Stille"; farve = "#D6EFC4";
+    forklaring = "Proteinet er det samme — flere kodoner betyder den samme aminosyre.";
+  } else {
+    let i = 0; while (ORIGINAL.as[i] === m.as[i]) i++;
+    stempel = "Ændret aminosyre"; farve = "#FFB300";
+    forklaring = "Nr. " + (i + 1) + " er nu " + kodonTilNavn(m.kodoner[i]) + " i stedet for " +
+                 kodonTilNavn(ORIGINAL.kodoner[i]) + ".";
+  }
+  dom.innerHTML = "<span class='stempel' style='--dom:" + farve + "'>" + stempel + "</span>" + forklaring;
+  sig(hvor + ". " + stempel + ". " + forklaring);
+}
 
-    function endDrag(e) {
-        if (!draggedElement) return;
-        window.removeEventListener("mousemove", doDrag);
-        window.removeEventListener("mouseup", endDrag);
+function saetBase(i, ny) {
+  state.kodende[i] = ny;
+  state.muteret = (state.kodende.join("") === GEN_START) ? -1 : i;
+  nu = afled(state.kodende);
+  $("cdNulstilGen").disabled = state.muteret < 0;
 
-        const type = draggedElement.dataset.type;
-        const pos = getTransform(draggedElement);
+  /* Kæden regnes forfra med det nye gen: står vi i et trin med afspilning,
+     kører det igen, ellers vises resultatet med det samme. */
+  state.tProg = state.trin === 1 ? 0 : nu.mrna.length;
+  state.pProg = state.trin >= 4 ? kodonTrin(nu) : 0;
+  if (state.trin === 5) tegnMutation();
+  tegn();
+}
 
-        // Logic based on state
-        let success = false;
+function nulstilGen() {
+  state.kodende = GEN_START.split("");
+  state.muteret = -1;
+  nu = afled(state.kodende);
+  $("cdNulstilGen").disabled = true;
+  state.tProg = state.trin === 1 ? 0 : nu.mrna.length;
+  state.pProg = state.trin >= 4 ? kodonTrin(nu) : 0;
+  if (state.trin === 5) tegnMutation();
+  tegn();
+  sig("Genet er sat tilbage til udgangspunktet.");
+}
 
-        if (state === 'INIT_TF' && type === 'tf') {
-            // Target: Promoter region (approx x=100 to 200, y=200)
-            if (dist(pos.x, pos.y, baseX + 2.5*baseSpacing, baseY) < 60) {
-                snapTo(draggedElement, baseX + 2.5*baseSpacing, baseY);
-                draggedElement.style.pointerEvents = "none"; // Lock it
-                tfBound = true;
-                updateStatus('INIT_POL');
-                success = true;
-            }
-        }
-        else if (state === 'INIT_POL' && type === 'pol') {
-            // Target: On top of TF
-            if (dist(pos.x, pos.y, baseX + 2.5*baseSpacing, baseY) < 60) {
-                snapTo(draggedElement, baseX + 2.5*baseSpacing, baseY - 10);
-                draggedElement.style.pointerEvents = "none";
-                polBound = true;
-                polymeraseObj = draggedElement;
-                openBubble();
-                updateStatus('ELONGATION');
-                success = true;
-            }
-        }
-        else if (state === 'ELONGATION' && type === 'nuc') {
-            // Target: The active site of Polymerase
-            // Pol is at geneStartIndex + transcriptionIndex
-            const currentDNAIndex = geneStartIndex + transcriptionIndex;
-            const targetX = baseX + currentDNAIndex * baseSpacing;
-            const targetY = baseY; // Active site
+/* ── Basemenuen: de tre andre baser ── */
+const stage = document.querySelector(".stage");
+let basemenu = null;
 
-            if (dist(pos.x, pos.y, targetX, targetY) < 50) {
-                // Check match
-                const templateBase = sequence[currentDNAIndex];
-                const incomingBase = draggedElement.dataset.base;
-                
-                if (checkPair(templateBase, incomingBase)) {
-                    // Success!
-                    addRNA(incomingBase, targetX, targetY);
-                    draggedElement.remove(); // Remove the dragged nuc
-                    success = true;
-                    advancePolymerase();
-                } else {
-                    // Wrong base feedback
-                    showFeedback(pos.x, pos.y, "Forkert base!");
-                }
-            }
-        }
+function lukBasemenu() {
+  if (basemenu) { basemenu.remove(); basemenu = null; }
+}
 
-        // If failed and it was a clone (nuc), remove it. If TF/Pol, return home.
-        if (!success) {
-            if (type === 'nuc') {
-                draggedElement.remove();
-            } else {
-                setTransform(draggedElement, originalPos.x, originalPos.y);
-                if (type === 'pol' && state === 'INIT_TF') {
-                    showFeedback(pos.x, pos.y, "Mangler Transkriptionsfaktor!");
-                }
-            }
-        }
+function aabnBasemenu(i, kilde, erSkabelon) {
+  lukBasemenu();
+  const nuvaerende = erSkabelon ? nu.skabelon[i] : nu.kodende[i];
 
-        draggedElement = null;
-    }
+  const boks = document.createElement("div");
+  boks.className = "basemenu";
+  boks.setAttribute("role", "group");
+  boks.setAttribute("aria-label", "Byt base " + (i + 1) + " ud");
+  const p = document.createElement("p");
+  p.textContent = "Base " + (i + 1) + ": " + nuvaerende + " →";
+  boks.appendChild(p);
+  const raekke = document.createElement("div");
+  raekke.className = "basemenu-knapper";
+  boks.appendChild(raekke);
 
-    // --- GAME LOGIC ---
-    function openBubble() {
-        // Visual effect: Separate strands
-        document.getElementById('backbone-top').setAttribute("transform", "translate(0, -15)");
-        document.getElementById('backbone-bot').setAttribute("transform", "translate(0, 15)");
-        // Hide hydrogen bonds in the active area?
-        // For simplicity, we just keep them or fade them.
-    }
+  ["A", "T", "G", "C"].forEach(function (b) {
+    if (b === nuvaerende) return;
+    const k = document.createElement("button");
+    k.type = "button";
+    k.textContent = b;
+    k.style.setProperty("--bf", BASEFARVE[b]);
+    k.setAttribute("aria-label", "Byt til " + b);
+    k.addEventListener("click", function () {
+      /* Klikker man på skabelonstrengen, er det den base, der sættes —
+         den kodende bliver så dens modpart. Basepar ændres altid parvis. */
+      saetBase(i, erSkabelon ? KOMPL_DNA[b] : b);
+      lukBasemenu();
+      kilde.focus();
+    });
+    raekke.appendChild(k);
+  });
 
-    function advancePolymerase() {
-        transcriptionIndex++;
-        const nextIndex = geneStartIndex + transcriptionIndex;
+  stage.appendChild(boks);
 
-        // Move Pol
-        const newX = baseX + nextIndex * baseSpacing;
-        polymeraseObj.style.transition = "transform 0.5s";
-        setTransform(polymeraseObj, newX, baseY - 10);
+  const r = kilde.getBoundingClientRect(), s = stage.getBoundingClientRect();
+  let venstre = r.left - s.left + r.width / 2;
+  venstre = Math.max(72, Math.min(s.width - 72, venstre));
+  boks.style.left = venstre + "px";
+  boks.style.top = (r.bottom - s.top + 8) + "px";
+  basemenu = boks;
+  raekke.firstChild.focus();
+}
 
-        // Check Termination
-        if (nextIndex >= geneStartIndex + 9) { // End of gene in our short sequence
-            setTimeout(terminate, 600);
-        }
-    }
+function gorKlikbar(celler, erSkabelon) {
+  celler.forEach(function (c, i) {
+    c.g.setAttribute("tabindex", "0");
+    c.g.setAttribute("role", "button");
+    c.g.addEventListener("click", function () { aabnBasemenu(i, c.g, erSkabelon); });
+    c.g.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); aabnBasemenu(i, c.g, erSkabelon); }
+    });
+  });
+}
+gorKlikbar(cKodende, false);
+gorKlikbar(cSkabelon, true);
 
-    function addRNA(base, x, y) {
-        rnaSequence += base;
-        
-        const g = document.createElementNS(svgNS, "g");
-        g.setAttribute("class", "fade-in");
-        
-        // Draw RNA nucleotide
-        const circle = document.createElementNS(svgNS, "circle");
-        circle.setAttribute("cx", x);
-        circle.setAttribute("cy", baseY + 5); // Slightly offset
-        circle.setAttribute("r", 12);
-        circle.setAttribute("fill", getNucColor(base));
-        g.appendChild(circle);
+document.addEventListener("click", function (e) {
+  if (basemenu && !basemenu.contains(e.target) &&
+      !(e.target.closest && e.target.closest(".cd-klik"))) lukBasemenu();
+});
 
-        const t = document.createElementNS(svgNS, "text");
-        t.setAttribute("x", x);
-        t.setAttribute("y", baseY + 9);
-        t.setAttribute("text-anchor", "middle");
-        t.setAttribute("fill", "white");
-        t.setAttribute("font-size", "10px");
-        t.textContent = base;
-        g.appendChild(t);
+/* ==========================================================================
+   7. Kodontabellen
+   ========================================================================== */
 
-        // Draw bond to previous if exists
-        if (rnaSequence.length > 1) {
-            const prevX = x - baseSpacing;
-            const line = document.createElementNS(svgNS, "line");
-            line.setAttribute("x1", prevX);
-            line.setAttribute("y1", baseY + 5);
-            line.setAttribute("x2", x);
-            line.setAttribute("y2", baseY + 5);
-            line.setAttribute("stroke", "#e67e22");
-            line.setAttribute("stroke-width", "4");
-            // Insert line before circle so it looks connected
-            rnaLayer.appendChild(line);
-        }
+(function bygKodontabel() {
+  const tabel = document.createElement("table");
+  const thead = document.createElement("thead");
+  const hr = document.createElement("tr");
+  hr.innerHTML = "<th>1.</th>" + BASE_ORDEN.split("").map(function (b) {
+    return "<th>" + b + "</th>";
+  }).join("") + "<th>3.</th>";
+  thead.appendChild(hr);
+  tabel.appendChild(thead);
 
-        rnaLayer.appendChild(g);
+  const tbody = document.createElement("tbody");
+  BASE_ORDEN.split("").forEach(function (b1) {
+    BASE_ORDEN.split("").forEach(function (b3, j) {
+      const tr = document.createElement("tr");
+      if (j === 0) {
+        const td = document.createElement("td");
+        td.className = "kt-b1"; td.rowSpan = 4; td.textContent = b1;
+        tr.appendChild(td);
+      }
+      BASE_ORDEN.split("").forEach(function (b2) {
+        const kodon = b1 + b2 + b3;
+        const bogstav = kodonTilBogstav(kodon);
+        const td = document.createElement("td");
+        const s = document.createElement("span");
+        s.className = "kt-c" + (kodon === "AUG" ? " er-start" : (bogstav === "*" ? " er-stop" : ""));
+        s.id = "kt-" + kodon;
+        s.innerHTML = "<b>" + kodon + "</b> <i>" + AMINOSYRER[bogstav][0] + "</i>";
+        td.appendChild(s);
+        tr.appendChild(td);
+      });
+      const td3 = document.createElement("td");
+      td3.className = "kt-b3"; td3.textContent = b3;
+      tr.appendChild(td3);
+      tbody.appendChild(tr);
+    });
+  });
+  tabel.appendChild(tbody);
+  $("cdTabelKrop").appendChild(tabel);
+})();
 
-        // Animate RNA "tail" falling off? 
-        // In this simple view, we keep it hybridized or just trailing.
-        // Let's shift the older RNA parts up/out to simulate the tail exiting the polymerase.
-        // For this 2D view, keeping it linear is easiest to understand.
-    }
+let markeret = null;
+function opdaterTabelMarkering(kodon) {
+  if (markeret) { markeret.classList.remove("er-nu"); markeret = null; }
+  if (!kodon) return;
+  const el = $("kt-" + kodon);
+  if (el) { el.classList.add("er-nu"); markeret = el; }
+}
 
-    function terminate() {
-        state = 'TERMINATED';
-        updateStatus('TERMINATED');
-        
-        // Pol falls off
-        polymeraseObj.style.transform += " translate(50px, -100px) rotate(20deg)";
-        polymeraseObj.style.opacity = "0";
+function saetTabel(aaben) {
+  $("cdTabel").hidden = !aaben;
+  $("cdTabelKnap").setAttribute("aria-expanded", aaben ? "true" : "false");
+  $("cdTabelKnap").setAttribute("aria-pressed", aaben ? "true" : "false");
+}
+$("cdTabelKnap").addEventListener("click", function () { saetTabel($("cdTabel").hidden); });
+$("cdTabelLuk").addEventListener("click", function () { saetTabel(false); $("cdTabelKnap").focus(); });
 
-        // RNA releases
-        rnaLayer.childNodes.forEach(node => {
-            // Simple animation to float away
-            node.style.transition = "transform 2s";
-            node.style.transform = "translate(0, 100px)";
-        });
+/* ==========================================================================
+   8. Betjening
+   ========================================================================== */
 
-        showFeedback(400, 100, "Færdig! mRNA frigivet.");
-    }
+const prikker = $("cdPrikker");
+TRIN.forEach(function (t, i) {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.textContent = String(i + 1);
+  b.setAttribute("aria-label", "Trin " + (i + 1) + ": " + t.overskrift);
+  b.addEventListener("click", function () { visTrin(i + 1); });
+  prikker.appendChild(b);
+});
 
-    // --- HELPERS ---
-    function updateStatus(s) {
-        state = s;
-        document.querySelectorAll('.status-step').forEach(el => el.classList.remove('active'));
-        if (s === 'INIT_TF' || s === 'INIT_POL') document.getElementById('step-init').classList.add('active');
-        if (s === 'ELONGATION') document.getElementById('step-elong').classList.add('active');
-        if (s === 'TERMINATED') document.getElementById('step-term').classList.add('active');
-    }
+$("cdForrige").addEventListener("click", function () { visTrin(state.trin - 1); });
+$("cdNaeste").addEventListener("click", function () { visTrin(state.trin + 1); });
+$("cdAfspil").addEventListener("click", function () { afspil(); });
+$("cdNulstilGen").addEventListener("click", nulstilGen);
 
-    function getComplementDNA(dnaBase) {
-        const map = { 'A': 'T', 'T': 'A', 'C': 'G', 'G': 'C' };
-        return map[dnaBase];
-    }
+const tempo = $("cdTempo");
+tempo.addEventListener("input", function () {
+  state.tempo = parseFloat(tempo.value);
+  $("cdTempoUd").textContent = state.tempo.toFixed(1).replace(".", ",") + "×";
+});
 
-    function checkPair(dnaBase, rnaBase) {
-        // DNA A -> RNA U
-        // DNA T -> RNA A
-        // DNA C -> RNA G
-        // DNA G -> RNA C
-        if (dnaBase === 'A' && rnaBase === 'U') return true;
-        if (dnaBase === 'T' && rnaBase === 'A') return true;
-        if (dnaBase === 'C' && rnaBase === 'G') return true;
-        if (dnaBase === 'G' && rnaBase === 'C') return true;
-        return false;
-    }
+/* Tastatur: piletaster, mellemrum, Home/End. Springes over, når fokus står i
+   en knap eller et felt, der selv bruger tasten. */
+document.addEventListener("keydown", function (e) {
+  if (e.key === "Escape") { lukBasemenu(); saetTabel(false); return; }
+  if (e.target.closest &&
+      e.target.closest("dialog, summary, input, textarea, select, .basemenu, .cd-klik")) return;
+  if (e.key === "ArrowRight" || e.key === "PageDown" || e.key === " ") {
+    if (e.target.tagName === "BUTTON" && e.key === " ") return;
+    e.preventDefault(); visTrin(state.trin + 1);
+  } else if (e.key === "ArrowLeft" || e.key === "PageUp") {
+    e.preventDefault(); visTrin(state.trin - 1);
+  } else if (e.key === "Home") {
+    e.preventDefault(); visTrin(1);
+  } else if (e.key === "End") {
+    e.preventDefault(); visTrin(TRIN.length);
+  }
+});
 
-    function getNucColor(base) {
-        const colors = { 'A': '#e74c3c', 'U': '#f1c40f', 'C': '#2980b9', 'G': '#2ecc71', 'T': '#27ae60' };
-        return colors[base] || '#95a5a6';
-    }
+const projektor = $("cdProjektor");
+projektor.addEventListener("click", function () {
+  const til = document.body.getAttribute("data-projektor") !== "1";
+  document.body.setAttribute("data-projektor", til ? "1" : "0");
+  projektor.setAttribute("aria-pressed", til ? "true" : "false");
+  laasRammehojde();
+});
 
-    function getMousePos(evt) {
-        const pt = svg.createSVGPoint();
-        pt.x = evt.clientX;
-        pt.y = evt.clientY;
-        return pt.matrixTransform(svg.getScreenCTM().inverse());
-    }
+const dialog = $("cdDialog");
+$("cdOm").addEventListener("click", function () {
+  $("cdDialogKrop").innerHTML = OM_TEKST;
+  if (typeof dialog.showModal === "function") dialog.showModal(); else dialog.setAttribute("open", "");
+});
+$("cdDialogLuk").addEventListener("click", function () {
+  if (typeof dialog.close === "function") dialog.close(); else dialog.removeAttribute("open");
+});
 
-    function getTransform(el) {
-        const transform = el.getAttribute("transform");
-        if (!transform) return { x: 0, y: 0 };
-        const match = /translate\(([^,]+),\s*([^)]+)\)/.exec(transform);
-        return match ? { x: parseFloat(match[1]), y: parseFloat(match[2]) } : { x: 0, y: 0 };
-    }
+/* ==========================================================================
+   9. Start — ?trin=4 eller #trin=4 kan deles direkte
+   ========================================================================== */
 
-    function setTransform(el, x, y) {
-        el.setAttribute("transform", `translate(${x}, ${y})`);
-    }
+function startTrin() {
+  const m = /trin=(\d+)/.exec(location.hash) || /trin=(\d+)/.exec(location.search);
+  return m ? parseInt(m[1], 10) : 1;
+}
+if (/mode=teach|projektor=1/.test(location.search)) {
+  document.body.setAttribute("data-projektor", "1");
+  projektor.setAttribute("aria-pressed", "true");
+}
 
-    function snapTo(el, x, y) {
-        setTransform(el, x, y);
-    }
+visTrin(startTrin());
+laasRammehojde();
+if (state.trin === 2 || state.trin === 4) afspil();
 
-    function dist(x1, y1, x2, y2) {
-        return Math.sqrt((x1-x2)**2 + (y1-y2)**2);
-    }
+/* Skrifterne hentes udefra: er de ikke nået frem ved første optegning, er
+   linjerne brudt anderledes, end de bliver bagefter — så mål én gang til. */
+if (document.fonts && document.fonts.ready) {
+  document.fonts.ready.then(laasRammehojde);
+}
 
-    function showTooltip(e) {
-        const title = e.currentTarget.dataset.title;
-        if (!title) return;
-        tooltip.textContent = title;
-        tooltip.style.opacity = 1;
-        tooltip.style.left = (e.clientX + 10) + 'px';
-        tooltip.style.top = (e.clientY + 10) + 'px';
-    }
+let maaleTid;
+window.addEventListener("resize", function () {
+  clearTimeout(maaleTid);
+  maaleTid = setTimeout(laasRammehojde, 160);
+  lukBasemenu();
+});
 
-    function hideTooltip() {
-        tooltip.style.opacity = 0;
-    }
+window.addEventListener("hashchange", function () {
+  const n = startTrin();
+  if (n !== state.trin) visTrin(n);
+});
 
-    function showFeedback(x, y, msg) {
-        const t = document.createElementNS(svgNS, "text");
-        t.setAttribute("x", x);
-        t.setAttribute("y", y - 30);
-        t.setAttribute("text-anchor", "middle");
-        t.setAttribute("fill", "#e74c3c");
-        t.setAttribute("font-weight", "bold");
-        t.setAttribute("class", "fade-in");
-        t.textContent = msg;
-        svg.appendChild(t);
-        setTimeout(() => t.remove(), 1500);
-    }
-
-    // Start
-    init();
-
+})();
 </script>
 </body>
 </html>

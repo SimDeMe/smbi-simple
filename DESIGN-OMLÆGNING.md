@@ -4,7 +4,7 @@ Status pr. 9. august 2026. Skabelonen er beskrevet i `CLAUDE.md`.
 Forlæg: `index.html` + `forside.css`, `geografi/Stigningsregn.html`,
 `geografi/drivhuseffektenSimpel.html`.
 
-**Lagt om: 8 sider. Tilbage: 40.**
+**Lagt om: 9 sider. Tilbage: 39.**
 
 Rækkefølgen nedenfor er valgt efter, hvad eleverne og du selv møder oftest,
 ikke efter hvad der er nemmest.
@@ -166,10 +166,38 @@ Cormorant Garamond) og de tre løse spalter er væk; alt bor nu i ét `.rig`.
 
 Samme øvelse på biologisiden. Her skal `--accent:var(--bio)` bruges.
 
+### ✅ 10 — `biologi/transkription.html` (færdig — skrevet helt om)
+
+Den eneste af sagerne, hvor modellen **ikke** er bevaret: den gamle side var en
+drag-og-slip-øvelse, der stoppede ved mRNA'et, og den er erstattet af en ny
+simulering, `Fra gen til protein` (1634 linjer). Filnavnet er beholdt, så
+gamle links stadig virker.
+
+* **Hele det centrale dogme i ét apparat.** Fem trin: genet i DNA'et,
+  transkription base for base, mRNA'et gennem kernemembranen, translation
+  kodon for kodon med tRNA, og det færdige protein. Samme figur hele vejen —
+  DNA, mRNA og aminosyrekæde vokser frem i hver sin bane, så eleverne ser
+  sammenhængen frem for fem løsrevne billeder.
+* **Genet er 8 kodoner** (`ATG TTC GGA AAG TCA CAT GTG TGA` →
+  Met-Phe-Gly-Lys-Ser-His-Val-STOP). Kort nok til at alt kan stå på skærmen
+  samtidig, og valgt så alle mutationstyper kan findes af eleverne selv.
+  Kodontabellen er den rigtige, alle 64 kodoner, i en boks der flyder over
+  panelet og fremhæver det kodon, ribosomet står på.
+* **Punktmutationer.** Man klikker på en base i DNA'et — begge strenge er
+  klikbare, og basepar ændres altid parvis — og hele kæden regnes igennem igen.
+  Dommen skrives ud i fem kategorier: stille, ændret aminosyre, nonsens,
+  stopkodon væk og startkodon væk, med proteinet før og efter ved siden af
+  hinanden.
+* Trin i `#trin=4`, `Projektor`-knap plus `?projektor=1` / `?mode=teach`,
+  tempo-skyder til de to animerede trin, `aria-live`-status og tastaturbetjening.
+* **Rammen står stille:** panelet måles ved indlæsning over alle fem trin *og*
+  over én mutation af hver slags, så mutationsboksen ikke kan skubbe figuren.
+  Målt: 761 px konstant over 11 mutationer og alle trin, 867 px i
+  projektortilstand.
+
 | # | Fil | Linjer | Indhold |
 | --- | --- | --- | --- |
 | 9 | `biologi/KvindensCyklus/FinalSim.html` | 1322 | 3 canvas, 1 skyder |
-| 10 | `biologi/transkription.html` | 711 | 2 svg, trinvis |
 | 11 | `biologi/DNA_Simulering.html` | 684 | svg, trinvis — `drivhuseffektenSimpel.html` er forlæg |
 | 12 | `biologi/enzymhastighed.html` | 635 | 5 canvas, 3 skydere |
 | 13 | `biologi/osmose.html` | 389 | canvas + svg, 2 skydere |

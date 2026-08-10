@@ -32,7 +32,9 @@ skal følge skabelonen herunder. Kopiér fra en side, der allerede er lagt om.
 
 Lagt om indtil videre: forsiden, fagforsiderne, `Stigningsregn.html`,
 `drivhuseffektenSimpel.html`, `drivhuseffekten.html`,
-`poroesitetPermeabilitet.html`, `TermiskTryk3.html`. Resten af `geografi/`, `biologi/` og
+`poroesitetPermeabilitet.html`, `TermiskTryk3.html`,
+`biologi/transkription.html` (eneste biologi-side — brug den som forlæg, når
+`--accent:var(--bio)` skal bruges). Resten af `geografi/`, `biologi/` og
 `style.css`-siderne kører stadig det gamle design — rør dem kun, når opgaven
 handler om dem.
 
