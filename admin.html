@@ -1,105 +1,105 @@
 <!doctype html>
 <html lang="da">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Admin – smbi.dk</title>
-  <link rel="stylesheet" href="style.css" />
-  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin — interne ressourcer — smbi.dk</title>
+<meta name="description" content="Interne værktøjer og dokumenter til lærerne: arbejdstidskalender, tidsregistrering, censor-ur og navne-app.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,300..600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="forside.css">
+<style>
+  :root{--glow:#E2D6F8}
+</style>
 </head>
 <body>
 
-  <nav class="site-nav">
-    <div class="nav-inner">
-      <a href="index.html" class="nav-brand">smbi.dk</a>
-      <div class="nav-links">
-        <a href="index.html" class="nav-link"><i class="ph ph-house"></i> Forside</a>
-        <a href="biologi.html" class="nav-link"><i class="ph ph-dna"></i> Biologi</a>
-        <a href="geografi.html" class="nav-link"><i class="ph ph-globe-hemisphere-west"></i> Geografi</a>
-        <a href="born.html" class="nav-link"><i class="ph ph-star"></i> Børn</a>
-        <a href="contact.html" class="nav-link"><i class="ph ph-envelope"></i> Kontakt</a>
-        <a href="admin.html" class="nav-link active"><i class="ph ph-lock-key"></i> Admin</a>
-      </div>
+<header class="top" id="site-top">
+  <div class="rainbow"></div>
+  <div class="top-bar">
+    <div class="top-in">
+      <a href="index.html" class="brand"><span class="brand-mark"></span>smbi<em>.dk</em></a>
+      <nav class="top-nav">
+        <a href="index.html">Forside</a>
+        <a href="#vaerktoj">Værktøjer</a>
+        <a href="biologi.html">Biologi</a>
+        <a href="geografi.html">Geografi</a>
+        <a href="contact.html">Kontakt</a>
+      </nav>
     </div>
-  </nav>
+  </div>
+</header>
 
-  <header class="page-hero" style="background: var(--sepia);">
-    <div class="page-hero-inner">
-      <div>
-        <div class="page-hero-eyebrow">smbi.dk · Intern</div>
-        <h1 class="page-hero-title"><em>Admin</em></h1>
-        <p class="page-hero-sub">Interne ressourcer og dokumenter til lærerne.</p>
-      </div>
+<main>
+
+  <div class="wrap head">
+    <div class="head-in">
+      <span class="eyebrow mono"><span class="blink"></span>smbi.dk · Intern</span>
+      <h1>Ressourcer og værktøjer til <span class="hi" style="--hc:#E2D6F8">lærerne</span></h1>
+      <p class="lead">Kalender, eksamen og undervisning — samlet ét sted, uden at rode forsiden til.</p>
     </div>
-  </header>
+  </div>
 
-  <main class="container">
-
-    <p class="section-label">Planlægning</p>
-
-    <div class="card">
-      <div class="card-header" style="background: var(--sepia);">
-        <i class="ph ph-calendar card-header-icon"></i>
-        <span class="card-header-title">Arbejdstid</span>
-      </div>
-      <div class="card-body">
-        <ul class="list">
-          <li>
-            <a href="Arbejdstidskalender_2026-27.html">Arbejdstidskalender 2026–27</a>
-            <span class="tag">planlægning</span>
-          </li>
-          <li>
-            <a href="tid/">Tid – tidregistrering</a>
-            <span class="tag">app</span>
-          </li>
-        </ul>
-      </div>
+  <section class="sec wrap" id="vaerktoj">
+    <div class="sec-head">
+      <h2>Værktøjer</h2>
+      <span class="tag t2">4 stk</span>
+      <span class="rule"></span>
     </div>
 
-    <div class="card">
-      <div class="card-header" style="background: var(--sepia);">
-        <i class="ph ph-timer card-header-icon"></i>
-        <span class="card-header-title">Eksamen</span>
+    <div class="tools">
+      <a class="tool t-lime" href="Arbejdstidskalender_2026-27.html">
+        <span class="tool-ic"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span>
+        <span class="mono">Planlægning</span><h4>Arbejdstidskalender</h4>
+        <p>Kalender med overblik over årets arbejdstid, 2026/27.</p>
+      </a>
+      <a class="tool t-amber" href="tid/index.html">
+        <span class="tool-ic"><svg viewBox="0 0 24 24"><path d="M6 3h12M6 21h12M7 3v4l5 5 5-5V3M7 21v-4l5-5 5 5v4"/></svg></span>
+        <span class="mono">Registrering</span><h4>Tid</h4>
+        <p>Hold styr på timerne — opgaver, historik og rapporter.</p>
+      </a>
+      <a class="tool t-blue" href="censorUr.html">
+        <span class="tool-ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg></span>
+        <span class="mono">Eksamen</span><h4>Censor-ur</h4>
+        <p>Hold tiden ved mundtlig eksamen — forberedelse, prøve og votering.</p>
+      </a>
+      <a class="tool t-grape" href="navneApp/index.html">
+        <span class="tool-ic"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 19a6 6 0 0 1 12 0"/><circle cx="17.5" cy="9.5" r="2.4"/><path d="M15 19a5 5 0 0 1 6.5-4.3"/></svg></span>
+        <span class="mono">Klassen</span><h4>Navne-app</h4>
+        <p>Træk elever tilfældigt, og fordel dem i grupper.</p>
+      </a>
+    </div>
+  </section>
+
+</main>
+
+<footer class="foot">
+  <div class="foot-in">
+    <div>
+      <a href="index.html" class="brand"><span class="brand-mark"></span>smbi<em style="color:#8FA29E">.dk</em></a>
+      <p class="mono">Simon Messell · naturgeografi &amp; biologi · © <span id="year"></span></p>
+    </div>
+    <div class="foot-cols">
+      <div class="foot-col">
+        <h4>Sider</h4>
+        <div class="foot-links">
+          <a href="index.html">Forside</a>
+          <a href="biologi.html">Biologi</a>
+          <a href="geografi.html">Geografi</a>
+          <a href="born.html">Børn</a>
+        </div>
       </div>
-      <div class="card-body">
-        <ul class="list">
-          <li>
-            <a href="censorUr.html">CensorUr – hold tiden til eksamen</a>
-            <span class="tag">app</span>
-          </li>
-        </ul>
-        <p style="margin: 0.5rem 0 0; font-size: 0.88rem; color: var(--text-muted, #666);">Har du også svært ved hovedregning med minutter sidst på en lang eksamensdag? Så brug CensorUr – det hjælper dig med at holde tiden til eksamen.</p>
+      <div class="foot-col">
+        <h4>Andet</h4>
+        <div class="foot-links">
+          <a href="contact.html">Kontakt</a>
+        </div>
       </div>
     </div>
+  </div>
+</footer>
 
-    <p class="section-label">Undervisning</p>
-
-    <div class="card">
-      <div class="card-header" style="background: var(--sepia);">
-        <i class="ph ph-users card-header-icon"></i>
-        <span class="card-header-title">Elevnavne</span>
-      </div>
-      <div class="card-body">
-        <ul class="list">
-          <li>
-            <a href="navneApp/">Navne-app – lær elevnavne</a>
-            <span class="tag">app</span><span class="tag">PWA</span>
-          </li>
-        </ul>
-      </div>
-    </div>
-
-  </main>
-
-  <footer class="footer">
-    <div class="footer-inner">
-      <div>
-        <div class="footer-brand">smbi.dk</div>
-        <div class="footer-meta">Naturgeografi &amp; Biologi · © <span id="year"></span></div>
-      </div>
-    </div>
-  </footer>
-
-  <script src="site.js"></script>
+<script src="fag.js"></script>
 </body>
 </html>

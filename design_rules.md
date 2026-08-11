@@ -12,8 +12,8 @@ skal følge skabelonen herunder. Kopiér fra en side, der allerede er lagt om.
 | `geografi/Stigningsregn.html` | simulering med canvas + skydere + instrumenter |
 | `geografi/drivhuseffektenSimpel.html` | trinvis SVG-figur med forklaringsspalte |
 
-Lagt om indtil videre: forsiden, fagforsiderne, `Stigningsregn.html`,
-`drivhuseffektenSimpel.html`, `drivhuseffekten.html`,
+Lagt om indtil videre: forsiden, fagforsiderne, `born.html`, `admin.html`,
+`Stigningsregn.html`, `drivhuseffektenSimpel.html`, `drivhuseffekten.html`,
 `poroesitetPermeabilitet.html`, `TermiskTryk3.html`,
 `biologi/transkription.html` (eneste biologi-side — brug den som forlæg, når
 `--accent:var(--bio)` skal bruges). Resten af `geografi/`, `biologi/` og

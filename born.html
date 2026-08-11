@@ -1,68 +1,102 @@
 <!doctype html>
 <html lang="da">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Børn – smbi.dk</title>
-  <link rel="stylesheet" href="style.css" />
-  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Børn — spil og øvelser — smbi.dk</title>
+<meta name="description" content="Spil og øvelser til de yngste elever — regneøvelser i spilform, der kører direkte i browseren uden login.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,300..600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="forside.css">
+<style>
+  :root{--glow:#FFE9B0}
+</style>
 </head>
 <body>
 
-  <nav class="site-nav">
-    <div class="nav-inner">
-      <a href="index.html" class="nav-brand">smbi.dk</a>
-      <div class="nav-links">
-        <a href="index.html" class="nav-link"><i class="ph ph-house"></i> Forside</a>
-        <a href="biologi.html" class="nav-link"><i class="ph ph-dna"></i> Biologi</a>
-        <a href="geografi.html" class="nav-link"><i class="ph ph-globe-hemisphere-west"></i> Geografi</a>
-        <a href="born.html" class="nav-link active"><i class="ph ph-star"></i> Børn</a>
-        <a href="contact.html" class="nav-link"><i class="ph ph-envelope"></i> Kontakt</a>
-        <a href="admin.html" class="nav-link"><i class="ph ph-lock-key"></i> Admin</a>
-      </div>
+<header class="top" id="site-top">
+  <div class="rainbow"></div>
+  <div class="top-bar">
+    <div class="top-in">
+      <a href="index.html" class="brand"><span class="brand-mark"></span>smbi<em>.dk</em></a>
+      <nav class="top-nav">
+        <a href="index.html">Forside</a>
+        <a href="#spil">Spil</a>
+        <a href="biologi.html">Biologi</a>
+        <a href="geografi.html">Geografi</a>
+        <a href="contact.html">Kontakt</a>
+      </nav>
     </div>
-  </nav>
+  </div>
+</header>
 
-  <header class="page-hero" style="background: var(--sepia);">
-    <div class="page-hero-inner">
-      <div>
-        <div class="page-hero-eyebrow">smbi.dk · Fag</div>
-        <h1 class="page-hero-title"><em>Børn</em></h1>
-        <p class="page-hero-sub">Spil og øvelser til de yngre elever.</p>
-      </div>
+<main>
+
+  <div class="wrap head">
+    <div class="head-in">
+      <span class="eyebrow mono"><span class="blink"></span>smbi.dk · Børn</span>
+      <h1>Spil og øvelser til de <span class="hi" style="--hc:#FFE9B0">yngste</span></h1>
+      <p class="lead">Regneøvelser i spilform — ingen login, bare åbn og gå i gang.</p>
     </div>
-  </header>
+  </div>
 
-  <main class="container">
-
-    <p class="section-label">Spil &amp; Øvelser</p>
-
-    <div class="card">
-      <div class="card-header" style="background: var(--sepia);">
-        <i class="ph ph-game-controller card-header-icon"></i>
-        <span class="card-header-title">Spil &amp; Øvelser</span>
-      </div>
-      <div class="card-body">
-        <ul class="list">
-          <li>
-            <a href="ForBørn/Mathsteroids/Mathsteroids.html">Mathsteroids</a>
-            <span class="tag">C</span><span class="tag">matematik</span>
-          </li>
-        </ul>
-      </div>
+  <section class="sec wrap" id="spil">
+    <div class="sec-head">
+      <h2>Spil &amp; øvelser</h2>
+      <span class="tag t1">1 stk</span>
+      <span class="rule"></span>
     </div>
 
-  </main>
+    <div class="sims">
 
-  <footer class="footer">
-    <div class="footer-inner">
-      <div>
-        <div class="footer-brand">smbi.dk</div>
-        <div class="footer-meta">Naturgeografi &amp; Biologi · © <span id="year"></span></div>
+      <article class="sim">
+        <div class="sim-fig"><svg viewBox="0 0 120 64" aria-hidden="true">
+          <path d="M22 46 34 10l6 36z"/>
+          <path d="M28 46h12"/>
+          <path d="M34 46v10m-5-8 5 8 5-8" opacity=".6"/>
+          <circle cx="76" cy="18" r="10"/>
+          <circle cx="100" cy="40" r="7"/>
+          <path d="M70 46l10 10m0-10-10 10"/>
+        </svg></div>
+        <div class="sim-body">
+          <h4><a href="ForBørn/Mathsteroids/Mathsteroids.html">Mathsteroids</a></h4>
+          <p>Skyd asteroiderne ned ved at regne den rigtige opgave først.</p>
+          <div class="sim-meta"><span class="kind">Matematik</span><span class="lvl lvl-C">C</span></div>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+</main>
+
+<footer class="foot">
+  <div class="foot-in">
+    <div>
+      <a href="index.html" class="brand"><span class="brand-mark"></span>smbi<em style="color:#8FA29E">.dk</em></a>
+      <p class="mono">Simon Messell · naturgeografi &amp; biologi · © <span id="year"></span></p>
+    </div>
+    <div class="foot-cols">
+      <div class="foot-col">
+        <h4>Sider</h4>
+        <div class="foot-links">
+          <a href="index.html">Forside</a>
+          <a href="biologi.html">Biologi</a>
+          <a href="geografi.html">Geografi</a>
+          <a href="contact.html">Kontakt</a>
+        </div>
+      </div>
+      <div class="foot-col">
+        <h4>Andet</h4>
+        <div class="foot-links">
+          <a href="admin.html">Admin</a>
+        </div>
       </div>
     </div>
-  </footer>
+  </div>
+</footer>
 
-  <script src="site.js"></script>
+<script src="fag.js"></script>
 </body>
 </html>
