@@ -4,7 +4,7 @@ Status pr. 9. august 2026. Skabelonen er beskrevet i `CLAUDE.md`.
 Forlæg: `index.html` + `forside.css`, `geografi/Stigningsregn.html`,
 `geografi/drivhuseffektenSimpel.html`.
 
-**Lagt om: 9 sider. Tilbage: 39.**
+**Lagt om: 10 sider. Tilbage: 38.**
 
 Rækkefølgen nedenfor er valgt efter, hvad eleverne og du selv møder oftest,
 ikke efter hvad der er nemmest.
@@ -214,9 +214,18 @@ gamle links stadig virker.
 Små sider, som stadig hænger på `style.css`. Kan tages samlet på én gang, når
 etape 1–3 er i hus.
 
+### ✅ 17 — `contact.html` (færdig)
+
+Lagt om til skabelonen: topbjælke, `.wrap head` med eyebrow/`h1`/lead, og
+formularen i et `.kontakt`-panel (samme blækkant + hård skygge som `.rig`,
+med `.rig-bar` i `--teal` og `.rig-head` med status-prik — kontakt er
+hverken bio eller geo). Formspree-afsendelsen er uændret (samme
+`action`-URL og felter), kun rammen og statusboksen (busy/ok/err) er nye.
+`site.js` og `@phosphor-icons` er væk; siden bruger `forside.css` og
+`fag.js` (kun til årstallet i bunden).
+
 | # | Fil | Linjer |
 | --- | --- | --- |
-| 17 | `contact.html` | 105 |
 | 18 | `born.html` | 68 |
 | 19 | `admin.html` | 105 |
 
