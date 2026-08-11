@@ -195,6 +195,25 @@ gamle links stadig virker.
   Målt: 761 px konstant over 11 mutationer og alle trin, 867 px i
   projektortilstand.
 
+### ✅ 15 — `biologi/enzymkinetik.html` (færdig — erstatter `bio-glass/`, skrevet helt om)
+
+`bio-glass/` var en selvstændig app med tre moduler (fordøjelse, kinetik,
+glykolyse) på Matter.js og Chart.js, hvoraf kun kinetik-modulet fungerede
+efter hensigten. De to andre er droppet, og kinetik-modulet er genopbygget
+fra bunden som én simulering uden eksterne afhængigheder.
+
+* Hvert enzym har nu ét fysisk bindingssted — en lille lomme på kanten af
+  enzymet — som substraterne skal ramme for at kunne binde. Reaktionen er
+  modelleret som E + S ⇌ ES → E + P: et bundet substrat konkurrerer mellem
+  katalyse (temperatur- og pH-afhængig) og simpel frigivelse uomdannet, i
+  stedet for den gamle udgaves øjeblikkelige kollisions-tjek.
+  Substraterne docker i enzymets lomme.
+* Samme temperatur/pH-model som før (pH-klokkekurve om 7,0, denaturering
+  over 55 °C), men uden Matter.js/Chart.js — kanvas-fysikken og rate-søjlen
+  er skrevet fra bunden.
+* Alle links til `bio-glass/index.html` er opdateret til
+  `biologi/enzymkinetik.html` (forsiden, fagforsiden).
+
 | # | Fil | Linjer | Indhold |
 | --- | --- | --- | --- |
 | 9 | `biologi/KvindensCyklus/FinalSim.html` | 1322 | 3 canvas, 1 skyder |
@@ -202,7 +221,6 @@ gamle links stadig virker.
 | 12 | `biologi/enzymhastighed.html` | 635 | 5 canvas, 3 skydere |
 | 13 | `biologi/osmose.html` | 389 | canvas + svg, 2 skydere |
 | 14 | `bio-tree.html` | 230 | svg-netværk |
-| 15 | `bio-glass/index.html` | 152 | canvas; har egen `style.css` — skal fjernes |
 | 16 | `biologi/bio-blocks/index.html` | 129 | 2 svg; har egen `style.css` — skal fjernes |
 
 `biologi/bio-blocks.html` er kun en redirect på 12 linjer og skal ikke røres.
@@ -276,9 +294,8 @@ side i stedet for som en separat runde.
 * **Rammen skal stå stille** på alle sider med trin eller tilstande: mål alle
   tilstande ved indlæsning, lås `min-height`, mål igen ved `resize`,
   projektorskift og `document.fonts.ready`.
-* **`style.css` kan slettes**, når disse seks sider er omlagt:
-  `born.html`, `admin.html`, `contact.html`, `bio-glass/index.html`,
-  `biologi/bio-blocks/index.html`, `studiekort/index.html`.
+* **`style.css` kan slettes**, når disse sider er omlagt:
+  `contact.html`, `biologi/bio-blocks/index.html`, `studiekort/index.html`.
   `backup-gammelt-design/` og `smbi-design/` skal ikke røres.
 * **`site.js`** (årstal + gammelt søgefelt) bruges kun af de sider, der
   stadig kører `style.css`. Den kan følge `style.css` i graven — `fag.js`
