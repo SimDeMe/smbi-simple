@@ -608,7 +608,13 @@ const TM_K     = 316.5;  // K — smeltepunkt for proteinet (43,4 °C)
 const DH       = 300;    // kJ/mol — udfoldningens entalpi (styrer hvor brat det går)
 const R_GAS    = 8.314e-3;
 const TAU_FOLD = 3.0;    // s — hvor hurtigt bestanden indstiller sig på ligevægten
-const AGG_TID  = 6.0;    // s udfoldet, før proteinet klumper uigenkaldeligt (lukket beholder)
+/* Et protein folder sig ud og ind igen hele tiden — ved 37 °C varer en
+   sådan tur i gennemsnit 1/kFold ≈ 3,3 s. Grænsen for uigenkaldelig
+   klumpning skal derfor ligge ude i halen af den fordeling, ikke midt i
+   den: ellers dør enzymerne af helt almindelige udsving ved
+   kropstemperatur. Med 25 s overlever bestanden ved 37 °C, mens et enzym
+   ved 60 °C stadig klumper på under et halvt minut. */
+const AGG_TID  = 25.0;   // s udfoldet, før proteinet klumper uigenkaldeligt (lukket beholder)
 
 /* Ved meget lav og meget høj pH falder proteinets smeltepunkt, så det
    folder sig ud allerede ved stuetemperatur. Inden for pH 3–11 sker der
