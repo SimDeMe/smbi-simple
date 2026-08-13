@@ -1,0 +1,1571 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Enzymkinetik — smbi.dk</title>
+<meta name="description" content="Interaktiv Michaelis-Menten-model: hold substrat- og enzymkoncentrationen fast, aflæs en stabil reaktionshastighed, og mål selv kurverne for substrat, enzym, temperatur og pH.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,300..600&display=swap" rel="stylesheet">
+<style>
+/* ─────────────────────────────────────────────────────────
+   Enzymkinetik — smbi.dk's fælles design
+   ───────────────────────────────────────────────────────── */
+:root{
+  --paper:#FFF9EE;
+  --paper-2:#FFF3DC;
+  --panel:#FFFFFF;
+  --ink:#17211F;
+  --slate:#566B68;
+
+  --pink:#E8336D;
+  --blue:#0E86C8;
+  --lime:#5FB030;
+  --amber:#FFB300;
+  --grape:#7A4FD6;
+  --coral:#FF6A3D;
+  --teal:#0FA593;
+
+  --bio:var(--pink);
+  --accent:var(--bio);
+
+  --display:'Archivo',system-ui,sans-serif;
+  --body:'Source Serif 4',Georgia,serif;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+
+  --wide:'wdth' 118;
+  --max:1080px;
+
+  --hard:4px 4px 0 var(--ink);
+  --hard-lg:7px 7px 0 var(--ink);
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--body);
+  font-size:17px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--grape);outline-offset:3px;border-radius:4px}
+
+.mono{
+  font-family:var(--mono);font-size:0.68rem;font-weight:500;
+  letter-spacing:0.14em;text-transform:uppercase;
+}
+.sr{
+  position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+  overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;
+}
+
+/* ── Topbjælke ─────────────────────────────────────────── */
+.rainbow{
+  height:7px;
+  background:linear-gradient(90deg,
+    var(--pink) 0 14.3%, var(--coral) 14.3% 28.6%, var(--amber) 28.6% 42.9%,
+    var(--lime) 42.9% 57.2%, var(--teal) 57.2% 71.5%, var(--blue) 71.5% 85.8%,
+    var(--grape) 85.8% 100%);
+}
+.top{position:sticky;top:0;z-index:60}
+.top-bar{
+  background:rgba(255,249,238,0.93);
+  backdrop-filter:blur(10px);
+  border-bottom:2px solid var(--ink);
+}
+.top-in{
+  max-width:var(--max);margin:0 auto;padding:0 24px;
+  display:flex;align-items:center;gap:16px;height:60px;
+}
+.brand{
+  font-family:var(--display);font-variation-settings:'wdth' 125;
+  font-weight:800;font-size:1.15rem;letter-spacing:-0.02em;
+  text-decoration:none;display:flex;align-items:center;gap:8px;
+}
+.brand-mark{
+  width:25px;height:25px;border-radius:9px;border:2px solid var(--ink);
+  background:conic-gradient(var(--pink),var(--amber),var(--lime),var(--blue),var(--grape),var(--pink));
+  flex-shrink:0;
+}
+.brand em{font-family:var(--mono);font-size:0.72rem;font-weight:500;font-style:normal;color:var(--slate)}
+.top-nav{display:flex;gap:6px;margin-left:auto}
+.top-nav a{
+  font-family:var(--display);font-size:0.84rem;font-weight:600;
+  text-decoration:none;color:var(--ink);white-space:nowrap;
+  padding:7px 14px;border-radius:20px;border:2px solid transparent;
+  transition:background .15s,border-color .15s;
+}
+.top-nav a:hover{background:#FBD3E1;border-color:var(--ink)}
+
+/* ── Sidehoved ─────────────────────────────────────────── */
+.wrap{max-width:var(--max);margin:0 auto;padding:0 24px}
+.head{padding:34px 0 22px;position:relative;overflow:hidden}
+.head::before{
+  content:'';position:absolute;width:380px;height:380px;border-radius:50%;
+  background:#FBD3E1;filter:blur(70px);opacity:.6;top:-200px;right:-120px;z-index:0;
+}
+.head-in{position:relative;z-index:1}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--ink);color:#FFF6E0;padding:6px 14px;border-radius:20px;
+}
+.eyebrow .blink{width:8px;height:8px;border-radius:50%;background:var(--amber);animation:pulse 1.8s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.8)}}
+h1{
+  font-family:var(--display);font-variation-settings:var(--wide);font-weight:800;
+  font-size:clamp(2rem,4.6vw,2.9rem);line-height:1.03;letter-spacing:-0.032em;
+  margin:16px 0 14px;
+}
+.hi{position:relative;display:inline-block;z-index:0;white-space:nowrap}
+.hi::before{
+  content:'';position:absolute;z-index:-1;left:-8px;right:-8px;top:12%;bottom:8%;
+  background:var(--hc,var(--amber));border-radius:6px;transform:rotate(-1.3deg);
+}
+.lead{font-size:1.06rem;color:#3E4E4C;max-width:62ch}
+
+/* ── Signaturpanel: selve simuleringen ─────────────────── */
+.rig{
+  position:relative;
+  background:var(--panel);
+  border:2.5px solid var(--ink);border-radius:18px;overflow:hidden;
+  box-shadow:var(--hard-lg);
+  margin-top:26px;
+}
+.rig-bar{height:9px;background:var(--accent)}
+.rig-head{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:11px 15px;border-bottom:2px solid var(--ink);
+  background:#FBD3E1;
+}
+.rig-live{display:flex;align-items:center;gap:7px}
+.rig-live .mono{color:var(--ink);font-weight:600}
+.dot{
+  width:9px;height:9px;border-radius:50%;background:var(--accent);
+  border:1.5px solid var(--ink);animation:pulse 2s ease-in-out infinite;
+}
+.rig-head .who{
+  font-family:var(--mono);font-size:0.6rem;font-weight:600;
+  letter-spacing:0.12em;text-transform:uppercase;color:#5A4451;
+  font-variant-numeric:tabular-nums;
+}
+.rig-head .spacer{margin-left:auto}
+.btn-mini{
+  font-family:var(--display);font-size:0.72rem;font-weight:700;
+  background:#fff;border:2px solid var(--ink);color:var(--ink);
+  padding:4px 11px;border-radius:18px;cursor:pointer;white-space:nowrap;
+  box-shadow:2px 2px 0 var(--ink);
+  transition:transform .12s,box-shadow .12s,background .16s,color .16s;
+}
+.btn-mini:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--ink)}
+.btn-mini:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--ink)}
+.btn-mini[aria-pressed="true"]{
+  background:var(--accent);color:#fff;
+  transform:translate(2px,2px);box-shadow:0 0 0 var(--ink);
+}
+.btn-mini[disabled]{opacity:.45;cursor:not-allowed;transform:none;box-shadow:2px 2px 0 var(--ink)}
+
+/* kanvas + overlay */
+.stage{
+  position:relative;
+  padding:10px 10px 0;
+  background:radial-gradient(circle at 1px 1px,#E6EDEB 1px,transparent 0) 0 0/16px 16px;
+}
+canvas{
+  display:block;width:100%;height:auto;
+  border:2px solid var(--ink);border-radius:12px;
+  background:linear-gradient(180deg,#EAF6F0,#DCEEF6);
+}
+
+.hint{
+  position:absolute;right:22px;bottom:22px;z-index:2;pointer-events:none;
+  font-family:var(--mono);font-size:0.58rem;font-weight:600;letter-spacing:0.1em;
+  text-transform:uppercase;color:var(--ink);
+  background:rgba(255,249,238,.9);border:1.5px solid var(--ink);border-radius:14px;
+  padding:4px 10px;transition:opacity .3s;
+}
+.hint.gone{opacity:0}
+
+/* ── Instrumenter ──────────────────────────────────────── */
+.gauges{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  border-top:2px solid var(--ink);
+}
+.gauge{
+  padding:13px 15px 14px;border-left:2px solid var(--ink);
+  display:flex;flex-direction:column;gap:9px;
+}
+.gauge:first-child{border-left:none}
+.g-rate{background:#EDF8E4}
+.g-occ{background:#E7F4FB}
+.g-fold{background:#FFF1EC}
+.g-prod{background:#F1ECFC}
+.gauge dt{
+  font-family:var(--mono);font-size:0.57rem;font-weight:600;letter-spacing:0.12em;
+  text-transform:uppercase;color:#5A6C69;
+}
+.gauge dd{
+  font-family:var(--display);font-variation-settings:'wdth' 108;
+  font-weight:800;font-size:1.28rem;line-height:1;font-variant-numeric:tabular-nums;
+}
+.gauge dd small{font-size:0.62em;font-weight:700;color:#5A6C69;margin-left:3px}
+.g-viz{display:flex;align-items:flex-end;gap:10px;height:46px}
+
+/* vandret søjle (hastighed, mætning) */
+.col{
+  position:relative;width:100%;height:44px;flex:1;
+  border:2px solid var(--ink);border-radius:9px;overflow:hidden;
+  background:
+    repeating-linear-gradient(90deg,rgba(23,33,31,.09) 0 1.5px,transparent 1.5px 25%),
+    #fff;
+}
+.col i{
+  position:absolute;left:0;bottom:0;top:0;display:block;
+  background:var(--cc,linear-gradient(90deg,#8FE07A,#5FB030));width:0%;
+  border-right:2px solid var(--ink);
+  transition:width .16s linear;
+}
+.col b{
+  position:absolute;right:5px;bottom:3px;
+  font-family:var(--mono);font-size:0.5rem;font-weight:600;color:#5A6C69;letter-spacing:.06em;
+  background:rgba(255,255,255,.82);border-radius:5px;padding:0 3px;
+}
+
+/* enzymbrikker: én brik pr. enzymmolekyle */
+.edots{
+  display:flex;flex-wrap:wrap;gap:5px;align-items:center;align-content:center;
+  height:44px;flex:1;
+}
+.edots i{
+  width:12px;height:12px;border-radius:4px;flex:none;
+  border:1.5px solid var(--ink);background:var(--coral);
+}
+.edots i.uf{border-radius:50%;background:#CFD8D4}          /* foldet ud */
+.edots i.dead{background:#8C9C99;transform:rotate(45deg);border-radius:2px} /* klumpet */
+
+/* gennemstrømning i stedet for ophobning */
+.flowlbl{
+  display:flex;align-items:center;height:44px;flex:1;
+  border:2px dashed rgba(23,33,31,.4);border-radius:9px;padding:0 10px;
+  font-family:var(--mono);font-size:0.53rem;font-weight:600;letter-spacing:.08em;
+  text-transform:uppercase;color:#6C5A85;line-height:1.2;
+}
+.g-viz > .skjul{display:none}
+
+/* ── Måleplot ──────────────────────────────────────────── */
+.plot{border-top:2px solid var(--ink);background:#fff}
+.plot-head{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  padding:11px 15px;border-bottom:2px solid var(--ink);background:#EDF8E4;
+}
+.plot-head .mono{color:#4E6349}
+.seg{display:flex;gap:5px;flex-wrap:wrap}
+.plot-acts{display:flex;gap:5px;margin-left:auto;flex-wrap:wrap}
+.plot-svg{display:block;width:100%;height:auto;padding:10px 12px 2px}
+.p-grid line{stroke:#E1EAE7;stroke-width:1}
+.p-axis line{stroke:var(--ink);stroke-width:2}
+.p-axis text{font-family:var(--mono);font-size:11px;font-weight:500;fill:#5A6C69;letter-spacing:.06em}
+.p-axis text.ax{font-family:var(--display);font-size:12.5px;font-weight:700;fill:var(--ink);letter-spacing:0}
+.p-curve{fill:none;stroke:var(--ink);stroke-width:2.6;stroke-linejoin:round;stroke-linecap:round}
+.p-guide{stroke:var(--grape);stroke-width:1.6;stroke-dasharray:5 4;fill:none}
+.p-guide-lbl{font-family:var(--mono);font-size:10.5px;font-weight:600;fill:var(--grape);letter-spacing:.08em}
+.p-pt{stroke:var(--ink);stroke-width:1.6}
+.p-err{stroke:var(--ink);stroke-width:1.3;opacity:.55}
+.p-mark{stroke:var(--ink);stroke-width:2}
+.plot-legend{
+  border-top:2px solid var(--ink);
+  padding:10px 15px;display:flex;gap:9px;flex-wrap:wrap;align-items:center;background:#fff;
+}
+.key{
+  display:inline-flex;align-items:center;gap:7px;
+  font-family:var(--mono);font-size:0.58rem;font-weight:600;letter-spacing:0.1em;
+  text-transform:uppercase;color:#4A5A57;
+}
+.key svg{flex:none}
+
+/* ── Kontrolpanel ──────────────────────────────────────── */
+.knobs{
+  border-top:2px solid var(--ink);background:var(--paper-2);
+  padding:18px 15px 20px;
+  display:grid;grid-template-columns:1fr 1fr;gap:20px 26px;
+}
+.knob{display:flex;flex-direction:column;gap:7px}
+.knob-top{display:flex;align-items:baseline;gap:10px}
+.knob-top .mono{color:#5A6C69;font-size:0.62rem}
+.knob-val{
+  margin-left:auto;font-family:var(--display);font-variation-settings:'wdth' 108;
+  font-weight:800;font-size:1rem;font-variant-numeric:tabular-nums;
+  background:#fff;border:2px solid var(--ink);border-radius:16px;padding:1px 11px;
+  white-space:nowrap;
+}
+input[type=range]{
+  -webkit-appearance:none;appearance:none;width:100%;height:22px;background:transparent;cursor:pointer;
+}
+input[type=range]::-webkit-slider-runnable-track{
+  height:10px;border:2px solid var(--ink);border-radius:9px;
+  background:var(--track,#fff);
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;
+  width:22px;height:22px;margin-top:-8px;border-radius:50%;
+  border:2.5px solid var(--ink);background:var(--kc,var(--amber));
+  box-shadow:2px 2px 0 var(--ink);
+}
+input[type=range]::-moz-range-track{
+  height:10px;border:2px solid var(--ink);border-radius:9px;background:var(--track,#fff);
+}
+input[type=range]::-moz-range-thumb{
+  width:20px;height:20px;border-radius:50%;
+  border:2.5px solid var(--ink);background:var(--kc,var(--amber));box-shadow:2px 2px 0 var(--ink);
+}
+#inp-sub{--track:linear-gradient(90deg,#C7E6F6,#0E86C8);--kc:var(--blue)}
+#inp-enz{--track:linear-gradient(90deg,#FFE9DC,#FF6A3D);--kc:var(--coral)}
+#inp-temp{--track:linear-gradient(90deg,#9BE0F5,#FFB300,#FF6A3D);--kc:var(--coral)}
+#inp-ph{--track:linear-gradient(90deg,#FF6A3D,#FFB300,#5FB030,#0E86C8,#7A4FD6);--kc:var(--grape)}
+
+/* ── Fakta-fod ─────────────────────────────────────────── */
+.facts{
+  border-top:2px solid var(--ink);background:#fff;
+  padding:12px 15px;display:flex;gap:9px;flex-wrap:wrap;align-items:center;
+}
+.fact{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--paper);border:2px solid var(--ink);border-radius:22px;padding:5px 13px;
+  font-family:var(--mono);font-size:0.6rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;
+}
+.fact::before{content:'';width:10px;height:10px;border-radius:3px;background:var(--fc,var(--slate));border:1.5px solid var(--ink)}
+.fact b{font-family:var(--display);font-size:0.84rem;font-weight:800;letter-spacing:0;font-variant-numeric:tabular-nums}
+
+/* ── Bund ──────────────────────────────────────────────── */
+.foot{
+  margin-top:34px;background:var(--ink);color:#FFF6E0;padding:26px 0 32px;
+}
+.foot-in{
+  max-width:var(--max);margin:0 auto;padding:0 24px;
+  display:flex;justify-content:space-between;align-items:flex-end;gap:18px;flex-wrap:wrap;
+}
+.foot .brand{color:#FFF6E0}
+.foot .mono{color:#8FA29E;margin-top:5px}
+.foot-links{display:flex;gap:8px;flex-wrap:wrap}
+.foot-links a{
+  font-family:var(--display);font-size:0.82rem;font-weight:700;text-decoration:none;
+  border:2px solid #FFF6E0;border-radius:20px;padding:5px 13px;
+  transition:background .16s,color .16s,border-color .16s;
+}
+.foot-links a:nth-child(1):hover{background:var(--pink);border-color:var(--pink)}
+.foot-links a:nth-child(2):hover{background:var(--amber);border-color:var(--amber);color:var(--ink)}
+.foot-links a:nth-child(3):hover{background:var(--lime);border-color:var(--lime);color:var(--ink)}
+
+/* ── Projektortilstand ──────────────────────────────────── */
+body[data-projektor="1"] .top,
+body[data-projektor="1"] .head,
+body[data-projektor="1"] .foot{display:none}
+body[data-projektor="1"] .wrap{max-width:none;padding:0 14px}
+body[data-projektor="1"] .rig{margin-top:14px;box-shadow:var(--hard)}
+body[data-projektor="1"] .gauge dt{font-size:0.76rem}
+body[data-projektor="1"] .gauge dd{font-size:1.9rem}
+body[data-projektor="1"] .gauge dd small{font-size:0.9rem}
+body[data-projektor="1"] .knob-top .mono{font-size:0.82rem}
+body[data-projektor="1"] .knob-val{font-size:1.05rem}
+body[data-projektor="1"] .fact{font-size:0.74rem}
+body[data-projektor="1"] .fact b{font-size:0.92rem}
+body[data-projektor="1"] .plot-head .mono,
+body[data-projektor="1"] .key{font-size:0.74rem}
+
+/* ── Responsivt ────────────────────────────────────────── */
+@media (max-width:820px){
+  .gauges{grid-template-columns:1fr 1fr}
+  .gauge:nth-child(3){border-left:none}
+  .gauge:nth-child(n+3){border-top:2px solid var(--ink)}
+  .plot-acts{margin-left:0}
+}
+@media (max-width:700px){
+  /* plottet får sin egen vandrette rulning frem for at klemme akserne sammen */
+  .plot-scroll{overflow-x:auto}
+  .plot-svg{min-width:660px}
+}
+@media (max-width:620px){
+  body{font-size:16px}
+  .wrap,.top-in,.foot-in{padding-left:16px;padding-right:16px}
+  .head{padding:24px 0 18px}
+  .rig{border-radius:14px;box-shadow:var(--hard)}
+  .knobs{grid-template-columns:1fr}
+  .hint{display:none}
+  .gauge dd{font-size:1.1rem}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+@media print{
+  .top,.foot,.plot-acts,.seg,.rig-head .btn-mini,.btn-reset{display:none!important}
+  .rig{box-shadow:none}
+}
+</style>
+</head>
+<body>
+
+<header class="top" id="site-top">
+  <div class="rainbow"></div>
+  <div class="top-bar">
+    <div class="top-in">
+      <a href="/" class="brand"><span class="brand-mark"></span>smbi<em>.dk</em></a>
+      <nav class="top-nav">
+        <a href="/biologi.html">Biologi</a>
+        <a href="/">Forside</a>
+      </nav>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap head">
+    <div class="head-in">
+      <span class="eyebrow mono"><span class="blink"></span>Biologi B · enzymkinetik</span>
+      <h1>Hvad bestemmer <span class="hi" style="--hc:#FBD3E1">reaktionshastigheden</span>?</h1>
+      <p class="lead">Beholderen holder substrat- og enzymkoncentrationen fast: hver gang et substrat bliver omdannet, tilsættes et nyt, og produktet skylles ud. Derfor står hastigheden stille, så den kan aflæses og måles. Skru på de fire faktorer, mål punkter, og se Michaelis-Menten-kurven, temperaturoptimum og pH-optimum vokse frem.</p>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <section class="rig">
+      <div class="rig-bar"></div>
+      <div class="rig-head">
+        <span class="rig-live"><span class="dot"></span><span class="mono">Live model</span></span>
+        <span class="who" id="who-counts">6 µM enzym · 40 µM substrat</span>
+        <span class="spacer"></span>
+        <button type="button" class="btn-mini" id="btn-fast" aria-pressed="true"
+                title="Til: koncentrationerne holdes konstante. Fra: lukket beholder, hvor substratet bliver brugt op">Fast koncentration</button>
+        <button type="button" class="btn-mini" id="btn-frisk"
+                title="Nyt, ubrugt enzym og nulstillet produkttæller">Frisk forsøg</button>
+        <button type="button" class="btn-mini" id="btn-projektor" aria-pressed="false"
+                title="Skjul sidens krom og forstør aflæsningerne">Projektor</button>
+      </div>
+
+      <div class="stage" id="stage">
+        <canvas id="simCanvas" width="820" height="420" role="img"
+                aria-label="Beholder med enzymmolekyler og substrat. Substraterne binder sig i enzymets aktive sted, og en del af dem spaltes til to produktstykker. Ved høj temperatur folder enzymerne sig ud og kan ikke længere binde substrat."></canvas>
+        <div class="hint" id="hint">Skru på skyderne, og mål punkter ↓</div>
+      </div>
+
+      <dl class="gauges">
+        <div class="gauge g-rate">
+          <dt>Hastighed v (målt)</dt>
+          <div class="g-viz">
+            <div class="col"><i id="anim-rate" style="--cc:linear-gradient(90deg,#8FE07A,#5FB030)"></i><b id="lbl-vmax">V<sub>max</sub> 5,2</b></div>
+          </div>
+          <dd id="val-rate">–<small>µM/s</small></dd>
+        </div>
+
+        <div class="gauge g-occ">
+          <dt>Enzym med substrat</dt>
+          <div class="g-viz">
+            <div class="col"><i id="anim-occ" style="--cc:linear-gradient(90deg,#9BD7F3,#0E86C8)"></i><b id="lbl-occ">ES / E<sub>tot</sub></b></div>
+          </div>
+          <dd id="val-occ">0<small>%</small></dd>
+        </div>
+
+        <div class="gauge g-fold">
+          <dt>Foldet, aktivt enzym</dt>
+          <div class="g-viz">
+            <div class="edots" id="anim-fold" aria-hidden="true"></div>
+          </div>
+          <dd id="val-fold">100<small>%</small></dd>
+        </div>
+
+        <div class="gauge g-prod">
+          <dt>Omsat i alt</dt>
+          <div class="g-viz">
+            <div class="col skjul" id="col-prod"><i id="anim-prodbar" style="--cc:linear-gradient(90deg,#C7A8F5,#7A4FD6)"></i><b id="lbl-prod">0 % omsat</b></div>
+            <div class="flowlbl" id="flow-lbl">Produktet skylles ud</div>
+          </div>
+          <dd id="val-prod">0<small>µM</small></dd>
+        </div>
+      </dl>
+
+      <div class="plot">
+        <div class="plot-head">
+          <span class="mono">Hastighed som funktion af</span>
+          <div class="seg" role="group" aria-label="Vælg hvilken faktor der er på x-aksen">
+            <button type="button" class="btn-mini" data-x="sub"  aria-pressed="true">Substrat</button>
+            <button type="button" class="btn-mini" data-x="enz"  aria-pressed="false">Enzym</button>
+            <button type="button" class="btn-mini" data-x="temp" aria-pressed="false">Temperatur</button>
+            <button type="button" class="btn-mini" data-x="ph"   aria-pressed="false">pH</button>
+          </div>
+          <div class="plot-acts">
+            <button type="button" class="btn-mini" id="btn-maal" title="Mål hastigheden i beholderen i 8 sekunder og sæt punktet på kurven">Mål punkt</button>
+            <button type="button" class="btn-mini" id="btn-serie" title="Kør hele måleserien i hurtigt tempo">Kør serie</button>
+            <button type="button" class="btn-mini" id="btn-ryd">Ryd</button>
+          </div>
+        </div>
+
+        <div class="plot-scroll">
+          <svg class="plot-svg" id="plot" viewBox="0 0 820 290"
+               role="img" aria-labelledby="plot-title" aria-describedby="plot-desc">
+            <title id="plot-title">Reaktionshastighed som funktion af substratkoncentration</title>
+            <desc id="plot-desc"></desc>
+            <g class="p-grid" id="p-grid"></g>
+            <g id="p-guides"></g>
+            <path class="p-curve" id="p-curve" d=""></path>
+            <g id="p-points"></g>
+            <g id="p-marker"></g>
+            <g class="p-axis" id="p-axis"></g>
+          </svg>
+        </div>
+
+        <div class="plot-legend">
+          <span class="key"><svg width="24" height="10" aria-hidden="true"><line x1="1" y1="5" x2="23" y2="5" stroke="#17211F" stroke-width="2.6"/></svg>Modellens kurve</span>
+          <span class="key"><svg width="14" height="14" aria-hidden="true"><circle cx="7" cy="7" r="4.5" fill="#E8336D" stroke="#17211F" stroke-width="1.6"/></svg>Målt her</span>
+          <span class="key"><svg width="14" height="14" aria-hidden="true"><circle cx="7" cy="7" r="4.5" fill="#fff" stroke="#17211F" stroke-width="1.6"/></svg>Målt under andre forhold</span>
+          <span class="key"><svg width="14" height="14" aria-hidden="true"><rect x="1.5" y="1.5" width="11" height="11" fill="none" stroke="#17211F" stroke-width="2"/></svg>Beholderen lige nu</span>
+          <span class="key"><svg width="24" height="10" aria-hidden="true"><line x1="1" y1="5" x2="23" y2="5" stroke="#7A4FD6" stroke-width="1.6" stroke-dasharray="5 4"/></svg>V<sub>max</sub> og K<sub>M</sub></span>
+        </div>
+      </div>
+
+      <div class="knobs">
+        <label class="knob" for="inp-sub">
+          <span class="knob-top"><span class="mono">Substratkoncentration [S]</span><span class="knob-val" id="lbl-sub">40 µM</span></span>
+          <input type="range" id="inp-sub" min="5" max="120" step="5" value="40">
+        </label>
+        <label class="knob" for="inp-enz">
+          <span class="knob-top"><span class="mono">Enzymkoncentration [E]</span><span class="knob-val" id="lbl-enz">6 µM</span></span>
+          <input type="range" id="inp-enz" min="1" max="12" step="1" value="6">
+        </label>
+        <label class="knob" for="inp-temp">
+          <span class="knob-top"><span class="mono">Temperatur</span><span class="knob-val" id="lbl-temp">37 °C</span></span>
+          <input type="range" id="inp-temp" min="0" max="80" step="1" value="37">
+        </label>
+        <label class="knob" for="inp-ph">
+          <span class="knob-top"><span class="mono">pH-værdi</span><span class="knob-val" id="lbl-ph">7,0</span></span>
+          <input type="range" id="inp-ph" min="1" max="14" step="0.1" value="7.0">
+        </label>
+      </div>
+
+      <div class="facts">
+        <span class="fact" style="--fc:var(--lime)">V<sub>max</sub> <b id="f-vmax">5,2</b> µM/s</span>
+        <span class="fact" style="--fc:var(--grape)">K<sub>M</sub> <b id="f-km">36</b> µM</span>
+        <span class="fact" style="--fc:var(--coral)">k<sub>cat</sub> <b id="f-kcat">0,87</b> s⁻¹</span>
+        <span class="fact" style="--fc:var(--amber)">Temperaturoptimum <b>≈ 40 °C</b></span>
+        <span class="fact" style="--fc:var(--blue)">pH-optimum <b>7,0</b></span>
+      </div>
+    </section>
+
+    <!-- Instrumenterne opdateres mange gange i sekundet og kan derfor ikke selv
+         være aria-live — så ville skærmlæseren tale i ét væk. I stedet
+         opsummeres aflæsningen her med jævne mellemrum. -->
+    <p class="sr" id="sr-status" aria-live="polite"></p>
+  </div>
+</main>
+
+<footer class="foot">
+  <div class="foot-in">
+    <div>
+      <a href="/" class="brand"><span class="brand-mark"></span>smbi<em>.dk</em></a>
+      <div class="mono">Enzymkinetik · Michaelis-Menten</div>
+    </div>
+    <nav class="foot-links">
+      <a href="/biologi.html">Biologi</a>
+      <a href="/">Alle simuleringer</a>
+      <a href="/contact.html">Kontakt</a>
+    </nav>
+  </div>
+</footer>
+
+<script>
+/* skjul side-krom, når siden vises i en iframe */
+(function(){try{if(window.top!==window.self){
+  document.getElementById('site-top').style.display='none';
+  document.querySelector('.foot').style.display='none';
+  document.querySelector('.head').style.display='none';
+}}catch(x){}})();
+</script>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   1. MODELLEN
+   ───────────────────────────────────────────────────────────────
+   Hvert enzymmolekyle er en lille tilstandsmaskine med tre tilstande:
+
+       F   foldet og frit          FS  foldet med substrat bundet
+       U   foldet ud (inaktivt)
+
+   Overgangene sker med de rigtige hastighedskonstanter, ét molekyle
+   ad gangen. Regner man ligevægten ud for hele bestanden, falder
+   Michaelis-Menten-udtrykket ud af sig selv — derfor rammer de målte
+   punkter modellens kurve uden at blive tvunget derhen.
+
+   Koncentrationsenhed: 1 kugle på figuren = 1 µM.
+   ═══════════════════════════════════════════════════════════════ */
+
+const K_ON     = 0.075;  // µM⁻¹ s⁻¹ — binding af substrat
+const K_OFF    = 1.8;    // s⁻¹     — ES falder fra hinanden uomdannet
+const KCAT_REF = 0.9;    // s⁻¹     — katalyse ved 37 °C, pH 7, foldet enzym
+const Q10      = 2.0;    // hastigheden fordobles pr. 10 °C
+const PH_OPT   = 7.0, PH_SIGMA = 1.3;
+const TM_K     = 316.5;  // K — smeltepunkt for proteinet (43,4 °C)
+const DH       = 300;    // kJ/mol — udfoldningens entalpi (styrer hvor brat det går)
+const R_GAS    = 8.314e-3;
+const TAU_FOLD = 3.0;    // s — hvor hurtigt bestanden indstiller sig på ligevægten
+/* Et protein folder sig ud og ind igen hele tiden — ved 37 °C varer en
+   sådan tur i gennemsnit 1/kFold ≈ 3,3 s. Grænsen for uigenkaldelig
+   klumpning skal derfor ligge ude i halen af den fordeling, ikke midt i
+   den: ellers dør enzymerne af helt almindelige udsving ved
+   kropstemperatur. Med 25 s overlever bestanden ved 37 °C, mens et enzym
+   ved 60 °C stadig klumper på under et halvt minut. */
+const AGG_TID  = 25.0;   // s udfoldet, før proteinet klumper uigenkaldeligt (lukket beholder)
+
+/* Ved meget lav og meget høj pH falder proteinets smeltepunkt, så det
+   folder sig ud allerede ved stuetemperatur. Inden for pH 3–11 sker der
+   ingenting — der er det kun det aktive steds ladning, der ændrer sig. */
+function tmEff(ph){
+  const d = Math.max(0, Math.abs(ph - PH_OPT) - 4);
+  return TM_K - 3 * d * d;
+}
+/* ligevægtskonstanten for udfoldning, K = [U]/[F] */
+function eqK(temp, ph){
+  const T = temp + 273.15;
+  return Math.exp(-(DH / R_GAS) * (1 / T - 1 / tmEff(ph)));
+}
+function foldetAndel(temp, ph){ return 1 / (1 + eqK(temp, ph)); }
+function kUnfold(temp, ph){ const K = eqK(temp, ph); return (1 / TAU_FOLD) * (K / (1 + K)); }
+function kFold(temp, ph){   const K = eqK(temp, ph); return (1 / TAU_FOLD) * (1 / (1 + K)); }
+
+function phFaktor(ph){ return Math.exp(-((ph - PH_OPT) ** 2) / (2 * PH_SIGMA * PH_SIGMA)); }
+function kcatOf(temp, ph){ return KCAT_REF * Math.pow(Q10, (temp - 37) / 10) * phFaktor(ph); }
+
+/* K_M må også tage højde for, at et ES-kompleks kan gå tabt ved at
+   enzymet folder sig ud. Det er den samme udledning som den klassiske,
+   blot med ét led mere i nævneren. */
+function kmOf(temp, ph){ return (K_OFF + kcatOf(temp, ph) + kUnfold(temp, ph)) / K_ON; }
+function vmaxOf(temp, ph, enz){ return kcatOf(temp, ph) * foldetAndel(temp, ph) * enz; }
+function hastighed(temp, ph, enz, sub){
+  const km = kmOf(temp, ph);
+  return vmaxOf(temp, ph, enz) * sub / (km + sub);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   2. OPSÆTNING
+   ═══════════════════════════════════════════════════════════════ */
+const canvas = document.getElementById('simCanvas');
+const ctx = canvas.getContext('2d');
+const W = 820, H = 420;
+const TAU = Math.PI * 2;
+const reduceMotion = window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+
+function fitCanvas(){
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width  = Math.round(W * dpr);
+  canvas.height = Math.round(H * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+fitCanvas();
+window.addEventListener('resize', fitCanvas);
+
+const inpSub  = document.getElementById('inp-sub');
+const inpEnz  = document.getElementById('inp-enz');
+const inpTemp = document.getElementById('inp-temp');
+const inpPh   = document.getElementById('inp-ph');
+
+const el = id => document.getElementById(id);
+const elValRate = el('val-rate'), elValOcc = el('val-occ'),
+      elValFold = el('val-fold'), elValProd = el('val-prod');
+const animRate = el('anim-rate'), animOcc = el('anim-occ'),
+      animFold = el('anim-fold'), animProdBar = el('anim-prodbar');
+const elHint = el('hint'),
+      elWho = el('who-counts'), elColProd = el('col-prod'), elFlowLbl = el('flow-lbl');
+
+let fastMode = true;                       // konstante koncentrationer
+let ENZ = parseInt(inpEnz.value, 10);
+let SUB = parseInt(inpSub.value, 10);
+let temp = parseFloat(inpTemp.value);
+let ph   = parseFloat(inpPh.value);
+
+const ENZ_R = 23, POCKET_R = 10.5, SUB_R = 7.5, FRAG_R = 5.5;
+const rand = (a, b) => a + Math.random() * (b - a);
+const expKvote = () => -Math.log(1 - Math.random());
+const expTid = r => r > 0 ? expKvote() / r : Infinity;
+
+/* ── Enzymmolekyler ─────────────────────────────────────── */
+function nytEnzym(kant){
+  const p = kant ? kantPunkt(ENZ_R) : { x: rand(ENZ_R + 24, W - ENZ_R - 24), y: rand(ENZ_R + 24, H - ENZ_R - 24) };
+  return {
+    x: p.x, y: p.y, vx: rand(-8, 8), vy: rand(-8, 8),
+    mund: rand(0, TAU), mundOmega: rand(0.4, 0.8) * (Math.random() < 0.5 ? -1 : 1),
+    bundet: null,
+    foldet: true, dead: false, udfoldetTid: 0,
+    // eksponentielle "kvoter": hver proces bruger af sin egen kvote med sin
+    // egen hastighed, og hændelsen sker præcis når kvoten er brugt op. Så
+    // bliver kinetikken uafhængig af billedfrekvensen.
+    qB: expKvote(), qU: expKvote(), qE: expKvote(), qF: expKvote(),
+    u: 0,               // visuel udfoldning 0–1
+    greb: 0,            // visuel "induced fit" 0–1
+    jag: Array.from({ length: 9 }, () => rand(-1, 1))
+  };
+}
+const enzymer = [];
+for (let i = 0; i < ENZ; i++) enzymer.push(nytEnzym(false));
+
+function saetEnzymAntal(n){
+  n = Math.max(+inpEnz.min, Math.min(+inpEnz.max, Math.round(n)));
+  ENZ = n; inpEnz.value = n;
+  while (enzymer.length < n) enzymer.push(nytEnzym(true));
+  while (enzymer.length > n){
+    let i = enzymer.findIndex(e => !e.bundet);
+    if (i === -1) i = enzymer.length - 1;
+    if (enzymer[i].bundet) frigiv(enzymer[i].bundet, false);
+    enzymer.splice(i, 1);
+  }
+}
+
+/* ── Substrat og produkt ────────────────────────────────── */
+function kantPunkt(r){
+  const side = Math.floor(Math.random() * 4);
+  if (side === 0) return { x: r + 2,     y: rand(r, H - r) };
+  if (side === 1) return { x: W - r - 2, y: rand(r, H - r) };
+  if (side === 2) return { x: rand(r, W - r), y: r + 2 };
+  return { x: rand(r, W - r), y: H - r - 2 };
+}
+function nytSubstrat(kant){
+  const p = kant ? kantPunkt(SUB_R) : { x: rand(SUB_R + 8, W - SUB_R - 8), y: rand(SUB_R + 8, H - SUB_R - 8) };
+  return {
+    x: p.x, y: p.y, vx: rand(-20, 20), vy: rand(-20, 20),
+    rot: rand(0, TAU), rotV: rand(-1.4, 1.4),
+    fri: true, enzym: null, ind: kant ? 0 : 1, vaek: false
+  };
+}
+const substrater = [];
+for (let i = 0; i < SUB; i++) substrater.push(nytSubstrat(false));
+const stykker = [];   // produktfragmenter
+const glimt = [];     // korte ringe ved binding/omdannelse
+
+/* et substrat tæller kun med i koncentrationen, hvis det er frit og
+   ikke allerede på vej ud af beholderen */
+function frieAntal(){ let n = 0; for (const s of substrater) if (s.fri && !s.vaek) n++; return n; }
+
+function saetSubstratAntal(n){
+  n = Math.max(+inpSub.min, Math.min(+inpSub.max, Math.round(n)));
+  SUB = n; inpSub.value = n;
+  topOp();
+}
+/* Holder antallet af FRIE substrater præcis på [S]. Det er dét tal,
+   bindingssandsynligheden regnes ud fra, så modellen bliver eksakt:
+   tilløb erstatter det, der bindes, og overskud skylles ud. */
+function topOp(){
+  let fri = frieAntal();
+  for (const s of substrater){          // hent først dem tilbage, der var på vej ud
+    if (fri >= SUB) break;
+    if (s.fri && s.vaek){ s.vaek = false; fri++; }
+  }
+  while (fri < SUB){ substrater.push(nytSubstrat(true)); fri++; }
+  for (let i = substrater.length - 1; i >= 0 && fri > SUB; i--){
+    const s = substrater[i];
+    if (s.fri && !s.vaek){ s.vaek = true; fri--; }
+  }
+}
+
+let omsat = 0;                 // µM produkt i alt
+
+function syncEtiketter(){
+  el('lbl-enz').textContent  = ENZ + ' µM';
+  el('lbl-sub').textContent  = SUB + ' µM';
+  el('lbl-temp').textContent = Math.round(temp) + ' °C';
+  el('lbl-ph').textContent   = ph.toFixed(1).replace('.', ',');
+  elWho.textContent = ENZ + ' µM enzym · ' + (fastMode ? SUB : frieAntal()) + ' µM substrat';
+}
+
+/* ── Binding og frigivelse ──────────────────────────────── */
+function mundPunkt(e){
+  const r = ENZ_R * (1 - e.u * 0.3) - e.greb * 2;
+  return { x: e.x + Math.cos(e.mund) * r, y: e.y + Math.sin(e.mund) * r };
+}
+function naermesteFrie(e){
+  let bedst = null, bd = Infinity;
+  const p = mundPunkt(e);
+  for (const s of substrater){
+    if (!s.fri || s.vaek) continue;
+    const d = (s.x - p.x) ** 2 + (s.y - p.y) ** 2;
+    if (d < bd){ bd = d; bedst = s; }
+  }
+  return bedst;
+}
+function bind(e, s){
+  s.fri = false; s.enzym = e; e.bundet = s;
+  glimt.push({ x: s.x, y: s.y, liv: 1, farve: '#0E86C8', r0: SUB_R + 3 });
+  if (fastMode) topOp();     // nyt substrat strømmer ind i stedet
+}
+/* omdannet = true: substratet spaltes til to produktstykker */
+function frigiv(s, omdannet){
+  const e = s.enzym;
+  const p = mundPunkt(e);
+  const dx = p.x - e.x, dy = p.y - e.y;
+  const d = Math.hypot(dx, dy) || 1;
+  e.bundet = null; s.enzym = null;
+
+  if (omdannet){
+    omsat++;
+    haendelser.push(tid);          // tælles med i den målte hastighed
+    glimt.push({ x: p.x, y: p.y, liv: 1, farve: '#7A4FD6', r0: POCKET_R });
+    for (let k = 0; k < 2; k++){
+      const vinkel = Math.atan2(dy, dx) + (k ? 0.7 : -0.7);
+      stykker.push({
+        x: p.x, y: p.y,
+        vx: Math.cos(vinkel) * 70 + rand(-10, 10),
+        vy: Math.sin(vinkel) * 70 + rand(-10, 10),
+        rot: rand(0, TAU), rotV: rand(-3, 3),
+        liv: fastMode ? rand(2.2, 3.4) : Infinity, ud: 1
+      });
+    }
+    const i = substrater.indexOf(s);
+    if (i !== -1) substrater.splice(i, 1);
+    if (fastMode) topOp();
+  } else {
+    s.fri = true;
+    s.x = p.x; s.y = p.y;
+    s.vx = (dx / d) * 55 + rand(-12, 12);
+    s.vy = (dy / d) * 55 + rand(-12, 12);
+    glimt.push({ x: p.x, y: p.y, liv: 1, farve: '#0E86C8', r0: POCKET_R });
+    if (fastMode) topOp();   // ét frit substrat for meget → trimmes væk igen
+  }
+}
+
+/* ── Fri bevægelse ──────────────────────────────────────── */
+function bevaeg(b, r, maxFart, acc, dt){
+  b.vx += rand(-1, 1) * acc * dt;
+  b.vy += rand(-1, 1) * acc * dt;
+  const f = Math.hypot(b.vx, b.vy);
+  if (f > maxFart){ const k = maxFart / f; b.vx *= k; b.vy *= k; }
+  b.x += b.vx * dt; b.y += b.vy * dt;
+  if (b.x < r){ b.x = r; b.vx = Math.abs(b.vx); }
+  if (b.x > W - r){ b.x = W - r; b.vx = -Math.abs(b.vx); }
+  if (b.y < r){ b.y = r; b.vy = Math.abs(b.vy); }
+  if (b.y > H - r){ b.y = H - r; b.vy = -Math.abs(b.vy); }
+  if (b.rot !== undefined) b.rot += b.rotV * dt;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   3. ET TIDSSKRIDT
+   ═══════════════════════════════════════════════════════════════ */
+let sidsteFri = SUB;
+
+/* Ét enzymmolekyles kemi i et tidsrum. Processerne konkurrerer om, hvem
+   der først bruger sin kvote op — det er præcis den samme fordeling som
+   konkurrerende eksponentielle ventetider, bare regnet skridtvis, så
+   raterne må ændre sig undervejs (når man skruer på en slider). */
+function enzymKemi(e, dt, kc, ku, kf){
+  let rest = dt, vagt = 0;
+  while (rest > 1e-9 && vagt++ < 16){
+    let bedst = Infinity, hvem = null, rX = 0;
+    if (e.foldet){
+      const tU = ku > 0 ? e.qU / ku : Infinity;
+      if (tU < bedst){ bedst = tU; hvem = 'ud'; }
+      rX = e.bundet ? (K_OFF + kc) : K_ON * sidsteFri;
+      const tX = rX > 0 ? (e.bundet ? e.qE : e.qB) / rX : Infinity;
+      if (tX < bedst){ bedst = tX; hvem = e.bundet ? 'es' : 'bind'; }
+    } else {
+      const tF = kf > 0 ? e.qF / kf : Infinity;
+      if (tF < bedst){ bedst = tF; hvem = 'ind'; }
+    }
+
+    const skridt = Math.min(bedst, rest);
+    if (e.foldet){
+      e.qU -= ku * skridt;
+      if (e.bundet) e.qE -= rX * skridt; else e.qB -= rX * skridt;
+    } else {
+      e.qF -= kf * skridt;
+    }
+    rest -= skridt;
+    if (bedst > skridt) return;                 // ingen hændelse nåede at ske
+
+    if (hvem === 'ud'){
+      e.foldet = false; e.udfoldetTid = 0;
+      if (e.bundet) frigiv(e.bundet, false);
+      e.qF = expKvote();
+    } else if (hvem === 'ind'){
+      e.foldet = true; e.udfoldetTid = 0;
+      e.qU = expKvote(); e.qB = expKvote();
+    } else if (hvem === 'bind'){
+      const s = naermesteFrie(e);
+      if (s){ bind(e, s); e.qE = expKvote(); sidsteFri = frieAntal(); }
+      e.qB = expKvote();
+    } else {
+      frigiv(e.bundet, Math.random() < kc / (K_OFF + kc));
+      e.qB = expKvote();
+      sidsteFri = frieAntal();
+    }
+  }
+}
+
+function opdater(dt, nu){
+  const kc = kcatOf(temp, ph);
+  const ku = kUnfold(temp, ph), kf = kFold(temp, ph);
+
+  if (fastMode) topOp();
+  sidsteFri = frieAntal();
+
+  // molekylernes egen fart følger temperaturen — det er kun et billede af
+  // varmebevægelsen; selve kinetikken sidder i k-værdierne ovenfor
+  const fart = (0.35 + Math.min(1.35, temp / 45) * 1.5) * (reduceMotion ? 0.5 : 1);
+
+  // ── enzymerne ──
+  for (const e of enzymer){
+    bevaeg(e, ENZ_R, 20 * fart, 70, dt);
+    const maalU = (e.dead || !e.foldet) ? 1 : 0;
+    e.u += (maalU - e.u) * Math.min(1, dt * 3.2);
+    const maalGreb = e.bundet ? 1 : 0;
+    e.greb += (maalGreb - e.greb) * Math.min(1, dt * 9);
+    if (!e.bundet && !e.dead) e.mund += e.mundOmega * dt * (1 - e.u) * (reduceMotion ? 0.4 : 1);
+
+    if (e.dead) continue;
+
+    // i en lukket beholder klumper det udfoldede protein sammen til sidst,
+    // og så er denatureringen uigenkaldelig
+    if (!e.foldet){
+      e.udfoldetTid += dt;
+      if (!fastMode && e.udfoldetTid > AGG_TID){ e.dead = true; continue; }
+    }
+    enzymKemi(e, dt, kc, ku, kf);
+  }
+
+  // ── substraterne ──
+  for (let i = substrater.length - 1; i >= 0; i--){
+    const s = substrater[i];
+    if (s.fri){
+      if (s.vaek){
+        s.ind -= dt * 2.6;
+        if (s.ind <= 0){ substrater.splice(i, 1); continue; }
+      } else if (s.ind < 1){
+        s.ind = Math.min(1, s.ind + dt * 3);
+      }
+      bevaeg(s, SUB_R, 95 * fart, 300, dt);
+    } else {
+      // trækkes ind mod lommen; når det slipper før det når frem,
+      // ser det ud som et sammenstød, der ikke førte til noget
+      const p = mundPunkt(s.enzym);
+      const k = Math.min(1, dt * 13);
+      s.x += (p.x - s.x) * k; s.y += (p.y - s.y) * k;
+      s.rot += s.rotV * dt * 0.4;
+    }
+  }
+
+  // ── produktstykker ──
+  for (let i = stykker.length - 1; i >= 0; i--){
+    const f = stykker[i];
+    bevaeg(f, FRAG_R, 60 * fart, 150, dt);
+    if (f.liv !== Infinity){
+      f.liv -= dt;
+      if (f.liv < 0.5) f.ud = Math.max(0, f.liv / 0.5);
+      if (f.liv <= 0) stykker.splice(i, 1);
+    }
+  }
+  for (let i = glimt.length - 1; i >= 0; i--){
+    glimt[i].liv -= dt * 2.6;
+    if (glimt[i].liv <= 0) glimt.splice(i, 1);
+  }
+
+  registrerTid(nu, sidsteFri);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   4. TEGNING
+   ═══════════════════════════════════════════════════════════════ */
+function baggrund(){
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#EAF6F0'); g.addColorStop(1, '#DCEEF6');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+
+  if (fastMode){
+    // ind- og udløb, så det er tydeligt hvorfor koncentrationen står stille
+    ctx.save();
+    ctx.font = '600 11px ' + "'IBM Plex Mono',monospace";
+    ctx.fillStyle = 'rgba(23,33,31,.42)';
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'left';
+    ctx.fillText('SUBSTRAT IND ›', 14, 14);
+    ctx.textAlign = 'right';
+    ctx.fillText('‹ PRODUKT UD', W - 14, H - 14);
+    ctx.restore();
+  }
+}
+function lerpFarve(a, b, t){
+  const A = [1, 3, 5].map(i => parseInt(a.slice(i, i + 2), 16));
+  const B = [1, 3, 5].map(i => parseInt(b.slice(i, i + 2), 16));
+  return 'rgb(' + A.map((v, i) => Math.round(v + (B[i] - v) * t)).join(',') + ')';
+}
+function blobSti(cx, cy, r, jag, d, sx, sy){
+  const n = jag.length;
+  ctx.beginPath();
+  for (let i = 0; i <= n; i++){
+    const a = (i / n) * TAU;
+    const k = 1 + jag[i % n] * 0.3 * d;
+    const x = cx + Math.cos(a) * r * sx * k;
+    const y = cy + Math.sin(a) * r * sy * k;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+}
+function tegnEnzym(e){
+  const d = e.u;
+  const sag = d * 7, sx = 1 + d * 0.24, sy = 1 - d * 0.34;
+  const krop = e.dead ? '#8C9C99' : lerpFarve('#FF6A3D', '#C2CBC6', d);
+
+  ctx.save();
+  ctx.translate(e.x, e.y + sag);
+  ctx.lineJoin = 'round';
+  blobSti(3, 4, ENZ_R, e.jag, d, sx, sy);
+  ctx.fillStyle = 'rgba(23,33,31,.8)'; ctx.fill();
+  blobSti(0, 0, ENZ_R, e.jag, d, sx, sy);
+  ctx.fillStyle = krop; ctx.fill();
+  ctx.strokeStyle = '#17211F'; ctx.lineWidth = 2.4; ctx.stroke();
+
+  // det aktive sted — klemmer sig om substratet (induced fit) og
+  // forsvinder, når proteinet folder sig ud
+  const pr = ENZ_R * (1 - d * 0.3);
+  const px = Math.cos(e.mund) * pr * sx, py = Math.sin(e.mund) * pr * sy;
+  blobSti(px, py, POCKET_R * (1 - d * 0.6) * (1 - e.greb * 0.14), e.jag, d, sx, sy);
+  ctx.fillStyle = '#FFF9EE'; ctx.fill();
+  ctx.strokeStyle = '#17211F'; ctx.lineWidth = 2; ctx.stroke();
+  ctx.restore();
+}
+function tegnSubstrat(s){
+  ctx.save();
+  ctx.translate(s.x, s.y); ctx.rotate(s.rot);
+  ctx.globalAlpha = s.ind;
+  const r = SUB_R;
+  const tegnFirkant = (dx, dy) => {
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(-r + dx, -r + dy, r * 2, r * 2, 3.5);
+    else ctx.rect(-r + dx, -r + dy, r * 2, r * 2);
+  };
+  tegnFirkant(1.5, 2); ctx.fillStyle = 'rgba(23,33,31,.45)'; ctx.fill();
+  tegnFirkant(0, 0);   ctx.fillStyle = '#4FC3F7'; ctx.fill();
+  ctx.strokeStyle = '#17211F'; ctx.lineWidth = 1.6; ctx.stroke();
+  // hakket, der passer i lommen
+  ctx.beginPath(); ctx.moveTo(r, -2.6); ctx.lineTo(r - 3.4, 0); ctx.lineTo(r, 2.6);
+  ctx.fillStyle = '#17211F'; ctx.fill();
+  ctx.restore();
+}
+function tegnStykke(f){
+  ctx.save();
+  ctx.translate(f.x, f.y); ctx.rotate(f.rot);
+  ctx.globalAlpha = f.ud;
+  const r = FRAG_R;
+  const trekant = (dx, dy) => {
+    ctx.beginPath();
+    ctx.moveTo(dx, -r * 1.15 + dy);
+    ctx.lineTo(r + dx, r * 0.8 + dy);
+    ctx.lineTo(-r + dx, r * 0.8 + dy);
+    ctx.closePath();
+  };
+  trekant(1.2, 1.6); ctx.fillStyle = 'rgba(23,33,31,.42)'; ctx.fill();
+  trekant(0, 0);     ctx.fillStyle = '#A98BEC'; ctx.fill();
+  ctx.strokeStyle = '#17211F'; ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.restore();
+}
+function tegn(){
+  ctx.clearRect(0, 0, W, H);
+  baggrund();
+  for (const f of stykker) tegnStykke(f);
+  for (const s of substrater) if (s.fri) tegnSubstrat(s);
+  for (const e of enzymer) tegnEnzym(e);
+  for (const s of substrater) if (!s.fri) tegnSubstrat(s);
+  for (const g of glimt){
+    ctx.globalAlpha = Math.max(0, g.liv) * 0.75;
+    ctx.strokeStyle = g.farve; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(g.x, g.y, g.r0 + (1 - g.liv) * 16, 0, TAU); ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   5. MÅLING AF HASTIGHEDEN
+   ───────────────────────────────────────────────────────────────
+   Hastigheden tælles — den aflæses ikke på formlen. Vinduet nulstilles,
+   hver gang man skruer på noget, så man aldrig blander to forsøg.
+   ═══════════════════════════════════════════════════════════════ */
+const VINDUE = 8;             // s — rullende måleperiode
+let haendelser = [];          // tidsstempler (s) for hver omdannelse
+let vindueStart = 0;
+let sSum = 0, sN = 0;         // middel-[S] i vinduet
+
+function nulstilVindue(nu){ haendelser = []; vindueStart = nu; sSum = 0; sN = 0; }
+function registrerTid(nu, fri){
+  sSum += fri; sN++;
+  while (haendelser.length && nu - haendelser[0] > VINDUE){ haendelser.shift(); }
+  if (nu - vindueStart > VINDUE) vindueStart = nu - VINDUE;
+}
+function maaltTid(nu){ return Math.max(0, nu - vindueStart); }
+function maaltV(nu){
+  const t = maaltTid(nu);
+  return t < 1.2 ? null : haendelser.length / t;
+}
+function maaltS(){ return sN ? sSum / sN : SUB; }
+
+/* ═══════════════════════════════════════════════════════════════
+   6. MÅLEPLOTTET
+   ═══════════════════════════════════════════════════════════════ */
+const AKSER = {
+  sub:  { navn: 'Substratkoncentration [S]', enhed: 'µM', min: 0, max: 120, tik: 20, vaerdi: () => sidsteFri },
+  enz:  { navn: 'Enzymkoncentration [E]',    enhed: 'µM', min: 0, max: 12,  tik: 2,  vaerdi: () => levendeEnz() },
+  temp: { navn: 'Temperatur',                enhed: '°C', min: 0, max: 80,  tik: 10, vaerdi: () => temp },
+  ph:   { navn: 'pH-værdi',                  enhed: '',   min: 1, max: 14,  tik: 2,  vaerdi: () => ph }
+};
+let xVar = 'sub';
+const punkter = { sub: [], enz: [], temp: [], ph: [] };
+
+function levendeEnz(){ let n = 0; for (const e of enzymer) if (!e.dead) n++; return n; }
+
+/* modellens hastighed, hvor x-variablen er sat til v og resten står som nu */
+function vAf(x){
+  if (xVar === 'sub')  return hastighed(temp, ph, levendeEnz(), x);
+  if (xVar === 'enz')  return hastighed(temp, ph, x, sidsteFri);
+  if (xVar === 'temp') return hastighed(x, ph, levendeEnz(), sidsteFri);
+  return hastighed(temp, x, levendeEnz(), sidsteFri);
+}
+/* de øvrige indstillinger — bruges til at afgøre, om et gammelt punkt
+   er målt under samme forhold som nu */
+function forhold(){ return { temp, ph, enz: levendeEnz(), sub: sidsteFri }; }
+function sammeForhold(a){
+  const b = forhold();
+  const ok = (k, tol) => xVar === k || Math.abs(a[k] - b[k]) <= tol;
+  return ok('temp', 1.5) && ok('ph', 0.25) && ok('enz', 0.5) && ok('sub', 4);
+}
+
+const PX0 = 68, PX1 = 802, PY0 = 16, PY1 = 244;
+const svgNS = 'http://www.w3.org/2000/svg';
+function svgEl(tag, attrs, tekst){
+  const n = document.createElementNS(svgNS, tag);
+  for (const k in attrs) n.setAttribute(k, attrs[k]);
+  if (tekst !== undefined) n.textContent = tekst;
+  return n;
+}
+function tom(node){ while (node.firstChild) node.removeChild(node.firstChild); }
+function pentTop(v){
+  if (!(v > 0)) return 1;
+  const p = Math.pow(10, Math.floor(Math.log10(v)));
+  const n = v / p;
+  const s = n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10;
+  return s * p;
+}
+function komma(v, d){ return v.toFixed(d).replace('.', ','); }
+
+let yTop = 1, plotSnavset = true;
+
+function tegnPlot(){
+  const A = AKSER[xVar];
+  const gGrid = el('p-grid'), gGuides = el('p-guides'), gPts = el('p-points'), gAx = el('p-axis');
+  tom(gGrid); tom(gGuides); tom(gPts); tom(gAx);
+
+  // kurvepunkter
+  const N = 140, xs = [], vs = [];
+  for (let i = 0; i <= N; i++){
+    const x = A.min + (A.max - A.min) * i / N;
+    xs.push(x); vs.push(vAf(x));
+  }
+  let top = Math.max.apply(null, vs);
+  for (const p of punkter[xVar]) top = Math.max(top, p.v + p.err);
+  yTop = pentTop(Math.max(top * 1.12, 0.05));
+
+  const sx = x => PX0 + (x - A.min) / (A.max - A.min) * (PX1 - PX0);
+  const sy = v => PY1 - Math.max(0, Math.min(1, v / yTop)) * (PY1 - PY0);
+
+  // gitter
+  for (let i = 0; i <= 5; i++){
+    const y = PY1 - (PY1 - PY0) * i / 5;
+    gGrid.appendChild(svgEl('line', { x1: PX0, y1: y, x2: PX1, y2: y }));
+  }
+  for (let x = A.min; x <= A.max + 1e-6; x += A.tik){
+    gGrid.appendChild(svgEl('line', { x1: sx(x), y1: PY0, x2: sx(x), y2: PY1 }));
+  }
+
+  // Vmax og K_M — kun meningsfulde på substratkurven
+  if (xVar === 'sub'){
+    const vmax = vmaxOf(temp, ph, levendeEnz());
+    const km = kmOf(temp, ph);
+    if (vmax > 0.02 && vmax < yTop * 1.6){
+      gGuides.appendChild(svgEl('line', { class: 'p-guide', x1: PX0, y1: sy(vmax), x2: PX1, y2: sy(vmax) }));
+      gGuides.appendChild(svgEl('text', { class: 'p-guide-lbl', x: PX1 - 4, y: sy(vmax) - 6, 'text-anchor': 'end' }, 'Vmax'));
+      if (km <= A.max){
+        gGuides.appendChild(svgEl('line', { class: 'p-guide', x1: sx(km), y1: sy(vmax / 2), x2: sx(km), y2: PY1 }));
+        gGuides.appendChild(svgEl('line', { class: 'p-guide', x1: PX0, y1: sy(vmax / 2), x2: sx(km), y2: sy(vmax / 2) }));
+        gGuides.appendChild(svgEl('text', { class: 'p-guide-lbl', x: sx(km) + 5, y: PY1 - 7 }, 'KM ' + Math.round(km)));
+      }
+    }
+  }
+
+  // selve kurven
+  let d = '';
+  for (let i = 0; i <= N; i++) d += (i ? 'L' : 'M') + sx(xs[i]).toFixed(1) + ' ' + sy(vs[i]).toFixed(1);
+  el('p-curve').setAttribute('d', d);
+
+  // målepunkter med fejlstreg
+  for (const p of punkter[xVar]){
+    if (p.x < A.min || p.x > A.max) continue;
+    const X = sx(p.x), Y = sy(p.v);
+    if (p.err > 0){
+      const y1 = sy(Math.min(yTop, p.v + p.err)), y2 = sy(Math.max(0, p.v - p.err));
+      gPts.appendChild(svgEl('line', { class: 'p-err', x1: X, y1: y1, x2: X, y2: y2 }));
+      gPts.appendChild(svgEl('line', { class: 'p-err', x1: X - 4, y1: y1, x2: X + 4, y2: y1 }));
+      gPts.appendChild(svgEl('line', { class: 'p-err', x1: X - 4, y1: y2, x2: X + 4, y2: y2 }));
+    }
+    gPts.appendChild(svgEl('circle', {
+      class: 'p-pt', cx: X, cy: Y, r: 4.6,
+      fill: sammeForhold(p.ctx) ? '#E8336D' : '#FFFFFF'
+    }));
+  }
+
+  // akser
+  gAx.appendChild(svgEl('line', { x1: PX0, y1: PY0, x2: PX0, y2: PY1 }));
+  gAx.appendChild(svgEl('line', { x1: PX0, y1: PY1, x2: PX1, y2: PY1 }));
+  const dec = yTop < 0.5 ? 2 : yTop < 2 ? 1 : 0;
+  for (let i = 0; i <= 5; i++){
+    const v = yTop * i / 5, y = sy(v);
+    gAx.appendChild(svgEl('line', { x1: PX0 - 5, y1: y, x2: PX0, y2: y }));
+    gAx.appendChild(svgEl('text', { x: PX0 - 9, y: y + 4, 'text-anchor': 'end' }, komma(v, dec)));
+  }
+  for (let x = A.min; x <= A.max + 1e-6; x += A.tik){
+    const X = sx(x);
+    gAx.appendChild(svgEl('line', { x1: X, y1: PY1, x2: X, y2: PY1 + 5 }));
+    gAx.appendChild(svgEl('text', { x: X, y: PY1 + 18, 'text-anchor': 'middle' }, String(Math.round(x))));
+  }
+  gAx.appendChild(svgEl('text', {
+    class: 'ax', x: (PX0 + PX1) / 2, y: PY1 + 40, 'text-anchor': 'middle'
+  }, A.navn + (A.enhed ? ' / ' + A.enhed : '')));
+  gAx.appendChild(svgEl('text', {
+    class: 'ax', x: 16, y: (PY0 + PY1) / 2, 'text-anchor': 'middle',
+    transform: 'rotate(-90 16 ' + ((PY0 + PY1) / 2) + ')'
+  }, 'Hastighed v / µM·s⁻¹'));
+
+  el('plot-title').textContent = 'Reaktionshastighed som funktion af ' + A.navn.toLowerCase();
+  tegnMarkoer(true);
+  plotSnavset = false;
+}
+
+/* krydset, der viser hvor beholderen står lige nu */
+function tegnMarkoer(ogsaaTekst){
+  const A = AKSER[xVar];
+  const g = el('p-marker'); tom(g);
+  const sx = x => PX0 + (x - A.min) / (A.max - A.min) * (PX1 - PX0);
+  const sy = v => PY1 - Math.max(0, Math.min(1, v / yTop)) * (PY1 - PY0);
+
+  const x = A.vaerdi();
+  const X = sx(Math.max(A.min, Math.min(A.max, x)));
+  const vTeori = vAf(x);
+  g.appendChild(svgEl('rect', {
+    class: 'p-mark', x: X - 6, y: sy(vTeori) - 6, width: 12, height: 12, fill: 'none'
+  }));
+  const vM = maaltV(tid);
+  if (vM !== null){
+    g.appendChild(svgEl('line', { class: 'p-err', x1: X, y1: sy(vTeori), x2: X, y2: sy(vM) }));
+    g.appendChild(svgEl('circle', { class: 'p-pt', cx: X, cy: sy(vM), r: 3.2, fill: '#FFB300' }));
+  }
+  if (ogsaaTekst){
+    el('plot-desc').textContent =
+      'Kurven viser modellens hastighed. Lige nu: ' + A.navn.toLowerCase() + ' ' +
+      komma(x, 1) + ' ' + A.enhed + ', hastighed ' + komma(vTeori, 2) + ' mikromol per liter per sekund. ' +
+      punkter[xVar].length + ' målepunkter sat.';
+  }
+}
+
+/* ── Målepunkter ───────────────────────────────────────── */
+let maaler = false, maalerSlut = 0;
+const btnMaal = el('btn-maal'), btnSerie = el('btn-serie');
+
+function startMaaling(){
+  if (maaler) return;
+  maaler = true; maalerSlut = tid + VINDUE;
+  nulstilVindue(tid);
+  btnMaal.setAttribute('aria-pressed', 'true');
+  btnSerie.disabled = true;
+}
+function afbrydMaaling(){
+  if (!maaler) return;
+  maaler = false;
+  btnMaal.setAttribute('aria-pressed', 'false');
+  btnMaal.textContent = 'Mål punkt';
+  btnSerie.disabled = false;
+}
+function gemPunkt(n, t, x){
+  punkter[xVar].push({ x: x, v: n / t, err: Math.sqrt(Math.max(n, 1)) / t, ctx: forhold() });
+  if (punkter[xVar].length > 60) punkter[xVar].shift();
+  plotSnavset = true;
+}
+
+/* Hele serien køres som en hurtig udgave af præcis samme model — samme
+   k-værdier og samme terningkast, bare uden animation. Molekyle for
+   molekyle springes fra hændelse til hændelse. */
+function mcMaal(t_, p_, e_, s_, sek){
+  const kc = kcatOf(t_, p_), ku = kUnfold(t_, p_), kf = kFold(t_, p_);
+  const rBind = K_ON * s_, rEs = K_OFF + kc, andel = kc / rEs;
+  const VARM = 20;                      // s, så bestanden når sin ligevægt
+  let n = 0;
+  for (let j = 0; j < e_; j++){
+    let t = 0, st = 0;                  // 0 = fri, 1 = med substrat, 2 = udfoldet
+    while (t < VARM + sek){
+      if (st === 2){ t += expTid(kf); st = 0; continue; }
+      const tU = expTid(ku), tX = expTid(st === 0 ? rBind : rEs);
+      if (tU < tX){ t += tU; st = 2; continue; }
+      t += tX;
+      if (st === 0){ st = 1; continue; }
+      st = 0;
+      if (Math.random() < andel && t > VARM) n++;
+    }
+  }
+  return { n: n, t: sek };
+}
+function koerSerie(){
+  const A = AKSER[xVar];
+  const vaerdier = [];
+  if (xVar === 'enz'){ for (let e = 1; e <= 12; e++) vaerdier.push(e); }
+  else if (xVar === 'sub'){ for (let i = 0; i < 10; i++) vaerdier.push(Math.round(5 + (120 - 5) * i / 9)); }
+  else if (xVar === 'temp'){ for (let i = 0; i <= 10; i++) vaerdier.push(Math.round(A.min + (A.max - A.min) * i / 10)); }
+  else { for (let i = 0; i <= 12; i++) vaerdier.push(+(1 + 13 * i / 12).toFixed(1)); }
+
+  const c = forhold();
+  const nye = vaerdier.map(x => {
+    const t_ = xVar === 'temp' ? x : c.temp;
+    const p_ = xVar === 'ph'   ? x : c.ph;
+    const e_ = xVar === 'enz'  ? x : Math.max(1, Math.round(c.enz));
+    const s_ = xVar === 'sub'  ? x : c.sub;
+    const r = mcMaal(t_, p_, e_, s_, 120);   // 2 minutters måling pr. punkt
+    return { x: x, v: r.n / r.t, err: Math.sqrt(Math.max(r.n, 1)) / r.t, ctx: { temp: t_, ph: p_, enz: e_, sub: s_ } };
+  });
+  // Punkterne dukker op ét ad gangen, så serien kan følges. Listen låses
+  // fast her, så punkterne bliver på deres egen akse, også hvis man når at
+  // skifte x-variabel undervejs.
+  const maal = punkter[xVar];
+  btnSerie.disabled = true;
+  let i = 0;
+  (function naeste(){
+    if (i >= nye.length){ btnSerie.disabled = maaler; return; }
+    maal.push(nye[i++]);
+    plotSnavset = true;
+    setTimeout(naeste, reduceMotion ? 0 : 70);
+  })();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   7. INSTRUMENTER OG TEKST
+   ═══════════════════════════════════════════════════════════════ */
+let sidsteDots = '';
+function tegnEnzymBrikker(){
+  const n = enzymer.length;
+  if (animFold.children.length !== n){
+    tom(animFold);
+    for (let i = 0; i < n; i++) animFold.appendChild(document.createElement('i'));
+  }
+  let sig = '';
+  for (let i = 0; i < n; i++){
+    const e = enzymer[i];
+    sig += e.dead ? 'd' : e.foldet ? 'f' : 'u';
+  }
+  if (sig === sidsteDots) return;
+  sidsteDots = sig;
+  for (let i = 0; i < n; i++){
+    animFold.children[i].className = sig[i] === 'd' ? 'dead' : sig[i] === 'u' ? 'uf' : '';
+  }
+}
+
+let uiUr = 0;
+function opdaterUI(dt){
+  uiUr += dt;
+  if (uiUr < 0.1) return;
+  uiUr = 0;
+
+  const eLev = levendeEnz();
+  const vmax = vmaxOf(temp, ph, eLev);
+  const kc = kcatOf(temp, ph);
+  const km = kmOf(temp, ph);
+  const fAndel = foldetAndel(temp, ph);
+
+  // hastighed
+  const vM = maaltV(tid);
+  if (maaler){
+    const rest = Math.max(0, Math.ceil(maalerSlut - tid));
+    btnMaal.textContent = 'Måler … ' + rest;
+  }
+  elValRate.innerHTML = (vM === null ? '–' : komma(vM, 2)) + '<small>µM/s</small>';
+  animRate.style.width = (vM === null ? 0 : Math.min(100, vM / Math.max(vmax, 1e-6) * 100)) + '%';
+  el('lbl-vmax').innerHTML = 'V<sub>max</sub> ' + komma(vmax, 2);
+
+  // mætning
+  let bundne = 0, foldede = 0;
+  for (const e of enzymer){ if (e.bundet) bundne++; if (e.foldet && !e.dead) foldede++; }
+  const occ = enzymer.length ? bundne / enzymer.length : 0;
+  elValOcc.innerHTML = Math.round(occ * 100) + '<small>%</small>';
+  animOcc.style.width = (occ * 100) + '%';
+
+  // foldet enzym
+  tegnEnzymBrikker();
+  elValFold.innerHTML = Math.round((enzymer.length ? foldede / enzymer.length : 0) * 100) + '<small>%</small>';
+
+  // omsat — i lukket beholder er det andelen af alt substrat, der er omdannet
+  elValProd.innerHTML = omsat + '<small>µM</small>';
+  if (!fastMode){
+    const andel = omsat / Math.max(1, omsat + substrater.length) * 100;
+    animProdBar.style.width = andel + '%';
+    el('lbl-prod').textContent = Math.round(andel) + ' % omsat';
+  }
+
+  // fakta
+  el('f-vmax').textContent = komma(vmax, 2);
+  el('f-km').textContent   = Math.round(km);
+  el('f-kcat').textContent = komma(kc, 2);
+
+  elWho.textContent = ENZ + ' µM enzym · ' + (fastMode ? SUB : sidsteFri) + ' µM substrat';
+
+  if (plotSnavset) tegnPlot(); else tegnMarkoer(false);
+  planlaegStatus(vM, occ, fAndel);
+  gemTilstand();
+}
+
+/* ── Skærmlæser ────────────────────────────────────────── */
+const elSr = el('sr-status');
+let srUr = 0, srSidste = '';
+function planlaegStatus(vM, occ, fAndel){
+  srUr += 0.1;
+  if (srUr < 2.5) return;
+  srUr = 0;
+  const t =
+    'Temperatur ' + Math.round(temp) + ' grader, pH ' + komma(ph, 1) + ', ' +
+    'enzym ' + ENZ + ' mikromolær, substrat ' + (fastMode ? SUB : sidsteFri) + ' mikromolær. ' +
+    (vM === null ? 'Hastigheden måles stadig. ' : 'Målt hastighed ' + komma(vM, 2) + ' mikromolær per sekund. ') +
+    Math.round(occ * 100) + ' procent af enzymerne har substrat bundet. ' +
+    Math.round(fAndel * 100) + ' procent af enzymet er foldet. ' +
+    omsat + ' mikromolær omsat i alt.';
+  if (t === srSidste) return;
+  srSidste = t;
+  elSr.textContent = t;
+}
+
+/* ── Deling: indstillingerne ligger i adressen ─────────── */
+let hashUr = 0, hashSidste = '';
+function tilstandStreng(){
+  return '#sub=' + SUB + '&enz=' + ENZ + '&t=' + Math.round(temp) +
+         '&ph=' + ph.toFixed(1) + '&fast=' + (fastMode ? 1 : 0) + '&x=' + xVar;
+}
+function gemTilstand(){
+  const h = tilstandStreng();
+  if (h === hashSidste) return;
+  hashSidste = h;
+  clearTimeout(hashUr);
+  hashUr = setTimeout(function(){
+    if (location.hash !== h) history.replaceState(null, '', h);
+  }, 400);
+}
+function laesTilstand(){
+  const p = new URLSearchParams(location.search);
+  new URLSearchParams(location.hash.replace(/^#/, '')).forEach(function(v, k){ p.set(k, v); });
+  const tal = (raa, min, max) => {
+    const v = parseFloat(raa);
+    return isFinite(v) ? Math.max(min, Math.min(max, v)) : null;
+  };
+  const s = tal(p.get('sub'), +inpSub.min, +inpSub.max);
+  const e = tal(p.get('enz'), +inpEnz.min, +inpEnz.max);
+  const t = tal(p.get('t'),   +inpTemp.min, +inpTemp.max);
+  const f = tal(p.get('ph'),  +inpPh.min,  +inpPh.max);
+  if (p.get('fast') === '0') saetFast(false);
+  if (s !== null){ SUB = Math.round(s / 5) * 5; inpSub.value = SUB; saetSubstratAntal(SUB); }
+  if (e !== null) saetEnzymAntal(e);
+  if (t !== null){ temp = t; inpTemp.value = t; }
+  if (f !== null){ ph = f; inpPh.value = f; }
+  const x = p.get('x');
+  if (x && AKSER[x]) saetXVar(x);
+  syncEtiketter();
+  hashSidste = tilstandStreng();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   8. BETJENING
+   ═══════════════════════════════════════════════════════════════ */
+function roert(){
+  elHint.classList.add('gone');
+  afbrydMaaling();
+  nulstilVindue(tid);
+  plotSnavset = true;
+}
+inpSub.addEventListener('input', () => { saetSubstratAntal(parseInt(inpSub.value, 10)); syncEtiketter(); roert(); });
+inpEnz.addEventListener('input', () => { saetEnzymAntal(parseInt(inpEnz.value, 10)); syncEtiketter(); roert(); });
+inpTemp.addEventListener('input', () => { temp = parseFloat(inpTemp.value); syncEtiketter(); roert(); });
+inpPh.addEventListener('input',   () => { ph = parseFloat(inpPh.value);   syncEtiketter(); roert(); });
+
+function friskForsoeg(){
+  omsat = 0;
+  stykker.length = 0; glimt.length = 0;
+  for (const e of enzymer){
+    if (e.bundet){ e.bundet.fri = true; e.bundet.enzym = null; e.bundet = null; }
+    e.foldet = true; e.dead = false; e.udfoldetTid = 0;
+  }
+  substrater.length = 0;
+  for (let i = 0; i < SUB; i++) substrater.push(nytSubstrat(false));
+  sidsteDots = '';
+  roert();
+}
+el('btn-frisk').addEventListener('click', friskForsoeg);
+
+const btnFast = el('btn-fast');
+function saetFast(til){
+  fastMode = til;
+  btnFast.setAttribute('aria-pressed', til ? 'true' : 'false');
+  elColProd.classList.toggle('skjul', til);
+  elFlowLbl.classList.toggle('skjul', !til);
+  if (til){ for (const f of stykker) if (f.liv === Infinity) f.liv = rand(0.6, 2.6); topOp(); }
+  else { for (const f of stykker) f.liv = Infinity; }
+  syncEtiketter();
+}
+btnFast.addEventListener('click', () => { saetFast(btnFast.getAttribute('aria-pressed') !== 'true'); friskForsoeg(); });
+
+document.querySelectorAll('.seg [data-x]').forEach(b => {
+  b.addEventListener('click', () => saetXVar(b.dataset.x));
+});
+function saetXVar(x){
+  xVar = x;
+  document.querySelectorAll('.seg [data-x]').forEach(b => {
+    b.setAttribute('aria-pressed', b.dataset.x === x ? 'true' : 'false');
+  });
+  plotSnavset = true;
+}
+btnMaal.addEventListener('click', () => { maaler ? afbrydMaaling() : startMaaling(); });
+btnSerie.addEventListener('click', koerSerie);
+el('btn-ryd').addEventListener('click', () => { punkter[xVar].length = 0; plotSnavset = true; });
+
+const btnProjektor = el('btn-projektor');
+function saetProjektor(til){
+  document.body.setAttribute('data-projektor', til ? '1' : '0');
+  btnProjektor.setAttribute('aria-pressed', til ? 'true' : 'false');
+}
+btnProjektor.addEventListener('click', function(){
+  saetProjektor(document.body.getAttribute('data-projektor') !== '1');
+});
+if (/mode=teach|projektor=1/.test(location.search)) saetProjektor(true);
+
+/* ═══════════════════════════════════════════════════════════════
+   9. LØKKEN
+   ═══════════════════════════════════════════════════════════════ */
+let tid = 0;                       // modeltid i sekunder
+laesTilstand();
+saetFast(fastMode);
+nulstilVindue(0);
+tegnPlot();
+
+let sidste = performance.now();
+function frame(nu){
+  const dt = Math.max(0, Math.min(0.05, (nu - sidste) / 1000));
+  sidste = nu;
+  tid += dt;
+
+  opdater(dt, tid);
+  tegn();
+  opdaterUI(dt);
+
+  if (maaler && tid >= maalerSlut){
+    gemPunkt(haendelser.length, maaltTid(tid), xVar === 'sub' ? maaltS() : AKSER[xVar].vaerdi());
+    afbrydMaaling();
+  }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
