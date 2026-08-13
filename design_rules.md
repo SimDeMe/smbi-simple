@@ -142,7 +142,23 @@ Kun de dele, siden har brug for. Alle indre rækker adskilles med
 bane med blækkant, 22 px rund gribeknap med blækkant og hård skygge. Hver
 slider får sin egen `--track`-gradient og `--kc`-knapfarve.
 
-## 4. Faste krav til hver side
+## 4. Hold siden let
+
+Byg kun det, opgaven beder om — skabelonen er en ramme, ikke en tjekliste, der
+skal fyldes ud. Tilføj ikke på eget initiativ:
+
+* En statuspille/-boks der i ord gentager, hvad instrumenterne (`.gauges`)
+  allerede viser (fx "Enzymerne arbejder" oven på et mætningsinstrument, der
+  viser det samme tal). Vælg ét sted at vise en given oplysning.
+* Lange forklarende tekstblokke under panelet (teorigennemgang, øvelser,
+  "prøv selv"-lister) medmindre brugeren har bedt om dem. Sådan indhold hører
+  hjemme i undervisningsmaterialet ved siden af, ikke som fast del af hver ny
+  simulering.
+
+Spørg, hvis det er uklart om siden skal have forklarende tekst under panelet
+— tilføj det ikke som standard.
+
+## 5. Faste krav til hver side
 
 * **`<html lang="da">`**, sigende `<title>` der ender på `— smbi.dk`, og en
   `<meta name="description">` på én sætning.
@@ -177,7 +193,7 @@ slider får sin egen `--track`-gradient og `--kc`-knapfarve.
 * **Ingen eksterne afhængigheder** ud over Google Fonts. Ingen build, ingen
   npm-pakker, ingen ikonbibliotek-CDN i nye sider.
 
-## 5. Når fysikken/modellen ændres
+## 6. Når fysikken/modellen ændres
 
 Simuleringernes beregninger er undervisningsindhold. Ved omlægning af designet
 skal modellen være **uændret** — omskriv kun rammen, og kontrollér resultatet
