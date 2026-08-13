@@ -446,7 +446,7 @@ body[data-projektor="1"] .key{font-size:0.74rem}
 
       <div class="stage" id="stage">
         <canvas id="simCanvas" width="820" height="420" role="img"
-                aria-label="Beholder med enzymmolekyler og substrat. Substraterne binder sig i enzymets aktive sted, og en del af dem spaltes til to produktstykker. Ved høj temperatur folder enzymerne sig ud og kan ikke længere binde substrat."></canvas>
+                aria-label="Beholder med enzymmolekyler og substrat. Substraterne binder sig i enzymets aktive sted, og en del af dem spaltes til to produktstykker. Ved høj temperatur folder enzymerne sig ud og kan ikke længere binde substrat. Væk fra pH-optimum trækker klemmerne i det aktive sted sig sammen og bliver blege, så substratet stadig bindes, men sjældnere omdannes."></canvas>
         <div class="hint" id="hint">Skru på skyderne, og mål punkter ↓</div>
       </div>
 
@@ -1023,9 +1023,51 @@ function tegnEnzym(e){
   // forsvinder, når proteinet folder sig ud
   const pr = ENZ_R * (1 - d * 0.3);
   const px = Math.cos(e.mund) * pr * sx, py = Math.sin(e.mund) * pr * sy;
-  blobSti(px, py, POCKET_R * (1 - d * 0.6) * (1 - e.greb * 0.14), e.jag, d, sx, sy);
-  ctx.fillStyle = '#FFF9EE'; ctx.fill();
+  blobSti(px, py, lommeRadius(e), e.jag, d, sx, sy);
+  ctx.fillStyle = lerpFarve('#DCE5E1', '#FFF9EE', e.dead ? 0 : katalyseKraft(e));
+  ctx.fill();
   ctx.strokeStyle = '#17211F'; ctx.lineWidth = 2; ctx.stroke();
+  ctx.restore();
+}
+
+/* Hvor godt det aktive sted virker lige nu: pH afgør ladningen på de
+   katalytiske grupper, og et udfoldet protein har slet intet aktivt sted.
+   Samme faktor som i kcatOf, så billedet og tallet siger det samme. */
+function katalyseKraft(e){ return phFaktor(ph) * (1 - e.u); }
+function lommeRadius(e){ return POCKET_R * (1 - e.u * 0.6) * (1 - e.greb * 0.14); }
+
+/* De katalytiske grupper i lommen, tegnet oven på et bundet substrat.
+   Ved pH-optimum står de mørke og lange og klemmer om substratet; væk fra
+   optimum trækker de sig sammen til blege stumper, og substratet kan så
+   sidde i lommen uden at blive omdannet — præcis dét, det lave kcat
+   betyder. pH-signalet sidder derfor kun her, mens temperaturen slår ud
+   på hele kroppen. */
+function tegnAktivtSted(e){
+  if (e.dead) return;
+  const d = e.u;
+  const kraft = katalyseKraft(e);
+  const sag = d * 7, sx = 1 + d * 0.24, sy = 1 - d * 0.34;
+  const pr = ENZ_R * (1 - d * 0.3);
+  const rad = lommeRadius(e);
+  const laengde = POCKET_R * (0.16 + 0.44 * kraft) * (1 + e.greb * 0.18);
+  const bred = POCKET_R * 0.6;
+
+  ctx.save();
+  ctx.translate(e.x + Math.cos(e.mund) * pr * sx,
+                e.y + sag + Math.sin(e.mund) * pr * sy);
+  ctx.fillStyle = lerpFarve('#B9C6C1', '#17211F', kraft);
+  ctx.lineJoin = 'round';
+  for (const side of [-1, 1]){
+    const a = e.mund + side * Math.PI / 2;
+    const ux = Math.cos(a), uy = Math.sin(a);       // ud mod lommens kant
+    const fx = ux * rad, fy = uy * rad;             // fodpunkt på kanten
+    ctx.beginPath();
+    ctx.moveTo(fx - uy * bred / 2, fy + ux * bred / 2);
+    ctx.lineTo(fx + uy * bred / 2, fy - ux * bred / 2);
+    ctx.lineTo(fx - ux * laengde,  fy - uy * laengde);
+    ctx.closePath();
+    ctx.fill();
+  }
   ctx.restore();
 }
 function tegnSubstrat(s){
@@ -1070,6 +1112,9 @@ function tegn(){
   for (const s of substrater) if (s.fri) tegnSubstrat(s);
   for (const e of enzymer) tegnEnzym(e);
   for (const s of substrater) if (!s.fri) tegnSubstrat(s);
+  // klemmerne skal ligge oven på det bundne substrat, ellers er det netop
+  // i grebet, man ikke kan se, om det aktive sted virker
+  for (const e of enzymer) tegnAktivtSted(e);
   for (const g of glimt){
     ctx.globalAlpha = Math.max(0, g.liv) * 0.75;
     ctx.strokeStyle = g.farve; ctx.lineWidth = 2;
@@ -1433,6 +1478,8 @@ function planlaegStatus(vM, occ, fAndel){
     (vM === null ? 'Hastigheden måles stadig. ' : 'Målt hastighed ' + komma(vM, 2) + ' mikromolær per sekund. ') +
     Math.round(occ * 100) + ' procent af enzymerne har substrat bundet. ' +
     Math.round(fAndel * 100) + ' procent af enzymet er foldet. ' +
+    'Det aktive sted arbejder ved ' + Math.round(phFaktor(ph) * 100) +
+    ' procent af sin styrke ved pH-optimum. ' +
     omsat + ' mikromolær omsat i alt.';
   if (t === srSidste) return;
   srSidste = t;
