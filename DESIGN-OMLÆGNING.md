@@ -4,7 +4,7 @@ Status pr. 9. august 2026. Skabelonen er beskrevet i `CLAUDE.md`.
 Forlæg: `index.html` + `forside.css`, `geografi/Stigningsregn.html`,
 `geografi/drivhuseffektenSimpel.html`.
 
-**Lagt om: 10 sider. Tilbage: 38.**
+**Lagt om: 10 sider. Tilbage: 37.**
 
 Rækkefølgen nedenfor er valgt efter, hvad eleverne og du selv møder oftest,
 ikke efter hvad der er nemmest.
@@ -157,7 +157,6 @@ Cormorant Garamond) og de tre løse spalter er væk; alt bor nu i ét `.rig`.
 | # | Fil | Linjer | Indhold | Bemærkning |
 | --- | --- | --- | --- | --- |
 | 6 | `geografi/groenlandspumpen.html` | 1153 | canvas + 15 svg, 2 skydere | Mange SVG-lag; afsæt tid til `<title>`/`<desc>` og stregtype som andet signal end farve. |
-| 7 | `geografi/straalingsbalance.html` | 966 | 2 svg, 6 skydere | Ren instrumentside — `.gauges` + `.knobs`. |
 | 8 | `geografi/Dugpunkt.html` | 324 | canvas + svg, 2 skydere | Mindst af dem. God at tage som opvarmning, hvis etape 2 skal deles op. |
 
 ---
