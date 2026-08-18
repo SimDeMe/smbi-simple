@@ -1,390 +1,980 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="da">
 <head>
-    <meta charset="UTF-8">
-    <title>Osmose</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background-color: #f0f4f8;
-            color: #333;
-        }
-        h2 { margin-bottom: 5px; color: #2c3e50; }
-        .subtitle { color: #666; font-size: 0.95em; margin-bottom: 20px; max-width: 600px; text-align: center; }
-        
-        .controls {
-            background: white;
-            padding: 20px 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-            margin-bottom: 20px;
-            display: flex;
-            gap: 50px;
-            align-items: center;
-            border: 1px solid #e1e1e1;
-        }
-        .control-group { text-align: center; }
-        input[type=range] { cursor: pointer; width: 180px; }
-        .unit { font-size: 0.8em; color: #777; font-weight: normal;}
-        .value-display { font-weight: bold; color: #2c3e50; font-size: 1.1em; }
-        
-        #simulation-container {
-            position: relative;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-            border-radius: 12px;
-            background: white;
-            overflow: hidden;
-            border: 1px solid #ccc;
-        }
-        canvas { display: block; background: radial-gradient(circle, #f9fdff 0%, #eef6fa 100%); }
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Osmose i cellen — smbi.dk</title>
+<meta name="description" content="Interaktiv model af osmose: skru på saltkoncentrationen inde i og uden for cellen, og se vandet søge den vej, hvor der er mest salt — indtil cellen svulmer eller skrumper og krenerer.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,300..600&display=swap" rel="stylesheet">
+<style>
+/* ─────────────────────────────────────────────────────────
+   Osmose i cellen — smbi.dk's fælles design
+   ───────────────────────────────────────────────────────── */
+:root{
+  --paper:#FFF9EE;
+  --paper-2:#FFF3DC;
+  --panel:#FFFFFF;
+  --ink:#17211F;
+  --slate:#566B68;
 
-        .status-panel {
-            margin-top: 15px;
-            font-weight: bold;
-            font-size: 1.1em;
-            padding: 12px 25px;
-            border-radius: 50px;
-            background: #fff;
-            border: 2px solid #ddd;
-            text-align: center;
-            width: 550px;
-            transition: all 0.3s ease;
-        }
-        
-        .normal { background-color: #d4edda; color: #155724; border-color: #c3e6cb; }
-        .swell { background-color: #fff3cd; color: #856404; border-color: #ffeeba; }
-        .shrink { background-color: #f3e5f5; color: #4a148c; border-color: #d1c4e9; } /* Lilla nuance for skrumpning */
+  --pink:#E8336D;
+  --blue:#0E86C8;
+  --lime:#5FB030;
+  --amber:#FFB300;
+  --grape:#7A4FD6;
+  --coral:#FF6A3D;
+  --teal:#0FA593;
 
-        .legend {
-            margin-top: 15px;
-            display: flex;
-            gap: 20px;
-            font-size: 0.85em;
-            color: #555;
-        }
-        .legend-item { display: flex; align-items: center; }
-        .dot { width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
-        .blue { background-color: #3498db; }
-        .red { background-color: #e74c3c; }
-    </style>
+  --bio:var(--pink);
+  --accent:var(--bio);
+
+  --display:'Archivo',system-ui,sans-serif;
+  --body:'Source Serif 4',Georgia,serif;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+
+  --wide:'wdth' 118;
+  --max:980px;
+
+  --hard:4px 4px 0 var(--ink);
+  --hard-lg:7px 7px 0 var(--ink);
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--body);
+  font-size:17px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--grape);outline-offset:3px;border-radius:4px}
+
+.mono{
+  font-family:var(--mono);font-size:0.68rem;font-weight:500;
+  letter-spacing:0.14em;text-transform:uppercase;
+}
+/* Enheder skrives som de staves — mono-mærkaternes versaler må ikke lave
+   mmol/L om til MMOL/L. */
+.enhed{text-transform:none}
+.sr{
+  position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+  overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;
+}
+
+/* ── Topbjælke ─────────────────────────────────────────── */
+.rainbow{
+  height:7px;
+  background:linear-gradient(90deg,
+    var(--pink) 0 14.3%, var(--coral) 14.3% 28.6%, var(--amber) 28.6% 42.9%,
+    var(--lime) 42.9% 57.2%, var(--teal) 57.2% 71.5%, var(--blue) 71.5% 85.8%,
+    var(--grape) 85.8% 100%);
+}
+.top{position:sticky;top:0;z-index:60}
+.top-bar{
+  background:rgba(255,249,238,0.93);
+  backdrop-filter:blur(10px);
+  border-bottom:2px solid var(--ink);
+}
+.top-in{
+  max-width:var(--max);margin:0 auto;padding:0 24px;
+  display:flex;align-items:center;gap:16px;height:60px;
+}
+.brand{
+  font-family:var(--display);font-variation-settings:'wdth' 125;
+  font-weight:800;font-size:1.15rem;letter-spacing:-0.02em;
+  text-decoration:none;display:flex;align-items:center;gap:8px;
+}
+.brand-mark{
+  width:25px;height:25px;border-radius:9px;border:2px solid var(--ink);
+  background:conic-gradient(var(--pink),var(--amber),var(--lime),var(--blue),var(--grape),var(--pink));
+  flex-shrink:0;
+}
+.brand em{font-family:var(--mono);font-size:0.72rem;font-weight:500;font-style:normal;color:var(--slate)}
+.top-nav{display:flex;gap:6px;margin-left:auto}
+.top-nav a{
+  font-family:var(--display);font-size:0.84rem;font-weight:600;
+  text-decoration:none;color:var(--ink);white-space:nowrap;
+  padding:7px 14px;border-radius:20px;border:2px solid transparent;
+  transition:background .15s,border-color .15s;
+}
+.top-nav a:hover{background:#FBD3E1;border-color:var(--ink)}
+
+/* ── Sidehoved ─────────────────────────────────────────── */
+.wrap{max-width:var(--max);margin:0 auto;padding:0 24px}
+.head{padding:34px 0 22px;position:relative;overflow:hidden}
+.head::before{
+  content:'';position:absolute;width:380px;height:380px;border-radius:50%;
+  background:#FBD3E1;filter:blur(70px);opacity:.6;top:-200px;right:-120px;z-index:0;
+}
+.head-in{position:relative;z-index:1}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--ink);color:#FFF6E0;padding:6px 14px;border-radius:20px;
+}
+.eyebrow .blink{width:8px;height:8px;border-radius:50%;background:var(--amber);animation:pulse 1.8s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.8)}}
+h1{
+  font-family:var(--display);font-variation-settings:var(--wide);font-weight:800;
+  font-size:clamp(2rem,4.6vw,2.9rem);line-height:1.03;letter-spacing:-0.032em;
+  margin:16px 0 14px;
+}
+.hi{position:relative;display:inline-block;z-index:0;white-space:nowrap}
+.hi::before{
+  content:'';position:absolute;z-index:-1;left:-8px;right:-8px;top:12%;bottom:8%;
+  background:var(--hc,var(--amber));border-radius:6px;transform:rotate(-1.3deg);
+}
+.lead{font-size:1.06rem;color:#3E4E4C;max-width:62ch}
+
+/* ── Signaturpanel: selve simuleringen ─────────────────── */
+.rig{
+  position:relative;
+  background:var(--panel);
+  border:2.5px solid var(--ink);border-radius:18px;overflow:hidden;
+  box-shadow:var(--hard-lg);
+  margin-top:26px;
+}
+.rig-bar{height:9px;background:var(--accent)}
+.rig-head{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:11px 15px;border-bottom:2px solid var(--ink);
+  background:#FBD3E1;
+}
+.rig-live{display:flex;align-items:center;gap:7px}
+.rig-live .mono{color:var(--ink);font-weight:600}
+.dot{
+  width:9px;height:9px;border-radius:50%;background:var(--accent);
+  border:1.5px solid var(--ink);animation:pulse 2s ease-in-out infinite;
+}
+.rig-head .who{
+  font-family:var(--mono);font-size:0.6rem;font-weight:600;
+  letter-spacing:0.12em;text-transform:uppercase;color:#5A4451;
+  font-variant-numeric:tabular-nums;
+}
+.rig-head .spacer{margin-left:auto}
+.btn-mini{
+  font-family:var(--display);font-size:0.72rem;font-weight:700;
+  background:#fff;border:2px solid var(--ink);color:var(--ink);
+  padding:4px 11px;border-radius:18px;cursor:pointer;white-space:nowrap;
+  box-shadow:2px 2px 0 var(--ink);
+  transition:transform .12s,box-shadow .12s,background .16s,color .16s;
+}
+.btn-mini:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--ink)}
+.btn-mini:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--ink)}
+.btn-mini[aria-pressed="true"]{
+  background:var(--accent);color:#fff;
+  transform:translate(2px,2px);box-shadow:0 0 0 var(--ink);
+}
+
+/* ── Scenen ────────────────────────────────────────────── */
+.stage{
+  position:relative;padding:10px;
+  background:radial-gradient(circle at 1px 1px,#E6EDEB 1px,transparent 0) 0 0/16px 16px;
+}
+canvas{
+  display:block;width:100%;height:auto;aspect-ratio:41/26;
+  border:2px solid var(--ink);border-radius:12px;
+  background:linear-gradient(180deg,#EAF6FB,#DAEBF4);
+}
+.hint{
+  position:absolute;right:22px;bottom:22px;z-index:2;pointer-events:none;
+  font-family:var(--mono);font-size:0.58rem;font-weight:600;letter-spacing:0.1em;
+  text-transform:uppercase;color:var(--ink);
+  background:rgba(255,249,238,.9);border:1.5px solid var(--ink);border-radius:14px;
+  padding:4px 10px;transition:opacity .3s;
+}
+.hint.gone{opacity:0}
+
+/* ── Instrumenter ──────────────────────────────────────── */
+.gauges{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  border-top:2px solid var(--ink);
+}
+.gauge{
+  padding:13px 15px 14px;border-left:2px solid var(--ink);
+  display:flex;flex-direction:column;gap:9px;
+}
+.gauge:first-child{border-left:none}
+.g-tonic{background:#E7F4FB}
+.g-stoer{background:#FFF1EC}
+.g-kren{background:#F1ECFC}
+.gauge dt{
+  font-family:var(--mono);font-size:0.57rem;font-weight:600;letter-spacing:0.12em;
+  text-transform:uppercase;color:#5A6C69;
+}
+.gauge dd{
+  font-family:var(--display);font-variation-settings:'wdth' 108;
+  font-weight:800;font-size:1.28rem;line-height:1;font-variant-numeric:tabular-nums;
+}
+.gauge dd small{font-size:0.62em;font-weight:700;color:#5A6C69;margin-left:3px}
+.g-viz{display:flex;align-items:flex-end;gap:10px;height:46px}
+
+/* måleskala med blækkant */
+.col{
+  position:relative;width:100%;height:44px;flex:1;
+  border:2px solid var(--ink);border-radius:9px;overflow:hidden;
+  background:
+    repeating-linear-gradient(90deg,rgba(23,33,31,.09) 0 1.5px,transparent 1.5px 25%),
+    #fff;
+}
+.col i{
+  position:absolute;left:0;bottom:0;top:0;display:block;
+  background:var(--cc,linear-gradient(90deg,#9BD7F3,#0E86C8));width:0%;
+  border-right:2px solid var(--ink);
+  transition:width .16s linear,left .16s linear;
+}
+.col.mid i{border-left:2px solid var(--ink)}
+.col b{
+  position:absolute;right:5px;bottom:3px;
+  font-family:var(--mono);font-size:0.5rem;font-weight:600;color:#5A6C69;letter-spacing:.06em;
+  background:rgba(255,255,255,.82);border-radius:5px;padding:0 3px;
+}
+.col .tick{
+  position:absolute;top:0;bottom:0;width:2px;background:var(--ink);opacity:.45;
+}
+.col .tick::after{
+  content:attr(data-lbl);position:absolute;top:2px;left:4px;
+  font-family:var(--mono);font-size:0.45rem;font-weight:600;letter-spacing:.06em;
+  color:#5A6C69;white-space:nowrap;
+}
+
+/* ── Kontrolpanel ──────────────────────────────────────── */
+.knobs{
+  border-top:2px solid var(--ink);background:var(--paper-2);
+  padding:18px 15px 20px;
+  display:grid;grid-template-columns:1fr 1fr;gap:20px 26px;
+}
+.knob{display:flex;flex-direction:column;gap:7px}
+.knob-top{display:flex;align-items:baseline;gap:10px}
+.knob-top .mono{color:#5A6C69;font-size:0.62rem}
+.knob-val{
+  margin-left:auto;font-family:var(--display);font-variation-settings:'wdth' 108;
+  font-weight:800;font-size:1rem;font-variant-numeric:tabular-nums;
+  background:#fff;border:2px solid var(--ink);border-radius:16px;padding:1px 11px;
+  white-space:nowrap;
+}
+input[type=range]{
+  -webkit-appearance:none;appearance:none;width:100%;height:22px;background:transparent;cursor:pointer;
+}
+input[type=range]::-webkit-slider-runnable-track{
+  height:10px;border:2px solid var(--ink);border-radius:9px;background:var(--track,#fff);
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;
+  width:22px;height:22px;margin-top:-8px;border-radius:50%;
+  border:2.5px solid var(--ink);background:var(--kc,var(--amber));
+  box-shadow:2px 2px 0 var(--ink);
+}
+input[type=range]::-moz-range-track{
+  height:10px;border:2px solid var(--ink);border-radius:9px;background:var(--track,#fff);
+}
+input[type=range]::-moz-range-thumb{
+  width:20px;height:20px;border-radius:50%;
+  border:2.5px solid var(--ink);background:var(--kc,var(--amber));box-shadow:2px 2px 0 var(--ink);
+}
+/* begge skydere styrer den samme størrelse — derfor samme farve som saltet på figuren */
+#inp-ude,#inp-inde{--track:linear-gradient(90deg,#FFF3DC,#FF6A3D);--kc:var(--coral)}
+
+/* ── Fakta-fod ─────────────────────────────────────────── */
+.facts{
+  border-top:2px solid var(--ink);background:#fff;
+  padding:12px 15px;display:flex;gap:9px;flex-wrap:wrap;align-items:center;
+}
+.fact{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--paper);border:2px solid var(--ink);border-radius:22px;padding:5px 13px;
+  font-family:var(--mono);font-size:0.6rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;
+}
+.fact::before{content:'';width:10px;height:10px;border-radius:3px;background:var(--fc,var(--slate));border:1.5px solid var(--ink)}
+.fact.rund::before{border-radius:50%;width:8px;height:8px}
+.fact b{font-family:var(--display);font-size:0.84rem;font-weight:800;letter-spacing:0;font-variant-numeric:tabular-nums}
+
+/* ── Bund ──────────────────────────────────────────────── */
+.foot{margin-top:34px;background:var(--ink);color:#FFF6E0;padding:26px 0 32px}
+.foot-in{
+  max-width:var(--max);margin:0 auto;padding:0 24px;
+  display:flex;justify-content:space-between;align-items:flex-end;gap:18px;flex-wrap:wrap;
+}
+.foot .brand{color:#FFF6E0}
+.foot .mono{color:#8FA29E;margin-top:5px}
+.foot-links{display:flex;gap:8px;flex-wrap:wrap}
+.foot-links a{
+  font-family:var(--display);font-size:0.82rem;font-weight:700;text-decoration:none;
+  border:2px solid #FFF6E0;border-radius:20px;padding:5px 13px;
+  transition:background .16s,color .16s,border-color .16s;
+}
+.foot-links a:nth-child(1):hover{background:var(--pink);border-color:var(--pink)}
+.foot-links a:nth-child(2):hover{background:var(--amber);border-color:var(--amber);color:var(--ink)}
+.foot-links a:nth-child(3):hover{background:var(--lime);border-color:var(--lime);color:var(--ink)}
+
+/* ── Projektortilstand ─────────────────────────────────── */
+body[data-projektor="1"] .top,
+body[data-projektor="1"] .head,
+body[data-projektor="1"] .foot{display:none}
+body[data-projektor="1"] .wrap{max-width:none;padding:0 14px}
+body[data-projektor="1"] .rig{margin-top:14px;box-shadow:var(--hard)}
+body[data-projektor="1"] .gauge dt{font-size:0.76rem}
+body[data-projektor="1"] .gauge dd{font-size:1.9rem}
+body[data-projektor="1"] .gauge dd small{font-size:0.9rem}
+body[data-projektor="1"] .knob-top .mono{font-size:0.82rem}
+body[data-projektor="1"] .knob-val{font-size:1.05rem}
+body[data-projektor="1"] .fact{font-size:0.74rem}
+
+/* ── Responsivt ────────────────────────────────────────── */
+@media (max-width:860px){
+  .gauges{grid-template-columns:1fr 1fr}
+  .gauge:nth-child(3){grid-column:1 / -1;border-left:none;border-top:2px solid var(--ink)}
+}
+@media (max-width:700px){
+  /* Figuren får sin egen vandrette rulning frem for at skrumpe mærkaterne
+     ned under læsbar størrelse — resten af siden ruller kun lodret. */
+  .stage{overflow-x:auto}
+  canvas{min-width:600px}
+}
+@media (max-width:620px){
+  body{font-size:16px}
+  .wrap,.top-in,.foot-in{padding-left:16px;padding-right:16px}
+  .head{padding:24px 0 18px}
+  .rig{border-radius:14px;box-shadow:var(--hard)}
+  .gauges{grid-template-columns:1fr}
+  .gauge{border-left:none;border-top:2px solid var(--ink)}
+  .gauge:first-child{border-top:none}
+  .gauge:nth-child(3){grid-column:auto}
+  .gauge dd{font-size:1.1rem}
+  .knobs{grid-template-columns:1fr}
+  .hint{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+@media print{
+  .top,.foot,.rig-head .btn-mini,.hint{display:none!important}
+  .rig{box-shadow:none}
+}
+</style>
 </head>
 <body>
-<!-- smbi hjem-knap -->
-<a href="/" class="smbi-home" aria-label="Til forsiden" title="Til forsiden">
-<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
-<span>Hjem</span>
-</a>
-<style>
-.smbi-home{position:fixed;top:14px;left:14px;z-index:2147483000;display:inline-flex;align-items:center;gap:6px;padding:8px 13px;font:600 14px/1 system-ui,-apple-system,"Segoe UI",sans-serif;color:#F5F0E8;background:#1C2E44;border:1px solid #2E4A6A;border-radius:999px;text-decoration:none;box-shadow:0 2px 10px rgba(0,0,0,.28);opacity:.9;transition:opacity .15s,transform .15s}
-.smbi-home:hover{opacity:1;transform:translateY(-1px)}
-.smbi-home svg{flex:none}
-@media print{.smbi-home{display:none!important}}
-</style>
-<script>(function(){try{if(window.top!==window.self){var e=document.querySelector(".smbi-home");if(e)e.style.display="none";}}catch(x){}})();</script>
 
+<header class="top" id="site-top">
+  <div class="rainbow"></div>
+  <div class="top-bar">
+    <div class="top-in">
+      <a href="/" class="brand"><span class="brand-mark"></span>smbi<em>.dk</em></a>
+      <nav class="top-nav">
+        <a href="/biologi.html">Biologi</a>
+        <a href="/">Forside</a>
+      </nav>
+    </div>
+  </div>
+</header>
 
-    <h2>Osmose i cellen</h2>
-    <div class="subtitle">Observer hvordan cellen langsomt tilpasser sig osmose.<br>Se membranen folde sammen (krenere), hvis cellen dehydrerer.</div>
+<main>
+  <div class="wrap head">
+    <div class="head-in">
+      <span class="eyebrow mono"><span class="blink"></span>Biologi C · osmose</span>
+      <h1>Vandet søger derhen, hvor der er <span class="hi" style="--hc:#FBD3E1">mest salt</span></h1>
+      <p class="lead">Cellemembranen lader vand passere, men holder på saltet. Skru på saltkoncentrationen uden for og inde i cellen, og se cellen svulme, når den ligger i en tynd væske — eller skrumpe og folde membranen sammen (krenere), når væsken udenfor er for salt.</p>
+    </div>
+  </div>
 
-    <div class="controls">
-        <div class="control-group">
-            <label>Ekstracellulær væske (Udenfor)</label><br>
-            <input type="range" id="saltOut" min="0" max="600" step="10" value="300">
-            <div class="value-display"><span id="dispOut">300</span> <span class="unit">mOsm/L</span></div>
+  <div class="wrap">
+    <section class="rig">
+      <div class="rig-bar"></div>
+      <div class="rig-head">
+        <span class="rig-live"><span class="dot"></span><span class="mono">Live model</span></span>
+        <span class="who"><span id="who-tal">300 udenfor · 300 indeni</span> <span class="enhed">mmol/L</span></span>
+        <span class="spacer"></span>
+        <button type="button" class="btn-mini" id="btn-nulstil"
+                title="Sæt begge koncentrationer tilbage til 300 mmol/L">Nulstil</button>
+        <button type="button" class="btn-mini" id="btn-projektor" aria-pressed="false"
+                title="Skjul sidens krom og forstør aflæsningerne">Projektor</button>
+      </div>
+
+      <div class="stage">
+        <canvas id="laerred" width="820" height="520" role="img"
+                aria-label="En celle set i tværsnit, omgivet af ekstracellulær væske. Vandmolekyler tegnes som små blå cirkler og saltioner som orange firkanter; saltet kan ikke komme gennem membranen, men vandet kan. Er der mest salt indeni, peger pile ind gennem membranen, og cellen vokser. Er der mest salt udenfor, peger pilene ud, cellen skrumper, og membranen folder sig sammen i takker."></canvas>
+        <div class="hint" id="hint">Træk i skyderne ↓</div>
+      </div>
+
+      <dl class="gauges">
+        <div class="gauge g-tonic">
+          <dt>Væsken udenfor er</dt>
+          <div class="g-viz">
+            <div class="col mid">
+              <i id="viz-delta" style="--cc:linear-gradient(90deg,#9BD7F3,#0E86C8)"></i>
+              <span class="tick" style="left:calc(50% - 1px)"></span>
+              <b id="lbl-delta">Δ 0 mmol/L</b>
+            </div>
+          </div>
+          <dd id="val-tonic">Isotonisk</dd>
         </div>
-        <div class="control-group">
-            <label>Intracellulær væske (Indeni)</label><br>
-            <input type="range" id="saltIn" min="0" max="600" step="10" value="300">
-            <div class="value-display"><span id="dispIn">300</span> <span class="unit">mOsm/L</span></div>
+
+        <div class="gauge g-stoer">
+          <dt>Cellens størrelse</dt>
+          <div class="g-viz">
+            <div class="col">
+              <i id="viz-stoer" style="--cc:linear-gradient(90deg,#FFD9C9,#FF6A3D)"></i>
+              <span class="tick" style="left:60.6%" data-lbl="normal"></span>
+            </div>
+          </div>
+          <dd id="val-stoer">100<small>% af normal</small></dd>
         </div>
+
+        <div class="gauge g-kren">
+          <dt>Krenering — foldet membran</dt>
+          <div class="g-viz">
+            <div class="col">
+              <i id="viz-kren" style="--cc:linear-gradient(90deg,#E2D6F8,#7A4FD6)"></i>
+              <b>glat → fuldt foldet</b>
+            </div>
+          </div>
+          <dd id="val-kren">0<small>%</small></dd>
+        </div>
+      </dl>
+
+      <div class="knobs">
+        <label class="knob" for="inp-ude">
+          <span class="knob-top"><span class="mono">Udenfor — ekstracellulær væske</span><span class="knob-val" id="lbl-ude">300 mmol/L</span></span>
+          <input type="range" id="inp-ude" min="0" max="600" step="10" value="300">
+        </label>
+        <label class="knob" for="inp-inde">
+          <span class="knob-top"><span class="mono">Indeni — cytoplasma</span><span class="knob-val" id="lbl-inde">300 mmol/L</span></span>
+          <input type="range" id="inp-inde" min="0" max="600" step="10" value="300">
+        </label>
+      </div>
+
+      <div class="facts">
+        <span class="fact rund" style="--fc:var(--blue)">Vand</span>
+        <span class="fact" style="--fc:var(--coral)">Salt / ion</span>
+        <span class="fact" style="--fc:var(--pink)">Kropsvæske <b>≈ 300</b> <span class="enhed">mmol/L</span></span>
+        <span class="fact" style="--fc:var(--grape)">Isotonisk ved forskel <b>≤ 15</b> <span class="enhed">mmol/L</span></span>
+      </div>
+    </section>
+
+    <!-- Instrumenterne opdateres mange gange i sekundet og kan derfor ikke selv
+         være aria-live — så ville skærmlæseren tale i ét væk. I stedet
+         opsummeres aflæsningen her med jævne mellemrum. -->
+    <p class="sr" id="sr-status" aria-live="polite"></p>
+  </div>
+</main>
+
+<footer class="foot">
+  <div class="foot-in">
+    <div>
+      <a href="/" class="brand"><span class="brand-mark"></span>smbi<em>.dk</em></a>
+      <div class="mono">Osmose · celle og membran</div>
     </div>
+    <nav class="foot-links">
+      <a href="/biologi.html">Biologi</a>
+      <a href="/">Alle simuleringer</a>
+      <a href="/contact.html">Kontakt</a>
+    </nav>
+  </div>
+</footer>
 
-    <div id="simulation-container">
-        <canvas id="simCanvas" width="600" height="500"></canvas>
-    </div>
+<script>
+/* skjul side-krom, når siden vises i en iframe */
+(function(){try{if(window.top!==window.self){
+  document.getElementById('site-top').style.display='none';
+  document.querySelector('.foot').style.display='none';
+  document.querySelector('.head').style.display='none';
+}}catch(x){}})();
+</script>
 
-    <div id="statusText" class="status-panel normal">Isotonisk: Cellen er i balance</div>
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   1. MODELLEN — uændret fra den gamle udgave
+   ───────────────────────────────────────────────────────────────
+   Koncentrationerne er antal opløste partikler pr. liter i mmol/L.
+   Forskellen på de to sider bestemmer, hvor stor cellen ender med at
+   blive; den bevæger sig glidende derhen. Skrumper den under normal
+   størrelse, folder membranen sig sammen i takker (krenering).
+   ═══════════════════════════════════════════════════════════════ */
+const BASIS_RADIUS = 140;   // radius ved 300 mmol/L på begge sider
+const MIN_RADIUS   = 70;
+const MAKS_RADIUS  = 230;
+const RADIUS_PR_MMOL = 0.35;
+const ISO_GRAENSE  = 15;    // mmol/L — under dette regnes cellen i balance
+const REAKTIONSFART = 0.008;// andel af afstanden til målet pr. billede ved 60 Hz
+const MAKS_KROEL   = 10;    // px — takkernes højde ved fuldt skrumpet celle
 
-    <div class="legend">
-        <div class="legend-item"><div class="dot blue"></div> Vand</div>
-        <div class="legend-item"><div class="dot red"></div> Salt/Ion</div>
-    </div>
+/* Måleradius som funktion af forskellen inde − ude. */
+function maalRadiusAf(forskel){
+  const r = BASIS_RADIUS + forskel * RADIUS_PR_MMOL;
+  if (r < MIN_RADIUS)  return MIN_RADIUS;
+  if (r > MAKS_RADIUS) return MAKS_RADIUS;
+  return r;
+}
+/* Hvor foldet membranen er ved en given radius: 0 = glat, 1 = fuldt kreneret. */
+function kroelGradAf(r){
+  if (r >= BASIS_RADIUS) return 0;
+  return (BASIS_RADIUS - r) / (BASIS_RADIUS - MIN_RADIUS);
+}
+/* Væsken udenfor set fra cellen. */
+function tonicitetAf(forskel){
+  if (Math.abs(forskel) <= ISO_GRAENSE) return 'iso';
+  return forskel > ISO_GRAENSE ? 'hypo' : 'hyper';
+}
 
-    <script>
-        const canvas = document.getElementById('simCanvas');
-        const ctx = canvas.getContext('2d');
-        const sliderOut = document.getElementById('saltOut');
-        const sliderIn = document.getElementById('saltIn');
-        const dispOut = document.getElementById('dispOut');
-        const dispIn = document.getElementById('dispIn');
-        const statusText = document.getElementById('statusText');
+/* ═══════════════════════════════════════════════════════════════
+   2. OPSÆTNING
+   ═══════════════════════════════════════════════════════════════ */
+const laerred = document.getElementById('laerred');
+const ctx = laerred.getContext('2d');
+const B = 820, H = 520;                 // tegnefladens logiske mål
+const cx = B / 2, cy = H / 2;
+const TAU = Math.PI * 2;
+const INK = '#17211F';
+const roligTilstand = window.matchMedia('(prefers-reduced-motion:reduce)').matches;
 
-        const cx = canvas.width / 2;
-        const cy = canvas.height / 2;
-        
-        // --- KONFIGURATION ---
-        let currentRadius = 140; // Start størrelse
-        let targetRadius = 140;
-        const BASE_RADIUS = 140; // Radius ved 300 mOsm (Normal)
-        const MIN_RADIUS = 70;  
-        const MAX_RADIUS = 230; 
-        
-        // Hvor hurtigt reagerer cellen? (Lavere = langsommere/mere flydende)
-        const REACTION_SPEED = 0.008; 
+/* Lærredet tegnes altid i det logiske 820×520-koordinatsystem, men
+   billedpunkterne følger både skærmens tæthed og den viste bredde,
+   så figuren er skarp uanset vinduets størrelse. */
+function tilpasLaerred(){
+  const vist = laerred.clientWidth || B;
+  const skala = Math.min(window.devicePixelRatio || 1, 2) * (vist / B);
+  laerred.width  = Math.round(B * skala);
+  laerred.height = Math.round(H * skala);
+  ctx.setTransform(skala, 0, 0, skala, 0, 0);
+}
 
-        // Partikel system
-        let particles = [];
-        const WATER_COUNT = 150; 
+const el = id => document.getElementById(id);
+const inpUde  = el('inp-ude');
+const inpInde = el('inp-inde');
+const lblUde  = el('lbl-ude'),  lblInde = el('lbl-inde');
+const elWho   = el('who-tal'),  elHint  = el('hint');
+const elTonic = el('val-tonic'), elStoer = el('val-stoer'), elKren = el('val-kren');
+const vizDelta = el('viz-delta'), vizStoer = el('viz-stoer'), vizKren = el('viz-kren');
+const lblDelta = el('lbl-delta'), elSr = el('sr-status');
 
-        // --- SETUP AF ORGANELLER ---
-        // Vi genererer nogle tilfældige positioner til mitokondrier, som er relative til centrum
-        const mitochondria = [];
-        for(let i=0; i<5; i++) {
-            mitochondria.push({
-                angle: Math.random() * Math.PI * 2,
-                distFactor: 0.4 + Math.random() * 0.3, // Hvor langt ude i cytoplasma? (0-1)
-                rotation: Math.random() * Math.PI
-            });
+let radius = BASIS_RADIUS;      // cellens nuværende radius
+let maalRadius = BASIS_RADIUS;  // den radius den er på vej mod
+let forskel = 0;                // mmol/L, inde − ude
+
+/* Mitokondriernes pladser ligger fast — de flytter sig kun med cellen. */
+const mitokondrier = [];
+for (let i = 0; i < 5; i++){
+  mitokondrier.push({
+    /* fordelt rundt om kernen med et tilfældigt skub, så to aldrig lander oven i hinanden */
+    vinkel: i / 5 * TAU + Math.random() * (TAU / 6),
+    afstand: 0.4 + Math.random() * 0.3,   // andel af radius
+    drejning: Math.random() * Math.PI
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   3. PARTIKLER
+   ───────────────────────────────────────────────────────────────
+   Vand bevæger sig frit gennem membranen. Salt preller af: en ion
+   indeni bliver indeni, en ion udenfor bliver udenfor.
+   ═══════════════════════════════════════════════════════════════ */
+const VAND_ANTAL = 150;
+let partikler = [];
+
+class Partikel{
+  constructor(slags, side){
+    this.slags = slags;             // 'vand' | 'salt'
+    this.side  = side;              // 'inde' | 'ude'
+    this.radius = slags === 'salt' ? 3.5 : 2;
+
+    const vinkel = Math.random() * TAU;
+    let afstand;
+    if (side === 'inde'){
+      afstand = Math.random() * (radius - 10);
+    } else {
+      afstand = Math.random() * 120 + radius + 15;
+      if (afstand > 290) afstand = 290;
+    }
+    this.x = cx + Math.cos(vinkel) * afstand;
+    this.y = cy + Math.sin(vinkel) * afstand;
+
+    const fart = slags === 'salt' ? 0.4 : 1.2;
+    this.vx = (Math.random() - 0.5) * fart;
+    this.vy = (Math.random() - 0.5) * fart;
+  }
+
+  opdater(){
+    this.x += this.vx;
+    this.y += this.vy;
+
+    const dx = this.x - cx, dy = this.y - cy;
+    const afstand = Math.sqrt(dx*dx + dy*dy) || 1e-6;
+    const nx = dx / afstand, ny = dy / afstand;
+
+    if (this.x < 0 || this.x > B) this.vx *= -1;
+    if (this.y < 0 || this.y > H) this.vy *= -1;
+
+    /* Sammenstød med membranen regnes mod den glatte cirkel — også
+       når figuren er krøllet — så saltet ikke sætter sig fast i en tak. */
+    if (this.slags === 'salt'){
+      if (this.side === 'inde'){
+        if (afstand + this.radius > radius){
+          this.x = cx + nx * (radius - this.radius - 1);
+          this.y = cy + ny * (radius - this.radius - 1);
+          this.vx *= -1; this.vy *= -1;
         }
+      } else if (afstand - this.radius < radius){
+        this.x = cx + nx * (radius + this.radius + 1);
+        this.y = cy + ny * (radius + this.radius + 1);
+        this.vx *= -1; this.vy *= -1;
+      }
+    }
+  }
 
-        class Particle {
-            constructor(type, location) {
-                this.type = type; 
-                this.location = location; 
-                this.radius = type === 'salt' ? 3.5 : 2;
-                this.color = type === 'salt' ? 'rgba(231, 76, 60, 0.8)' : 'rgba(52, 152, 219, 0.6)';
-                
-                let angle = Math.random() * Math.PI * 2;
-                let dist;
+  tegn(){
+    if (this.slags === 'vand'){
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, TAU);
+      ctx.fillStyle = 'rgba(14,134,200,0.6)';
+      ctx.fill();
+    } else {
+      const s = 5.6;                       // tegnes mindre end sin stødradius
+      ctx.beginPath();
+      ctx.rect(this.x - s/2, this.y - s/2, s, s);
+      ctx.fillStyle = '#FF6A3D';
+      ctx.fill();
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = 'rgba(23,33,31,.75)';
+      ctx.stroke();
+    }
+  }
+}
 
-                if (location === 'inside') {
-                    dist = Math.random() * (currentRadius - 10);
-                } else {
-                    dist = Math.random() * (120) + currentRadius + 15;
-                    if (dist > 290) dist = 290; 
-                }
+function saetVand(){
+  partikler = [];
+  for (let i = 0; i < VAND_ANTAL; i++){
+    partikler.push(new Partikel('vand', Math.random() > 0.5 ? 'inde' : 'ude'));
+  }
+}
 
-                this.x = cx + Math.cos(angle) * dist;
-                this.y = cy + Math.sin(angle) * dist;
+/* ═══════════════════════════════════════════════════════════════
+   4. FIGUREN
+   ═══════════════════════════════════════════════════════════════ */
+function membranSti(forskyd, kroel){
+  ctx.beginPath();
+  for (let i = 0; i <= 360; i += 2){
+    const v = i * Math.PI / 180;
+    const r = radius + Math.sin(v * 12) * kroel + forskyd;   // 12 takker rundt
+    const x = cx + Math.cos(v) * r;
+    const y = cy + Math.sin(v) * r;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+}
 
-                const speed = type === 'salt' ? 0.4 : 1.2;
-                this.vx = (Math.random() - 0.5) * speed;
-                this.vy = (Math.random() - 0.5) * speed;
-            }
+function tegnOrganeller(){
+  const kerne = radius * 0.25;
 
-            update() {
-                this.x += this.vx;
-                this.y += this.vy;
+  ctx.beginPath();
+  ctx.arc(cx, cy, kerne, 0, TAU);
+  ctx.fillStyle = '#E2D6F8';
+  ctx.fill();
+  ctx.lineWidth = 2; ctx.strokeStyle = INK; ctx.stroke();
 
-                const dx = this.x - cx;
-                const dy = this.y - cy;
-                const dist = Math.sqrt(dx*dx + dy*dy);
-                const nx = dx / dist; 
-                const ny = dy / dist;
+  ctx.beginPath();
+  ctx.arc(cx - 5, cy - 5, kerne * 0.3, 0, TAU);
+  ctx.fillStyle = '#7A4FD6';
+  ctx.fill();
 
-                // Bounce på vægge
-                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
-                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+  for (const m of mitokondrier){
+    const d = radius * m.afstand;
+    ctx.save();
+    ctx.translate(cx + Math.cos(m.vinkel) * d, cy + Math.sin(m.vinkel) * d);
+    ctx.rotate(m.drejning);
 
-                // Enkel kollisionsmodel: Bruger en "usynlig" perfekt cirkel til fysikken
-                // Selvom grafikken krøller, bruger fysikken gennemsnits-radius for stabilitet.
-                if (this.type === 'salt') {
-                    if (this.location === 'inside') {
-                        if (dist + this.radius > currentRadius) {
-                            this.x = cx + nx * (currentRadius - this.radius - 1);
-                            this.y = cy + ny * (currentRadius - this.radius - 1);
-                            this.vx *= -1; this.vy *= -1;
-                        }
-                    } else {
-                        if (dist - this.radius < currentRadius) {
-                            this.x = cx + nx * (currentRadius + this.radius + 1);
-                            this.y = cy + ny * (currentRadius + this.radius + 1);
-                            this.vx *= -1; this.vy *= -1;
-                        }
-                    }
-                }
-            }
+    const a = radius * 0.09, b = radius * 0.045;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, a, b, 0, 0, TAU);
+    ctx.fillStyle = '#D6EFC4';
+    ctx.fill();
+    ctx.lineWidth = 1.8; ctx.strokeStyle = INK; ctx.stroke();
 
-            draw() {
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                ctx.fillStyle = this.color;
-                ctx.fill();
-            }
-        }
+    /* cristae som en lille siksak */
+    ctx.beginPath();
+    for (let k = -2; k <= 2; k++){
+      const x = k * a * 0.32;
+      ctx.moveTo(x, -b * 0.55);
+      ctx.lineTo(x + a * 0.16, b * 0.55);
+    }
+    ctx.lineWidth = 1.1; ctx.strokeStyle = 'rgba(23,33,31,.55)'; ctx.stroke();
+    ctx.restore();
+  }
+}
 
-        function initWater() {
-            particles = [];
-            for(let i=0; i<WATER_COUNT; i++) {
-                let loc = Math.random() > 0.5 ? 'inside' : 'outside';
-                particles.push(new Particle('water', loc));
-            }
-        }
+function tegnCelle(kroel){
+  membranSti(0, kroel);
+  const fyld = ctx.createRadialGradient(cx, cy, radius * 0.1, cx, cy, radius);
+  fyld.addColorStop(0, '#FFF6F9');
+  fyld.addColorStop(1, '#FBD3E1');
+  ctx.fillStyle = fyld;
+  ctx.fill();
 
-        function updateSimulation() {
-            particles = particles.filter(p => p.type === 'water');
-            
-            const mOsmOut = parseInt(sliderOut.value);
-            const mOsmIn = parseInt(sliderIn.value);
-            
-            dispOut.innerText = mOsmOut;
-            dispIn.innerText = mOsmIn;
+  tegnOrganeller();
 
-            // Visualiser salt (færre prikker for ydeevne og overblik)
-            const visualCountIn = Math.floor(mOsmIn / 8);
-            const visualCountOut = Math.floor(mOsmOut / 8);
+  /* dobbeltlaget: en accentlinje inden for blækkanten */
+  membranSti(-5.5, kroel);
+  ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(232,51,109,.5)'; ctx.stroke();
 
-            for(let i=0; i<visualCountIn; i++) particles.push(new Particle('salt', 'inside'));
-            for(let i=0; i<visualCountOut; i++) particles.push(new Particle('salt', 'outside'));
+  membranSti(0, kroel);
+  ctx.lineWidth = 3.5 + kroel / 4;
+  ctx.strokeStyle = INK;
+  ctx.stroke();
+}
 
-            // Beregn mål-radius
-            const diff = mOsmIn - mOsmOut;
-            // Divider med større tal for at gøre radius-ændringen mindre ekstrem ift osmolaritet
-            targetRadius = BASE_RADIUS + (diff * 0.35); 
+/* Pilene viser, hvilken vej vandet netto bevæger sig. */
+function tegnVandpile(t){
+  if (tonicitetAf(forskel) === 'iso') return;
+  const ind = forskel > 0;
+  const styrke = Math.min(1, Math.abs(forskel) / 200);
+  const antal = 8;
 
-            if (targetRadius < MIN_RADIUS) targetRadius = MIN_RADIUS;
-            if (targetRadius > MAX_RADIUS) targetRadius = MAX_RADIUS;
+  for (let i = 0; i < antal; i++){
+    const v = i / antal * TAU + Math.PI / antal;
+    const faser = roligTilstand ? 0.5 : ((t * 0.5 + i / antal) % 1);
+    /* Pilene holder sig inden for tegnefladen, også når cellen er svulmet
+       helt op og der næsten ikke er væske tilbage omkring den. */
+    const inder = radius + 4;
+    const yder = Math.min(radius + 50, H / 2 - 10);
+    const straek = Math.max(12, yder - inder);
+    const d = ind ? inder + straek * (1 - faser) : inder + straek * faser;
+    const gennemsigt = roligTilstand ? 0.9 : Math.sin(faser * Math.PI) * 0.95 + 0.05;
 
-            // Opdater tekst
-            statusText.className = "status-panel";
-            if (Math.abs(diff) <= 15) {
-                statusText.innerText = "Isotonisk: Cellen er i balance";
-                statusText.classList.add("normal");
-            } else if (diff > 15) {
-                statusText.innerText = `Hypotonisk: Vand suges ind (${diff} mOsm forskel)`;
-                statusText.classList.add("swell");
-            } else {
-                statusText.innerText = `Hypertonisk: Vand trækkes ud -> Cellen skrumper!`;
-                statusText.classList.add("shrink");
-            }
-        }
+    ctx.save();
+    ctx.globalAlpha = gennemsigt;
+    ctx.translate(cx + Math.cos(v) * d, cy + Math.sin(v) * d);
+    ctx.rotate(v + (ind ? Math.PI : 0));
+    const s = 0.75 + styrke * 0.45;
+    ctx.scale(s, s);
+    ctx.beginPath();
+    ctx.moveTo(9, 0); ctx.lineTo(-4, 6); ctx.lineTo(-1, 0); ctx.lineTo(-4, -6);
+    ctx.closePath();
+    ctx.fillStyle = '#0E86C8';
+    ctx.fill();
+    ctx.lineWidth = 1.6; ctx.strokeStyle = INK; ctx.lineJoin = 'round'; ctx.stroke();
+    ctx.restore();
+  }
+  ctx.globalAlpha = 1;
+}
 
-        function drawOrganelles(r) {
-            // 1. Nucleus (Kernen) - Følger centrum, men bliver lidt mindre når cellen skrumper
-            const nucleusSize = r * 0.25;
-            ctx.beginPath();
-            ctx.arc(cx, cy, nucleusSize, 0, Math.PI * 2);
-            ctx.fillStyle = "rgba(100, 50, 150, 0.3)"; // Mørk lilla kerne
-            ctx.fill();
-            
-            // Nucleolus (Indre kerne)
-            ctx.beginPath();
-            ctx.arc(cx - 5, cy - 5, nucleusSize * 0.3, 0, Math.PI * 2);
-            ctx.fillStyle = "rgba(80, 40, 120, 0.4)";
-            ctx.fill();
+function monoSkrift(px){
+  ctx.font = '600 ' + px + 'px "IBM Plex Mono", ui-monospace, monospace';
+  try { ctx.letterSpacing = '0.12em'; } catch(x){}
+}
+function displaySkrift(px){
+  ctx.font = '700 ' + px + 'px Archivo, system-ui, sans-serif';
+  try { ctx.letterSpacing = '0em'; } catch(x){}
+}
+/* tekst med papirfarvet omrids, så den kan læses oven på partiklerne */
+function skrivMedGlorie(tekst, x, y, farve){
+  ctx.lineWidth = 4;
+  ctx.strokeStyle = 'rgba(255,249,238,.92)';
+  ctx.lineJoin = 'round';
+  ctx.strokeText(tekst, x, y);
+  ctx.fillStyle = farve;
+  ctx.fillText(tekst, x, y);
+}
 
-            // 2. Mitokondrier
-            mitochondria.forEach(mito => {
-                // Position baseret på nuværende radius
-                const dist = r * mito.distFactor;
-                const mx = cx + Math.cos(mito.angle) * dist;
-                const my = cy + Math.sin(mito.angle) * dist;
+function tegnMaerkater(kroel){
+  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
 
-                ctx.save();
-                ctx.translate(mx, my);
-                ctx.rotate(mito.rotation);
-                
-                // Tegn oval (mitokondrie)
-                ctx.beginPath();
-                ctx.ellipse(0, 0, r * 0.08, r * 0.04, 0, 0, Math.PI * 2);
-                ctx.fillStyle = "rgba(46, 204, 113, 0.4)"; // Grønlig
-                ctx.fill();
-                ctx.strokeStyle = "rgba(39, 174, 96, 0.6)";
-                ctx.stroke();
-                
-                // Indre folder (cristae) - simpel streg
-                ctx.beginPath();
-                ctx.moveTo(-r*0.06, 0);
-                ctx.lineTo(r*0.06, 0);
-                ctx.stroke();
+  monoSkrift(11);
+  skrivMedGlorie('UDENFOR · EKSTRACELLULÆR VÆSKE', 16, 26, '#3E5A66');
 
-                ctx.restore();
-            });
-        }
+  if (radius > 120){
+    ctx.textAlign = 'center';
+    skrivMedGlorie('INDENI · CYTOPLASMA', cx, cy - radius + 44, '#8A4B63');
+    ctx.textAlign = 'left';
+  }
 
-        function drawCell() {
-            // Beregn hvor "krøllet" cellen skal være
-            // Hvis radius er under base_radius, begynder den at krølle
-            let wrinkleAmount = 0;
-            if (currentRadius < BASE_RADIUS) {
-                // Jo mindre den er, jo mere krøllet
-                const shrinkFactor = (BASE_RADIUS - currentRadius) / (BASE_RADIUS - MIN_RADIUS);
-                wrinkleAmount = shrinkFactor * 10; // Max amplitude af krøller
-            }
+  /* membranmærkat med henvisningsstreg */
+  const kant = cx + radius + kroel;
+  ctx.beginPath();
+  ctx.moveTo(kant + 2, cy);
+  ctx.lineTo(kant + 26, cy - 16);
+  ctx.lineTo(kant + 40, cy - 16);
+  ctx.lineWidth = 1.8; ctx.strokeStyle = INK; ctx.stroke();
+  ctx.beginPath(); ctx.arc(kant + 2, cy, 2.6, 0, TAU); ctx.fillStyle = INK; ctx.fill();
+  displaySkrift(13);
+  skrivMedGlorie('Membran', kant + 26, cy - 22, INK);
 
-            ctx.beginPath();
-            // Tegn en cirkel der er "moduleret" med sinus-bølger hvis den er skrumpet
-            for (let i = 0; i <= 360; i+=2) {
-                const angle = i * Math.PI / 180;
-                // Lav 12 "buler" rundt om cellen
-                const distortion = Math.sin(angle * 12) * wrinkleAmount; 
-                
-                // Radius ved denne vinkel
-                const r = currentRadius + distortion;
-                
-                const x = cx + Math.cos(angle) * r;
-                const y = cy + Math.sin(angle) * r;
-                
-                if (i === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
-            }
-            ctx.closePath();
+  if (radius > 80){
+    ctx.textAlign = 'center';
+    displaySkrift(12);
+    skrivMedGlorie('Kerne', cx, cy + radius * 0.25 + 15, '#4A2A80');
+    ctx.textAlign = 'left';
+  }
+}
 
-            // Farvelæg cytoplasma
-            const gradient = ctx.createRadialGradient(cx, cy, currentRadius * 0.1, cx, cy, currentRadius);
-            gradient.addColorStop(0, "rgba(255, 235, 235, 0.7)");
-            gradient.addColorStop(1, "rgba(255, 220, 220, 0.6)");
-            ctx.fillStyle = gradient;
-            ctx.fill();
-            
-            // Tegn Membran kant
-            ctx.lineWidth = 4 + (wrinkleAmount/2); // Membranen ser tykkere ud når den krøller
-            ctx.strokeStyle = "rgba(192, 57, 43, 0.8)";
-            ctx.stroke();
+function tegn(t){
+  ctx.clearRect(0, 0, B, H);
+  const kroel = kroelGradAf(radius) * MAKS_KROEL;
+  tegnCelle(kroel);
+  for (const p of partikler) p.tegn();
+  tegnVandpile(t);
+  tegnMaerkater(kroel);
+}
 
-            // Tegn organeller OVENPÅ cytoplasma, men under membrankant (teknisk set)
-            // Vi kalder den her for at tegne dem "inde" i formen
-            drawOrganelles(currentRadius);
-            
-            // Labels
-            ctx.fillStyle = "#333";
-            ctx.font = "bold 13px sans-serif";
-            ctx.fillText("Membran", cx + currentRadius + 15, cy);
-            
-            if (currentRadius > 80) {
-                ctx.fillStyle = "rgba(80, 40, 120, 0.8)";
-                ctx.fillText("Nucleus", cx - 20, cy + 5);
-            }
-        }
+/* ═══════════════════════════════════════════════════════════════
+   5. INSTRUMENTER OG SKYDERE
+   ═══════════════════════════════════════════════════════════════ */
+const TONIC_TEKST = {
+  iso:   'Isotonisk',
+  hypo:  'Hypotonisk',
+  hyper: 'Hypertonisk'
+};
+const TONIC_SR = {
+  iso:   'Væsken udenfor er isotonisk, og cellen er i balance.',
+  hypo:  'Væsken udenfor er hypotonisk. Vandet suges ind, og cellen svulmer.',
+  hyper: 'Væsken udenfor er hypertonisk. Vandet trækkes ud, cellen skrumper og krenerer.'
+};
 
-        function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+function opdaterModel(){
+  const ude  = parseInt(inpUde.value, 10);
+  const inde = parseInt(inpInde.value, 10);
 
-            // GLIDENDE OVERGANG (Lerp)
-            // Vi flytter os kun en lille smule (REACTION_SPEED) mod målet hver gang.
-            // Dette skaber den langsomme, organiske bevægelse.
-            currentRadius += (targetRadius - currentRadius) * REACTION_SPEED;
+  /* saltet tegnes forfra, så mængden passer til skyderne — vandet bliver */
+  partikler = partikler.filter(p => p.slags === 'vand');
+  const antalInde = Math.floor(inde / 8);
+  const antalUde  = Math.floor(ude / 8);
+  for (let i = 0; i < antalInde; i++) partikler.push(new Partikel('salt', 'inde'));
+  for (let i = 0; i < antalUde;  i++) partikler.push(new Partikel('salt', 'ude'));
 
-            drawCell();
+  forskel = inde - ude;
+  maalRadius = maalRadiusAf(forskel);
+  if (roligTilstand) radius = maalRadius;
 
-            particles.forEach(p => {
-                p.update();
-                p.draw();
-            });
+  lblUde.textContent  = ude  + ' mmol/L';
+  lblInde.textContent = inde + ' mmol/L';
+  elWho.textContent   = ude + ' udenfor · ' + inde + ' indeni';
 
-            requestAnimationFrame(animate);
-        }
+  const tonic = tonicitetAf(forskel);
+  elTonic.textContent = TONIC_TEKST[tonic];
+  lblDelta.textContent = 'Δ ' + (forskel > 0 ? '+' : '') + String(forskel).replace('-', '−') + ' mmol/L';
 
-        sliderOut.addEventListener('input', updateSimulation);
-        sliderIn.addEventListener('input', updateSimulation);
+  /* søjlen vokser ud fra midten: til højre når der er mest salt indeni */
+  const halv = Math.min(50, Math.abs(forskel) / 600 * 50);
+  vizDelta.style.left  = (forskel >= 0 ? 50 : 50 - halv) + '%';
+  vizDelta.style.width = halv + '%';
 
-        initWater();
-        updateSimulation();
-        animate();
+  gemTilstand();
+}
 
-    </script>
+let sidsteStoer = '', sidsteKren = '';
+function opdaterInstrumenter(){
+  const stoer = Math.round(radius / BASIS_RADIUS * 100);
+  const kren  = Math.round(kroelGradAf(radius) * 100);
+
+  const s = String(stoer);
+  if (s !== sidsteStoer){
+    sidsteStoer = s;
+    elStoer.innerHTML = s + '<small>% af normal</small>';
+    vizStoer.style.width = (radius / MAKS_RADIUS * 100) + '%';
+  }
+  const k = String(kren);
+  if (k !== sidsteKren){
+    sidsteKren = k;
+    elKren.innerHTML = k + '<small>%</small>';
+    vizKren.style.width = kren + '%';
+  }
+}
+
+/* Skærmlæseren får en rolig opsummering — ikke ét råb pr. billede. */
+let srUr = 0, srSidste = '';
+function opdaterSr(){
+  const t = TONIC_SR[tonicitetAf(forskel)] +
+            ' Cellen er nu ' + Math.round(radius / BASIS_RADIUS * 100) + ' procent af normal størrelse.';
+  if (t === srSidste) return;
+  srSidste = t;
+  elSr.textContent = t;
+}
+
+/* ── Deling: indstillingerne ligger i adressen ─────────── */
+let hashUr = 0, hashSidste = '';
+function gemTilstand(){
+  const h = '#ude=' + inpUde.value + '&inde=' + inpInde.value;
+  if (h === hashSidste) return;
+  hashSidste = h;
+  clearTimeout(hashUr);
+  hashUr = setTimeout(function(){
+    if (location.hash !== h) history.replaceState(null, '', h);
+  }, 400);
+}
+function laesTilstand(){
+  const p = new URLSearchParams(location.search);
+  new URLSearchParams(location.hash.replace(/^#/, '')).forEach(function(v, k){ p.set(k, v); });
+  const tal = (raa, inp) => {
+    const v = parseFloat(raa);
+    if (!isFinite(v)) return null;
+    return Math.max(+inp.min, Math.min(+inp.max, Math.round(v / 10) * 10));
+  };
+  const u = tal(p.get('ude'),  inpUde);
+  const i = tal(p.get('inde'), inpInde);
+  if (u !== null) inpUde.value  = u;
+  if (i !== null) inpInde.value = i;
+  /* springer cellen direkte på plads, så et delt link viser sit resultat med det samme */
+  if (u !== null || i !== null) radius = maalRadiusAf(parseInt(inpInde.value,10) - parseInt(inpUde.value,10));
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   6. BETJENING
+   ═══════════════════════════════════════════════════════════════ */
+function roert(){ elHint.classList.add('gone'); }
+inpUde.addEventListener('input',  () => { opdaterModel(); roert(); });
+inpInde.addEventListener('input', () => { opdaterModel(); roert(); });
+
+el('btn-nulstil').addEventListener('click', function(){
+  inpUde.value = 300; inpInde.value = 300;
+  opdaterModel();
+});
+
+const btnProjektor = el('btn-projektor');
+function saetProjektor(til){
+  document.body.setAttribute('data-projektor', til ? '1' : '0');
+  btnProjektor.setAttribute('aria-pressed', til ? 'true' : 'false');
+  tilpasLaerred();
+}
+btnProjektor.addEventListener('click', function(){
+  saetProjektor(document.body.getAttribute('data-projektor') !== '1');
+});
+if (/mode=teach|projektor=1/.test(location.search)) saetProjektor(true);
+
+window.addEventListener('resize', tilpasLaerred);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(tilpasLaerred);
+
+/* ═══════════════════════════════════════════════════════════════
+   7. LØKKEN
+   ═══════════════════════════════════════════════════════════════ */
+tilpasLaerred();
+laesTilstand();
+saetVand();
+opdaterModel();
+
+let sidste = performance.now(), tid = 0;
+function billede(nu){
+  const dt = Math.max(0, Math.min(0.05, (nu - sidste) / 1000));
+  sidste = nu;
+  tid += dt;
+
+  if (!roligTilstand){
+    /* Samme glidende bevægelse som før — men bundet til tiden i stedet
+       for til billedhastigheden, så en 120 Hz-skærm ikke kører dobbelt
+       så hurtigt som en 60 Hz-skærm. Ved 60 Hz er de to ens. */
+    const andel = 1 - Math.pow(1 - REAKTIONSFART, dt * 60);
+    radius += (maalRadius - radius) * andel;
+    for (const p of partikler) p.opdater();
+  }
+
+  tegn(tid);
+  opdaterInstrumenter();
+  if (nu - srUr > 1500){ srUr = nu; opdaterSr(); }
+
+  requestAnimationFrame(billede);
+}
+requestAnimationFrame(billede);
+</script>
 </body>
 </html>

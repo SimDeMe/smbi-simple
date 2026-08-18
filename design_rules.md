@@ -15,10 +15,10 @@ skal følge skabelonen herunder. Kopiér fra en side, der allerede er lagt om.
 Lagt om indtil videre: forsiden, fagforsiderne, `born.html`, `admin.html`,
 `Stigningsregn.html`, `drivhuseffektenSimpel.html`, `drivhuseffekten.html`,
 `poroesitetPermeabilitet.html`, `TermiskTryk3.html`,
-`biologi/transkription.html`, `biologi/enzymkinetik.html` (brug dem som
-forlæg, når `--accent:var(--bio)` skal bruges). Resten af `geografi/`,
-`biologi/` og `style.css`-siderne kører stadig det gamle design — rør dem
-kun, når opgaven handler om dem.
+`biologi/transkription.html`, `biologi/enzymkinetik.html`,
+`biologi/osmose.html` (brug dem som forlæg, når `--accent:var(--bio)` skal
+bruges). Resten af `geografi/`, `biologi/` og `style.css`-siderne kører
+stadig det gamle design — rør dem kun, når opgaven handler om dem.
 
 ## 1. Tokens — kopiér uændret ind i `:root`
 
@@ -63,6 +63,24 @@ Skrifterne hentes fra Google Fonts i `<head>`:
 * `--mono` (IBM Plex Mono) — etiketter, enheder, øjenbryn, fodnoter. Altid
   `text-transform:uppercase; letter-spacing:0.12–0.14em` og lille (≈0.6rem).
   Klassen `.mono` findes færdig.
+
+**Enheder skrives altid, som de staves.** Versalerne i mono-mærkaterne må
+ikke lave `mmol/L` om til `MMOL/L`, `kJ/mol` om til `KJ/MOL` eller `pH` om til
+`PH` — en forkert skrevet enhed er en faglig fejl, ikke en designdetalje. Skal
+en enhed stå inde i et mærkat med `text-transform:uppercase`, så pak den ind:
+
+```css
+.enhed{text-transform:none}
+```
+
+```html
+<span class="fact">Kropsvæske <b>≈ 300</b> <span class="enhed">mmol/L</span></span>
+```
+
+Det gælder også tekst, der sættes fra JavaScript: hold enheden i sit eget
+element, så aflæsningen kan opdateres uden at røre den. Og vælg en enhed,
+eleverne kender — `mmol/L` frem for `mOsm/L`, `°C` frem for `K` — medmindre
+emnet netop handler om den anden.
 
 **Farvebrug:** højst én accentfarve pr. side (`--accent`). Regnbuen bruges kun
 i topstriben og i brandmærket. Lyse toner til flader: `#C7E6F6` blå,
