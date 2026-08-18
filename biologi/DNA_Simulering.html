@@ -1,685 +1,1356 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="da">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DNA Bygger Simulering</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f0f4f8;
-            color: #333;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin: 0;
-            padding: 20px;
-            user-select: none; /* Forhindrer tekstmarkering under drag-drop */
-        }
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DNA-byggeren — smbi.dk</title>
+<meta name="description" content="Byg DNA fra bunden: saml nukleotider af fosfat, sukker og base, sæt dem sammen til en streng fra 5' mod 3', og par den komplementære streng med A-T og C-G.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,300..600&display=swap" rel="stylesheet">
+<style>
+/* ─────────────────────────────────────────────────────────
+   DNA-byggeren — smbi.dk's fælles design
+   ───────────────────────────────────────────────────────── */
+:root{
+  --paper:#FFF9EE;
+  --paper-2:#FFF3DC;
+  --panel:#FFFFFF;
+  --ink:#17211F;
+  --slate:#566B68;
 
-        h1 {
-            color: #2c3e50;
-            margin-bottom: 10px;
-        }
+  --pink:#E8336D;
+  --blue:#0E86C8;
+  --lime:#5FB030;
+  --amber:#FFB300;
+  --grape:#7A4FD6;
+  --coral:#FF6A3D;
+  --teal:#0FA593;
 
-        #status-bar {
-            background-color: #fff;
-            padding: 15px 25px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-            text-align: center;
-            font-size: 1.1em;
-            max-width: 800px;
-            border-left: 5px solid #27ae60;
-        }
+  --bio:var(--pink);
+  --geo:var(--blue);
+  --accent:var(--bio);
 
-        #game-area {
-            display: flex;
-            gap: 20px;
-            align-items: flex-start;
-            justify-content: center;
-            width: 100%;
-            max-width: 1200px;
-            min-height: 600px;
-        }
+  --display:'Archivo',system-ui,sans-serif;
+  --body:'Source Serif 4',Georgia,serif;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
 
-        /* Parts Bin (Venstre side) */
-        #parts-bin {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            width: 200px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            align-items: center;
-        }
+  --wide:'wdth' 118;
+  --max:1180px;
 
-        .bin-section {
-            border-bottom: 1px solid #eee;
-            padding-bottom: 10px;
-            width: 100%;
-            text-align: center;
-        }
-        .bin-section:last-child { border-bottom: none; }
-        .bin-label { font-size: 0.9em; color: #777; margin-bottom: 5px; display: block; }
+  --hard:4px 4px 0 var(--ink);
+  --hard-lg:7px 7px 0 var(--ink);
 
-        /* Workspace (Højre side) */
-        #workspace {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            flex-grow: 1;
-            min-height: 600px;
-            position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            overflow: hidden;
-        }
+  --ok:#2E7D32;
+  --nej:#C62828;
+}
 
-        /* Draggable Elements */
-        .part {
-            cursor: grab;
-            position: relative;
-            transition: transform 0.1s;
-            z-index: 10;
-        }
-        .part:active { cursor: grabbing; z-index: 100; }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--body);
+  font-size:17px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--grape);outline-offset:3px;border-radius:4px}
 
-        /* Shapes */
-        .phosphate {
-            width: 40px;
-            height: 40px;
-            background-color: #f1c40f; /* Gul */
-            border-radius: 50%;
-            border: 2px solid #d4ac0d;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-weight: bold;
-            color: #fff;
-            font-size: 12px;
-        }
+.mono{
+  font-family:var(--mono);font-size:0.68rem;font-weight:500;
+  letter-spacing:0.14em;text-transform:uppercase;
+}
+/* Enheder skrives som de staves — versalerne i mono-mærkaterne må ikke
+   lave 5'-enden eller nm om til noget andet. */
+.enhed{text-transform:none}
+.sr{
+  position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+  overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;
+}
 
-        .sugar {
-            width: 50px;
-            height: 50px;
-            background-color: #3498db; /* Blå */
-            clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: #fff;
-            font-size: 10px;
-            font-weight: bold;
-            padding-top: 5px; /* Juster tekst pga form */
-        }
+/* ── Topbjælke ─────────────────────────────────────────── */
+.rainbow{
+  height:7px;
+  background:linear-gradient(90deg,
+    var(--pink) 0 14.3%, var(--coral) 14.3% 28.6%, var(--amber) 28.6% 42.9%,
+    var(--lime) 42.9% 57.2%, var(--teal) 57.2% 71.5%, var(--blue) 71.5% 85.8%,
+    var(--grape) 85.8% 100%);
+}
+.top{position:sticky;top:0;z-index:60}
+.top-bar{
+  background:rgba(255,249,238,0.93);
+  backdrop-filter:blur(10px);
+  border-bottom:2px solid var(--ink);
+}
+.top-in{
+  max-width:var(--max);margin:0 auto;padding:0 24px;
+  display:flex;align-items:center;gap:16px;height:60px;
+}
+.brand{
+  font-family:var(--display);font-variation-settings:'wdth' 125;
+  font-weight:800;font-size:1.15rem;letter-spacing:-0.02em;
+  text-decoration:none;display:flex;align-items:center;gap:8px;
+}
+.brand-mark{
+  width:25px;height:25px;border-radius:9px;border:2px solid var(--ink);
+  background:conic-gradient(var(--pink),var(--amber),var(--lime),var(--blue),var(--grape),var(--pink));
+  flex-shrink:0;
+}
+.brand em{font-family:var(--mono);font-size:0.72rem;font-weight:500;font-style:normal;color:var(--slate)}
+.top-nav{display:flex;gap:6px;margin-left:auto}
+.top-nav a{
+  font-family:var(--display);font-size:0.84rem;font-weight:600;
+  text-decoration:none;color:var(--ink);white-space:nowrap;
+  padding:7px 14px;border-radius:20px;border:2px solid transparent;
+  transition:background .15s,border-color .15s;
+}
+.top-nav a:hover{background:#FBD3E1;border-color:var(--ink)}
 
-        .base {
-            width: 60px;
-            height: 30px;
-            border-radius: 4px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: #fff;
-            font-weight: bold;
-            font-size: 14px;
-            border: 1px solid rgba(0,0,0,0.1);
-        }
+/* ── Sidehoved ─────────────────────────────────────────── */
+.wrap{max-width:var(--max);margin:0 auto;padding:0 24px}
+.head{padding:34px 0 22px;position:relative;overflow:hidden}
+.head::before{
+  content:'';position:absolute;width:380px;height:380px;border-radius:50%;
+  background:#FBD3E1;filter:blur(70px);opacity:.6;top:-200px;right:-120px;z-index:0;
+}
+.head-in{position:relative;z-index:1}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--ink);color:#FFF6E0;padding:6px 14px;border-radius:20px;
+}
+.eyebrow .blink{width:8px;height:8px;border-radius:50%;background:var(--amber);animation:pulse 1.8s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.8)}}
+h1{
+  font-family:var(--display);font-variation-settings:var(--wide);font-weight:800;
+  font-size:clamp(2rem,4.6vw,2.9rem);line-height:1.03;letter-spacing:-0.032em;
+  margin:16px 0 14px;
+}
+.hi{position:relative;display:inline-block;z-index:0;white-space:nowrap}
+.hi::before{
+  content:'';position:absolute;z-index:-1;left:-8px;right:-8px;top:12%;bottom:8%;
+  background:var(--hc,var(--amber));border-radius:6px;transform:rotate(-1.3deg);
+}
+.lead{font-size:1.06rem;color:#3E4E4C;max-width:62ch}
 
-        .base-A { background-color: #e74c3c; } /* Rød */
-        .base-T { background-color: #27ae60; } /* Grøn */
-        .base-C { background-color: #2980b9; } /* Mørkeblå */
-        .base-G { background-color: #f39c12; } /* Orange */
+/* ── Signaturpanel ─────────────────────────────────────── */
+.rig{
+  position:relative;
+  background:var(--panel);
+  border:2.5px solid var(--ink);border-radius:18px;overflow:hidden;
+  box-shadow:var(--hard-lg);
+  margin-top:26px;
+}
+.rig-bar{height:9px;background:var(--accent)}
+.rig-head{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:11px 15px;border-bottom:2px solid var(--ink);
+  background:#FBD3E1;
+}
+.rig-live{display:flex;align-items:center;gap:7px;flex:none}
+.rig-live .mono{color:var(--ink);font-weight:600}
+.dot{
+  width:9px;height:9px;border-radius:50%;background:var(--accent);
+  border:1.5px solid var(--ink);animation:pulse 2s ease-in-out infinite;
+}
+.rig-head .who{
+  font-family:var(--mono);font-size:0.6rem;font-weight:600;
+  letter-spacing:0.12em;text-transform:uppercase;color:#5A4451;
+  font-variant-numeric:tabular-nums;
+  flex:1 1 200px;min-width:0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.rig-head .who.ok{color:var(--ok)}
+.rig-head .who.nej{color:var(--nej)}
+.btn-mini{
+  font-family:var(--display);font-size:0.72rem;font-weight:700;
+  background:#fff;border:2px solid var(--ink);color:var(--ink);
+  padding:4px 11px;border-radius:18px;cursor:pointer;white-space:nowrap;
+  box-shadow:2px 2px 0 var(--ink);
+  transition:transform .12s,box-shadow .12s,background .16s,color .16s;
+}
+.btn-mini:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--ink)}
+.btn-mini:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--ink)}
+.btn-mini[aria-pressed="true"]{
+  background:var(--accent);color:#fff;
+  transform:translate(2px,2px);box-shadow:0 0 0 var(--ink);
+}
+.btn-mini[disabled]{opacity:.4;cursor:not-allowed;transform:translate(2px,2px);box-shadow:0 0 0 var(--ink)}
 
-        /* Nucleotide Container (Assembly Area) */
-        .nucleotide-slot {
-            width: 140px;
-            height: 100px;
-            border: 2px dashed #ccc;
-            border-radius: 8px;
-            margin: 10px;
-            position: relative;
-            background-color: #fafafa;
-        }
-        
-        .nucleotide-slot.completed {
-            border: 2px solid #27ae60;
-            background-color: #eafaf1;
-        }
+/* ── Opgavelinjen over figuren ─────────────────────────── */
+.opgave{
+  border-bottom:2px solid var(--ink);background:#E7F4FB;
+  padding:12px 15px;display:flex;gap:14px;align-items:flex-start;
+  /* to linjer er reserveret, så rammen ikke hopper mellem trinnene */
+  min-height:74px;
+}
+.opgave .nr{
+  font-family:var(--display);font-variation-settings:'wdth' 108;
+  font-weight:800;font-size:1.5rem;line-height:1;
+  border:2.5px solid var(--ink);border-radius:12px;background:#fff;
+  width:46px;height:46px;display:flex;align-items:center;justify-content:center;
+  flex:none;box-shadow:2px 2px 0 var(--ink);
+}
+.opgave-tekst{min-width:0}
+.opgave-tekst .mono{color:#41585F;display:block;margin-bottom:2px}
+.opgave-tekst p{font-size:0.97rem;line-height:1.4}
 
-        /* Drop Zones inside Nucleotide Slot */
-        .zone {
-            position: absolute;
-            border: 1px dotted #ddd;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 10px;
-            color: #ccc;
-        }
-        .zone-p { top: 10px; left: 10px; width: 40px; height: 40px; }
-        .zone-s { top: 30px; left: 45px; width: 50px; height: 50px; }
-        .zone-b { top: 35px; left: 85px; width: 50px; height: 30px; border-radius: 4px; }
+/* ── Scenen ────────────────────────────────────────────── */
+.stage{
+  position:relative;padding:10px;
+  background:radial-gradient(circle at 1px 1px,#E6EDEB 1px,transparent 0) 0 0/16px 16px;
+}
+#bord{
+  display:block;width:100%;height:auto;aspect-ratio:900/540;
+  border:2px solid var(--ink);border-radius:12px;background:#fff;
+  touch-action:none;
+}
+/* ── Instrumenter ──────────────────────────────────────── */
+.gauges{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  border-top:2px solid var(--ink);
+}
+.gauge{
+  padding:13px 15px 14px;border-left:2px solid var(--ink);
+  display:flex;flex-direction:column;gap:9px;
+}
+.gauge:first-child{border-left:none}
+.g-nuk{background:#FFF1EC}
+.g-streng{background:#EDF8E4}
+.g-par{background:#F1ECFC}
+.gauge dt{
+  font-family:var(--mono);font-size:0.57rem;font-weight:600;letter-spacing:0.12em;
+  text-transform:uppercase;color:#5A6C69;
+}
+.gauge dd{
+  font-family:var(--display);font-variation-settings:'wdth' 108;
+  font-weight:800;font-size:1.28rem;line-height:1;font-variant-numeric:tabular-nums;
+}
+.gauge dd small{font-size:0.62em;font-weight:700;color:#5A6C69;margin-left:3px}
+.pips{display:flex;gap:6px;height:18px}
+.pips i{
+  flex:1;border:2px solid var(--ink);border-radius:5px;background:#fff;
+  transition:background .2s;
+}
+.pips i.fyldt{background:var(--pc,var(--accent))}
 
-        /* Strand Assembly Area */
-        #strand-container {
-            display: flex;
-            gap: 50px;
-            padding-top: 40px;
-        }
+/* ── Styring: trin, fortryd, videre ────────────────────── */
+.styring{
+  border-top:2px solid var(--ink);background:var(--paper-2);
+  padding:14px 15px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+}
+.trinvej{display:flex;gap:8px;flex-wrap:wrap}
+.trin-knap{
+  font-family:var(--display);font-size:0.78rem;font-weight:700;
+  background:#fff;border:2px solid var(--ink);border-radius:20px;
+  padding:5px 13px;cursor:pointer;box-shadow:2px 2px 0 var(--ink);
+  display:inline-flex;align-items:center;gap:7px;white-space:nowrap;
+  transition:transform .12s,box-shadow .12s,background .16s,color .16s;
+}
+.trin-knap:hover:not([disabled]){transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--ink)}
+.trin-knap .nr{
+  font-family:var(--mono);font-size:0.62rem;font-weight:600;
+  border:1.5px solid currentColor;border-radius:50%;
+  width:17px;height:17px;display:flex;align-items:center;justify-content:center;
+}
+.trin-knap[aria-current="true"]{
+  background:var(--accent);color:#fff;
+  transform:translate(2px,2px);box-shadow:0 0 0 var(--ink);
+}
+.trin-knap[disabled]{opacity:.42;cursor:not-allowed;transform:translate(2px,2px);box-shadow:0 0 0 var(--ink)}
+.trin-knap.klar::after{content:'✓';font-size:0.8rem}
+.styring .spacer{margin-left:auto}
+.btn{
+  font-family:var(--display);font-size:0.92rem;font-weight:800;
+  background:var(--accent);color:#fff;border:2.5px solid var(--ink);
+  border-radius:22px;padding:8px 20px;cursor:pointer;white-space:nowrap;
+  box-shadow:var(--hard);
+  transition:transform .12s,box-shadow .12s,background .16s;
+}
+.btn:hover:not([disabled]){transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--ink)}
+.btn:active:not([disabled]){transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.btn[disabled]{background:#E3DACB;color:#7B8785;cursor:not-allowed;box-shadow:2px 2px 0 var(--ink);transform:translate(2px,2px)}
 
-        .strand-column {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-width: 150px;
-            position: relative;
-        }
+/* ── Fakta-fod ─────────────────────────────────────────── */
+.facts{
+  border-top:2px solid var(--ink);background:#fff;
+  padding:12px 15px;display:flex;gap:9px;flex-wrap:wrap;align-items:center;
+}
+.fact{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--paper);border:2px solid var(--ink);border-radius:22px;padding:5px 13px;
+  font-family:var(--mono);font-size:0.6rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;
+}
+.fact::before{content:'';width:11px;height:11px;background:var(--fc,var(--slate));border:1.5px solid var(--ink)}
+.fact.rund::before{border-radius:50%}
+.fact.fem::before{clip-path:polygon(50% 0,100% 38%,82% 100%,18% 100%,0 38%);border:none;background:var(--ink)}
+.fact.streg::before{width:16px;height:0;border:none;border-top:2.5px dashed var(--ink)}
+.fact b{font-family:var(--display);font-size:0.84rem;font-weight:800;letter-spacing:0;font-variant-numeric:tabular-nums}
 
-        .strand-label {
-            font-weight: bold;
-            color: #555;
-            margin: 10px 0;
-            font-size: 1.2em;
-        }
+/* ── Bund ──────────────────────────────────────────────── */
+.foot{margin-top:34px;background:var(--ink);color:#FFF6E0;padding:26px 0 32px}
+.foot-in{
+  max-width:var(--max);margin:0 auto;padding:0 24px;
+  display:flex;justify-content:space-between;align-items:flex-end;gap:18px;flex-wrap:wrap;
+}
+.foot .brand{color:#FFF6E0}
+.foot .mono{color:#8FA29E;margin-top:5px}
+.foot-links{display:flex;gap:8px;flex-wrap:wrap}
+.foot-links a{
+  font-family:var(--display);font-size:0.82rem;font-weight:700;text-decoration:none;
+  border:2px solid #FFF6E0;border-radius:20px;padding:5px 13px;
+  transition:background .16s,color .16s,border-color .16s;
+}
+.foot-links a:nth-child(1):hover{background:var(--pink);border-color:var(--pink)}
+.foot-links a:nth-child(2):hover{background:var(--amber);border-color:var(--amber);color:var(--ink)}
+.foot-links a:nth-child(3):hover{background:var(--lime);border-color:var(--lime);color:var(--ink)}
 
-        .nucleotide-wrapper {
-            position: relative;
-            width: 140px;
-            height: 90px; /* Lidt overlap for backbone */
-            transition: all 0.3s ease;
-        }
+/* ═══ Figurens egne dele ═══════════════════════════════ */
+.mrk{
+  font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:1.2px;
+  fill:#5A6C69;text-anchor:middle;pointer-events:none;
+}
+.mrk.venstre{text-anchor:start}
+.mrk.hoejre{text-anchor:end}
+.mrk.lille{font-size:9px;letter-spacing:.8px}
+.mrk.stor{font-size:11px;fill:var(--ink)}
+.ende{
+  font-family:var(--display);font-weight:800;font-size:15px;
+  fill:var(--ink);text-anchor:middle;pointer-events:none;
+}
+.stk-tekst{
+  font-family:var(--display);font-weight:800;font-size:16px;
+  fill:var(--ink);text-anchor:middle;dominant-baseline:middle;pointer-events:none;
+}
+.stk .form{fill:var(--fyld,#fff);stroke:var(--ink);stroke-width:2.5;stroke-linejoin:round}
+.stk-fosfat .form{fill:#FFB300}
+.stk-sukker .form{fill:#FFFFFF}
+.rygrad{stroke:var(--ink);stroke-width:5;stroke-linecap:round}
+.stilk{stroke:var(--ink);stroke-width:4;stroke-linecap:round}
+.hbind{stroke:var(--ink);stroke-width:2.5;stroke-dasharray:5 4;stroke-linecap:round;opacity:.75}
 
-        /* Visual adjustments for assembled nucleotides */
-        .assembled-nucleotide {
-            position: relative;
-            width: 100%;
-            height: 100%;
-        }
-        .assembled-nucleotide .phosphate { position: absolute; top: 0; left: 10px; }
-        .assembled-nucleotide .sugar { position: absolute; top: 25px; left: 40px; z-index: 2; }
-        .assembled-nucleotide .base { position: absolute; top: 35px; left: 80px; z-index: 1; }
+/* Spøgelser: her skal delen sidde. De står dæmpet, indtil man tager fat i
+   en del — så lyser alle de pladser op, delen kan sidde på. */
+.spoegelse{opacity:.4;transition:opacity .15s}
+.spoegelse .form{fill:#FFFDF7;stroke-dasharray:7 5;stroke-width:2.5}
+.spoegelse .stk-tekst{fill:#95A3A1;font-size:12px}
+#bord.griber .spoegelse.passer{opacity:1}
+#bord.griber .spoegelse.passer .form{animation:blink 1.3s ease-in-out infinite}
+@keyframes blink{0%,100%{stroke-opacity:.5}50%{stroke-opacity:1}}
+.spoegelse.hot{opacity:1}
+.spoegelse.hot .form{stroke-width:4;stroke-dasharray:none;animation:none}
+.spoegelse.hot.ja .form{stroke:var(--ok);fill:#EAF5EA}
+.spoegelse.hot.nej .form{stroke:var(--nej);fill:#FBEBEB}
+.ring{fill:none;stroke:var(--ok);stroke-width:3;opacity:.55}
+.venter .form{stroke:var(--accent);stroke-width:4;animation:blink 1.1s ease-in-out infinite}
+.naeste-pil{fill:var(--accent);stroke:var(--ink);stroke-width:1.5;animation:skub 1.4s ease-in-out infinite}
+.naeste-pil.mod-venstre{animation-name:skub-v}
+@keyframes skub{0%,100%{transform:translateX(0)}50%{transform:translateX(6px)}}
+@keyframes skub-v{0%,100%{transform:translateX(0)}50%{transform:translateX(-6px)}}
+.plads{fill:#FFFDF7;stroke:var(--ink);stroke-width:2.5;stroke-dasharray:8 6;opacity:.55}
+.plads.faerdig{stroke-dasharray:none;fill:#EDF8E4;opacity:1}
+.lager-kasse{fill:var(--paper-2);stroke:var(--ink);stroke-width:2.5}
+.lager-pille{fill:#fff;stroke:var(--ink);stroke-width:2;rx:14}
+.emne{cursor:grab}
+.emne:hover .lager-pille{fill:#FFF3DC}
+.emne.valgt .lager-pille{fill:#FBD3E1;stroke-width:3}
+.emne.brugt{opacity:.28;pointer-events:none}
+.maal-hit{cursor:pointer}
+.flyver{pointer-events:none;filter:drop-shadow(3px 4px 0 rgba(23,33,31,.28))}
+.flyver.ryst{animation:ryst .4s}
+@keyframes ryst{
+  0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}
+  40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}
+}
+.pv-linje{stroke-width:3.5;stroke-dasharray:8 5;fill:none}
+.pv-prik{fill:#fff;stroke-width:3}
+.pv-tekst{font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.06em;text-anchor:middle}
+.pv-bg{fill:rgba(255,255,255,.94);stroke-width:2;rx:6}
+.pv-ja .pv-linje,.pv-ja .pv-prik,.pv-ja .pv-bg{stroke:var(--ok)}
+.pv-ja .pv-tekst{fill:var(--ok)}
+.pv-nej .pv-linje,.pv-nej .pv-prik,.pv-nej .pv-bg{stroke:var(--nej)}
+.pv-nej .pv-tekst{fill:var(--nej)}
+.fx{pointer-events:none}
+.fx-tekst{font-family:var(--display);font-weight:800;font-size:13px;text-anchor:middle;fill:var(--nej)}
+.fx-boks{fill:#FBEBEB;stroke:var(--nej);stroke-width:2;rx:7}
+.fx g{animation:svaev 2.4s forwards}
+@keyframes svaev{0%{opacity:0;transform:translateY(6px)}12%{opacity:1;transform:translateY(0)}75%{opacity:1}100%{opacity:0;transform:translateY(-10px)}}
+.klik-fx{fill:none;stroke:var(--ok);stroke-width:3;animation:klik .5s forwards}
+@keyframes klik{from{r:8;opacity:.9}to{r:46;opacity:0}}
+g[tabindex]:focus{outline:none}
+g[tabindex]:focus-visible .form,
+g[tabindex]:focus-visible .lager-pille{stroke:var(--grape);stroke-width:4}
 
-        /* Inverted strand (Right side) */
-        .inverted .phosphate { top: 50px; left: 90px; }
-        .inverted .sugar { top: 25px; left: 50px; transform: rotate(180deg); }
-        .inverted .base { top: 35px; left: 0px; } /* Base peger mod venstre */
+/* ── Projektortilstand ─────────────────────────────────── */
+body[data-projektor="1"] .top,
+body[data-projektor="1"] .head,
+body[data-projektor="1"] .foot{display:none}
+body[data-projektor="1"] .wrap{max-width:none;padding:0 14px}
+body[data-projektor="1"] .rig{margin-top:14px;box-shadow:var(--hard)}
+body[data-projektor="1"] .opgave-tekst p{font-size:1.15rem}
+body[data-projektor="1"] .opgave-tekst .mono{font-size:0.8rem}
+body[data-projektor="1"] .gauge dt{font-size:0.76rem}
+body[data-projektor="1"] .gauge dd{font-size:1.9rem}
+body[data-projektor="1"] .trin-knap{font-size:0.95rem}
+body[data-projektor="1"] .fact{font-size:0.74rem}
 
-        /* Buttons */
-        button {
-            background-color: #2c3e50;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 1em;
-            margin-top: 20px;
-        }
-        button:hover { background-color: #34495e; }
-        button:disabled { background-color: #ccc; cursor: not-allowed; }
-
-        /* Hydrogen Bonds */
-        .hydrogen-bonds {
-            position: absolute;
-            top: 35px;
-            left: -60px; /* Justeret til at passe med gap + centrering */
-            width: 60px;
-            height: 30px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            gap: 6px;
-            z-index: 0;
-        }
-        .bond-line {
-            width: 80%;
-            border-top: 2px dashed #95a5a6;
-            height: 0;
-        }
-
-        /* Backbone Bonds (Phosphate-Sugar) */
-        .bond {
-            position: absolute;
-            background-color: #7f8c8d;
-            height: 3px;
-            transform-origin: 0 0; /* Rotate from top-left */
-            z-index: 0;
-            border-radius: 2px;
-        }
-
-        /* Normal Strand (Left) */
-        /* Internal P -> S */
-        .nucleotide-wrapper:not(.inverted) .bond-internal {
-            width: 46px;
-            top: 20px;
-            left: 30px;
-            transform: rotate(40deg);
-        }
-        /* External S -> Next P */
-        .nucleotide-wrapper:not(.inverted) .bond-external {
-            width: 70px;
-            top: 50px;
-            left: 65px;
-            transform: rotate(120deg);
-        }
-
-        /* Inverted Strand (Right) */
-        /* Internal S -> P */
-        .nucleotide-wrapper.inverted .bond-internal {
-            width: 40px;
-            top: 50px;
-            left: 75px;
-            transform: rotate(30deg);
-        }
-        /* External P -> Next S */
-        .nucleotide-wrapper.inverted .bond-external {
-            width: 78px;
-            top: 70px;
-            left: 110px;
-            transform: rotate(116deg);
-        }
-
-        /* Hide external bond for the last nucleotide in the column 
-           (It is the second to last child because of the label) */
-        .strand-column .nucleotide-wrapper:nth-last-child(2) .bond-external {
-            display: none;
-        }
-
-        .hidden { display: none !important; }
-
-    </style>
+/* ── Responsivt ────────────────────────────────────────── */
+@media (max-width:960px){
+  .gauges{grid-template-columns:1fr 1fr}
+  .gauge:nth-child(3){grid-column:1 / -1;border-left:none;border-top:2px solid var(--ink)}
+}
+@media (max-width:700px){
+  /* Figuren får sin egen vandrette rulning frem for at skrumpe mærkaterne
+     ned under læsbar størrelse — resten af siden ruller kun lodret. */
+  .stage{overflow-x:auto}
+  #bord{min-width:700px}
+}
+@media (max-width:620px){
+  body{font-size:16px}
+  .wrap,.top-in,.foot-in{padding-left:16px;padding-right:16px}
+  .head{padding:24px 0 18px}
+  .rig{border-radius:14px;box-shadow:var(--hard)}
+  .gauges{grid-template-columns:1fr}
+  .gauge{border-left:none;border-top:2px solid var(--ink)}
+  .gauge:first-child{border-top:none}
+  .gauge:nth-child(3){grid-column:auto}
+  .gauge dd{font-size:1.1rem}
+  .opgave{min-height:0}
+  .styring .spacer{margin-left:0;flex-basis:100%;height:0}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+@media print{
+  .top,.foot,.styring,.rig-head .btn-mini{display:none!important}
+  .rig{box-shadow:none}
+}
+</style>
 </head>
 <body>
-<!-- smbi hjem-knap -->
-<a href="/" class="smbi-home" aria-label="Til forsiden" title="Til forsiden">
-<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
-<span>Hjem</span>
-</a>
-<style>
-.smbi-home{position:fixed;top:14px;left:14px;z-index:2147483000;display:inline-flex;align-items:center;gap:6px;padding:8px 13px;font:600 14px/1 system-ui,-apple-system,"Segoe UI",sans-serif;color:#F5F0E8;background:#1C2E44;border:1px solid #2E4A6A;border-radius:999px;text-decoration:none;box-shadow:0 2px 10px rgba(0,0,0,.28);opacity:.9;transition:opacity .15s,transform .15s}
-.smbi-home:hover{opacity:1;transform:translateY(-1px)}
-.smbi-home svg{flex:none}
-@media print{.smbi-home{display:none!important}}
-</style>
-<script>(function(){try{if(window.top!==window.self){var e=document.querySelector(".smbi-home");if(e)e.style.display="none";}}catch(x){}})();</script>
 
-
-    <h1>🧬 DNA Bygger Simulering</h1>
-    
-    <div id="status-bar">
-        Velkommen! Lad os starte med at bygge byggestenene til DNA. <br>
-        <strong>Opgave:</strong> Byg 5 nukleotider ved at samle Phosphat (P), Sukker (D) og en Base.
+<header class="top" id="site-top">
+  <div class="rainbow"></div>
+  <div class="top-bar">
+    <div class="top-in">
+      <a href="/" class="brand"><span class="brand-mark"></span>smbi<em>.dk</em></a>
+      <nav class="top-nav">
+        <a href="/biologi.html">Biologi</a>
+        <a href="/">Forside</a>
+      </nav>
     </div>
+  </div>
+</header>
 
-    <div id="game-area">
-        <!-- Parts Bin -->
-        <div id="parts-bin">
-            <div class="bin-section">
-                <span class="bin-label">Rygrad</span>
-                <div class="part phosphate" draggable="true" data-type="phosphate">P</div>
-                <div style="height:10px"></div>
-                <div class="part sugar" draggable="true" data-type="sugar">D</div>
-            </div>
-            <div class="bin-section">
-                <span class="bin-label">Baser</span>
-                <div class="part base base-A" draggable="true" data-type="base" data-val="A">A</div>
-                <div style="height:5px"></div>
-                <div class="part base base-T" draggable="true" data-type="base" data-val="T">T</div>
-                <div style="height:5px"></div>
-                <div class="part base base-C" draggable="true" data-type="base" data-val="C">C</div>
-                <div style="height:5px"></div>
-                <div class="part base base-G" draggable="true" data-type="base" data-val="G">G</div>
-            </div>
-            <button id="next-btn" class="hidden" onclick="nextPhase()">Næste Trin</button>
-        </div>
-
-        <!-- Workspace -->
-        <div id="workspace">
-            <!-- Phase 1: Build Nucleotides -->
-            <div id="phase1-container" style="display:flex; flex-wrap:wrap; justify-content:center;">
-                <!-- Slots generated by JS -->
-            </div>
-
-            <!-- Phase 2 & 3: Assemble Strands -->
-            <div id="strand-container" class="hidden">
-                <div class="strand-column" id="strand-1">
-                    <div class="strand-label">5' Ende</div>
-                    <!-- Nucleotides dropped here -->
-                    <div class="strand-label" style="margin-top: auto;">3' Ende</div>
-                </div>
-                <div class="strand-column" id="strand-2">
-                    <div class="strand-label">3' Ende</div>
-                    <!-- Complementary nucleotides dropped here -->
-                    <div class="strand-label" style="margin-top: auto;">5' Ende</div>
-                </div>
-            </div>
-        </div>
+<main>
+  <div class="wrap head">
+    <div class="head-in">
+      <span class="eyebrow mono"><span class="blink"></span>Biologi C · DNA'ets opbygning</span>
+      <h1>Byg DNA — én <span class="hi" style="--hc:#FBD3E1">byggesten</span> ad gangen</h1>
+      <p class="lead">Et nukleotid er en fosfatgruppe, et sukker og en base. Saml fire af dem, bind dem sammen til en streng fra 5'-enden mod 3'-enden, og par den anden streng med A over for T og C over for G. Delene klikker på plads, når du rammer den rigtige plads — og siger fra, når du ikke gør.</p>
     </div>
+  </div>
 
-    <script>
-        // State
-        let phase = 1;
-        let nucleotidesBuilt = []; // Array of objects {id, base, p, s}
-        let currentNucleotides = 0;
-        const targetNucleotides = 5;
-        let strand1Sequence = [];
-        let strand2Count = 0;
+  <div class="wrap">
+    <section class="rig">
+      <div class="rig-bar"></div>
 
-        // Setup Phase 1
-        const phase1Container = document.getElementById('phase1-container');
-        
-        function initPhase1() {
-            for(let i=0; i<targetNucleotides; i++) {
-                createNucleotideSlot(i);
-            }
-        }
+      <div class="rig-head">
+        <span class="rig-live"><span class="dot"></span><span class="mono">DNA-byggeren</span></span>
+        <span class="who" id="besked" aria-live="polite">Tag fat i en del i lageret til venstre.</span>
+        <button type="button" class="btn-mini" id="btn-forfra" title="Ryd bordet og start ved trin 1">Forfra</button>
+        <button type="button" class="btn-mini" id="btn-projektor" aria-pressed="false"
+                title="Skjul sidens krom og forstør teksten">Projektor</button>
+      </div>
 
-        function createNucleotideSlot(id) {
-            const slot = document.createElement('div');
-            slot.className = 'nucleotide-slot';
-            slot.dataset.id = id;
-            slot.innerHTML = `
-                <div class="zone zone-p" data-accept="phosphate">P</div>
-                <div class="zone zone-s" data-accept="sugar">D</div>
-                <div class="zone zone-b" data-accept="base">Base</div>
-            `;
-            phase1Container.appendChild(slot);
-        }
+      <div class="opgave" id="opgave-rk">
+        <span class="nr" id="opg-nr" aria-hidden="true">1</span>
+        <div class="opgave-tekst">
+          <span class="mono" id="opg-titel">Trin 1 af 3 · nukleotider</span>
+          <p id="opg-tekst">Saml fire nukleotider. Hvert nukleotid er én fosfatgruppe, ét sukker (deoxyribose) og én base — hver del har sin plads i figuren.</p>
+        </div>
+      </div>
 
-        // Drag and Drop Logic
-        let draggedItem = null;
-        let draggedType = null;
-        let draggedVal = null;
+      <div class="stage">
+        <svg id="bord" viewBox="0 0 900 540" role="group"
+             aria-label="Byggebord til DNA. Til venstre et lager med delene, til højre pladserne hvor de skal sidde.">
+          <title>DNA-byggeren</title>
+          <desc id="bord-desc">Et byggebord. Delene i lageret til venstre trækkes over på de stiplede pladser til højre. Pladserne lyser op, når den del du holder, kan sidde der.</desc>
+          <g id="lag-plads"></g>
+          <g id="lag-rygrad"></g>
+          <g id="lag-spoegelse"></g>
+          <g id="lag-stof"></g>
+          <g id="lag-lager"></g>
+          <g id="lag-pv"></g>
+          <g id="lag-fx" class="fx"></g>
+          <g id="lag-flyver"></g>
+        </svg>
+      </div>
 
-        document.addEventListener('dragstart', (e) => {
-            if(e.target.classList.contains('part')) {
-                draggedItem = e.target;
-                draggedType = e.target.dataset.type;
-                draggedVal = e.target.dataset.val;
-                e.dataTransfer.setData('text/plain', draggedType);
-                e.dataTransfer.effectAllowed = 'copy'; // We copy from bin
-            } else if (e.target.classList.contains('nucleotide-wrapper')) {
-                // Dragging a completed nucleotide in Phase 2/3
-                draggedItem = e.target;
-                draggedType = 'nucleotide';
-                draggedVal = e.target.dataset.base;
-                e.dataTransfer.setData('text/plain', 'nucleotide');
-                e.dataTransfer.effectAllowed = 'move';
-            }
-        });
+      <dl class="gauges">
+        <div class="gauge g-nuk">
+          <dt>Nukleotider samlet</dt>
+          <div class="pips" id="pips-nuk" style="--pc:var(--coral)"></div>
+          <dd><span id="val-nuk">0</span><small>af 4</small></dd>
+        </div>
+        <div class="gauge g-streng">
+          <dt>Streng 1 · 5' → 3'</dt>
+          <div class="pips" id="pips-s1" style="--pc:var(--lime)"></div>
+          <dd><span id="val-s1">0</span><small>af 4 bundet</small></dd>
+        </div>
+        <div class="gauge g-par">
+          <dt>Basepar dannet</dt>
+          <div class="pips" id="pips-s2" style="--pc:var(--grape)"></div>
+          <dd><span id="val-s2">0</span><small>af 4</small> · <span id="val-hb">0</span><small>brintbindinger</small></dd>
+        </div>
+      </dl>
 
-        document.addEventListener('dragover', (e) => {
-            e.preventDefault(); // Allow dropping
-        });
+      <div class="styring">
+        <div class="trinvej" role="group" aria-label="Trin">
+          <button type="button" class="trin-knap" data-trin="1" aria-current="true"><span class="nr">1</span>Nukleotider</button>
+          <button type="button" class="trin-knap" data-trin="2"><span class="nr">2</span>Strengen</button>
+          <button type="button" class="trin-knap" data-trin="3"><span class="nr">3</span>Basepar</button>
+        </div>
+        <span class="spacer"></span>
+        <button type="button" class="btn-mini" id="btn-fortryd" disabled>Fortryd</button>
+        <button type="button" class="btn" id="btn-videre" disabled>Videre</button>
+      </div>
 
-        document.addEventListener('drop', (e) => {
-            e.preventDefault();
-            
-            // Phase 1 Logic: Dropping parts into slots
-            if (phase === 1 || phase === 3) {
-                // Find closest drop zone or slot
-                let zone = e.target.closest('.zone');
-                const slot = e.target.closest('.nucleotide-slot');
+      <div class="facts">
+        <span class="fact rund" style="--fc:#FFB300">Fosfatgruppe</span>
+        <span class="fact fem">Sukker · deoxyribose</span>
+        <span class="fact" style="--fc:#FFD9C9">A parrer med T · <b>2</b> brintbindinger</span>
+        <span class="fact" style="--fc:#C7E6F6">C parrer med G · <b>3</b> brintbindinger</span>
+        <span class="fact streg">Strengene er antiparallelle</span>
+      </div>
+    </section>
 
-                // If dropped on slot but not specific zone, try to find the matching zone
-                if (!zone && slot) {
-                    zone = slot.querySelector(`.zone[data-accept="${draggedType}"]`);
-                }
+    <p class="sr" id="sr-status" aria-live="polite"></p>
+  </div>
+</main>
 
-                if (zone && zone.dataset.accept === draggedType && !zone.querySelector('.part')) {
-                    // Check if slot is already completed
-                    const parentSlot = zone.closest('.nucleotide-slot');
-                    if(parentSlot.classList.contains('completed')) return;
+<footer class="foot">
+  <div class="foot-in">
+    <div>
+      <a href="/" class="brand"><span class="brand-mark"></span>smbi<em>.dk</em></a>
+      <div class="mono">DNA · nukleotid, streng og basepar</div>
+    </div>
+    <nav class="foot-links">
+      <a href="/biologi.html">Biologi</a>
+      <a href="/">Alle simuleringer</a>
+      <a href="/contact.html">Kontakt</a>
+    </nav>
+  </div>
+</footer>
 
-                    // Clone the part
-                    const clone = draggedItem.cloneNode(true);
-                    clone.style.position = 'static';
-                    clone.style.margin = '0';
-                    clone.draggable = false; // Once placed, cannot move in this phase
-                    clone.style.cursor = 'pointer';
-                    clone.title = "Klik for at fjerne";
-                    
-                    // Click to remove logic
-                    clone.onclick = function(e) {
-                        e.stopPropagation();
-                        const z = this.parentNode;
-                        const s = z.closest('.nucleotide-slot');
-                        this.remove();
-                        
-                        // Restore placeholder
-                        if(z.dataset.accept === 'phosphate') z.innerText = 'P';
-                        if(z.dataset.accept === 'sugar') z.innerText = 'D';
-                        if(z.dataset.accept === 'base') z.innerText = 'Base';
-                        
-                        if(s) s.classList.remove('completed');
-                        if(phase === 1) document.getElementById('next-btn').classList.add('hidden');
-                    };
-                    
-                    // Clear zone text/placeholder
-                    zone.innerHTML = '';
-                    zone.appendChild(clone);
-                    
-                    checkSlotCompletion(parentSlot);
-                }
-            }
+<script>
+/* skjul side-krom, når siden vises i en iframe */
+(function(){try{if(window.top!==window.self){
+  document.getElementById('site-top').style.display='none';
+  document.querySelector('.foot').style.display='none';
+  document.querySelector('.head').style.display='none';
+}}catch(x){}})();
+</script>
+<script>
+(function(){
+"use strict";
 
-            // Phase 2 Logic: Building Strand 1
-            if (phase === 2) {
-                const strand1 = document.getElementById('strand-1');
-                // Check if dropping on strand 1 area
-                if (e.target.closest('#strand-1') && draggedType === 'nucleotide') {
-                    // Append to strand 1
-                    // In a real game we might check position, here we just append
-                    strand1.insertBefore(draggedItem, strand1.lastElementChild); // Insert before "3' End" label
-                    draggedItem.draggable = false; // Lock it
-                    strand1Sequence.push(draggedItem.dataset.base);
-                    
-                    checkStrand1Completion();
-                }
-            }
+/* ═══════════════════════════════════════════════════════════════
+   1. FAGET — hvad et nukleotid består af, og hvad der parrer med hvad
+   ═══════════════════════════════════════════════════════════════ */
+const N = 4;                       // antal nukleotider i modellen
 
-            // Phase 3 Logic: Building Strand 2 (Attaching)
-            if (phase === 3 && draggedType === 'nucleotide') {
-                // Dropping a new nucleotide onto Strand 2 area
-                const strand2 = document.getElementById('strand-2');
-                const targetIndex = strand2Count;
-                
-                // We need to match it against strand 1's nucleotide at this index
-                if (targetIndex < strand1Sequence.length) {
-                    const targetBase = strand1Sequence[targetIndex];
-                    const myBase = draggedVal;
-                    
-                    // Check pairing
-                    if (checkPairing(targetBase, myBase)) {
-                        // Correct!
-                        // Visual: Invert it to look like right side of helix
-                        draggedItem.classList.add('inverted');
-                        draggedItem.draggable = false;
+const BASER = {
+  A:{navn:'Adenin',  par:'T', bind:2, farve:'#FFD9C9'},
+  T:{navn:'Thymin',  par:'A', bind:2, farve:'#D6EFC4'},
+  C:{navn:'Cytosin', par:'G', bind:3, farve:'#C7E6F6'},
+  G:{navn:'Guanin',  par:'C', bind:3, farve:'#E2D6F8'}
+};
+const BOGSTAVER = ['A','T','C','G'];
+const STANDARD  = ['T','A','C','G'];   // rækkefølgen når et trin deles direkte
+const NAVN = {fosfat:'fosfatgruppen', sukker:'sukkeret', base:'basen',
+              nukleotid:'et helt nukleotid'};
 
-                        // Add hydrogen bonds
-                        const bondContainer = document.createElement('div');
-                        bondContainer.className = 'hydrogen-bonds';
-                        // C-G har 3 bindinger, A-T har 2
-                        const bondCount = (myBase === 'C' || myBase === 'G') ? 3 : 2;
-                        for(let i=0; i<bondCount; i++) {
-                            const line = document.createElement('div');
-                            line.className = 'bond-line';
-                            bondContainer.appendChild(line);
-                        }
-                        draggedItem.appendChild(bondContainer);
-                        
-                        // Insert into DOM at correct position (top to bottom)
-                        // Insert before the last label (5' End)
-                        strand2.insertBefore(draggedItem, strand2.lastElementChild);
-                        
-                        strand2Count++;
-                        
-                        // Remove the empty slot used to build it
-                        // (In this simplified version, we just let them drag from the build area)
-                        // We need to clear the build area slot that this came from?
-                        // Actually, draggedItem is the element itself moving.
-                        
-                        // If we moved it from a slot, that slot is now empty? 
-                        // The slot container remains, but the wrapper is gone.
-                        // Let's regenerate a new empty slot for the user to build the next one.
-                        generateNewBuildSlot();
+/* ── Geometri ──────────────────────────────────────────────────
+   Alle dele tegnes omkring deres eget nulpunkt, så den samme tegning
+   kan bruges i lageret, på pladsen og i hånden under et træk.
+   Nukleotidets nulpunkt er sukkerets midte. */
+const P_R = 17, S_R = 25, B_W = 66, B_H = 28;
+const P_Y = -42;        // fosfatets midte over sukkeret
+const B_CX = 61;        // basens midte ud for sukkeret
+const B_KANT = B_CX + B_W/2;   // basens yderkant — der hvor brintbindingerne begynder
+const TRIN_Y = 78;      // lodret afstand mellem to nukleotider i en streng
+const X1 = 420, X2 = 650, Y0 = 140;   // strengenes x og første nukleotids y
+const SNAP1 = 78, SNAP2 = 118;        // hvor tæt man skal ramme
+const STRAF  = 46;      // en plads der ikke passer, skal rammes tættere
 
-                        checkStrand2Completion();
-                    } else {
-                        alert(`Fejl! ${myBase} kan ikke parres med ${targetBase}. Husk reglerne: A-T og C-G.`);
-                    }
-                }
-            }
-        });
+const PLADS = [[210,62],[556,62],[210,286],[556,286]];  // byggepladser i trin 1
+const PL_W = 300, PL_H = 196;
 
-        function checkSlotCompletion(slot) {
-            const p = slot.querySelector('.zone-p .part');
-            const s = slot.querySelector('.zone-s .part');
-            const b = slot.querySelector('.zone-b .part');
+const TRIN_TEKST = {
+  1:['Trin 1 af 3 · nukleotider',
+     'Saml fire nukleotider. Hvert nukleotid er én fosfatgruppe, ét sukker (deoxyribose) og én base — hver del har sin plads i figuren.'],
+  2:['Trin 2 af 3 · sukker-fosfat-rygraden',
+     "Bind nukleotiderne sammen til én streng. Sukkeret binder til den næste fosfatgruppe, så strengen vokser fra 5'-enden mod 3'-enden. Du bestemmer selv rækkefølgen af baser."],
+  3:['Trin 3 af 3 · basepar og brintbindinger',
+     "Byg den komplementære streng: A over for T, C over for G. Den nye streng vender modsat den første — også den vokser fra 5' mod 3', så den bygges nedefra og op."]
+};
 
-            if (p && s && b) {
-                slot.classList.add('completed');
-                
-                // Get base value
-                const baseVal = slot.querySelector('.base').dataset.val;
-                slot.dataset.baseVal = baseVal;
+/* ═══════════════════════════════════════════════════════════════
+   2. SMÅ SVG-HJÆLPERE
+   ═══════════════════════════════════════════════════════════════ */
+const NS = 'http://www.w3.org/2000/svg';
+const $ = function(id){ return document.getElementById(id); };
 
-                // If phase 1, check if all 5 are done
-                if (phase === 1) {
-                    const allSlots = document.querySelectorAll('.nucleotide-slot');
-                    const allCompleted = Array.from(allSlots).every(s => s.classList.contains('completed'));
-                    
-                    if (allCompleted) {
-                        document.getElementById('next-btn').classList.remove('hidden');
-                        document.getElementById('status-bar').innerHTML = "Godt klaret! Du har bygget 5 nukleotider. <br>Klik på 'Næste Trin' for at samle DNA-strengen.";
-                    }
-                }
+function e(tag, attrs, cls){
+  const n = document.createElementNS(NS, tag);
+  if (attrs) for (const k in attrs) n.setAttribute(k, attrs[k]);
+  if (cls) n.setAttribute('class', cls);
+  return n;
+}
+function tekst(s, x, y, cls){
+  const t = e('text', {x:x, y:y}, cls);
+  t.textContent = s;
+  return t;
+}
+function ryd(g){ while (g.firstChild) g.removeChild(g.firstChild); }
 
-                // If phase 3, convert immediately to draggable nucleotide
-                if (phase === 3) {
-                    convertToDraggable(slot);
-                }
-            }
-        }
+/* Femkanten vender med spidsen opad — nedad i den vendte streng */
+function femkant(r, vendt){
+  const p = [];
+  for (let i = 0; i < 5; i++){
+    const a = ((vendt ? 90 : -90) + i * 72) * Math.PI / 180;
+    p.push((r*Math.cos(a)).toFixed(1) + ',' + (r*Math.sin(a)).toFixed(1));
+  }
+  return p.join(' ');
+}
 
-        function convertToDraggable(slot) {
-            // Create the visual representation of the assembled nucleotide
-            const baseVal = slot.dataset.baseVal;
-            
-            const wrapper = document.createElement('div');
-            wrapper.className = 'nucleotide-wrapper';
-            wrapper.draggable = true;
-            wrapper.dataset.base = baseVal;
-            
-            wrapper.innerHTML = `
-                <div class="assembled-nucleotide">
-                    <div class="bond bond-internal"></div>
-                    <div class="bond bond-external"></div>
-                    <div class="phosphate">P</div>
-                    <div class="sugar">D</div>
-                    <div class="base base-${baseVal}">${baseVal}</div>
-                </div>
-            `;
+/* ═══════════════════════════════════════════════════════════════
+   3. DELENE
+   ═══════════════════════════════════════════════════════════════ */
+function delG(type, base, x, y, ekstra, vendt){
+  const g = e('g', {transform:'translate(' + x + ',' + y + ')'},
+               'stk stk-' + type + (ekstra ? ' ' + ekstra : ''));
+  const spoeg = /spoegelse/.test(ekstra || '');
+  if (type === 'fosfat'){
+    g.appendChild(e('circle', {cx:0, cy:0, r:P_R}, 'form'));
+    g.appendChild(tekst('P', 0, 0, 'stk-tekst'));
+  } else if (type === 'sukker'){
+    g.appendChild(e('polygon', {points:femkant(S_R, vendt)}, 'form'));
+    g.appendChild(tekst('S', 0, vendt ? -3 : 3, 'stk-tekst'));
+  } else if (type === 'base'){
+    const r = e('rect', {x:-B_W/2, y:-B_H/2, width:B_W, height:B_H, rx:6}, 'form');
+    const kendt = base && BASER[base];
+    if (kendt) r.style.fill = BASER[base].farve;
+    g.appendChild(r);
+    g.appendChild(tekst(kendt && !spoeg ? base : 'BASE', 0, 0, 'stk-tekst'));
+  }
+  return g;
+}
 
-            // Replace the slot content with this wrapper, or just replace the slot?
-            // In Phase 1 -> 2 transition, we will replace all slots.
-            // In Phase 3, we replace the slot immediately so it can be dragged.
-            slot.replaceWith(wrapper);
-        }
+/* Hele nukleotidet med nulpunkt i sukkerets midte. `vendt` spejler det,
+   så basen peger til venstre og fosfatet sidder under sukkeret — det er
+   sådan den anden streng ligger, når strengene er antiparallelle. */
+function nukleotidG(dele, vendt, ekstra, basemaerke){
+  const s = vendt ? -1 : 1;
+  const g = e('g', null, ekstra || null);
+  if (dele.f && dele.s) g.appendChild(e('line', {x1:0, y1:P_Y*s, x2:0, y2:0}, 'rygrad'));
+  if (dele.s && dele.b) g.appendChild(e('line', {x1:20*s, y1:0, x2:34*s, y2:0}, 'stilk'));
+  if (dele.f) g.appendChild(delG('fosfat', null, 0, P_Y*s));
+  if (dele.s) g.appendChild(delG('sukker', null, 0, 0, null, vendt));
+  if (dele.b) g.appendChild(delG('base', dele.b, B_CX*s, 0, basemaerke || null));
+  return g;
+}
 
-        function nextPhase() {
-            if (phase === 1) {
-                phase = 2;
-                document.getElementById('status-bar').innerHTML = "<strong>Fase 2:</strong> Træk dine nukleotider over til venstre side (Strand 1) for at samle dem. <br>Husk: DNA bygges fra 5' mod 3'.";
-                document.getElementById('next-btn').classList.add('hidden');
-                
-                // Convert all slots to draggable items
-                const slots = document.querySelectorAll('.nucleotide-slot');
-                slots.forEach(slot => convertToDraggable(slot));
+/* ═══════════════════════════════════════════════════════════════
+   4. TILSTANDEN
+   ═══════════════════════════════════════════════════════════════ */
+const st = {
+  trin: 1,
+  hoejeste: 1,
+  nuk: [],        // trin 1: {f, s, b} for hvert nukleotid
+  pulje: [],      // trin 2: de færdige nukleotider, der endnu ikke er bundet
+  s1: [],         // trin 2: strengens baser, 5' → 3' (øverst → nederst)
+  s2: [],         // trin 3: den komplementære streng, samme rækker som s1
+  valgt: null,    // den del der er klikket på i lageret
+  fortryd: []
+};
 
-                // Show strand container
-                document.getElementById('strand-container').classList.remove('hidden');
-                // Hide phase 1 container (now empty/converted)
-                // Actually the converted items are in phase1-container. We leave them there as a "pool".
-                
-            } else if (phase === 2) {
-                // Transition to Phase 3
-                phase = 3;
-                document.getElementById('status-bar').innerHTML = "<strong>Fase 3:</strong> Byg den komplementære streng. <br>1. Byg et nukleotid i boksen. <br>2. Træk det over til højre streng. Det skal passe med basen overfor (A-T, C-G).";
-                document.getElementById('next-btn').classList.add('hidden');
-                
-                // Clear the pool area
-                phase1Container.innerHTML = '';
-                
-                // Create one new slot for building
-                generateNewBuildSlot();
-            }
-        }
+function nulstil(){
+  st.nuk = [];
+  for (let i = 0; i < N; i++) st.nuk.push({f:false, s:false, b:null});
+  st.pulje = []; st.s1 = []; st.s2 = new Array(N).fill(null);
+  st.valgt = null; st.fortryd = [];
+}
+const faerdigNuk = n => n.f && n.s && !!n.b;
+const antalNuk   = () => st.nuk.filter(faerdigNuk).length;
+const antalPar   = () => st.s2.filter(Boolean).length;
+const laast      = () => st.trin < st.hoejeste;
 
-        function checkStrand1Completion() {
-            const strand1 = document.getElementById('strand-1');
-            // Count children minus labels (2 labels)
-            const count = strand1.children.length - 2;
-            
-            if (count === targetNucleotides) {
-                document.getElementById('status-bar').innerHTML = "Flot! Du har samlet den kodende streng. <br>Nu skal vi lave den komplementære streng.";
-                document.getElementById('next-btn').classList.remove('hidden');
-            }
-        }
+function trinFaerdigt(t){
+  if (t === 1) return antalNuk() === N;
+  if (t === 2) return st.s1.length === N;
+  return antalPar() === N;
+}
 
-        function generateNewBuildSlot() {
-            // Only need one slot at a time for Phase 3
-            // Check if one exists
-            if(document.querySelector('.nucleotide-slot')) return;
-            
-            if(strand2Count < targetNucleotides) {
-                createNucleotideSlot(99); // ID doesn't matter much here
-            }
-        }
+/* Næste åbne række i den komplementære streng. Den bygges nedefra og op,
+   fordi også den nye streng vokser fra 5' mod 3'. */
+function naesteRaekke2(){
+  for (let i = N - 1; i >= 0; i--) if (!st.s2[i]) return i;
+  return -1;
+}
 
-        function checkPairing(base1, base2) {
-            if ((base1 === 'A' && base2 === 'T') || (base1 === 'T' && base2 === 'A')) return true;
-            if ((base1 === 'C' && base2 === 'G') || (base1 === 'G' && base2 === 'C')) return true;
-            return false;
-        }
+/* ═══════════════════════════════════════════════════════════════
+   5. SCENEN
+   ═══════════════════════════════════════════════════════════════ */
+const bord = $('bord');
+const lagPlads = $('lag-plads'), lagRygrad = $('lag-rygrad'),
+      lagSpoeg = $('lag-spoegelse'), lagStof = $('lag-stof'),
+      lagLager = $('lag-lager'), lagPv = $('lag-pv'),
+      lagFx = $('lag-fx'), lagFlyver = $('lag-flyver');
 
-        function checkStrand2Completion() {
-            if (strand2Count === targetNucleotides) {
-                document.getElementById('status-bar').innerHTML = "🎉 Tillykke! Du har bygget et komplet dobbeltstrenget DNA-molekyle. <br>Bemærk hvordan strengene løber antiparallelt (5'-3' mod 3'-5').";
-                document.getElementById('status-bar').style.backgroundColor = "#d4efdf";
-                document.getElementById('status-bar').style.borderColor = "#27ae60";
-                
-                // Confetti or celebration could go here
-            } else {
-                // Prompt for next
-                const nextBase = strand1Sequence[strand2Count];
-                // Optional hint
-                // document.getElementById('status-bar').innerHTML += ` (Næste base skal passe med ${nextBase})`;
-            }
-        }
+let maal = [];     // pladserne man kan slippe på lige nu
 
-        // Initialize
-        initPhase1();
+function nytMaal(m){
+  maal.push(m);
+  const g = m.el;
+  g.setAttribute('tabindex', '0');
+  g.setAttribute('role', 'button');
+  g.setAttribute('aria-label', m.aria);
+  g.addEventListener('click', function(ev){ ev.stopPropagation(); klikPaaMaal(m); });
+  g.addEventListener('keydown', function(ev){
+    if (ev.key === 'Enter' || ev.key === ' '){ ev.preventDefault(); klikPaaMaal(m); }
+  });
+  return g;
+}
 
-        // Allow deleting wrong nucleotides in Phase 3 by dropping them back in the bin
-        const bin = document.getElementById('parts-bin');
-        bin.addEventListener('dragover', e => e.preventDefault());
-        bin.addEventListener('drop', e => {
-            e.preventDefault();
-            if(phase === 3 && draggedType === 'nucleotide') {
-                draggedItem.remove();
-                generateNewBuildSlot();
-            }
-        });
-    </script>
+function tegn(){
+  [lagPlads, lagRygrad, lagSpoeg, lagStof, lagLager, lagPv].forEach(ryd);
+  maal = [];
+  if (st.trin === 1) tegnByggepladser(); else tegnStrenge();
+  tegnLager();
+  opdaterInstrumenter();
+  markerPassende();
+}
+
+/* ── Trin 1: fire byggepladser ─────────────────────────────── */
+function tegnByggepladser(){
+  st.nuk.forEach(function(n, i){
+    const px = PLADS[i][0], py = PLADS[i][1];
+    const ax = px + 114, ay = py + 96;
+    const hel = faerdigNuk(n);
+
+    lagPlads.appendChild(e('rect', {x:px, y:py, width:PL_W, height:PL_H, rx:14},
+                            'plads' + (hel ? ' faerdig' : '')));
+    lagPlads.appendChild(tekst('NUKLEOTID ' + (i+1), px + 18, py + 30, 'mrk venstre'));
+    if (hel){
+      const t = tekst('✓ ' + BASER[n.b].navn.toUpperCase(), px + PL_W - 18, py + 30, 'mrk hoejre');
+      t.style.fill = 'var(--ok)';
+      lagPlads.appendChild(t);
+    }
+
+    const del = nukleotidG({f:n.f, s:n.s, b:n.b}, false);
+    del.setAttribute('transform', 'translate(' + ax + ',' + ay + ')');
+    lagStof.appendChild(del);
+
+    if (laast()) return;
+    if (!n.f) spoegelse('fosfat', null, ax, ay + P_Y, i);
+    if (!n.s) spoegelse('sukker', null, ax, ay, i);
+    if (!n.b) spoegelse('base',  null, ax + B_CX, ay, i);
+  });
+}
+
+function spoegelse(type, base, x, y, n){
+  const g = delG(type, base, x, y, 'spoegelse');
+  lagSpoeg.appendChild(g);
+  nytMaal({x:x, y:y, accept:type, n:n, r:SNAP1, el:g,
+           aria:'Plads til ' + NAVN[type] + ' i nukleotid ' + (n+1)});
+}
+
+/* ── Trin 2 og 3: strengene ────────────────────────────────── */
+function tegnStrenge(){
+  const yFor = i => Y0 + i * TRIN_Y;
+
+  /* Streng 1 */
+  lagPlads.appendChild(tekst('STRENG 1', X1, 46, 'mrk stor'));
+  lagPlads.appendChild(tekst("5'-ENDEN", X1, 74, 'ende'));
+  lagPlads.appendChild(tekst("3'-ENDEN", X1, yFor(N-1) + 52, 'ende'));
+  if (st.s1.length){
+    lagRygrad.appendChild(e('line', {x1:X1, y1:Y0 + P_Y, x2:X1, y2:yFor(st.s1.length-1)}, 'rygrad'));
+  }
+  st.s1.forEach(function(b, i){
+    const g = nukleotidG({f:true, s:true, b:b}, false, null,
+                         (st.trin === 3 && i === naesteRaekke2()) ? 'venter' : null);
+    g.setAttribute('transform', 'translate(' + X1 + ',' + yFor(i) + ')');
+    lagStof.appendChild(g);
+  });
+
+  /* Streng 2 */
+  if (st.trin === 3){
+    lagPlads.appendChild(tekst('NY STRENG', X2, 46, 'mrk stor'));
+    lagPlads.appendChild(tekst("3'-ENDEN", X2, 74, 'ende'));
+    lagPlads.appendChild(tekst("5'-ENDEN", X2, yFor(N-1) + 78, 'ende'));
+    const m = naesteRaekke2();
+    const oeverst = m < 0 ? 0 : m + 1;
+    if (oeverst < N){
+      lagRygrad.appendChild(e('line', {x1:X2, y1:yFor(oeverst), x2:X2, y2:yFor(N-1) - P_Y}, 'rygrad'));
+    }
+    st.s2.forEach(function(b, i){
+      if (!b) return;
+      const g = nukleotidG({f:true, s:true, b:b}, true);
+      g.setAttribute('transform', 'translate(' + X2 + ',' + yFor(i) + ')');
+      lagStof.appendChild(g);
+      brintbindinger(i, b);
+    });
+  }
+
+  if (laast()) return;
+
+  /* Den ene åbne plads — den lyser, også når man ikke trækker i noget */
+  if (st.trin === 2 && st.s1.length < N){
+    const i = st.s1.length, y = yFor(i);
+    const g = nukleotidG({f:true, s:true, b:'?'}, false, 'spoegelse');
+    g.setAttribute('transform', 'translate(' + X1 + ',' + y + ')');
+    lagSpoeg.appendChild(g);
+    nytMaal({x:X1, y:y, accept:'nukleotid', n:i, r:SNAP2, el:g,
+             aria:"Åben plads i strengen, nummer " + (i+1) + " fra 5'-enden"});
+    pil(X1 - 92, y, 1);
+    lagPlads.appendChild(tekst('NÆSTE PLADS', X1 - 104, y + 4, 'mrk hoejre'));
+  }
+  if (st.trin === 3){
+    const i = naesteRaekke2();
+    if (i >= 0){
+      const y = yFor(i);
+      const g = nukleotidG({f:true, s:true, b:'?'}, true, 'spoegelse');
+      g.setAttribute('transform', 'translate(' + X2 + ',' + y + ')');
+      lagSpoeg.appendChild(g);
+      nytMaal({x:X2, y:y, accept:'nukleotid', n:i, krav:st.s1[i], r:SNAP2, el:g,
+               aria:'Åben plads over for ' + BASER[st.s1[i]].navn});
+      pil(X2 + 92, y, -1);
+      lagPlads.appendChild(tekst('NÆSTE PLADS', X2 + 120, y + 4, 'mrk venstre'));
+    }
+  }
+}
+
+/* Den lille pil der peger på den åbne plads */
+function pil(x, y, retning){
+  const p = e('polygon', {points:(x) + ',' + (y-9) + ' ' + (x + 20*retning) + ',' + y + ' ' + x + ',' + (y+9)},
+              'naeste-pil' + (retning < 0 ? ' mod-venstre' : ''));
+  lagPlads.appendChild(p);
+}
+
+function brintbindinger(i, b){
+  const y = Y0 + i * TRIN_Y;
+  const antal = BASER[b].bind;
+  const x1 = X1 + B_KANT + 3, x2 = X2 - B_KANT - 3;
+  const spred = antal === 3 ? [-9, 0, 9] : [-6, 6];
+  spred.forEach(function(dy){
+    lagRygrad.appendChild(e('line', {x1:x1, y1:y+dy, x2:x2, y2:y+dy}, 'hbind'));
+  });
+}
+
+/* ── Lageret ───────────────────────────────────────────────── */
+function tegnLager(){
+  lagLager.appendChild(e('rect', {x:10, y:10, width:170, height:520, rx:14}, 'lager-kasse'));
+  lagLager.appendChild(tekst('LAGER', 95, 36, 'mrk stor'));
+
+  if (st.trin === 1){
+    lagLager.appendChild(tekst('RYGRAD', 95, 62, 'mrk'));
+    emne({type:'fosfat'}, 'FOSFAT', 92);
+    emne({type:'sukker'}, 'SUKKER', 144);
+    lagLager.appendChild(tekst('BASER', 95, 184, 'mrk'));
+    BOGSTAVER.forEach(function(b, i){
+      emne({type:'base', base:b}, BASER[b].navn.toUpperCase(), 212 + i * 52);
+    });
+  } else if (st.trin === 2){
+    lagLager.appendChild(tekst('DINE NUKLEOTIDER', 95, 62, 'mrk'));
+    if (!st.pulje.length) lagLager.appendChild(tekst('— alle er bundet —', 95, 130, 'mrk'));
+    st.pulje.forEach(function(b, i){
+      emneNuk({type:'nukleotid', base:b, idx:i}, b, 104 + i * 90, false);
+    });
+  } else {
+    lagLager.appendChild(tekst('FÆRDIGE NUKLEOTIDER', 95, 62, 'mrk'));
+    BOGSTAVER.forEach(function(b, i){
+      emneNuk({type:'nukleotid', base:b}, b, 104 + i * 90, true);
+    });
+  }
+
+  const hj = laast() ? ['TRINNET ER FÆRDIGT', 'GÅ VIDERE →', '']
+                     : ['TRÆK EN DEL PÅ PLADS', 'ELLER KLIK DELEN', 'OG DEREFTER PLADSEN'];
+  hj.forEach(function(linje, i){
+    if (linje) lagLager.appendChild(tekst(linje, 95, 482 + i*16, 'mrk lille'));
+  });
+}
+
+function lagerEmne(info, y, hoejde, aria){
+  const g = e('g', null, 'emne' + (laast() ? ' brugt' : ''));
+  g.appendChild(e('rect', {x:20, y:y - hoejde/2, width:148, height:hoejde, rx:14}, 'lager-pille'));
+  g._info = info;
+  g.setAttribute('tabindex', laast() ? '-1' : '0');
+  g.setAttribute('role', 'button');
+  g.setAttribute('aria-label', aria);
+  if (st.valgt && st.valgt.type === info.type && st.valgt.base === info.base
+      && st.valgt.idx === info.idx) g.classList.add('valgt');
+  g.addEventListener('pointerdown', paaEmne);
+  g.addEventListener('keydown', function(ev){
+    if (ev.key === 'Enter' || ev.key === ' '){ ev.preventDefault(); vaelg(info, g); }
+  });
+  lagLager.appendChild(g);
+  return g;
+}
+
+function emne(info, mrk, y){
+  const g = lagerEmne(info, y, 44, mrk.toLowerCase() + ' — vælg og placér');
+  g.appendChild(delG(info.type, info.base, 58, y));
+  g.appendChild(tekst(mrk, 96, y + 4, 'mrk venstre'));
+  g._c = {x:58, y:y};
+}
+
+function emneNuk(info, base, y, uendelig){
+  const g = lagerEmne(info, y, 76,
+      'Nukleotid med ' + BASER[base].navn.toLowerCase() + ' — vælg og placér');
+  const indre = e('g', {transform:'translate(72.6,' + (y + 10.5) + ') scale(0.62)'});
+  indre.appendChild(nukleotidG({f:true, s:true, b:base}, false));
+  g.appendChild(indre);
+  if (uendelig) g.appendChild(tekst('∞', 152, y - 22, 'mrk'));
+  g._c = {x:72.6, y:y + 10.5};
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   6. INSTRUMENTER, BESKEDER OG STYRING
+   ═══════════════════════════════════════════════════════════════ */
+const elBesked = $('besked'), elSr = $('sr-status');
+
+function saetBesked(s, art){
+  elBesked.textContent = s;
+  elBesked.className = 'who' + (art ? ' ' + art : '');
+}
+
+function pips(id, antal){
+  const c = $(id);
+  if (!c.children.length) for (let i = 0; i < N; i++) c.appendChild(document.createElement('i'));
+  for (let i = 0; i < N; i++) c.children[i].classList.toggle('fyldt', i < antal);
+}
+
+function opdaterInstrumenter(){
+  const nk = antalNuk(), s1 = st.s1.length, s2 = antalPar();
+  pips('pips-nuk', nk);   $('val-nuk').textContent = nk;
+  pips('pips-s1', s1);    $('val-s1').textContent  = s1;
+  pips('pips-s2', s2);    $('val-s2').textContent  = s2;
+  $('val-hb').textContent = st.s2.reduce(function(sum, b){ return sum + (b ? BASER[b].bind : 0); }, 0);
+}
+
+function opdaterSr(){
+  const d = ['Trin ' + st.trin + ' af 3. ',
+             antalNuk() + ' af ' + N + ' nukleotider samlet. ',
+             st.s1.length + ' af ' + N + ' bundet i streng 1. ',
+             antalPar() + ' af ' + N + ' basepar dannet.'];
+  elSr.textContent = d.join('');
+}
+
+const btnVidere = $('btn-videre'), btnFortryd = $('btn-fortryd');
+
+/* Trinnene har forskellig mængde tekst. Måles de alle tre og låses linjen
+   til den højeste, hopper panelet ikke, når man klikker sig videre. */
+function laasOpgave(){
+  const rk = $('opgave-rk'), t = $('opg-titel'), b = $('opg-tekst');
+  if (getComputedStyle(rk).display === 'none') return;
+  rk.style.minHeight = '0px';
+  let maks = 0;
+  [1,2,3].forEach(function(n){
+    t.textContent = TRIN_TEKST[n][0];
+    b.textContent = TRIN_TEKST[n][1];
+    maks = Math.max(maks, rk.offsetHeight);
+  });
+  t.textContent = TRIN_TEKST[st.trin][0];
+  b.textContent = TRIN_TEKST[st.trin][1];
+  rk.style.minHeight = maks + 'px';
+}
+
+function opdaterStyring(){
+  document.querySelectorAll('.trin-knap').forEach(function(k){
+    const t = +k.dataset.trin;
+    k.setAttribute('aria-current', t === st.trin ? 'true' : 'false');
+    k.disabled = t > st.hoejeste;
+    k.classList.toggle('klar', trinFaerdigt(t));
+  });
+  const klar = trinFaerdigt(st.trin);
+  btnVidere.disabled = !(klar && st.trin < 3);
+  btnVidere.textContent = st.trin < 3 ? 'Videre' : (klar ? 'Færdig ✓' : 'Videre');
+  btnFortryd.disabled = !st.fortryd.length || laast();
+  $('opg-nr').textContent = st.trin;
+  $('opg-titel').textContent = TRIN_TEKST[st.trin][0];
+  $('opg-tekst').textContent = TRIN_TEKST[st.trin][1];
+  laasOpgave();
+  opdaterSr();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   7. DOMMEN — må delen sidde her?
+   ═══════════════════════════════════════════════════════════════ */
+function ja(kort, lang){ return {ok:true, kort:kort, lang:lang || kort}; }
+function nej(kort, lang){ return {ok:false, kort:kort, lang:lang || kort}; }
+
+function domFor(m, g){
+  if (!g) return nej('Vælg en del først');
+  if (m.accept !== g.type){
+    return nej('Her skal ' + NAVN[m.accept] + ' sidde',
+               'Den plads er til ' + NAVN[m.accept] + ' — prøv en anden.');
+  }
+  if (m.accept === 'fosfat') return ja('FOSFATGRUPPE');
+  if (m.accept === 'sukker') return ja('SUKKER · DEOXYRIBOSE');
+  if (m.accept === 'base')   return ja(BASER[g.base].navn.toUpperCase());
+
+  /* Nukleotid i en streng */
+  if (st.trin === 2) return ja("BINDES PÅ 3'-ENDEN",
+      'Sukkeret binder til den næste fosfatgruppe.');
+  const krav = m.krav;
+  if (BASER[g.base].par === krav){
+    return ja(g.base + ' · ' + krav + ' — ' + BASER[krav].bind + ' BRINTBINDINGER',
+              g.base + ' parrer med ' + krav + '.');
+  }
+  return nej(g.base + ' PARRER IKKE MED ' + krav,
+             krav + ' parrer kun med ' + BASER[krav].par + ' — ikke med ' + g.base + '.');
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   8. AT PLACERE EN DEL
+   ═══════════════════════════════════════════════════════════════ */
+function placer(m, g){
+  if (m.accept === 'fosfat' || m.accept === 'sukker' || m.accept === 'base'){
+    const n = st.nuk[m.n];
+    if (m.accept === 'fosfat'){ n.f = true; st.fortryd.push({slags:'del', n:m.n, del:'f'}); }
+    if (m.accept === 'sukker'){ n.s = true; st.fortryd.push({slags:'del', n:m.n, del:'s'}); }
+    if (m.accept === 'base'){   n.b = g.base; st.fortryd.push({slags:'del', n:m.n, del:'b'}); }
+    if (faerdigNuk(n)) saetBesked('Nukleotid ' + (m.n+1) + ' er samlet · ' + BASER[n.b].navn, 'ok');
+    else saetBesked(domFor(m, g).kort.toLowerCase() + ' sat på nukleotid ' + (m.n+1), 'ok');
+  }
+  else if (st.trin === 2){
+    st.s1.push(g.base);
+    st.pulje.splice(g.idx, 1);
+    st.fortryd.push({slags:'s1', idx:g.idx});
+    saetBesked(g.base + ' bundet på strengen · ' + (N - st.s1.length) + ' tilbage', 'ok');
+  }
+  else {
+    st.s2[m.n] = g.base;
+    st.fortryd.push({slags:'s2', i:m.n});
+    saetBesked(g.base + ' · ' + m.krav + ' parret med ' + BASER[m.krav].bind + ' brintbindinger', 'ok');
+  }
+
+  st.valgt = null;
+  tegn();
+  opdaterStyring();
+  klikFx(m.x, m.y);
+
+  if (trinFaerdigt(st.trin)){
+    if (st.trin === 1) saetBesked('Fire nukleotider klar — gå videre til strengen', 'ok');
+    if (st.trin === 2) saetBesked("Strengen er bundet fra 5' til 3' — gå videre", 'ok');
+    if (st.trin === 3) saetBesked('Færdigt DNA · to antiparallelle strenge, fire basepar', 'ok');
+  }
+}
+
+function fortryd(){
+  const f = st.fortryd.pop();
+  if (!f) return;
+  if (f.slags === 'del'){
+    if (f.del === 'b') st.nuk[f.n].b = null; else st.nuk[f.n][f.del] = false;
+  } else if (f.slags === 's1'){
+    const b = st.s1.pop();
+    st.pulje.splice(f.idx, 0, b);
+  } else {
+    st.s2[f.i] = null;
+  }
+  st.valgt = null;
+  saetBesked('Fortrudt.', '');
+  tegn();
+  opdaterStyring();
+}
+
+function klikFx(x, y){
+  const c = e('circle', {cx:x, cy:y, r:8}, 'klik-fx');
+  lagFx.appendChild(c);
+  setTimeout(function(){ c.remove(); }, 600);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   9. TRÆK, KLIK OG TASTATUR
+   ═══════════════════════════════════════════════════════════════ */
+/* Starter langt tilbage i tiden: de to tidsstempler bruges kun til at
+   skelne et klik fra enden af et træk, og må ikke spærre de første klik. */
+let greb = null, flyver = null, venter = null, sidsteSlip = -1e6, sidsteValg = -1e6;
+
+function svgPunkt(ev){
+  const pt = bord.createSVGPoint();
+  pt.x = ev.clientX; pt.y = ev.clientY;
+  return pt.matrixTransform(bord.getScreenCTM().inverse());
+}
+
+function iHaanden(){ return greb || st.valgt; }
+
+function markerPassende(){
+  const h = iHaanden();
+  bord.classList.toggle('griber', !!h);
+  maal.forEach(function(m){ m.el.classList.toggle('passer', !!h && m.accept === h.type); });
+}
+
+function bedsteMaal(x, y, hvad){
+  hvad = hvad || iHaanden();
+  if (!hvad) return null;
+  let bedst = null, bd = Infinity;
+  maal.forEach(function(m){
+    let d = Math.hypot(x - m.x, y - m.y);
+    if (d > m.r) return;
+    if (m.accept !== hvad.type) d += STRAF;
+    if (d < bd){ bd = d; bedst = m; }
+  });
+  return bedst ? {m:bedst, dom:domFor(bedst, hvad)} : null;
+}
+
+function boble(forael, txt, x, y, boksKl, tekstKl){
+  const t = tekst(txt, x, y, tekstKl || 'pv-tekst');
+  forael.appendChild(t);
+  let w = 60;
+  try { w = t.getComputedTextLength() + 18; } catch (err) { w = txt.length * 7 + 18; }
+  const cx = Math.max(w/2 + 8, Math.min(900 - w/2 - 8, x));
+  const cy = Math.max(26, y);
+  t.setAttribute('x', cx); t.setAttribute('y', cy);
+  const r = e('rect', {x:cx - w/2, y:cy - 14, width:w, height:20, rx:6}, boksKl || 'pv-bg');
+  forael.insertBefore(r, t);
+}
+
+function forhaandsvis(res, fx, fy){
+  ryd(lagPv);
+  maal.forEach(function(m){ m.el.classList.remove('hot', 'ja', 'nej'); });
+  if (!res) return;
+  const ok = res.dom.ok;
+  res.m.el.classList.add('hot', ok ? 'ja' : 'nej');
+  const g = e('g', null, ok ? 'pv-ja' : 'pv-nej');
+  lagPv.appendChild(g);
+  g.appendChild(e('line', {x1:fx, y1:fy, x2:res.m.x, y2:res.m.y}, 'pv-linje'));
+  g.appendChild(e('circle', {cx:res.m.x, cy:res.m.y, r:8}, 'pv-prik'));
+  boble(g, res.dom.kort, (fx + res.m.x)/2, Math.min(fy, res.m.y) - 30);
+}
+
+function afvis(res){
+  const grp = e('g');
+  lagFx.appendChild(grp);
+  boble(grp, res.dom.kort, res.m.x, res.m.y - 54, 'fx-boks', 'fx-tekst');
+  setTimeout(function(){ grp.remove(); }, 2500);
+  saetBesked(res.dom.lang, 'nej');
+}
+
+/* ── Pegeredskabet ─────────────────────────────────────────── */
+function paaEmne(ev){
+  if (ev.button !== undefined && ev.button !== 0) return;
+  if (laast()) return;
+  ev.preventDefault();
+  venter = {emne:ev.currentTarget, x:ev.clientX, y:ev.clientY, id:ev.pointerId};
+  window.addEventListener('pointermove', maaskeTraek);
+  window.addEventListener('pointerup', slipPeger);
+  window.addEventListener('pointercancel', slipPeger);
+}
+
+function maaskeTraek(ev){
+  if (!venter || ev.pointerId !== venter.id) return;
+  if (greb){ underTraek(ev); return; }
+  if (Math.hypot(ev.clientX - venter.x, ev.clientY - venter.y) < 5) return;
+  startTraek(venter.emne, ev);
+  underTraek(ev);
+}
+
+function slipPeger(ev){
+  if (!venter || (ev.pointerId !== undefined && ev.pointerId !== venter.id)) return;
+  window.removeEventListener('pointermove', maaskeTraek);
+  window.removeEventListener('pointerup', slipPeger);
+  window.removeEventListener('pointercancel', slipPeger);
+  const emne = venter.emne;
+  venter = null;
+  if (greb) slip();
+  else vaelg(emne._info, emne);
+}
+
+function startTraek(emne, ev){
+  const info = emne._info, p = svgPunkt(ev), c = emne._c;
+  const kl = function(v){ return Math.max(-24, Math.min(24, v)); };
+  greb = {type:info.type, base:info.base, idx:info.idx,
+          off:{x:kl(p.x - c.x), y:kl(p.y - c.y)}, x:c.x, y:c.y};
+  flyver = e('g', null, 'flyver');
+  if (info.type === 'nukleotid')
+    flyver.appendChild(nukleotidG({f:true, s:true, b:info.base}, st.trin === 3));
+  else
+    flyver.appendChild(delG(info.type, info.base, 0, 0));
+  lagFlyver.appendChild(flyver);
+  st.valgt = null;
+  markerPassende();
+}
+
+function underTraek(ev){
+  const p = svgPunkt(ev);
+  greb.x = p.x - greb.off.x;
+  greb.y = p.y - greb.off.y;
+  flyver.setAttribute('transform', 'translate(' + greb.x + ',' + greb.y + ')');
+  forhaandsvis(bedsteMaal(greb.x, greb.y), greb.x, greb.y);
+}
+
+function afslutTraek(ryst){
+  const f = flyver;
+  flyver = null; greb = null;
+  if (f){
+    if (ryst){ f.classList.add('ryst'); setTimeout(function(){ f.remove(); }, 430); }
+    else f.remove();
+  }
+  ryd(lagPv);
+  maal.forEach(function(m){ m.el.classList.remove('hot', 'ja', 'nej'); });
+  sidsteSlip = performance.now();
+  markerPassende();
+}
+
+function slip(){
+  const res = bedsteMaal(greb.x, greb.y);
+  const g = {type:greb.type, base:greb.base, idx:greb.idx};
+  if (res && res.dom.ok){ afslutTraek(false); placer(res.m, g); }
+  else if (res){ afvis(res); afslutTraek(true); }
+  else { afslutTraek(true); saetBesked('Slip delen på en stiplet plads', 'nej'); }
+}
+
+/* ── Klik og tastatur: vælg først, placér bagefter ─────────── */
+function vaelg(info, emne){
+  sidsteValg = performance.now();
+  const samme = st.valgt && st.valgt.type === info.type &&
+                st.valgt.base === info.base && st.valgt.idx === info.idx;
+  st.valgt = samme ? null : {type:info.type, base:info.base, idx:info.idx};
+  document.querySelectorAll('.emne').forEach(function(x){ x.classList.remove('valgt'); });
+  if (!samme){
+    emne.classList.add('valgt');
+    const hvad = info.type === 'nukleotid'
+      ? 'Nukleotid med ' + BASER[info.base].navn.toLowerCase()
+      : (info.type === 'base' ? BASER[info.base].navn : (info.type === 'fosfat' ? 'Fosfatgruppe' : 'Sukker'));
+    saetBesked(hvad + ' valgt — klik på en lysende plads', '');
+  } else {
+    saetBesked('Valget er sluppet', '');
+  }
+  markerPassende();
+}
+
+function klikPaaMaal(m){
+  if (performance.now() - sidsteSlip < 300) return;   // det var enden på et træk
+  if (laast()) return;
+  if (!st.valgt){ saetBesked('Vælg først en del i lageret', 'nej'); return; }
+  const g = st.valgt;
+  const d = domFor(m, g);
+  if (d.ok) placer(m, g);
+  else { afvis({m:m, dom:d}); }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   10. TRINNENE — og deling af et trin med #trin=2
+   ═══════════════════════════════════════════════════════════════ */
+function visTrin(n){
+  n = Math.max(1, Math.min(3, n));
+  if (n > st.hoejeste) n = st.hoejeste;
+  st.trin = n;
+  st.valgt = null;
+  st.fortryd = [];
+  if (location.hash !== '#trin=' + n) history.replaceState(null, '', '#trin=' + n);
+  tegn();
+  opdaterStyring();
+  saetBesked(laast() ? 'Trinnet er færdigt — gå videre'
+                     : (n === 1 ? 'Tag fat i en del i lageret til venstre'
+                                : 'Tag fat i et nukleotid i lageret til venstre'), '');
+}
+
+function videre(){
+  if (!trinFaerdigt(st.trin) || st.trin >= 3) return;
+  if (st.trin === 1 && st.hoejeste < 2) st.pulje = st.nuk.map(function(n){ return n.b; });
+  st.hoejeste = Math.max(st.hoejeste, st.trin + 1);
+  visTrin(st.trin + 1);
+}
+
+/* Åbnes et senere trin direkte, fyldes de tidligere trin ud med en fast
+   rækkefølge, så figuren er den samme på alle skærme i klassen. */
+function forbered(n){
+  if (n >= 2){
+    st.nuk = STANDARD.map(function(b){ return {f:true, s:true, b:b}; });
+    st.pulje = STANDARD.slice();
+  }
+  if (n >= 3){
+    st.s1 = STANDARD.slice();
+    st.pulje = [];
+  }
+  st.hoejeste = n;
+}
+
+function trinFraAdresse(){
+  const m = /trin=([1-3])/.exec(location.hash) || /trin=([1-3])/.exec(location.search);
+  return m ? parseInt(m[1], 10) : 1;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   11. KNAPPER OG START
+   ═══════════════════════════════════════════════════════════════ */
+document.querySelectorAll('.trin-knap').forEach(function(k){
+  k.addEventListener('click', function(){ visTrin(+k.dataset.trin); });
+});
+btnVidere.addEventListener('click', videre);
+btnFortryd.addEventListener('click', fortryd);
+
+$('btn-forfra').addEventListener('click', function(){
+  nulstil();
+  st.hoejeste = 1;
+  visTrin(1);
+  saetBesked('Bordet er ryddet — byg fire nukleotider', '');
+});
+
+const btnProjektor = $('btn-projektor');
+function saetProjektor(til){
+  document.body.setAttribute('data-projektor', til ? '1' : '0');
+  btnProjektor.setAttribute('aria-pressed', til ? 'true' : 'false');
+}
+btnProjektor.addEventListener('click', function(){
+  saetProjektor(document.body.getAttribute('data-projektor') !== '1');
+  laasOpgave();
+});
+
+let maaleTid;
+window.addEventListener('resize', function(){
+  clearTimeout(maaleTid);
+  maaleTid = setTimeout(laasOpgave, 160);
+});
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(laasOpgave);
+if (/mode=teach|projektor=1/.test(location.search)) saetProjektor(true);
+
+/* Et klik på et tomt sted i figuren slipper det valgte igen */
+bord.addEventListener('click', function(ev){
+  if (ev.target.closest && ev.target.closest('.emne')) return;
+  if (st.valgt && performance.now() - sidsteSlip > 300
+      && performance.now() - sidsteValg > 300){
+    st.valgt = null;
+    document.querySelectorAll('.emne').forEach(function(x){ x.classList.remove('valgt'); });
+    markerPassende();
+    saetBesked('Valget er sluppet', '');
+  }
+});
+document.addEventListener('keydown', function(ev){
+  if (ev.key === 'Escape' && st.valgt){
+    st.valgt = null;
+    document.querySelectorAll('.emne').forEach(function(x){ x.classList.remove('valgt'); });
+    markerPassende();
+    saetBesked('Valget er sluppet', '');
+  }
+});
+
+window.addEventListener('hashchange', function(){
+  const n = trinFraAdresse();
+  if (n !== st.trin){ if (n > st.hoejeste) forbered(n); visTrin(n); }
+});
+
+nulstil();
+const start = trinFraAdresse();
+if (start > 1) forbered(start);
+visTrin(start);
+
+})();
+</script>
 </body>
 </html>

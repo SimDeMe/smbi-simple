@@ -16,7 +16,7 @@ Lagt om indtil videre: forsiden, fagforsiderne, `born.html`, `admin.html`,
 `Stigningsregn.html`, `drivhuseffektenSimpel.html`, `drivhuseffekten.html`,
 `poroesitetPermeabilitet.html`, `TermiskTryk3.html`,
 `biologi/transkription.html`, `biologi/enzymkinetik.html`,
-`biologi/osmose.html` (brug dem som forlæg, når `--accent:var(--bio)` skal
+`biologi/osmose.html`, `biologi/DNA_Simulering.html` (brug dem som forlæg, når `--accent:var(--bio)` skal
 bruges). Resten af `geografi/`, `biologi/` og `style.css`-siderne kører
 stadig det gamle design — rør dem kun, når opgaven handler om dem.
 
