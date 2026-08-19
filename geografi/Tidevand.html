@@ -1,0 +1,1592 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tidevand — jord, måne og sol i 3D — smbi.dk</title>
+<meta name="description" content="Drej jorden og se hvorfor tidevandsbulen ligger på begge sider, hvorfor der er to højvande i døgnet, og hvorfor Middelhavet og Østersøen næsten ikke mærker det.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,300..600&display=swap" rel="stylesheet">
+<style>
+/* ─────────────────────────────────────────────────────────
+   Tidevand — 3D-model af jord, måne og sol
+   Følger smbi.dk's designskabelon (design_rules.md).
+   Undtagelse aftalt med Simon: three.js hentes fra CDN.
+   ───────────────────────────────────────────────────────── */
+:root{
+  --paper:#FFF9EE;  --paper-2:#FFF3DC;  --panel:#FFFFFF;
+  --ink:#17211F;    --slate:#566B68;
+
+  --pink:#E8336D; --blue:#0E86C8; --lime:#5FB030; --amber:#FFB300;
+  --grape:#7A4FD6; --coral:#FF6A3D; --teal:#0FA593;
+
+  --geo:var(--blue);
+
+  --display:'Archivo',system-ui,sans-serif;
+  --body:'Source Serif 4',Georgia,serif;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+
+  --wide:'wdth' 118;
+  --max:1180px;
+
+  --hard:4px 4px 0 var(--ink);
+  --hard-lg:7px 7px 0 var(--ink);
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--paper);color:var(--ink);
+  font-family:var(--body);font-size:17px;line-height:1.6;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden;
+}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--grape);outline-offset:3px;border-radius:4px}
+
+.mono{font-family:var(--mono);font-size:0.68rem;font-weight:500;letter-spacing:0.14em;text-transform:uppercase}
+.enhed{text-transform:none}
+.sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+/* ── Topbjælke ─────────────────────────────────────────── */
+.rainbow{
+  height:7px;
+  background:linear-gradient(90deg,
+    var(--pink) 0 14.3%, var(--coral) 14.3% 28.6%, var(--amber) 28.6% 42.9%,
+    var(--lime) 42.9% 57.2%, var(--teal) 57.2% 71.5%, var(--blue) 71.5% 85.8%,
+    var(--grape) 85.8% 100%);
+}
+.top{position:sticky;top:0;z-index:60}
+.top-bar{background:rgba(255,249,238,0.93);backdrop-filter:blur(10px);border-bottom:2px solid var(--ink)}
+.top-in{max-width:var(--max);margin:0 auto;padding:0 24px;display:flex;align-items:center;gap:16px;height:60px}
+.brand{
+  font-family:var(--display);font-variation-settings:'wdth' 125;
+  font-weight:800;font-size:1.15rem;letter-spacing:-0.02em;
+  text-decoration:none;display:flex;align-items:center;gap:8px;
+}
+.brand-mark{
+  width:25px;height:25px;border-radius:9px;border:2px solid var(--ink);
+  background:conic-gradient(var(--pink),var(--amber),var(--lime),var(--blue),var(--grape),var(--pink));
+  flex-shrink:0;
+}
+.brand em{font-family:var(--mono);font-size:0.72rem;font-weight:500;font-style:normal;color:var(--slate)}
+.top-nav{display:flex;gap:6px;margin-left:auto}
+.top-nav a{
+  font-family:var(--display);font-size:0.84rem;font-weight:600;
+  text-decoration:none;color:var(--ink);white-space:nowrap;
+  padding:7px 14px;border-radius:20px;border:2px solid transparent;
+  transition:background .15s,border-color .15s;
+}
+.top-nav a:hover{background:#C7E6F6;border-color:var(--ink)}
+
+/* ── Sidehoved ─────────────────────────────────────────── */
+.wrap{max-width:var(--max);margin:0 auto;padding:0 24px}
+.head{padding:34px 0 22px;position:relative;overflow:hidden}
+.head::before{
+  content:'';position:absolute;width:380px;height:380px;border-radius:50%;
+  background:#9BE0F5;filter:blur(70px);opacity:.5;top:-200px;right:-120px;z-index:0;
+}
+.head-in{position:relative;z-index:1}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;background:var(--ink);color:#FFF6E0;padding:6px 14px;border-radius:20px}
+.eyebrow .blink{width:8px;height:8px;border-radius:50%;background:var(--blue);animation:pulse 1.8s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.8)}}
+h1{
+  font-family:var(--display);font-variation-settings:var(--wide);font-weight:800;
+  font-size:clamp(2rem,4.6vw,2.9rem);line-height:1.03;letter-spacing:-0.032em;margin:16px 0 14px;
+}
+.hi{position:relative;display:inline-block;z-index:0;white-space:nowrap}
+.hi::before{
+  content:'';position:absolute;z-index:-1;left:-8px;right:-8px;top:12%;bottom:8%;
+  background:var(--hc,var(--amber));border-radius:6px;transform:rotate(-1.3deg);
+}
+.lead{font-size:1.06rem;color:#3E4E4C;max-width:58ch}
+
+/* ── Signaturpanel ─────────────────────────────────────── */
+.rig{
+  --accent:var(--geo);position:relative;background:var(--panel);
+  border:2.5px solid var(--ink);border-radius:18px;overflow:hidden;
+  box-shadow:var(--hard-lg);margin-top:26px;
+}
+.rig-bar{height:9px;background:var(--accent)}
+.rig-head{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  padding:11px 15px;border-bottom:2px solid var(--ink);background:#E7F4FB;
+}
+.rig-live{display:flex;align-items:center;gap:7px}
+.rig-live .mono{color:var(--ink);font-weight:600}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--accent);border:1.5px solid var(--ink);animation:pulse 2s ease-in-out infinite}
+.rig-head .spacer{margin-left:auto}
+.btn-mini{
+  font-family:var(--display);font-size:0.72rem;font-weight:700;
+  background:#fff;border:2px solid var(--ink);color:var(--ink);
+  padding:4px 11px;border-radius:18px;cursor:pointer;box-shadow:2px 2px 0 var(--ink);
+  transition:transform .12s,box-shadow .12s,background .16s,color .16s;
+}
+.btn-mini:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--ink)}
+.btn-mini:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--ink)}
+.btn-mini[aria-pressed="true"]{background:var(--accent);color:#fff;transform:translate(2px,2px);box-shadow:0 0 0 var(--ink)}
+
+/* ── Scenen: 3D til venstre, aflæsning til højre ───────── */
+.stage{
+  position:relative;display:grid;grid-template-columns:1fr 300px;
+  background:radial-gradient(circle at 1px 1px,#E6EDEB 1px,transparent 0) 0 0/16px 16px;
+}
+.view{position:relative;padding:10px;touch-action:none}
+.view canvas{
+  display:block;width:100%;height:auto;
+  border:2px solid var(--ink);border-radius:12px;background:#0B1220;cursor:grab;
+}
+.view canvas.dragging{cursor:grabbing}
+.badge{
+  position:absolute;left:22px;top:22px;z-index:2;pointer-events:none;
+  display:inline-flex;align-items:center;gap:9px;max-width:calc(100% - 44px);
+  background:#fff;border:2px solid var(--ink);border-radius:22px;
+  padding:7px 14px 7px 11px;box-shadow:3px 3px 0 var(--ink);
+}
+.badge-dot{width:11px;height:11px;border-radius:4px;flex:none;border:1.5px solid var(--ink);background:var(--pc,var(--slate))}
+.badge-txt{font-family:var(--display);font-size:0.82rem;font-weight:700;line-height:1.25}
+.hint{
+  position:absolute;right:22px;bottom:22px;z-index:2;pointer-events:none;
+  font-family:var(--mono);font-size:0.58rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;
+  color:var(--ink);background:rgba(255,249,238,.9);border:1.5px solid var(--ink);
+  border-radius:14px;padding:4px 10px;transition:opacity .3s;
+}
+.hint.gone{opacity:0}
+.scalenote{
+  position:absolute;left:22px;bottom:22px;z-index:2;pointer-events:none;
+  font-family:var(--mono);font-size:0.52rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;
+  color:#FFF6E0;background:rgba(23,33,31,.72);border-radius:12px;padding:3px 9px;
+}
+
+/* højre spalte: kurve + legende */
+.side{border-left:2px solid var(--ink);background:#fff;display:flex;flex-direction:column}
+.side-h{
+  padding:10px 14px 8px;border-bottom:2px solid var(--ink);background:var(--paper-2);
+}
+.side-h .mono{color:#5A6C69;font-size:0.57rem;display:block}
+.side-h b{font-family:var(--display);font-variation-settings:'wdth' 110;font-weight:800;font-size:1.02rem;line-height:1.15;display:block;margin-top:3px}
+.curve-box{padding:10px 12px 6px}
+.curve-box canvas{display:block;width:100%;height:auto;border:2px solid var(--ink);border-radius:10px;background:#F3FAFE}
+.laes{list-style:none;margin:10px 0 2px;display:flex;flex-direction:column;gap:5px}
+.laes li{
+  display:flex;align-items:center;gap:8px;
+  font-family:var(--mono);font-size:0.55rem;font-weight:500;
+  letter-spacing:0.08em;text-transform:uppercase;color:#5A6C69;line-height:1.35;
+}
+.laes i{width:9px;height:9px;border-radius:3px;border:1.5px solid var(--ink);flex:none}
+.paa-kloden{padding:2px 12px 10px}
+.paa-kloden > .mono{color:#5A6C69;font-size:0.55rem;display:block}
+.legend{border-top:2px solid var(--ink);padding:10px 12px 12px;margin-top:auto;background:#F7FBFA}
+.legend .mono{color:#5A6C69;font-size:0.55rem;margin-bottom:7px;display:block}
+.lg-bar{height:13px;border:2px solid var(--ink);border-radius:8px;overflow:hidden;display:flex}
+.lg-bar i{flex:1;display:block}
+.lg-tick{display:flex;justify-content:space-between;margin-top:4px}
+.lg-tick span{font-family:var(--mono);font-size:0.5rem;font-weight:600;color:#5A6C69;letter-spacing:.04em}
+
+/* ── Stedvælger ────────────────────────────────────────── */
+.places{
+  border-top:2px solid var(--ink);background:#fff;padding:11px 15px;
+  display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start;
+}
+.pl-group{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.pl-group > .mono{color:#5A6C69;font-size:0.55rem;width:100%;margin-bottom:1px}
+.pill{
+  font-family:var(--display);font-size:0.76rem;font-weight:700;
+  background:var(--paper);border:2px solid var(--ink);color:var(--ink);
+  padding:4px 12px;border-radius:20px;cursor:pointer;box-shadow:2px 2px 0 var(--ink);
+  transition:transform .12s,box-shadow .12s,background .16s,color .16s;
+  display:inline-flex;align-items:center;gap:7px;
+}
+.pill::before{content:'';width:9px;height:9px;border-radius:3px;background:var(--pc,var(--slate));border:1.5px solid var(--ink);flex:none}
+.pill:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--ink)}
+.pill[aria-pressed="true"]{background:var(--ink);color:#FFF6E0;transform:translate(2px,2px);box-shadow:0 0 0 var(--ink)}
+
+/* ── Instrumenter ──────────────────────────────────────── */
+.gauges{display:grid;grid-template-columns:repeat(4,1fr);border-top:2px solid var(--ink)}
+.gauge{padding:13px 15px 14px;border-left:2px solid var(--ink);display:flex;flex-direction:column;gap:9px}
+.gauge:first-child{border-left:none}
+.g-niv{background:#E7F4FB}
+.g-spaend{background:#EDF8E4}
+.g-fase{background:#F1ECFC}
+.g-naeste{background:#FFF1EC}
+.gauge dt{font-family:var(--mono);font-size:0.57rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#5A6C69}
+.gauge dd{
+  font-family:var(--display);font-variation-settings:'wdth' 108;font-weight:800;
+  font-size:1.28rem;line-height:1;font-variant-numeric:tabular-nums;
+}
+.gauge dd small{font-size:0.66em;font-weight:700;color:#5A6C69;margin-left:3px;text-transform:none}
+.g-viz{display:flex;align-items:flex-end;gap:10px;height:46px}
+
+/* vandsøjle */
+.tank{position:relative;width:30px;height:44px;flex:none;border:2px solid var(--ink);border-radius:8px;background:#fff;overflow:hidden}
+.tank i{position:absolute;left:0;right:0;bottom:0;display:block;background:linear-gradient(180deg,#4FB3E8,#0E86C8);height:50%;transition:height .1s linear}
+.tank u{position:absolute;left:0;right:0;height:2px;background:var(--ink);opacity:.55;bottom:50%}
+.ticks{display:flex;flex-direction:column;justify-content:space-between;height:44px}
+.ticks span{font-family:var(--mono);font-size:0.5rem;font-weight:600;color:#7E8F8C;letter-spacing:.04em}
+
+/* spændsøjle */
+.col{
+  position:relative;width:100%;max-width:130px;height:44px;flex:1;
+  border:2px solid var(--ink);border-radius:9px;overflow:hidden;
+  background:repeating-linear-gradient(90deg,rgba(23,33,31,.09) 0 1.5px,transparent 1.5px 25%),#fff;
+}
+.col i{position:absolute;left:0;bottom:0;top:0;display:block;background:linear-gradient(90deg,#5FB030,#0FA593);width:0%;border-right:2px solid var(--ink);transition:width .2s}
+.col b{position:absolute;right:5px;bottom:3px;font-family:var(--mono);font-size:0.5rem;font-weight:600;color:#5A6C69;letter-spacing:.06em;background:rgba(255,255,255,.82);border-radius:5px;padding:0 3px}
+
+/* måneskive */
+.moon{width:44px;height:44px;flex:none;border:2px solid var(--ink);border-radius:50%;background:#2A3330;overflow:hidden;position:relative}
+.moon canvas{display:block;width:100%;height:100%}
+
+/* urskive */
+.clock{width:44px;height:44px;flex:none}
+.clock circle{fill:#fff;stroke:var(--ink);stroke-width:2.5}
+.clock line{stroke:var(--ink);stroke-width:2.5;stroke-linecap:round}
+.clock .hand{stroke:var(--coral);stroke-width:3}
+
+/* ── Kontrolpanel ──────────────────────────────────────── */
+.knobs{
+  border-top:2px solid var(--ink);background:var(--paper-2);padding:18px 15px 20px;
+  display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px 26px;
+}
+.knob{display:flex;flex-direction:column;gap:7px}
+.knob-top{display:flex;align-items:baseline;gap:10px}
+.knob-top .mono{color:#5A6C69;font-size:0.62rem}
+.knob-val{
+  margin-left:auto;font-family:var(--display);font-variation-settings:'wdth' 108;
+  font-weight:800;font-size:1rem;font-variant-numeric:tabular-nums;
+  background:#fff;border:2px solid var(--ink);border-radius:16px;padding:1px 11px;white-space:nowrap;
+}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:22px;background:transparent;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:10px;border:2px solid var(--ink);border-radius:9px;background:var(--track,#fff)}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;width:22px;height:22px;margin-top:-8px;border-radius:50%;
+  border:2.5px solid var(--ink);background:var(--kc,var(--amber));box-shadow:2px 2px 0 var(--ink);
+}
+input[type=range]::-moz-range-track{height:10px;border:2px solid var(--ink);border-radius:9px;background:var(--track,#fff)}
+input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;border:2.5px solid var(--ink);background:var(--kc,var(--amber));box-shadow:2px 2px 0 var(--ink)}
+#inp-dag{--track:linear-gradient(90deg,#17211F,#FFF3DC,#17211F,#FFF3DC,#17211F);--kc:var(--grape)}
+#inp-time{--track:linear-gradient(90deg,#0B1220,#9BE0F5,#FFB300,#9BE0F5,#0B1220);--kc:var(--amber)}
+#inp-overdriv{--track:linear-gradient(90deg,#F3FAFE,#0E86C8);--kc:var(--blue)}
+
+/* ── Fakta-fod ─────────────────────────────────────────── */
+.facts{border-top:2px solid var(--ink);background:#fff;padding:12px 15px;display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+.fact{
+  display:inline-flex;align-items:center;gap:8px;background:var(--paper);
+  border:2px solid var(--ink);border-radius:22px;padding:5px 13px;
+  font-family:var(--mono);font-size:0.6rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;
+}
+.fact::before{content:'';width:10px;height:10px;border-radius:3px;background:var(--fc,var(--slate));border:1.5px solid var(--ink)}
+.fact b{font-family:var(--display);font-size:0.84rem;font-weight:800;letter-spacing:0}
+
+/* ── Uddybning til B-niveau ────────────────────────────── */
+.dig{max-width:var(--max);margin:26px auto 0;padding:0 24px;display:grid;grid-template-columns:1fr 1fr;gap:16px}
+details{
+  background:var(--panel);border:2.5px solid var(--ink);border-radius:14px;
+  box-shadow:var(--hard);overflow:hidden;
+}
+summary{
+  list-style:none;cursor:pointer;padding:12px 16px;background:#F1ECFC;
+  border-bottom:2px solid transparent;
+  font-family:var(--display);font-weight:800;font-size:0.95rem;
+  display:flex;align-items:center;gap:10px;
+}
+summary::-webkit-details-marker{display:none}
+summary::after{
+  content:'+';margin-left:auto;font-family:var(--mono);font-weight:600;font-size:1.05rem;
+  width:22px;height:22px;border:2px solid var(--ink);border-radius:50%;
+  display:grid;place-items:center;line-height:1;background:#fff;flex:none;
+}
+details[open] summary{border-bottom-color:var(--ink)}
+details[open] summary::after{content:'−'}
+summary .tag{
+  font-family:var(--mono);font-size:0.52rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;
+  background:var(--grape);color:#fff;border:1.5px solid var(--ink);border-radius:12px;padding:2px 8px;flex:none;
+}
+.dig-body{padding:14px 16px 16px;font-size:0.96rem}
+.dig-body p+p{margin-top:9px}
+.dig-body b{font-weight:600}
+.dig-body .form{
+  font-family:var(--mono);font-size:0.78rem;background:var(--paper-2);
+  border:2px solid var(--ink);border-radius:9px;padding:9px 12px;margin:10px 0;text-align:center;
+}
+
+/* ── Bund ──────────────────────────────────────────────── */
+.foot{margin-top:34px;background:var(--ink);color:#FFF6E0;padding:26px 0 32px}
+.foot-in{max-width:var(--max);margin:0 auto;padding:0 24px;display:flex;justify-content:space-between;align-items:flex-end;gap:18px;flex-wrap:wrap}
+.foot .brand{color:#FFF6E0}
+.foot .mono{color:#8FA29E;margin-top:5px}
+.foot-links{display:flex;gap:8px;flex-wrap:wrap}
+.foot-links a{
+  font-family:var(--display);font-size:0.82rem;font-weight:700;text-decoration:none;
+  border:2px solid #FFF6E0;border-radius:20px;padding:5px 13px;
+  transition:background .16s,color .16s,border-color .16s;
+}
+.foot-links a:nth-child(1):hover{background:var(--blue);border-color:var(--blue)}
+.foot-links a:nth-child(2):hover{background:var(--amber);border-color:var(--amber);color:var(--ink)}
+.foot-links a:nth-child(3):hover{background:var(--lime);border-color:var(--lime);color:var(--ink)}
+
+/* ── Projektortilstand ─────────────────────────────────── */
+body[data-projektor="1"] .top,
+body[data-projektor="1"] .head,
+body[data-projektor="1"] .dig,
+body[data-projektor="1"] .foot{display:none}
+body[data-projektor="1"] .wrap{max-width:none;padding:0 14px}
+body[data-projektor="1"] .rig{margin-top:14px;box-shadow:var(--hard)}
+body[data-projektor="1"] .gauge dt{font-size:0.78rem}
+body[data-projektor="1"] .gauge dd{font-size:1.9rem}
+body[data-projektor="1"] .gauge dd small{font-size:0.95rem}
+body[data-projektor="1"] .badge-txt{font-size:1.05rem}
+body[data-projektor="1"] .knob-top .mono{font-size:0.82rem}
+body[data-projektor="1"] .knob-val{font-size:1.05rem}
+body[data-projektor="1"] .pill{font-size:0.92rem}
+body[data-projektor="1"] .fact{font-size:0.74rem}
+body[data-projektor="1"] .fact b{font-size:0.92rem}
+body[data-projektor="1"] .side-h b{font-size:1.2rem}
+
+/* ── Responsivt ────────────────────────────────────────── */
+@media (max-width:960px){
+  .stage{grid-template-columns:1fr}
+  .side{border-left:none;border-top:2px solid var(--ink);flex-direction:row;flex-wrap:wrap}
+  .side-h{flex:1 1 100%}
+  .curve-box{flex:1 1 320px}
+  .paa-kloden{flex:1 1 240px;border-left:2px solid var(--ink);padding-top:10px}
+  .legend{flex:1 1 240px;margin-top:0;border-top:none;border-left:2px solid var(--ink)}
+  .knobs{grid-template-columns:1fr 1fr}
+  .dig{grid-template-columns:1fr}
+}
+@media (max-width:700px){
+  .gauges{grid-template-columns:1fr 1fr}
+  .gauge:nth-child(3){border-left:none}
+  .gauge:nth-child(n+3){border-top:2px solid var(--ink)}
+  .legend{border-left:none;border-top:2px solid var(--ink)}
+}
+@media (max-width:620px){
+  /* Mærkaterne på figuren skal ikke sejle oven i hinanden
+     på en telefon: solen og stednavnet står allerede i teksten
+     og i højre spalte. */
+  .ovl{font-size:0.58rem!important;padding:2px 7px!important}
+  .ovl-sol,.ovl-sted{display:none}
+  .badge{max-width:calc(100% - 32px)}
+  body{font-size:16px}
+  .wrap,.top-in,.foot-in,.dig{padding-left:16px;padding-right:16px}
+  .head{padding:24px 0 18px}
+  .rig{border-radius:14px;box-shadow:var(--hard)}
+  .knobs{grid-template-columns:1fr;padding:16px}
+  .places,.facts,.rig-head{padding-left:16px;padding-right:16px}
+  .badge{left:16px;top:16px;padding:5px 11px 5px 9px}
+  .badge-txt{font-size:0.72rem}
+  .hint{display:none}
+  .gauge dd{font-size:1.1rem}
+  details{box-shadow:3px 3px 0 var(--ink)}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+@media print{
+  .top,.foot,.knobs,.places,.rig-head .btn-mini{display:none!important}
+  .rig{box-shadow:none;break-inside:avoid}
+  .dig{display:block}
+  details{box-shadow:none;break-inside:avoid;margin-bottom:10px}
+}
+</style>
+</head>
+
+<body>
+
+<header class="top" id="site-top">
+  <div class="rainbow"></div>
+  <div class="top-bar">
+    <div class="top-in">
+      <a href="/" class="brand"><span class="brand-mark"></span>smbi<em>.dk</em></a>
+      <nav class="top-nav">
+        <a href="/geografi.html">Naturgeografi</a>
+        <a href="/">Forside</a>
+      </nav>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap head">
+    <div class="head-in">
+      <span class="eyebrow mono"><span class="blink"></span>Naturgeografi · hav &amp; tidevand</span>
+      <h1>Tidevand: jorden mellem <span class="hi" style="--hc:#C7E6F6">måne og sol</span></h1>
+      <p class="lead">Drej kloden og se, at vandet buler ud på <b>begge</b> sider. Jorden drejer rundt gennem de to buler i løbet af et døgn — derfor to højvande. Vælg et sted og se, hvor meget det så faktisk betyder der.</p>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <section class="rig">
+      <div class="rig-bar"></div>
+      <div class="rig-head">
+        <span class="rig-live"><span class="dot"></span><span class="mono">Live model</span></span>
+        <span class="spacer"></span>
+        <button type="button" class="btn-mini" id="btn-play" aria-pressed="true" title="Start og stop tiden">Pause</button>
+        <button type="button" class="btn-mini" id="btn-bule" aria-pressed="true" title="Vis eller skjul den overdrevne vandbule">Vandbule</button>
+        <button type="button" class="btn-mini" id="btn-sol" aria-pressed="true" title="Tag solens bidrag ud af modellen">Solens bidrag</button>
+        <button type="button" class="btn-mini" id="btn-farver" aria-pressed="true" title="Farvelæg havet efter hvor stort tidevandet er">Tidevandsfarver</button>
+        <button type="button" class="btn-mini" id="btn-projektor" aria-pressed="false" title="Skjul sidens krom og forstør aflæsningerne">Projektor</button>
+      </div>
+
+      <div class="stage">
+        <div class="view" id="view">
+          <canvas id="scene" width="900" height="600" tabindex="0" role="application"
+                  aria-label="3D-model af jorden, månen og solen. Træk for at dreje kloden. Brug piletasterne til at dreje, plus og minus til at zoome."></canvas>
+          <div class="badge" id="badge" style="--pc:var(--blue)">
+            <span class="badge-dot"></span>
+            <span class="badge-txt" id="badge-txt">Springflod — sol og måne trækker samme vej</span>
+          </div>
+          <div class="hint" id="hint">Træk for at dreje kloden</div>
+          <div class="scalenote">Afstande og bule er ikke i størrelsesforhold</div>
+        </div>
+
+        <aside class="side">
+          <div class="side-h">
+            <span class="mono">Vandstand her</span>
+            <b id="sted-navn">Esbjerg, Vadehavet</b>
+          </div>
+          <div class="curve-box">
+            <canvas id="kurve" width="560" height="300" aria-hidden="true"></canvas>
+            <p class="sr" id="kurve-sr"></p>
+            <ul class="laes">
+              <li><i style="background:#0E86C8"></i>Vandstanden gennem ét månedøgn</li>
+              <li><i style="background:#FF6A3D"></i>Lodret streg: hvor vi er nu</li>
+              <li><i style="background:#8FA29E"></i>To toppe — ca. 12 t 25 min imellem</li>
+            </ul>
+          </div>
+          <div class="paa-kloden">
+            <span class="mono">På kloden</span>
+            <ul class="laes">
+              <li><i style="background:#6FCDEE"></i>Vandlaget — tykkest ud mod bulerne</li>
+              <li><i style="background:#FFF6E0"></i>Stiplet cirkel: middelvandstand</li>
+              <li><i style="background:#FFB300"></i>Stiplet akse: gennem de to buler</li>
+              <li><i style="background:#E8336D"></i>Nålen: det valgte sted</li>
+            </ul>
+          </div>
+          <div class="legend">
+            <span class="mono">Tidevandets størrelse (springtid)</span>
+            <div class="lg-bar" id="lg-bar"></div>
+            <div class="lg-tick">
+              <span>0 <span class="enhed">m</span></span><span>2</span><span>5</span><span>10</span><span>16 <span class="enhed">m</span></span>
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      <div class="places" id="places">
+        <div class="pl-group" data-g="stort">
+          <span class="mono">Meget tidevand</span>
+        </div>
+        <div class="pl-group" data-g="lidt">
+          <span class="mono">Lidt tidevand</span>
+        </div>
+      </div>
+
+      <dl class="gauges">
+        <div class="gauge g-niv">
+          <dt>Vandstand nu</dt>
+          <div class="g-viz">
+            <div class="tank"><i id="anim-niv"></i><u></u></div>
+            <div class="ticks"><span>højvande</span><span>middel</span><span>lavvande</span></div>
+          </div>
+          <dd id="val-niv">+0,00<small>m</small></dd>
+        </div>
+
+        <div class="gauge g-spaend">
+          <dt>Tidevandsspænd i dag</dt>
+          <div class="g-viz">
+            <div class="col"><i id="anim-spaend"></i><b>0–16 m</b></div>
+          </div>
+          <dd id="val-spaend">1,5<small>m</small></dd>
+        </div>
+
+        <div class="gauge g-fase">
+          <dt>Måne og sol</dt>
+          <div class="g-viz">
+            <div class="moon"><canvas id="fase" width="88" height="88" aria-hidden="true"></canvas></div>
+            <div class="ticks"><span>ny</span><span>halv</span><span>fuld</span></div>
+          </div>
+          <dd id="val-fase">Springflod</dd>
+        </div>
+
+        <div class="gauge g-naeste">
+          <dt>Til næste højvande</dt>
+          <div class="g-viz">
+            <svg class="clock" viewBox="0 0 44 44" aria-hidden="true">
+              <circle cx="22" cy="22" r="19"/>
+              <line x1="22" y1="6" x2="22" y2="10"/>
+              <line x1="38" y1="22" x2="34" y2="22"/>
+              <line x1="22" y1="38" x2="22" y2="34"/>
+              <line x1="6" y1="22" x2="10" y2="22"/>
+              <line class="hand" id="clock-hand" x1="22" y1="22" x2="22" y2="10"/>
+            </svg>
+            <div class="ticks"><span>0 t</span><span>6 t</span><span>12 t</span></div>
+          </div>
+          <dd id="val-naeste">3:07<small>t:min</small></dd>
+        </div>
+      </dl>
+
+      <div class="knobs">
+        <div class="knob">
+          <div class="knob-top">
+            <label class="mono" for="inp-dag">Dag i månemåneden</label>
+            <span class="knob-val" id="v-dag">Dag 0</span>
+          </div>
+          <input type="range" id="inp-dag" min="0" max="29" step="1" value="0"
+                 aria-describedby="v-dag">
+        </div>
+        <div class="knob">
+          <div class="knob-top">
+            <label class="mono" for="inp-time">Time i døgnet</label>
+            <span class="knob-val" id="v-time">00:00</span>
+          </div>
+          <input type="range" id="inp-time" min="0" max="24" step="0.05" value="0"
+                 aria-describedby="v-time">
+        </div>
+        <div class="knob">
+          <div class="knob-top">
+            <label class="mono" for="inp-overdriv">Bulen forstørret</label>
+            <span class="knob-val" id="v-overdriv">× 60 000</span>
+          </div>
+          <input type="range" id="inp-overdriv" min="0" max="100" step="1" value="65"
+                 aria-describedby="v-overdriv">
+        </div>
+      </div>
+
+      <div class="facts">
+        <span class="fact" style="--fc:var(--amber)">Månedøgn <b>24 t 50 min</b></span>
+        <span class="fact" style="--fc:var(--blue)">Højvande <b>2 gange</b></span>
+        <span class="fact" style="--fc:var(--grape)">Månens træk <b>2,2 ×</b> solens</span>
+        <span class="fact" style="--fc:var(--teal)">Bulen i åbent hav <b>ca. 0,5 <span class="enhed">m</span></b></span>
+      </div>
+      <p class="sr" id="live" aria-live="polite"></p>
+    </section>
+  </div>
+
+  <div class="dig">
+    <details>
+      <summary>Hvorfor buler vandet ud på <em>begge</em> sider? <span class="tag">B-niveau</span></summary>
+      <div class="dig-body">
+        <p>Det er ikke månens tiltrækning i sig selv, der laver tidevand — det er <b>forskellen</b> på tiltrækningen hen over jorden. Tyngdekraften aftager med kvadratet på afstanden, og jorden er 12 700 km tyk. Vandet på den side, der vender mod månen, er tættere på og trækkes derfor lidt <em>hårdere</em> end jordens centrum. Vandet på bagsiden er længere væk og trækkes lidt <em>svagere</em>.</p>
+        <p>Ser man det fra jordens centrum, betyder det, at vandet foran hales mod månen, mens vandet bagpå bliver ladt tilbage — det halter bagud. Resultatet er to buler, én på hver side.</p>
+        <div class="form">a<sub>tidevand</sub> ∝ 2GMr / d³</div>
+        <p>Fordi der er <b>d³</b> og ikke d² i nævneren, vinder månen over solen, selvom solen trækker langt kraftigere i jorden som helhed: solen er 27 millioner gange tungere, men også 390 gange længere væk. Månens tidevandskraft bliver derfor ca. <b>2,2 gange</b> solens. Slå &raquo;Solens bidrag&laquo; fra i modellen og se, hvor meget forskellen mellem spring- og nipflod forsvinder.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>Hvorfor 24 timer og 50 minutter? <span class="tag">B-niveau</span></summary>
+      <div class="dig-body">
+        <p>Bulerne står stille i forhold til månen, ikke i forhold til jorden. Jorden drejer én gang rundt om sig selv på knap 24 timer — men i mellemtiden er månen selv rykket ca. 13° videre i sin bane. Et punkt på jorden skal altså dreje 13° <em>ekstra</em> for at komme under månen igen.</p>
+        <p>De 13° tager ca. 50 minutter. Derfor er et <b>månedøgn</b> 24 t 50 min, og derfor kommer højvandet ca. 50 minutter senere hver dag. Med to buler pr. omgang bliver der ca. <b>12 t 25 min</b> mellem to højvande.</p>
+        <p>Bemærk også, at de to højvande i samme døgn tit er <em>forskellig</em> høje. Det skyldes, at månen sjældent står lige over ækvator — når den står skråt, rammer jordens omdrejning den ene bule mere centralt end den anden. Det hedder <b>døgnulighed</b>, og du kan se det i kurven, når du vælger et sted langt fra ækvator.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>Hvorfor mærker Middelhavet det næsten ikke? <span class="tag">B-niveau</span></summary>
+      <div class="dig-body">
+        <p>Det er <b>ikke</b> fordi månen trækker mindre i Middelhavet. Bulen passerer lige så meget hen over Middelhavet som over Atlanterhavet — det kan du se på kloden. Forskellen er, at tidevand er en <b>bølge</b>, der skal have plads og tid til at bygge sig op.</p>
+        <p>Middelhavet er et næsten lukket bassin med én smal åbning ved Gibraltarstrædet, kun 14 km bred. På de godt 6 timer, der er mellem høj- og lavvande, kan der slet ikke nå at strømme vand nok ind og ud til at hæve hele havet. Bassinet er for lille til at lave sin egen tidevandsbølge, og for lukket til at låne Atlanterhavets. Østersøen er endnu mere lukket — dér er tidevandet nede på få centimeter.</p>
+        <p>Det omvendte sker i Nordsøen, Bristol Channel og Fundybugten: dér svinger bassinet næsten i takt med de 12 t 25 min. Bølgen bliver forstærket gang på gang — <b>resonans</b> — og samtidig presses vandet op i tragtformede bugte, der bliver smallere og lavere indefter. I Fundybugten giver det op mod 16 meter.</p>
+        <p>Venedig er den sjove undtagelse i Middelhavet: Adriaterhavet er lige akkurat langt og smalt nok til at svinge med, så dér er tidevandet omkring en meter — nok til at oversvømme Markuspladsen, når vinden også presser på.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>Hvad viser modellen — og hvad gør den ikke? <span class="tag">Forbehold</span></summary>
+      <div class="dig-body">
+        <p>Kloden viser <b>ligevægtstidevandet</b>: den bule havet ville lægge sig i, hvis jorden var dækket af et lige dybt hav uden kontinenter. Den forklarer rytmen — to højvande pr. månedøgn, spring- og nipflod, døgnulighed — og det er præcis det, den er sat til.</p>
+        <p>Den forklarer <b>ikke</b> af sig selv, hvor stort tidevandet bliver et bestemt sted. Det afhænger af bassinets form, dybde og egensvingning. Derfor er havets farver og tallene ved hvert sted <b>målte</b> springtidsspænd, ikke noget modellen selv regner ud. Farvefeltet mellem stederne er skematisk og skal læses som &raquo;stort / lille&laquo;, ikke som en aflæsning.</p>
+        <p>En detalje til den nysgerrige: <b>kloden</b> viser den rene ligevægtsbule, også når månen står skråt over ækvator. <b>Kurven</b> for det enkelte sted dæmper til gengæld den daglige del af svingningen. Ellers ville modellen give ét højvande i døgnet på vores breddegrader, og det passer ikke med nogen tidevandstabel: kontinentalsoklen forstærker de halvdaglige svingninger langt mere end de daglige. Det, der er tilbage af den daglige del, er netop døgnuligheden.</p>
+        <p>Bulen på kloden er forstørret mange tusinde gange. I virkeligheden er ligevægtsbulen i åbent hav kun omkring en halv meter høj — på en klode med 6371 km radius ville den være tyndere end en blyantsstreg.</p>
+      </div>
+    </details>
+  </div>
+</main>
+
+<footer class="foot">
+  <div class="foot-in">
+    <div>
+      <a href="/" class="brand"><span class="brand-mark"></span>smbi<em>.dk</em></a>
+      <div class="mono">Simuleringer til naturgeografi og biologi</div>
+    </div>
+    <nav class="foot-links">
+      <a href="/geografi.html">Naturgeografi</a>
+      <a href="/biologi.html">Biologi</a>
+      <a href="/contact.html">Kontakt</a>
+    </nav>
+  </div>
+</footer>
+
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+/* ═══════════════════════════════════════════════════════════
+   1. DATA
+   ═══════════════════════════════════════════════════════════ */
+
+/* Kystlinjer: Natural Earth 110m (public domain), delta-kodet.
+   Hver ring er en række lon/lat-par i tiendedele grader. */
+const LAND_PACKED = "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|vwDrK0gHDNDBIKEGAzgHGECBJBB|j2B4tBQNSQ0BKiBVDLoBGUIsBLcHCJmBGUNwBHSHSRjBJuBLgBFeReAFNhBXXIfUZBBLULcJIDMTFNZExBQcPWLCH1BIpBMXKGGdKbKAF5BDRIOOmBAoBEFGIKYUDIHIdKpBGOEVORAPIJFjBDnCGrBGfCPIUIbAFUQSUI0BGPL|5qB+zB2BBqBBkBFADvBJxBDRDsBAtBLhBFhBPnBDND7BBcBNDQJRFfFJHbFEDiBAAD1BLzBG5BDdClBCBKkBEJOOC0BJZOhBEQIkBEGGbIHM2BBQBgBItBClCBjBIPIXGDGeEYAmBEeIYBWFQMaCkBC8BCMB6BCqBAsBB|6zCXGfWLQWWMSASHOFWDiBNmBLOJKJELgBLGJRBENSLMVMAAHODFDWHBFNBDGRCTEPMJMLQZKPFLFCPPFJCVCRQTEDFZAIQOGFWJQlBSPAdUFJHBDIAIPKWGOABGdAHMREHKcEKGgBHCH|2pCkBWRXBFNARRNBTHdBGVHHMNCJGXHHKNAPCBaJGJQBSCSMOOFQEEQIEYEOQKMIISKOOKQIAKJCHMFSFBHNAEJNHLRORBJ|rnC2tBJHuBGaJYKSHQRKINUSCUBWHMTGNiBJkBJBHfBMHFFjBCjBGVBlBF7BDZBLKZGRBXQMCgBCcAaElBErBBbAJIuBIfAhBGQOOI2BMUD|qfvICXGHBJDFFMDFEPBHFDBRHVJbLlBHbHVPFRHLGPGDKBSHQAOCQKCAIKOCOFIDOASGKCOKAMEIEIAMMQMGKBIIBKOCMGKGJGHGN|vwD2sBghHNVADGlgHI|2e6ZKNKBGDPBDPDHFDAJGNSDOJeDeGCEDOEWPGGONAESUFQINMFKPDBPFOBEGIDIXGHSLGAGUBAOSEQBESDOTBPEXHRDJLRDTTSRBNWXKJ|kiC1DVAPSZQHMPQJOPcPSFQHQROJQPMTWBKMBgBDSRONMHSVWAQNMPOJHPMHIACNIJOBKNDXBf|7B0kBVTUCWADPRRUBUZOBMXGHYDBLLFIJRJZAhBFJELJRCNFLEeUSEfEFIWGLKEOeBEMNMXEFGIIFGLJAULKIUQQQAYA|k4CmXHPEJJNZHjBBbVNGAQjBDVJXAUPNfLJJIESLGHOUGKMUMOMoBGWDUkBOJeUKIOYDYIMWEKbAPRTAV|+jBmsBLB/BEFIjBGBKUEBMoBQREwBQFKuBKiCOiCCiBIoBCOHNFnCJ7BH9BTdTfRERmBP|hJypBDNWNZN5BNRDZC3BIUIrBKkBEAGpBEMOgBCeNeMaFgBKiBA|nc3wBaJILCHCJfFfFlBDpBDvBAZIEIqBGSGMIKIMGMKKAeEeD|prC0sBzBJJItBMGGQQSOTMkCCcDyBAUFWHZFvBNZNAH|r2B6xBYHbFjBNjBBpBCVKCGQGlBAVGLKOIOGUCHEuBCaLiBDgBDQL|l7BmwBWFoBASFFHYFMDcAcBgBEoBCiBBUHGHNDbFZE5BDnBAhBCzBGHMBKTIpBCVIIIoBB|uL6xBgCNxBHJPRDJPXApBMSGdGnBSPQ4BGKFcAIGeCaH|ksDxZEHQIEHAJFHNPJHIJPAPFFNLTPJJDRALGVCDGKQaUMEQGQMMKKOIGCKOKEH|ouCcPTNDTEfARDDNSRMIkBIAJJEHLRHUZDFSXALLFHGKQTHDGCINMCUNFCXAbLDHGGSDUHAFOIOCOKgBEISOQFYBYAUOCD|hjB2fNROGMDFFSFIGUHFNOECJINJPHBNEEQDEXRLAOKTETAnBABGMIHEQMUgBOMQGKADFJL|zjC0vBIHSEUAEJLJjCBxBJdADGqBK5CDbEcUSG4BHkBLiBAbSSIUBIJ|u+BqxBpBB3BEhBIPOZE0BOqBGoBLuBRFR|ktDzWOTCOIFEPQFMBMIKBDRFLPCFFCJBDHJJNPHBGHCKQFMVICIOGCQAMHOAEJINSJOIAMJOFGR|5qBrsBEHDHFHXBVDZAKIXBVDPGAIWIOCWAGKCIAQKKSCMHEFIJIHEJ|rqBzhBaNcDHJTAJGFHPFVCPGTCZMTKbYSDcNaHKKGOUIOBGJKN|8jCnEmBBGIkBHINeDYLVHVKRBVCREXINCHDjBIDKRAOUYBQFIBCH|45C2fWhBdGLbSVANPMLNDQCUBWEOCcLSCcSKHIKEENITBRIV|5xBoOIHUCGDSLMJGAMDBFQAOHBDNDLANCdBOKHGLAHGDMLAREFEZEHEIETCNJHADFHBJCMGEIIEKEQCECSBQASF|+5C0bODOIEVbFRTfOJVVADUKOWCGcGQWVQF|6rCyLMFGGCFBHGNDPLHDPEPMBICaJBLGDBJPKHMDHNMRDJGCIGEFGBHJMDIAUIHCgBGSMA|nE2gBjBLbCQWJUcQOISCULJNENPR|3+BkuBYDkBEGFTJgBHDRhBHRCNGxBQAGqBBVOWI|26CovBPPpCAfDnBOKMaE2BAoCJ|gvCoFCLALFRHUHJGPFHXMFOGKLIFHJCNLDGIQMGMIGJQGEKOABQQJCJCH|8PoyBoBFdL5BB5BEDEbCVI+BGcDUGyBF|n1BipBEJKEMFWFYFAJQCOHRFdGLITJbJHKZBQKEQGSOA|86CvZUFKCQEMBCXHFBPFGNNDANCLQBOLQAKOB|n6BwtBVPVCLQAKKKUEqBAmBDdRXD|rtBuMSDCEQAMFEAEFMABFKAKHHHJEHAHABDHADEFBHNFEAENEHBNCHDLGCIUDOBIGJIAILCEGMA|x9B+vBQHALJNfBVEAKfABOWAeGcACC|zoCwwBBNPHRAlBHfDbEiBQqBMeAcC|4yB8DRDHQDcIgBOJKNKVDTHF|2hC+wBxDHmBaQCOA0BLFH|nlB/xBFJFJpBCrBAXGACLEuBAqBBQIKIUH|ltCqeJBhBIFIPGDGVEFKAGWDMDSBIHKHUHIL|x+B+wBIHfCfGtBCUGXEBIoBB2BHOJ|vjD1xBlBBZGLIBALGMImBDUFOFGJ|1vB2tBAFTCVAVDFCVKCIICuBBkBL|g/CtDJBDDJFLDJAPGLGCGSDKCEKCACJMAGIKGBMMCEDALFL|4rCoOJPJQBQMSQQKFDLLf|79B9sBWDWCMJPCXBXCbBTEJIMEaDcA|+kC2LPJPGBSKIWGMAEHHHFL|37BmrBNFZGPBbISGOIUDMDGDOH|2J8XFPCFDJPIJCbKEKWBWCOC|4F4ZMNBZJAHFHGAYDMKBKG|4tCpGPFBECGIMUICEQGOAICGBFFVHPFNN|+fqyBZBRBBBXDVEMItBAoBEeAEFMGSCeDHD|v6B8uBLHbCXEKKcESFIF|uP2wBrBJjBGOELIqBEIHcD|77B6wBdFPGJIAIaBKAYHDF|xkB9fQHFHbFHIRJJKYKQDOI|uwCWBPJCBNIJFBHMFaEQGICLMBCH|uoD7NHDJGNINMLODGKAKHKFGFQLKJ|m+C+uBVHfClBIGGkBDyBD|k0CqVEFLLHGJDFLLGAKKMMDIKOF|tvB+pBVADKIKSEQFAHBDNF|z/C2jBTHJGDKSGMEMBKFRJ|uuC0HGXPGAFGLJFAOFCDMMBAILQSBGF|7kCywBlBFbGQIcCcDFF|wtCuGHHFLFFLOEGEGCMMADLQSBR|45C4tBdApBCBCSIaCcHCF|9yC4hBUCHVSPHALIHKJGBKAGKD|3rC9tBaDYELFRFbCTGEIYD|yxC9BGPPKPALANAEMaAWF|+rBhffBAMEIAEOFSDCDFH|+H4iBLPVMBIeGGJ|6sChFBLdDbCAIQEMFOASI|vwD2sBCCSAcFBDTDZBAO|2pChFIFMCEHVDNBLAIKKCGG|phC8tBRLdOGCaAQD|iqC6FZRKOOMMOKUEPNLJN|hwBmLFDLEJGCGIAEAOBKDEFNA|gGsaHPHEFOEGOIEP|lzBmnBXJNADGQIaAAD|prD8nBMDMCQFUBBBNDPEHERBDCCI|msCuHMFMAAHJJLFAKAKBK|2/C5CFFDMDIHGLKNGEEMFGDIDIJIFCJ|0VqWNJCBABTHJCDIIACACGQASG|wvD5KGFBLNBJCBKIGIBGE|zmB2eJAZGRKGCaFWHAD|lhD+LDDDEAEDICCCEAEACCBIBEBCBGHHFFB|6OqWKFQAQABDMCBFdBAEXEEI|uhDnEFBHIJMDQECCFGFILKFBF|5nBidQBSAJHHAXIFGIGGJ|urCrGHBZOSEKFIFBD|xkCkxBXDfAAEUGKBaD|/oBsLDDPALBAKCCQAKBED|+rCmIDRJKJQSBGF|vnDulBLBLCNGUEQBCH|twB8OFBDMHGEMGAIRAJ|z6BuwBJAlBCDEoBAODBB|vuC9tBgBHLCZCbEOGUF|hmBqGRBDCGGAIMCEAAP";
+
+/* Steder med målt springtidsspænd (meter, afrundet).
+   Tallene er observerede middelspringtidsspænd — ikke noget
+   modellen regner ud. Se forbeholdet nederst på siden. */
+const STEDER = [
+  {id:'fundy',   navn:'Fundybugten, Canada',    lat: 45.3, lon: -64.3, spaend:16.0, g:'stort'},
+  {id:'bristol', navn:'Bristol Channel, England',lat: 51.5, lon:  -3.0, spaend:12.5, g:'stort'},
+  {id:'msm',     navn:'Mont-Saint-Michel, Frankrig',lat:48.6,lon:-1.5, spaend:13.0, g:'stort'},
+  {id:'broome',  navn:'Broome, NV-Australien',  lat:-18.0, lon: 122.2, spaend: 9.5, g:'stort'},
+  {id:'esbjerg', navn:'Esbjerg, Vadehavet',     lat: 55.5, lon:   8.4, spaend: 1.5, g:'lidt'},
+  {id:'venedig', navn:'Venedig, Adriaterhavet', lat: 45.4, lon:  12.3, spaend: 1.0, g:'lidt'},
+  {id:'marseille',navn:'Marseille, Middelhavet',lat: 43.3, lon:   5.4, spaend: 0.30,g:'lidt'},
+  {id:'tahiti',  navn:'Tahiti, Stillehavet',    lat:-17.5, lon:-149.5, spaend: 0.35,g:'lidt'},
+  {id:'kbh',     navn:'København, Øresund',     lat: 55.7, lon:  12.7, spaend: 0.15,g:'lidt'},
+  {id:'stockholm',navn:'Stockholm, Østersøen',  lat: 59.3, lon:  18.6, spaend: 0.08,g:'lidt'}
+];
+
+/* Ankerpunkter til det skematiske farvekort over havet.
+   [lat, lon, springtidsspænd i meter] */
+const ANKRE = [
+  /* stort tidevand */
+  [45.3,-64.3,16],[59.5,-68.0,13],[51.4,-3.5,12],[48.7,-1.6,13],[50.3,-1.0,4.5],
+  [54.2,7.9,3.2],[53.5,5.0,2.2],[51.5,3.0,4.0],[57.0,-2.5,3.5],[53.5,-3.5,7.0],
+  [-18.0,122.2,9.5],[-15.5,124.5,9],[-20.5,118.0,6],[-12.5,136.5,3.5],
+  [39.0,124.5,7],[37.0,122.0,4.5],[31.5,121.8,4],[35.5,126.3,6],
+  [62.0,157.0,11],[59.0,154.0,6],[54.5,140.0,2.5],
+  [-51.6,-68.5,12],[-47.8,-65.8,7],[-42.5,-64.5,5],[-54.0,-66.0,6],
+  [60.5,-151.5,9],[58.0,-153.5,3.5],[55.0,-133.0,4],[49.0,-124.5,3.5],
+  [0.5,-49.5,6],[-2.5,-44.0,6.5],[5.5,-53.0,2.5],
+  [22.3,91.5,4.5],[21.0,88.5,4],[23.5,68.5,3.5],[20.5,72.0,4],
+  [45.0,-66.5,7],[43.5,-70.0,3],[40.5,-74.0,1.5],
+  [-4.0,39.5,3.2],[-15.5,40.5,3.5],[-6.0,12.5,1.6],
+  /* mellem/åbent hav */
+  [35.0,-40.0,0.9],[10.0,-30.0,0.9],[-25.0,-20.0,1.1],[-35.0,15.0,1.5],
+  [-30.0,80.0,1.3],[0.0,75.0,1.1],[-45.0,120.0,1.2],[-40.0,-120.0,1.0],
+  [0.0,-160.0,0.7],[20.0,-158.0,0.5],[30.0,170.0,0.8],[-20.0,175.0,1.0],
+  [60.0,-30.0,1.4],[70.0,10.0,1.6],[75.0,-140.0,0.4],[85.0,0.0,0.3],
+  [-65.0,-60.0,1.0],[-70.0,120.0,0.8],
+  /* lidt tidevand: indhave */
+  [36.5,14.0,0.28],[38.5,5.0,0.28],[34.5,25.0,0.22],[40.5,18.5,0.3],
+  [43.3,5.4,0.28],[36.0,-2.0,0.7],[45.4,12.3,0.95],[41.0,29.0,0.15],
+  [43.0,34.0,0.10],[45.5,37.5,0.10],[41.5,50.0,0.05],
+  [58.0,20.0,0.06],[60.5,19.0,0.05],[55.0,15.5,0.07],[65.0,23.0,0.06],
+  [56.0,11.0,0.25],[55.7,12.7,0.15],[57.5,10.8,0.30],
+  [18.0,-75.0,0.35],[25.0,-79.0,0.7],[13.0,-65.0,0.35],
+  [-17.5,-149.5,0.35],[-8.0,160.0,0.9],[26.0,-90.0,0.45],[28.5,-85.0,0.5],
+  [25.5,52.0,0.9],[15.0,42.0,0.6],[28.0,-112.0,1.5]
+];
+
+const FARVESKALA = [
+  [0.00,[ 12, 32, 58]],
+  [0.11,[ 22, 72,120]],
+  [0.22,[ 35,110,160]],
+  [0.33,[ 50,150,185]],
+  [0.41,[ 64,185,175]],
+  [0.53,[110,205,120]],
+  [0.69,[200,210, 60]],
+  [0.84,[255,170, 10]],
+  [1.00,[232, 51,109]]
+];
+const SPAEND_MAX = 16;
+/* Ikke-lineær skala, så de små forskelle nede omkring
+   Middelhavet og Østersøen stadig kan ses. */
+const skalaT = v => Math.pow(Math.min(Math.max(v,0),SPAEND_MAX)/SPAEND_MAX, 0.38);
+
+function farve(v){
+  const t = skalaT(v);
+  for(let i=1;i<FARVESKALA.length;i++){
+    if(t<=FARVESKALA[i][0]||i===FARVESKALA.length-1){
+      const [t0,c0]=FARVESKALA[i-1], [t1,c1]=FARVESKALA[i];
+      const f=(t-t0)/(t1-t0||1);
+      return [c0[0]+(c1[0]-c0[0])*f, c0[1]+(c1[1]-c0[1])*f, c0[2]+(c1[2]-c0[2])*f];
+    }
+  }
+  return FARVESKALA[FARVESKALA.length-1][1];
+}
+
+/* ═══════════════════════════════════════════════════════════
+   2. AFKODNING AF KYSTLINJER
+   ═══════════════════════════════════════════════════════════ */
+function afkodLand(str){
+  const CS="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+  const M={}; for(let i=0;i<64;i++) M[CS[i]]=i;
+  const ud=[];
+  for(const seg of str.split('|')){
+    const tal=[]; let z=0,sh=0;
+    for(const ch of seg){
+      const v=M[ch]; z |= (v&31)<<sh;
+      if(v&32){ sh+=5; } else { tal.push(z&1 ? -((z+1)/2) : z/2); z=0; sh=0; }
+    }
+    const pts=[]; let px=0,py=0;
+    for(let i=0;i<tal.length;i+=2){ px+=tal[i]; py+=tal[i+1]; pts.push(px/10,py/10); }
+    /* Rul længdegraden ud, så ringe hen over datolinjen ikke
+       bliver til en vandret streg tværs over kortet. */
+    for(let i=2;i<pts.length;i+=2){
+      while(pts[i]-pts[i-2] >  180) pts[i]-=360;
+      while(pts[i]-pts[i-2] < -180) pts[i]+=360;
+    }
+    ud.push(pts);
+  }
+  return ud;
+}
+const RINGE = afkodLand(LAND_PACKED);
+
+/* Antarktis lukkes ned mod polen, ellers står den som en åben strimmel. */
+for(const r of RINGE){
+  let minLat=90, minLon=1e9, maxLon=-1e9;
+  for(let i=0;i<r.length;i+=2){ if(r[i+1]<minLat)minLat=r[i+1];
+    if(r[i]<minLon)minLon=r[i]; if(r[i]>maxLon)maxLon=r[i]; }
+  if(minLat<-80 && (maxLon-minLon)>300){
+    r.push(r[r.length-2],-91, r[0],-91);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   3. TEKSTURER
+   ═══════════════════════════════════════════════════════════ */
+const TEX_W=2048, TEX_H=1024, FELT_W=360, FELT_H=180;
+
+function nyCanvas(w,h){ const c=document.createElement('canvas'); c.width=w; c.height=h; return c; }
+
+/* Landmaske i lav opløsning, så vi ved hvilke pixels der er hav. */
+function byggMaske(){
+  const c=nyCanvas(FELT_W,FELT_H), g=c.getContext('2d');
+  g.fillStyle='#000'; g.fillRect(0,0,FELT_W,FELT_H);
+  g.fillStyle='#fff';
+  tegnLand(g, FELT_W, FELT_H, false);
+  return g.getImageData(0,0,FELT_W,FELT_H).data;
+}
+
+function tegnLand(g,w,h,medStreg){
+  const sx = w/360, sy = h/180;
+  for(const off of [-360,0,360]){
+    for(const r of RINGE){
+      g.beginPath();
+      for(let i=0;i<r.length;i+=2){
+        const x=(r[i]+off+180)*sx, y=(90-r[i+1])*sy;
+        if(i===0) g.moveTo(x,y); else g.lineTo(x,y);
+      }
+      g.closePath();
+      g.fill();
+      if(medStreg) g.stroke();
+    }
+  }
+}
+
+/* Skematisk felt over tidevandets størrelse: gaussisk vægtet
+   middel af ankerpunkterne oven på en baggrundsværdi. */
+function byggFelt(){
+  const sigma=0.13, w0=0.30, v0=0.9;
+  const A = ANKRE.map(([la,lo,v])=>{
+    const p=la*Math.PI/180, l=lo*Math.PI/180;
+    return {x:Math.cos(p)*Math.cos(l), y:Math.cos(p)*Math.sin(l), z:Math.sin(p), v};
+  });
+  const felt=new Float32Array(FELT_W*FELT_H);
+  for(let j=0;j<FELT_H;j++){
+    const lat=(90-(j+0.5)*180/FELT_H)*Math.PI/180;
+    const cl=Math.cos(lat), sl=Math.sin(lat);
+    for(let i=0;i<FELT_W;i++){
+      const lon=(-180+(i+0.5)*360/FELT_W)*Math.PI/180;
+      const x=cl*Math.cos(lon), y=cl*Math.sin(lon), z=sl;
+      let sw=w0, sv=w0*v0;
+      for(const a of A){
+        let d=x*a.x+y*a.y+z*a.z; d=Math.acos(Math.min(1,Math.max(-1,d)));
+        if(d>0.55) continue;
+        const wgt=Math.exp(-(d*d)/(sigma*sigma));
+        sw+=wgt; sv+=wgt*a.v;
+      }
+      felt[j*FELT_W+i]=sv/sw;
+    }
+  }
+  return felt;
+}
+
+function byggTekstur(medFarver){
+  const maske=byggMaske(), felt=medFarver?byggFelt():null;
+  const lav=nyCanvas(FELT_W,FELT_H), lg=lav.getContext('2d');
+  const im=lg.createImageData(FELT_W,FELT_H), d=im.data;
+  for(let k=0;k<FELT_W*FELT_H;k++){
+    let r,gg,b;
+    if(medFarver){ [r,gg,b]=farve(felt[k]); }
+    else { r=23; gg=86; b=132; }
+    d[k*4]=r; d[k*4+1]=gg; d[k*4+2]=b; d[k*4+3]=255;
+  }
+  lg.putImageData(im,0,0);
+
+  const c=nyCanvas(TEX_W,TEX_H), g=c.getContext('2d');
+  g.imageSmoothingEnabled=true; g.imageSmoothingQuality='high';
+  g.drawImage(lav,0,0,TEX_W,TEX_H);
+
+  /* Bredde- og længdegrader, så man kan se kloden dreje. */
+  g.strokeStyle='rgba(255,255,255,0.16)'; g.lineWidth=2;
+  for(let la=-60;la<=60;la+=30){ const y=(90-la)/180*TEX_H;
+    g.beginPath(); g.moveTo(0,y); g.lineTo(TEX_W,y); g.stroke(); }
+  for(let lo=-180;lo<180;lo+=30){ const x=(lo+180)/360*TEX_W;
+    g.beginPath(); g.moveTo(x,0); g.lineTo(x,TEX_H); g.stroke(); }
+  g.strokeStyle='rgba(255,255,255,0.34)'; g.lineWidth=3;
+  g.beginPath(); g.moveTo(0,TEX_H/2); g.lineTo(TEX_W,TEX_H/2); g.stroke();
+
+  g.fillStyle='#F4EEDF'; g.strokeStyle='#17211F'; g.lineWidth=3; g.lineJoin='round';
+  tegnLand(g,TEX_W,TEX_H,true);
+
+  const t=new THREE.CanvasTexture(c);
+  t.colorSpace=THREE.SRGBColorSpace;
+  t.anisotropy=4;
+  return t;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   4. HIMMELMEKANIK
+   ═══════════════════════════════════════════════════════════ */
+const GRAD = Math.PI/180;
+const wE = 360/23.9345;        // jordens omdrejning, sideisk (°/time)
+const wM = 360/(27.32166*24);  // månens omløb (°/time)
+const wS = 360/(365.2422*24);  // jordens omløb om solen (°/time)
+const EPS = 23.44*GRAD;        // jordaksens hældning
+const INK = 5.14*GRAD;         // månebanens hældning
+const SPIN0 = 180*GRAD;        // t=0 er midnat ved 0-meridianen
+const K_SOL = 0.46;            // solens tidevandskraft i forhold til månens
+const MDOEGN = 360/(wE-wM);    // 24,84 timer
+
+/* Ekliptika ligger i XZ-planet, så +Y er "op" både for
+   banerne og for kameraet. Jordaksen hælder mod +X. */
+const AKSE = new THREE.Vector3(Math.sin(EPS),Math.cos(EPS),0).normalize();
+const Q_AKSE = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0), AKSE);
+
+const solRetning = (t,ud)=>{ const a=wS*t*GRAD;
+  return ud.set(Math.cos(a), 0, -Math.sin(a)); };
+const maaneRetning = (t,ud)=>{ const a=wM*t*GRAD;
+  return ud.set(Math.cos(a), Math.sin(a)*Math.sin(INK), -Math.sin(a)*Math.cos(INK)).normalize(); };
+const spin = t => SPIN0 + wE*t*GRAD;
+
+/* Punkt på jorden i kroppens eget system — samme konvention
+   som SphereGeometry's uv-afbildning, så mærket lander dér,
+   hvor teksturen viser stedet. */
+function kropPos(lat,lon,ud){
+  const p=lat*GRAD, phi=Math.PI+lon*GRAD;
+  return ud.set(-Math.cos(phi)*Math.cos(p), Math.sin(p), Math.sin(phi)*Math.cos(p));
+}
+
+/* Hjælpetræ med præcis samme rotationer som selve kloden,
+   så beregning og billede aldrig kan komme ud af trit. */
+const hPivot=new THREE.Object3D(), hMesh=new THREE.Object3D(), hPkt=new THREE.Object3D();
+hPivot.quaternion.copy(Q_AKSE); hPivot.add(hMesh); hMesh.add(hPkt);
+const _v=new THREE.Vector3();
+function retningAf(t,lat,lon,ud){
+  hMesh.rotation.y = spin(t);
+  kropPos(lat,lon,hPkt.position);
+  hPivot.updateMatrixWorld(true);
+  return ud.setFromMatrixPosition(hPkt.matrixWorld).normalize();
+}
+
+const P2 = x => (3*x*x-1)/2;
+
+/* Ligevægtstidevandet: summen af månens og solens bidrag. */
+const _m=new THREE.Vector3(), _s=new THREE.Vector3(), _d=new THREE.Vector3();
+function eta(t,lat,lon,medSol){
+  retningAf(t,lat,lon,_d);
+  maaneRetning(t,_m); solRetning(t,_s);
+  let e = P2(_d.dot(_m));
+  if(medSol) e += K_SOL*P2(_d.dot(_s));
+  return e;
+}
+
+/* Vandstanden på ét sted.
+
+   Den rene ligevægtsbule duer ikke til en vandstandskurve: står
+   månen skråt over ækvator, bliver tidevandet på vore bredder
+   næsten ÉT højvande i døgnet. Sådan opfører virkelige kyster
+   sig ikke — kontinentalsoklerne forstærker de halvdaglige
+   svingninger (M2, S2) langt kraftigere end de daglige (K1, O1),
+   og derfor er tidevandet i Nordsøen udpræget halvdagligt.
+
+   Vi deler derfor eta op: den daglige del skifter fortegn, når
+   man går en halv omgang rundt om jorden, den halvdaglige gør
+   ikke. Så kan den daglige del dæmpes med én faktor. Det, der
+   bliver tilbage af den, er døgnuligheden — de to højvande i
+   samme døgn er stadig ikke lige høje. */
+const D_DAEMP = 0.07;
+function etaSted(t,lat,lon,medSol){
+  const a=eta(t,lat,lon,medSol), b=eta(t,lat,lon+180,medSol);
+  return (a+b)/2 + D_DAEMP*(a-b)/2;
+}
+
+/* Referencespænd: hvor meget etaSted svinger over et månedøgn
+   ved springtid på den breddegrad. Bruges til at skalere op til
+   stedets faktisk målte spænd. */
+function refSpaend(lat,lon,medSol){
+  let lo=1e9,hi=-1e9;
+  for(let i=0;i<=240;i++){
+    const e=etaSted(i/240*MDOEGN,lat,lon,medSol);
+    if(e<lo)lo=e; if(e>hi)hi=e;
+  }
+  return Math.max(hi-lo,1e-4);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   5. TILSTAND
+   ═══════════════════════════════════════════════════════════ */
+const S = {
+  dag: 0, time: 0, overdriv: 55,
+  sted: STEDER.find(s=>s.id==='esbjerg'),
+  koerer: true, medSol: true, visBule: true, farver: true, projektor: false
+};
+const tid = () => S.dag*24 + S.time;
+
+/* ═══════════════════════════════════════════════════════════
+   6. SCENEN
+   ═══════════════════════════════════════════════════════════ */
+const lærred = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({canvas:lærred, antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio||1, 2));
+renderer.setClearColor(0x0B1220, 1);
+
+const scene = new THREE.Scene();
+const kamera = new THREE.PerspectiveCamera(38, 1.5, 0.1, 200);
+
+const texFarver = byggTekstur(true);
+const texSimpel = byggTekstur(false);
+
+const jordPivot = new THREE.Object3D();
+jordPivot.quaternion.copy(Q_AKSE);
+scene.add(jordPivot);
+
+const jord = new THREE.Mesh(
+  new THREE.SphereGeometry(1, 96, 64),
+  new THREE.MeshStandardMaterial({map:texFarver, roughness:1, metalness:0})
+);
+jordPivot.add(jord);
+
+/* Jordaksen, så omdrejningen kan ses. */
+const akseLinje = new THREE.Line(
+  new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,-1.35,0), new THREE.Vector3(0,1.35,0)]),
+  new THREE.LineBasicMaterial({color:0xFFF6E0, transparent:true, opacity:0.45})
+);
+jordPivot.add(akseLinje);
+
+/* Vandlaget. Tykkelsen er den overdrevne tidevandsbule. */
+const BULE_SEG = 128;
+const vandGeo = new THREE.SphereGeometry(1, BULE_SEG, BULE_SEG/2);
+const vandBasis = vandGeo.attributes.position.array.slice();
+const vand = new THREE.Mesh(vandGeo, new THREE.MeshStandardMaterial({
+  color:0x6FCDEE, transparent:true, opacity:0.40, roughness:0.2, metalness:0,
+  emissive:0x1B5E86, emissiveIntensity:0.32,
+  depthWrite:false, side:THREE.DoubleSide
+}));
+scene.add(vand);
+
+/* Stiplet cirkel i middelvandstand, vendt mod kameraet:
+   så kan man se, hvor meget bulen stikker udenfor. */
+const midtRing = new THREE.LineLoop(
+  new THREE.BufferGeometry().setFromPoints(
+    Array.from({length:129},(_,i)=>{ const a=i/128*Math.PI*2;
+      return new THREE.Vector3(Math.cos(a),Math.sin(a),0); })),
+  new THREE.LineDashedMaterial({color:0xFFF6E0, dashSize:0.07, gapSize:0.05, transparent:true, opacity:0.8})
+);
+midtRing.computeLineDistances();
+scene.add(midtRing);
+
+/* Aksen gennem de to buler — pointen med hele modellen. */
+const buleGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(),new THREE.Vector3()]);
+const buleLinje = new THREE.Line(buleGeo, new THREE.LineDashedMaterial({
+  color:0xFFB300, dashSize:0.09, gapSize:0.06, transparent:true, opacity:0.85
+}));
+scene.add(buleLinje);
+
+/* Månen */
+const MAANE_AFST = 2.35;
+const maane = new THREE.Mesh(
+  new THREE.SphereGeometry(0.27, 40, 26),
+  new THREE.MeshStandardMaterial({color:0xC9C4B4, roughness:1, metalness:0})
+);
+scene.add(maane);
+const maaneBane = new THREE.Line(
+  new THREE.BufferGeometry().setFromPoints(
+    Array.from({length:129},(_,i)=>{ const a=i/128*Math.PI*2;
+      return new THREE.Vector3(Math.cos(a),Math.sin(a)*Math.sin(INK),-Math.sin(a)*Math.cos(INK)).multiplyScalar(MAANE_AFST); })
+  ),
+  new THREE.LineBasicMaterial({color:0x8FA29E, transparent:true, opacity:0.35})
+);
+scene.add(maaneBane);
+
+/* Solen — langt væk, men på ingen måde i størrelsesforhold. */
+const SOL_AFST = 5.0;
+const sol = new THREE.Mesh(
+  new THREE.SphereGeometry(0.42, 32, 20),
+  new THREE.MeshBasicMaterial({color:0xFFD86B})
+);
+scene.add(sol);
+const solGlød = new THREE.Sprite(new THREE.SpriteMaterial({
+  map: (()=>{ const c=nyCanvas(128,128), g=c.getContext('2d');
+    const gr=g.createRadialGradient(64,64,4,64,64,64);
+    gr.addColorStop(0,'rgba(255,224,140,0.95)'); gr.addColorStop(0.35,'rgba(255,190,60,0.35)');
+    gr.addColorStop(1,'rgba(255,180,0,0)'); g.fillStyle=gr; g.fillRect(0,0,128,128);
+    const t=new THREE.CanvasTexture(c); t.colorSpace=THREE.SRGBColorSpace; return t; })(),
+  transparent:true, depthWrite:false
+}));
+solGlød.scale.set(2.8,2.8,1);
+scene.add(solGlød);
+
+const solLys = new THREE.DirectionalLight(0xFFF3DC, 2.6);
+scene.add(solLys);
+scene.add(new THREE.AmbientLight(0x35507A, 0.75));
+
+/* Stjerner */
+{
+  const n=520, pos=new Float32Array(n*3);
+  for(let i=0;i<n;i++){
+    const u=Math.random()*2-1, a=Math.random()*Math.PI*2, r=Math.sqrt(1-u*u)*46;
+    pos[i*3]=Math.cos(a)*r; pos[i*3+1]=Math.sin(a)*r; pos[i*3+2]=u*46;
+  }
+  const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  scene.add(new THREE.Points(g,new THREE.PointsMaterial({color:0xBFD3E8,size:0.22,sizeAttenuation:true,transparent:true,opacity:0.75})));
+}
+
+/* Stedmærket sidder fast på kloden og drejer med. */
+const mærke = new THREE.Group();
+const mærkeKugle = new THREE.Mesh(
+  new THREE.SphereGeometry(0.035,18,12),
+  new THREE.MeshBasicMaterial({color:0xE8336D})
+);
+mærkeKugle.position.y=0.13;
+const mærkeStang = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.008,0.008,0.13,8),
+  new THREE.MeshBasicMaterial({color:0xE8336D})
+);
+mærkeStang.position.y=0.065;
+mærke.add(mærkeKugle, mærkeStang);
+jord.add(mærke);
+
+const mærkeLabel = document.createElement('div');
+Object.assign(mærkeLabel.style,{
+  position:'absolute', pointerEvents:'none', zIndex:'3',
+  font:'700 0.72rem/1.1 Archivo, system-ui, sans-serif',
+  background:'#fff', border:'2px solid #17211F', borderRadius:'14px',
+  padding:'3px 9px', boxShadow:'2px 2px 0 #17211F', whiteSpace:'nowrap',
+  transform:'translate(-50%,-140%)', transition:'opacity .2s'
+});
+mærkeLabel.className = 'ovl ovl-sted';
+document.getElementById('view').appendChild(mærkeLabel);
+
+function placerMærke(){
+  const p = kropPos(S.sted.lat, S.sted.lon, new THREE.Vector3());
+  mærke.position.copy(p);
+  mærke.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), p.clone().normalize());
+  mærkeLabel.textContent = S.sted.navn.split(',')[0];
+}
+placerMærke();
+
+/* ── Kamera: egen lille orbit-styring ─────────────────── */
+const cam = {az: 0.34, el: 0.28, dist: 5.2};
+function opdaterKamera(){
+  cam.el = Math.max(-1.35, Math.min(1.35, cam.el));
+  cam.dist = Math.max(2.4, Math.min(9, cam.dist));
+  kamera.position.set(
+    cam.dist*Math.cos(cam.el)*Math.sin(cam.az),
+    cam.dist*Math.sin(cam.el),
+    cam.dist*Math.cos(cam.el)*Math.cos(cam.az)
+  );
+  kamera.lookAt(0,0,0);
+}
+opdaterKamera();
+
+(function styring(){
+  let trækker=false, sidst=null, pinch=null;
+  const hint=document.getElementById('hint');
+  const skjulHint=()=>hint&&hint.classList.add('gone');
+
+  lærred.addEventListener('pointerdown', e=>{
+    if(e.pointerType==='touch'&&e.isPrimary===false) return;
+    trækker=true; sidst={x:e.clientX,y:e.clientY};
+    lærred.setPointerCapture(e.pointerId); lærred.classList.add('dragging'); skjulHint();
+  });
+  lærred.addEventListener('pointermove', e=>{
+    if(!trækker||!sidst) return;
+    cam.az -= (e.clientX-sidst.x)*0.006;
+    cam.el += (e.clientY-sidst.y)*0.006;
+    sidst={x:e.clientX,y:e.clientY}; opdaterKamera();
+  });
+  const slip=e=>{ trækker=false; sidst=null; lærred.classList.remove('dragging');
+    try{lærred.releasePointerCapture(e.pointerId);}catch(_){} };
+  lærred.addEventListener('pointerup',slip);
+  lærred.addEventListener('pointercancel',slip);
+  lærred.addEventListener('wheel', e=>{ e.preventDefault(); skjulHint();
+    cam.dist *= (1 + Math.sign(e.deltaY)*0.09); opdaterKamera(); }, {passive:false});
+
+  lærred.addEventListener('touchstart', e=>{ if(e.touches.length===2){
+    pinch=Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY); }},{passive:true});
+  lærred.addEventListener('touchmove', e=>{ if(e.touches.length===2&&pinch){
+    const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
+    cam.dist *= pinch/d; pinch=d; opdaterKamera(); e.preventDefault(); }},{passive:false});
+  lærred.addEventListener('touchend', ()=>{ pinch=null; });
+
+  lærred.addEventListener('keydown', e=>{
+    const k=e.key; let brugt=true;
+    if(k==='ArrowLeft') cam.az+=0.09;
+    else if(k==='ArrowRight') cam.az-=0.09;
+    else if(k==='ArrowUp') cam.el+=0.07;
+    else if(k==='ArrowDown') cam.el-=0.07;
+    else if(k==='+'||k==='=') cam.dist*=0.9;
+    else if(k==='-') cam.dist*=1.1;
+    else brugt=false;
+    if(brugt){ e.preventDefault(); skjulHint(); opdaterKamera(); }
+  });
+})();
+
+function tilpasStørrelse(){
+  const boks = document.getElementById('view');
+  const b = boks.clientWidth - 20;
+  if(b<=0) return;
+  /* På smalle skærme er der ikke plads i bredden, så figuren
+     får lov at blive højere — ellers bliver kloden for lille. */
+  const forhold = b<560 ? 0.92 : 0.62;
+  const h = Math.round(Math.min(Math.max(b*forhold, 240), 620));
+  renderer.setSize(b, h, true);
+  kamera.aspect = b/h; kamera.updateProjectionMatrix();
+}
+new ResizeObserver(tilpasStørrelse).observe(document.getElementById('view'));
+tilpasStørrelse();
+
+
+/* ═══════════════════════════════════════════════════════════
+   7. AFLÆSNINGER
+   ═══════════════════════════════════════════════════════════ */
+const el = id => document.getElementById(id);
+const N_KURVE = 200, FOR_UD = 14.5;   // timer frem i kurvevinduet
+
+let refCache = {};
+function faktor(sted){
+  if(refCache[sted.id]===undefined)
+    refCache[sted.id] = sted.spaend / refSpaend(sted.lat, sted.lon, true);
+  return refCache[sted.id];
+}
+
+const kurveData = {t:new Float64Array(N_KURVE), v:new Float64Array(N_KURVE), nu:0, spaend:0, naeste:0};
+
+function beregnKurve(t){
+  const st=S.sted, f=faktor(st);
+  const t0=t-MDOEGN/2, t1=t+FOR_UD, dt=(t1-t0)/(N_KURVE-1);
+  let sum=0;
+  for(let i=0;i<N_KURVE;i++){
+    const ti=t0+i*dt;
+    kurveData.t[i]=ti;
+    kurveData.v[i]=etaSted(ti,st.lat,st.lon,S.medSol);
+    sum+=kurveData.v[i];
+  }
+  const middel=sum/N_KURVE;
+  for(let i=0;i<N_KURVE;i++) kurveData.v[i]=(kurveData.v[i]-middel)*f;
+
+  /* spænd over ét månedøgn omkring nu */
+  let lo=1e9,hi=-1e9;
+  for(let i=0;i<N_KURVE;i++){
+    if(kurveData.t[i]<t-MDOEGN/2-0.01||kurveData.t[i]>t+MDOEGN/2) continue;
+    if(kurveData.v[i]<lo)lo=kurveData.v[i];
+    if(kurveData.v[i]>hi)hi=kurveData.v[i];
+  }
+  kurveData.spaend=hi-lo;
+
+  /* vandstand netop nu */
+  const inu=(t-t0)/dt;
+  const i0=Math.max(0,Math.min(N_KURVE-2,Math.floor(inu))), fr=inu-i0;
+  kurveData.nu=kurveData.v[i0]*(1-fr)+kurveData.v[i0+1]*fr;
+
+  /* næste højvande: første toppunkt efter nu, forfinet parabolsk */
+  kurveData.naeste=NaN;
+  for(let i=Math.max(1,Math.ceil(inu));i<N_KURVE-1;i++){
+    const a=kurveData.v[i-1], b=kurveData.v[i], c=kurveData.v[i+1];
+    if(b>=a && b>c){
+      const n=(a-c)/(2*(a-2*b+c))||0;
+      kurveData.naeste=(kurveData.t[i]+n*dt)-t;
+      if(kurveData.naeste>0.001) break;
+      kurveData.naeste=NaN;
+    }
+  }
+}
+
+/* ── Kurven ────────────────────────────────────────────── */
+const kl = el('kurve'), kg = kl.getContext('2d');
+function tegnKurve(t){
+  const dpr=Math.min(devicePixelRatio||1,2);
+  const bw=kl.clientWidth||280, bh=Math.round(bw*0.72);
+  if(kl.width!==Math.round(bw*dpr)||kl.height!==Math.round(bh*dpr)){
+    kl.width=Math.round(bw*dpr); kl.height=Math.round(bh*dpr);
+    kl.style.height=bh+'px';
+  }
+  kg.setTransform(dpr,0,0,dpr,0,0);
+  kg.clearRect(0,0,bw,bh);
+
+  const L=34, R=6, T=8, B=20, w=bw-L-R, h=bh-T-B;
+  const amp=Math.max(kurveData.spaend/2*1.18, 0.05);
+  const t0=kurveData.t[0], t1=kurveData.t[N_KURVE-1];
+  const X=v=>L+(v-t0)/(t1-t0)*w;
+  const Y=v=>T+h/2-(v/amp)*(h/2);
+
+  kg.fillStyle='#F3FAFE'; kg.fillRect(L,T,w,h);
+
+  /* lodret gitter hver 6. time, regnet fra midnat */
+  kg.strokeStyle='rgba(23,33,31,0.12)'; kg.lineWidth=1;
+  kg.font='600 8px IBM Plex Mono, monospace'; kg.fillStyle='#7E8F8C'; kg.textAlign='center';
+  const t6=Math.ceil(t0/6)*6;
+  for(let tt=t6; tt<=t1; tt+=6){
+    const x=X(tt);
+    kg.beginPath(); kg.moveTo(x,T); kg.lineTo(x,T+h); kg.stroke();
+    kg.fillText(((Math.round(tt)%24)+24)%24+':00', x, bh-7);
+  }
+
+  /* nul-linje = middelvandstand */
+  kg.strokeStyle='rgba(23,33,31,0.45)'; kg.setLineDash([3,3]); kg.lineWidth=1.5;
+  kg.beginPath(); kg.moveTo(L,Y(0)); kg.lineTo(L+w,Y(0)); kg.stroke(); kg.setLineDash([]);
+
+  /* y-akse */
+  kg.textAlign='right'; kg.fillStyle='#7E8F8C';
+  const yv=kurveData.spaend/2;
+  kg.fillText('+'+yv.toFixed(yv<1?2:1), L-4, Y(yv)+3);
+  kg.fillText('0', L-4, Y(0)+3);
+  kg.fillText('−'+yv.toFixed(yv<1?2:1), L-4, Y(-yv)+3);
+  kg.save(); kg.translate(9,T+h/2); kg.rotate(-Math.PI/2);
+  kg.textAlign='center'; kg.fillText('METER', 0, 0); kg.restore();
+
+  /* selve kurven */
+  kg.beginPath();
+  for(let i=0;i<N_KURVE;i++){
+    const x=X(kurveData.t[i]), y=Y(kurveData.v[i]);
+    if(i===0) kg.moveTo(x,y); else kg.lineTo(x,y);
+  }
+  kg.lineTo(X(t1),Y(0)); kg.lineTo(X(t0),Y(0)); kg.closePath();
+  kg.fillStyle='rgba(14,134,200,0.22)'; kg.fill();
+
+  kg.beginPath();
+  for(let i=0;i<N_KURVE;i++){
+    const x=X(kurveData.t[i]), y=Y(kurveData.v[i]);
+    if(i===0) kg.moveTo(x,y); else kg.lineTo(x,y);
+  }
+  kg.strokeStyle='#0E86C8'; kg.lineWidth=2.4; kg.lineJoin='round'; kg.stroke();
+
+  /* nu */
+  const xn=X(t), yn=Y(kurveData.nu);
+  kg.strokeStyle='#FF6A3D'; kg.lineWidth=2;
+  kg.beginPath(); kg.moveTo(xn,T); kg.lineTo(xn,T+h); kg.stroke();
+  kg.beginPath(); kg.arc(xn,yn,4.5,0,Math.PI*2);
+  kg.fillStyle='#FF6A3D'; kg.fill();
+  kg.strokeStyle='#17211F'; kg.lineWidth=1.8; kg.stroke();
+
+  kg.strokeStyle='#17211F'; kg.lineWidth=2; kg.strokeRect(L,T,w,h);
+}
+
+/* ── Måneskiven ────────────────────────────────────────── */
+const fl = el('fase'), fg = fl.getContext('2d');
+function tegnFase(belyst, voksende){
+  const s=88, r=38, c=s/2;
+  fg.clearRect(0,0,s,s);
+  fg.fillStyle='#2A3330'; fg.beginPath(); fg.arc(c,c,r,0,Math.PI*2); fg.fill();
+  fg.fillStyle='#FFF3DC';
+  const k=Math.max(0,Math.min(1,belyst));
+  const ex=r*Math.abs(1-2*k);
+  fg.beginPath();
+  if(voksende) fg.arc(c,c,r,-Math.PI/2,Math.PI/2,false);
+  else         fg.arc(c,c,r, Math.PI/2,-Math.PI/2,false);
+  fg.ellipse(c,c,ex,r,0,Math.PI/2,-Math.PI/2, k>0.5 ? !voksende : voksende);
+  fg.closePath(); fg.fill();
+}
+
+/* ── Legenden ──────────────────────────────────────────── */
+(function legende(){
+  const bar=el('lg-bar'); bar.innerHTML='';
+  const stops=[];
+  for(let i=0;i<=40;i++){
+    const t=i/40, v=Math.pow(t,1/0.38)*SPAEND_MAX, c=farve(v);
+    stops.push(`rgb(${c[0]|0},${c[1]|0},${c[2]|0}) ${(t*100).toFixed(1)}%`);
+  }
+  bar.style.background=`linear-gradient(90deg,${stops.join(',')})`;
+  const tick=bar.parentElement.querySelector('.lg-tick');
+  tick.style.position='relative'; tick.style.height='12px'; tick.innerHTML='';
+  for(const v of [0,1,3,8,16]){
+    const s=document.createElement('span');
+    s.innerHTML = v===0 ? '0' : (v===16 ? '16&nbsp;<span class="enhed">m</span>' : String(v));
+    s.style.position='absolute';
+    s.style.left=(skalaT(v)*100).toFixed(1)+'%';
+    s.style.transform = v===0?'translateX(0)' : (v===16?'translateX(-100%)':'translateX(-50%)');
+    tick.appendChild(s);
+  }
+})();
+
+/* ── Stedvælger ────────────────────────────────────────── */
+(function steder(){
+  for(const g of ['stort','lidt']){
+    const boks=document.querySelector(`.pl-group[data-g="${g}"]`);
+    for(const s of STEDER.filter(x=>x.g===g)){
+      const b=document.createElement('button');
+      b.type='button'; b.className='pill'; b.dataset.sted=s.id;
+      b.setAttribute('aria-pressed', String(s.id===S.sted.id));
+      const c=farve(s.spaend);
+      b.style.setProperty('--pc',`rgb(${c[0]|0},${c[1]|0},${c[2]|0})`);
+      b.textContent = s.navn.split(',')[0];
+      const t=document.createElement('span'); t.className='mono';
+      t.style.cssText='font-size:0.55rem;opacity:.75;margin-left:2px';
+      t.textContent = (s.spaend<1?s.spaend.toFixed(2):s.spaend.toFixed(1)).replace('.',',')+' m';
+      b.appendChild(t);
+      b.addEventListener('click',()=>vaelgSted(s.id));
+      boks.appendChild(b);
+    }
+  }
+})();
+
+function vaelgSted(id){
+  const s=STEDER.find(x=>x.id===id); if(!s) return;
+  S.sted=s;
+  document.querySelectorAll('.pill[data-sted]').forEach(b=>
+    b.setAttribute('aria-pressed', String(b.dataset.sted===id)));
+  el('sted-navn').textContent=s.navn;
+  placerMærke();
+  gemTilstand();
+}
+
+/* ── Knapper og skydere ────────────────────────────────── */
+function trykknap(id, start, fn){
+  const b=el(id);
+  b.setAttribute('aria-pressed', String(start));
+  b.addEventListener('click', ()=>{
+    const ny = b.getAttribute('aria-pressed')!=='true';
+    b.setAttribute('aria-pressed', String(ny));
+    fn(ny);
+  });
+  return b;
+}
+trykknap('btn-play', S.koerer, v=>{ S.koerer=v; el('btn-play').textContent = v?'Pause':'Afspil'; });
+el('btn-play').textContent = S.koerer?'Pause':'Afspil';
+trykknap('btn-bule', S.visBule, v=>{ S.visBule=v; vand.visible=v; buleLinje.visible=v; });
+trykknap('btn-sol', S.medSol, v=>{ S.medSol=v; });
+trykknap('btn-farver', S.farver, v=>{ S.farver=v; jord.material.map = v?texFarver:texSimpel; jord.material.needsUpdate=true; });
+trykknap('btn-projektor', S.projektor, v=>{ S.projektor=v;
+  document.body.dataset.projektor = v?'1':'0';
+  requestAnimationFrame(tilpasStørrelse); });
+
+const inpDag=el('inp-dag'), inpTime=el('inp-time'), inpOver=el('inp-overdriv');
+inpDag.addEventListener('input', ()=>{ S.dag=+inpDag.value; gemTilstand(); });
+inpTime.addEventListener('input', ()=>{ S.time=+inpTime.value; gemTilstand(); });
+inpOver.addEventListener('input', ()=>{ S.overdriv=+inpOver.value; });
+
+/* ── Tilstand i adressen ───────────────────────────────── */
+let gemTimer=null;
+function gemTilstand(){
+  clearTimeout(gemTimer);
+  gemTimer=setTimeout(()=>{
+    const h=`sted=${S.sted.id}&dag=${S.dag.toFixed(0)}&time=${S.time.toFixed(1)}`;
+    history.replaceState(null,'','#'+h);
+  },250);
+}
+(function laesTilstand(){
+  const q=new URLSearchParams(location.search);
+  const h=new URLSearchParams(location.hash.replace(/^#/,''));
+  const hent=k=>h.get(k) ?? q.get(k);
+  if(hent('sted')) vaelgSted(hent('sted'));
+  if(hent('dag')!=null){ S.dag=Math.max(0,Math.min(29,+hent('dag')||0)); inpDag.value=S.dag; }
+  if(hent('time')!=null){ S.time=Math.max(0,Math.min(24,+hent('time')||0)); inpTime.value=S.time; }
+  if(q.get('projektor')==='1'||q.get('mode')==='teach'){ el('btn-projektor').click(); }
+})();
+
+/* ── Mærkater på figuren ───────────────────────────────── */
+function nyMærkat(tekst, bg, fg, klasse){
+  const d=document.createElement('div');
+  d.className = 'ovl '+(klasse||'');
+  Object.assign(d.style,{
+    position:'absolute', pointerEvents:'none', zIndex:'3',
+    font:'700 0.66rem/1.1 Archivo, system-ui, sans-serif',
+    background:bg, color:fg, border:'2px solid #17211F', borderRadius:'13px',
+    padding:'2px 8px', whiteSpace:'nowrap', transform:'translate(-50%,-50%)',
+    letterSpacing:'0.01em'
+  });
+  d.textContent=tekst;
+  document.getElementById('view').appendChild(d);
+  return d;
+}
+const mSol = nyMærkat('Solen', '#FFD86B', '#17211F', 'ovl-sol');
+const mMaane = nyMærkat('Månen', '#E4E0D4', '#17211F', 'ovl-maane');
+/* De to buler får hver sit mærkat — det er hele pointen. */
+const mBule1 = nyMærkat('Højvande', '#FFB300', '#17211F', 'ovl-bule');
+const mBule2 = nyMærkat('Højvande', '#FFB300', '#17211F', 'ovl-bule');
+const bulePkt1 = new THREE.Object3D(), bulePkt2 = new THREE.Object3D();
+scene.add(bulePkt1, bulePkt2);
+
+const _c1=new THREE.Vector3(), _c2=new THREE.Vector3();
+function bagJorden(P){
+  _c1.copy(P).sub(kamera.position);            // kamera → punkt
+  const l2=_c1.lengthSq();
+  let sK = l2>0 ? -kamera.position.dot(_c1)/l2 : 0;
+  sK = Math.max(0, Math.min(1, sK));
+  _c2.copy(kamera.position).addScaledVector(_c1, sK);
+  return _c2.length() < 1.0;
+}
+
+function placerMærkat(d, obj, kant, navn, klemY){
+  const v = obj.getWorldPosition(new THREE.Vector3()).project(kamera);
+  const w = lærred.clientWidth, h = lærred.clientHeight;
+  let x = (v.x*0.5+0.5)*w, y = (-v.y*0.5+0.5)*h;
+  if(v.z>1){ x = w-x; y = h-y; }          // bag kameraet
+  const kx = Math.max(kant, Math.min(w-kant, x));
+  let ky = Math.max(kant, Math.min(h-kant, y));
+  if(kx!==x) ky = h*klemY;
+  /* Ligger legemet uden for billedet, peger mærkatet derhen. */
+  const tekst = kx<x ? navn+' →' : (kx>x ? '← '+navn : navn);
+  if(d.textContent!==tekst) d.textContent=tekst;
+  d.style.left = (lærred.offsetLeft + kx)+'px';
+  d.style.top  = (lærred.offsetTop  + ky)+'px';
+}
+
+/* ═══════════════════════════════════════════════════════════
+   8. LØKKEN
+   ═══════════════════════════════════════════════════════════ */
+const mDir=new THREE.Vector3(), sDir=new THREE.Vector3(), tmp=new THREE.Vector3();
+const vandPos=vandGeo.attributes.position;
+const badge=el('badge'), badgeTxt=el('badge-txt'), live=el('live');
+let sidstTid=performance.now(), sidstLive=0;
+
+function faseNavn(el_){ // el_ = elongation i grader, 0 = nymåne
+  const d=Math.min(el_, 360-el_);
+  if(d<30||d>150) return 'Springflod';
+  if(d>60&&d<120) return 'Nipflod';
+  return 'Mellem';
+}
+
+function opdater(dt){
+  if(S.koerer){
+    let t=tid()+dt*1.25;
+    const maks=30*24;
+    if(t>=maks) t-=maks;
+    S.dag=Math.floor(t/24); S.time=t-S.dag*24;
+    inpDag.value=S.dag; inpTime.value=S.time.toFixed(2);
+  }
+  const t=tid();
+
+  el('v-dag').textContent = 'Dag '+S.dag;
+  el('v-time').textContent = String(Math.floor(S.time)).padStart(2,'0')+':'
+                           + String(Math.floor((S.time%1)*60)).padStart(2,'0');
+
+  /* himmellegemer */
+  maaneRetning(t,mDir); solRetning(t,sDir);
+  maane.position.copy(mDir).multiplyScalar(MAANE_AFST);
+  sol.position.copy(sDir).multiplyScalar(SOL_AFST);
+  solGlød.position.copy(sol.position);
+  solLys.position.copy(sDir).multiplyScalar(30);
+
+  jord.rotation.y = spin(t);
+
+  /* vandlaget: tykkelsen følger ligevægtstidevandet */
+  const over = 0.012 + (S.overdriv/100)*0.20;
+  const kS = S.medSol ? K_SOL : 0;
+  for(let i=0;i<vandPos.count;i++){
+    const bx=vandBasis[i*3], by=vandBasis[i*3+1], bz=vandBasis[i*3+2];
+    const e = (P2(bx*mDir.x+by*mDir.y+bz*mDir.z) + kS*P2(bx*sDir.x+by*sDir.y+bz*sDir.z))/(1+K_SOL);
+    const r = 1.014 + over*(e+0.5)/1.5;
+    vandPos.setXYZ(i, bx*r, by*r, bz*r);
+  }
+  vandPos.needsUpdate=true;
+  vandGeo.computeVertexNormals();
+
+  /* stiplet cirkel i middelvandstand, altid vendt mod kameraet */
+  const rMidt = 1.014 + over*0.5/1.5;
+  midtRing.scale.setScalar(rMidt);
+  midtRing.quaternion.copy(kamera.quaternion);
+  midtRing.visible = S.visBule;
+
+  /* aksen gennem de to buler */
+  const p=buleGeo.attributes.position;
+  const L=1.02+over+0.16;
+  p.setXYZ(0, -mDir.x*L, -mDir.y*L, -mDir.z*L);
+  p.setXYZ(1,  mDir.x*L,  mDir.y*L,  mDir.z*L);
+  p.needsUpdate=true; buleGeo.computeBoundingSphere(); buleLinje.computeLineDistances();
+
+  /* aflæsninger */
+  beregnKurve(t);
+  const nu=kurveData.nu, sp=kurveData.spaend;
+  const dec = v => (Math.abs(v)<1 ? v.toFixed(2) : v.toFixed(1)).replace('.',',');
+  el('val-niv').innerHTML = (nu>=0?'+':'−')+dec(Math.abs(nu))+'<small>m</small>';
+  el('anim-niv').style.height = (50 + (sp>0 ? nu/sp*100 : 0)).toFixed(1)+'%';
+  el('val-spaend').innerHTML = dec(sp)+'<small>m</small>';
+  el('anim-spaend').style.width = (skalaT(sp)*100).toFixed(1)+'%';
+
+  const elong = ((wM-wS)*t % 360 + 360) % 360;
+  const belyst = (1-Math.cos(elong*Math.PI/180))/2;
+  const navn = S.medSol ? faseNavn(elong) : 'Kun månen';
+  el('val-fase').textContent = navn;
+  tegnFase(belyst, elong<180);
+
+  if(isFinite(kurveData.naeste)){
+    const h=Math.floor(kurveData.naeste), m=Math.round((kurveData.naeste-h)*60);
+    el('val-naeste').innerHTML = h+':'+String(m).padStart(2,'0')+'<small>t:min</small>';
+    el('clock-hand').setAttribute('transform',
+      `rotate(${(kurveData.naeste/12.42*360).toFixed(1)} 22 22)`);
+  }
+
+  tegnKurve(t);
+
+  /* forklaringen på figuren */
+  let tekst, pc;
+  if(!S.medSol){ tekst='Kun månens træk — spring- og nipflod er slået fra'; pc='var(--slate)'; }
+  else if(navn==='Springflod'){ tekst='Springflod — sol og måne trækker samme vej'; pc='var(--pink)'; }
+  else if(navn==='Nipflod'){ tekst='Nipflod — solen trækker på tværs af månen'; pc='var(--teal)'; }
+  else { tekst='På vej mellem spring- og nipflod'; pc='var(--amber)'; }
+  if(badgeTxt.textContent!==tekst){ badgeTxt.textContent=tekst; badge.style.setProperty('--pc',pc); }
+
+  placerMærkat(mSol, sol, 38, 'Solen', 0.80);
+  placerMærkat(mMaane, maane, 38, 'Månen', 0.20);
+  mMaane.style.opacity = bagJorden(maane.position) ? '0.42' : '1';
+
+  const rBule = 1.014 + over;
+  bulePkt1.position.copy(mDir).multiplyScalar(rBule);
+  bulePkt2.position.copy(mDir).multiplyScalar(-rBule);
+  bulePkt1.updateMatrixWorld(); bulePkt2.updateMatrixWorld();
+  for(const [d,pkt] of [[mBule1,bulePkt1],[mBule2,bulePkt2]]){
+    if(!S.visBule){ d.style.opacity='0'; continue; }
+    const v = pkt.position.clone().project(kamera);
+    /* Bulen på bagsiden vises svagt — den er der jo stadig. */
+    d.style.opacity = (v.z>1) ? '0' : (bagJorden(pkt.position) ? '0.42' : '1');
+    d.style.left = (lærred.offsetLeft + (v.x*0.5+0.5)*lærred.clientWidth)+'px';
+    d.style.top  = (lærred.offsetTop  + (-v.y*0.5+0.5)*lærred.clientHeight)+'px';
+  }
+
+  /* mærkat på kloden */
+  mærkeKugle.getWorldPosition(tmp);
+  const bag = tmp.clone().normalize().dot(kamera.position.clone().sub(tmp).normalize()) < 0;
+  if(bag){ mærkeLabel.style.opacity='0'; }
+  else {
+    const pr=tmp.clone().project(kamera);
+    mærkeLabel.style.opacity='1';
+    mærkeLabel.style.left = (lærred.offsetLeft + (pr.x*0.5+0.5)*lærred.clientWidth)+'px';
+    mærkeLabel.style.top  = (lærred.offsetTop  + (-pr.y*0.5+0.5)*lærred.clientHeight)+'px';
+  }
+
+  /* skærmlæsere: rolig opdatering */
+  if(t-sidstLive>0.5||sidstLive===0){
+    sidstLive=t;
+    live.textContent = `${S.sted.navn}: vandstand ${dec(nu)} meter over middel. `
+      + `Tidevandsspænd i dag ${dec(sp)} meter. ${navn}. `
+      + (isFinite(kurveData.naeste)?`Næste højvande om ${kurveData.naeste.toFixed(1)} timer.`:'');
+    el('kurve-sr').textContent = `Kurve over vandstanden ved ${S.sted.navn} gennem et månedøgn. `
+      + `Der er to højvande og to lavvande, med ca. 12 timer og 25 minutter mellem højvandene.`;
+  }
+}
+
+function løkke(nu){
+  const dt=Math.min((nu-sidstTid)/1000, 0.1);
+  sidstTid=nu;
+  opdater(dt);
+  renderer.render(scene, kamera);
+  requestAnimationFrame(løkke);
+}
+requestAnimationFrame(løkke);
+
+/* Iframe-krom: figuren skal kunne lægges ind på en anden side. */
+if(window.top!==window.self){
+  for(const s of ['site-top']) { const n=el(s); if(n) n.style.display='none'; }
+  document.querySelectorAll('.foot,.head,.dig').forEach(n=>n.style.display='none');
+  requestAnimationFrame(tilpasStørrelse);
+}
+</script>
+
+</body>
+</html>
