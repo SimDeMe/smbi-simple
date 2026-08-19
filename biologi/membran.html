@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cellemembranen i 3D — smbi.dk</title>
-<meta name="description" content="Drej cellemembranen rundt og se fosfolipidernes hoveder og haler, kolesterolet mellem dem, proteinerne der ligger og flyder i lipidlaget, og sukkerkæderne på ydersiden.">
+<meta name="description" content="Drej cellemembranen rundt, se fosfolipidernes hoveder og haler, proteinerne der flyder i lipidlaget — og skru på iltkoncentrationen på hver side, så diffusionen gennem membranen kan følges molekyle for molekyle.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,300..600&display=swap" rel="stylesheet">
@@ -129,23 +129,6 @@ h1{
 .btn-mini:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--ink)}
 .btn-mini[aria-pressed="true"]{background:var(--accent);color:#fff;transform:translate(2px,2px);box-shadow:0 0 0 var(--ink)}
 
-/* ── Transportvælger ───────────────────────────────────── */
-.veje{
-  background:#fff;padding:11px 15px;
-  display:flex;gap:10px;flex-wrap:wrap;align-items:center;
-}
-.veje > .mono{color:#5A6C69;font-size:0.57rem;flex:1 1 100%;margin-bottom:1px}
-.pill{
-  font-family:var(--display);font-size:0.76rem;font-weight:700;
-  background:var(--paper);border:2px solid var(--ink);color:var(--ink);
-  padding:4px 12px;border-radius:20px;cursor:pointer;box-shadow:2px 2px 0 var(--ink);
-  transition:transform .12s,box-shadow .12s,background .16s,color .16s;
-  display:inline-flex;align-items:center;gap:7px;
-}
-.pill::before{content:'';width:9px;height:9px;border-radius:3px;background:var(--pc,var(--slate));border:1.5px solid var(--ink);flex:none}
-.pill:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--ink)}
-.pill[aria-pressed="true"]{background:var(--ink);color:#FFF6E0;transform:translate(2px,2px);box-shadow:0 0 0 var(--ink)}
-
 /* ── Scenen: figur til venstre, forklaring til højre ───── */
 .stage{
   position:relative;display:grid;grid-template-columns:1fr 302px;
@@ -197,20 +180,62 @@ h1{
   letter-spacing:0.1em;text-transform:uppercase;line-height:1.5;
 }
 
-/* ── Instrumenter ──────────────────────────────────────── */
-.gauges{display:grid;grid-template-columns:repeat(4,1fr);border-top:2px solid var(--ink)}
+/* ── Instrumenter ──────────────────────────────────────── *
+ * Rækken bygges af side.js ud fra det, mekanismerne aflæser,
+ * så en ny transportvej også får sine tal med. Farverne følger
+ * derfor pladsen i rækken, ikke et fast id.                   */
+.gauges{display:grid;grid-template-columns:repeat(3,1fr);border-top:2px solid var(--ink);min-height:76px}
 .gauge{padding:12px 15px 13px;border-left:2px solid var(--ink);display:flex;flex-direction:column;gap:7px}
 .gauge:first-child{border-left:none}
-.g-type{background:#FDEAF1}
-.g-energi{background:#FFF1EC}
-.g-protein{background:#F1ECFC}
-.g-stoffer{background:#EDF8E4}
+.gauge:nth-child(4n+1){background:#FFF1EC}
+.gauge:nth-child(4n+2){background:#F1ECFC}
+.gauge:nth-child(4n+3){background:#EDF8E4}
+.gauge:nth-child(4n+4){background:#E7F4FB}
 .gauge dt{font-family:var(--mono);font-size:0.57rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#5A6C69}
 .gauge dd{
   font-family:var(--display);font-variation-settings:'wdth' 108;font-weight:800;
   font-size:1.06rem;line-height:1.2;
 }
-.g-stoffer dd{font-size:0.95rem;font-family:var(--mono);font-weight:600;letter-spacing:0.02em}
+.gauge dd .enhed{
+  font-family:var(--mono);font-size:0.62rem;font-weight:600;
+  letter-spacing:0.04em;color:#5A6C69;
+}
+
+/* ── Skydere ───────────────────────────────────────────── */
+.knobs{
+  border-top:2px solid var(--ink);background:var(--paper-2);
+  padding:16px 15px 18px;display:grid;grid-template-columns:1fr 1fr;gap:16px 26px;
+}
+.knob{display:flex;flex-direction:column;gap:7px}
+.knob-top{display:flex;align-items:baseline;gap:10px}
+.knob-top .mono{color:#5A6C69;font-size:0.62rem}
+.knob-val{
+  margin-left:auto;font-family:var(--display);font-variation-settings:'wdth' 108;
+  font-weight:800;font-size:1rem;font-variant-numeric:tabular-nums;
+  background:#fff;border:2px solid var(--ink);border-radius:16px;padding:1px 11px;
+  white-space:nowrap;
+}
+.knob-val .enhed{font-family:var(--mono);font-size:0.62rem;font-weight:600;color:#5A6C69}
+input[type=range]{
+  -webkit-appearance:none;appearance:none;width:100%;height:22px;background:transparent;cursor:pointer;
+}
+input[type=range]::-webkit-slider-runnable-track{
+  height:10px;border:2px solid var(--ink);border-radius:9px;background:var(--track,#fff);
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;
+  width:22px;height:22px;margin-top:-8px;border-radius:50%;
+  border:2.5px solid var(--ink);background:var(--kc,var(--amber));box-shadow:2px 2px 0 var(--ink);
+}
+input[type=range]::-moz-range-track{
+  height:10px;border:2px solid var(--ink);border-radius:9px;background:var(--track,#fff);
+}
+input[type=range]::-moz-range-thumb{
+  width:20px;height:20px;border-radius:50%;
+  border:2.5px solid var(--ink);background:var(--kc,var(--amber));box-shadow:2px 2px 0 var(--ink);
+}
+#inp-ude{--track:linear-gradient(90deg,#EAF6FC,#9BE0F5,#0E86C8);--kc:var(--blue)}
+#inp-inde{--track:linear-gradient(90deg,#F3EEFD,#C9A9F0,#7A4FD6);--kc:var(--grape)}
 
 /* ── Signaturforklaring, der også er en vælger ─────────── */
 .facts{border-top:2px solid var(--ink);background:#fff;padding:12px 15px;display:flex;gap:9px;flex-wrap:wrap;align-items:center}
@@ -247,7 +272,8 @@ body[data-projektor="1"] .wrap{max-width:none;padding:0 14px}
 body[data-projektor="1"] .rig{margin-top:14px;box-shadow:var(--hard)}
 body[data-projektor="1"] .fact{font-size:0.76rem}
 body[data-projektor="1"] .lag{font-size:0.72rem}
-body[data-projektor="1"] .pill{font-size:0.92rem}
+body[data-projektor="1"] .knob-top .mono{font-size:0.78rem}
+body[data-projektor="1"] .knob-val{font-size:1.24rem}
 body[data-projektor="1"] .gauge dt{font-size:0.74rem}
 body[data-projektor="1"] .gauge dd{font-size:1.4rem}
 body[data-projektor="1"] .side-h b{font-size:1.2rem}
@@ -269,7 +295,8 @@ body[data-projektor="1"] .side-body{font-size:1.06rem}
   .wrap,.top-in,.foot-in{padding-left:16px;padding-right:16px}
   .head{padding:24px 0 18px}
   .rig{border-radius:14px;box-shadow:var(--hard)}
-  .facts,.rig-head,.veje{padding-left:16px;padding-right:16px}
+  .facts,.rig-head,.knobs{padding-left:16px;padding-right:16px}
+  .knobs{grid-template-columns:1fr}
   .gauges{grid-template-columns:1fr}
   .gauge{border-left:none}
   .gauge:nth-child(n+2){border-top:2px solid var(--ink)}
@@ -283,7 +310,7 @@ body[data-projektor="1"] .side-body{font-size:1.06rem}
   *{animation:none!important;transition:none!important}
 }
 @media print{
-  .top,.foot,.rig-head .btn-mini,.veje{display:none!important}
+  .top,.foot,.rig-head .btn-mini{display:none!important}
   .stage{grid-template-columns:1fr 260px}
   .rig{box-shadow:none;break-inside:avoid}
 }
@@ -310,7 +337,7 @@ body[data-projektor="1"] .side-body{font-size:1.06rem}
     <div class="head-in">
       <span class="eyebrow mono"><span class="blink"></span>Biologi · cellemembranen</span>
       <h1>Cellemembranen som <span class="hi" style="--hc:#FBD3E1">væskemosaik</span></h1>
-      <p class="lead">Drej membranen rundt og se, hvordan fosfolipiderne vender de hydrofile hoveder ud mod vandet på begge sider og gemmer de hydrofobe haler indeni — og hvordan proteinerne ligger og flyder i lipidlaget som isflager i en sø.</p>
+      <p class="lead">Drej membranen rundt og se, hvordan fosfolipiderne vender de hydrofile hoveder ud mod vandet på begge sider og gemmer de hydrofobe haler indeni — og hvordan proteinerne ligger og flyder i lipidlaget som isflager i en sø. Skru på iltkoncentrationen på hver side, og følg molekylerne tværs igennem.</p>
     </div>
   </div>
 
@@ -323,22 +350,15 @@ body[data-projektor="1"] .side-body{font-size:1.06rem}
         <button type="button" class="btn-mini" id="btn-kolesterol" aria-pressed="true" title="Vis eller skjul kolesterolet mellem fosfolipiderne">Kolesterol</button>
         <button type="button" class="btn-mini" id="btn-sukker" aria-pressed="true" title="Vis eller skjul kulhydratkæderne på ydersiden">Sukkerkæder</button>
         <button type="button" class="btn-mini" id="btn-snit" aria-pressed="false" title="Skær membranen over på midten, så man kan se ind i lipidlaget">Tværsnit</button>
+        <button type="button" class="btn-mini" id="btn-fast" aria-pressed="true" title="Til: cellen bruger ilten, så forskellen holdes ved lige. Fra: lukket system, hvor diffusionen udligner forskellen af sig selv">Fast koncentration</button>
         <button type="button" class="btn-mini" id="btn-nulstil" title="Sæt kameraet tilbage til udgangspunktet">Nulstil</button>
         <button type="button" class="btn-mini" id="btn-projektor" aria-pressed="false" title="Skjul sidens krom og forstør teksten">Projektor</button>
-      </div>
-
-      <div class="veje">
-        <span class="mono">Transportvej gennem membranen</span>
-        <button type="button" class="pill" data-vej="diffusion"  aria-pressed="false" style="--pc:#9BE0F5">Simpel diffusion</button>
-        <button type="button" class="pill" data-vej="kanal"      aria-pressed="false" style="--pc:#C9A9F0">Kanalprotein</button>
-        <button type="button" class="pill" data-vej="baerer"     aria-pressed="false" style="--pc:#FFAE8A">Transportprotein</button>
-        <button type="button" class="pill" data-vej="pumpe"      aria-pressed="false" style="--pc:#FF7FA8">Na⁺/K⁺-pumpen</button>
       </div>
 
       <div class="stage">
         <div class="view" id="view">
           <canvas id="scene" tabindex="0" role="img"
-            aria-label="En tredimensional model af cellemembranen. To lag fosfolipider ligger med de runde hydrofile hoveder udad mod vandet og de aflange hydrofobe haler ind mod hinanden. Mellem fosfolipiderne sidder kolesterol. Tværs gennem membranen går et kanalprotein, et transportprotein, en natrium-kalium-pumpe og et glykoprotein med forgrenede kulhydratkæder på ydersiden. På indersiden sidder et perifert protein på overfladen."></canvas>
+            aria-label="En tredimensional model af cellemembranen. To lag fosfolipider ligger med de runde hydrofile hoveder udad mod vandet og de aflange hydrofobe haler ind mod hinanden. Mellem fosfolipiderne sidder kolesterol. Tværs gennem membranen går et kanalprotein, et transportprotein, en natrium-kalium-pumpe og et glykoprotein med forgrenede kulhydratkæder på ydersiden. På indersiden sidder et perifert protein på overfladen. I vandet på begge sider driver røde iltmolekyler rundt, hver med to atomer, og enkelte af dem glider tværs gennem lipidlaget — flest fra den side, hvor koncentrationen er højest."></canvas>
           <span class="lag lag-ud">Uden for cellen</span>
           <span class="lag lag-ind">Inde i cellen · cytosol</span>
           <span class="maalestok">Membranen er ca. 5 <span class="enhed">nm</span> tyk</span>
@@ -350,19 +370,32 @@ body[data-projektor="1"] .side-body{font-size:1.06rem}
             <span class="mono" id="fork-stempel">Transportvej</span>
             <b id="fork-navn">Simpel diffusion</b>
           </div>
-          <div class="side-body" id="fork-tekst" aria-live="polite"></div>
+          <div class="side-body" id="fork-tekst" aria-live="polite">Iltmolekylerne glider tværs gennem lipidlaget uden hjælp fra noget protein.</div>
           <p class="side-tip">Klik på en del af figuren — eller brug knapperne nederst</p>
         </div>
       </div>
 
-      <dl class="gauges">
-        <div class="gauge g-type"><dt>Transporttype</dt><dd id="g-type">—</dd></div>
-        <div class="gauge g-energi"><dt>Energiforbrug</dt><dd id="g-energi">—</dd></div>
-        <div class="gauge g-protein"><dt>Protein</dt><dd id="g-protein">—</dd></div>
-        <div class="gauge g-stoffer"><dt>Stoffer</dt><dd id="g-stoffer">—</dd></div>
-      </dl>
+      <dl class="gauges" id="gauges"></dl>
+
+      <div class="knobs">
+        <div class="knob">
+          <div class="knob-top">
+            <label class="mono" for="inp-ude">Ilt uden for cellen</label>
+            <span class="knob-val"><span id="val-ude">0,26</span> <span class="enhed">mmol/L</span></span>
+          </div>
+          <input type="range" id="inp-ude" min="0" max="30" step="1" value="26">
+        </div>
+        <div class="knob">
+          <div class="knob-top">
+            <label class="mono" for="inp-inde">Ilt inde i cellen</label>
+            <span class="knob-val"><span id="val-inde">0,05</span> <span class="enhed">mmol/L</span></span>
+          </div>
+          <input type="range" id="inp-inde" min="0" max="30" step="1" value="5">
+        </div>
+      </div>
 
       <div class="facts">
+        <button type="button" class="fact" data-del="stof:o2"     aria-pressed="false" style="--fc:#FF5A36">Ilt O₂</button>
         <button type="button" class="fact" data-del="hoved"       aria-pressed="false" style="--fc:#7EC8E8">Hydrofilt hoved</button>
         <button type="button" class="fact" data-del="hale"        aria-pressed="false" style="--fc:#F2C14E">Hydrofob hale</button>
         <button type="button" class="fact" data-del="kolesterol"  aria-pressed="false" style="--fc:#B9E08A">Kolesterol</button>

@@ -2,12 +2,13 @@
    forklaring.js — udpegning og forklaringsrude.
 
    Ruden ved siden af figuren viser altid det, man sidst har
-   peget på: enten en del af membranen (klik i figuren eller på
-   en signaturknap) eller en transportvej (vælgerknapperne).
-   Teksterne kommer fra struktur.js og fra transport-*.js —
-   dette modul ejer ingen fagtekst selv.
+   peget på: en del af membranen, et af de molekyler der er på
+   vej igennem, eller — når siden lige er åbnet — den transport,
+   der kører. Teksterne kommer fra struktur.js, molekyler.js og
+   transport-*.js; dette modul ejer ingen fagtekst selv.
    ═══════════════════════════════════════════════════════════ */
-import {beskriv} from './struktur.js';
+import {beskriv}              from './struktur.js';
+import {find as findMolekyle} from './molekyler.js';
 
 export function opretForklaring({model, membran, lærred, felter, signaturer,
                                  naarValgt = () => {}}){
@@ -27,9 +28,21 @@ export function opretForklaring({model, membran, lærred, felter, signaturer,
     tekst.textContent   = brødtekst;
   }
 
+  /** Slår en del op. `stof:<id>` er et af de molekyler, en
+      transportmekanisme har sendt gennem membranen — dem forklares
+      der med `hvorfor`-sætningen fra molekyler.js, altså netop hvorfor
+      det stof kan tage den vej. */
+  function slaaOp(delId){
+    if(delId.startsWith('stof:')){
+      const m = findMolekyle(delId.slice(5));
+      return m && {type:'Molekyle', navn:`${m.navn} · ${m.formel}`, beskrivelse:m.hvorfor};
+    }
+    return beskriv(delId);
+  }
+
   /** Vis en del af membranen — lipidhoved, hale, kolesterol, protein … */
   function visDel(delId){
-    const d = beskriv(delId);
+    const d = slaaOp(delId);
     if(!d) return false;
     skriv(d.type ?? 'Del af membranen', d.navn, d.beskrivelse);
     membran.fremhæv(delId);
@@ -38,8 +51,9 @@ export function opretForklaring({model, membran, lærred, felter, signaturer,
     return true;
   }
 
-  /** Vis en transportvej. Fremhæver det protein, vejen bruger. */
-  function visVej(mekanisme){
+  /** Vis den transport, der kører. Bruges ved indlæsning, hvor der
+      endnu ikke er peget på noget. */
+  function visTransport(mekanisme){
     skriv('Transportvej', mekanisme.navn, mekanisme.beskrivelse);
     membran.fremhæv(mekanisme.protein);
     markerSignatur(mekanisme.protein);
@@ -71,5 +85,5 @@ export function opretForklaring({model, membran, lærred, felter, signaturer,
     }
   });
 
-  return {visDel, visVej};
+  return {visDel, visTransport};
 }

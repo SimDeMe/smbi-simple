@@ -6,19 +6,31 @@
    filerne og læser MEKANISMER — så er en ny mekanisme én ny fil
    plus én importlinje.
 
+   Alle registrerede mekanismer kører **samtidig**. Der er ingen
+   vælger: membranen er levende, og eleven skruer på gradienten
+   frem for at slå mekanismer til og fra.
+
    ── Kontrakten ────────────────────────────────────────────
    registrer({
      id, navn, slags,        // slags: 'passiv' | 'aktiv'
+     energi,                 // fx 'Ingen' eller '1 ATP pr. omgang'
      protein,                // id på proteinet i struktur.js, eller null
      molekyler,              // id'er fra molekyler.js
+     beskrivelse,            // teksten i forklaringsruden
      byg(ctx),               // laver mekanismens dele én gang
      opdater(t, dt, ctx),    // flytter dem ét billede frem
-     aflaes(ctx),            // {mærkat: værdi} til .gauges
-     ryd(ctx),               // kaldes, når mekanismen fravælges
+     aflaes(ctx),            // [{mærkat, værdi, enhed}] til .gauges
+     ryd(ctx),               // fjerner delene igen
    })
 
-   ctx indeholder: {scene, membran, mat, tilstand}
-   ── Endnu ingen mekanismer registreret. Se PLAN.md, trin 5-8.
+   ctx = {scene, membran, tilstand}
+
+   `tilstand` er sidens model, ikke mekanismens egen: {ude, inde}
+   er koncentrationerne i mmol/L på hver side af membranen, og
+   `fast` fortæller, om de holdes ved lige (cellen forbruger og
+   tilfører), eller om transporten må udligne dem. En mekanisme
+   må gerne skrive i `ude`/`inde` — det er netop det, den gør ved
+   at flytte molekyler.
    ═══════════════════════════════════════════════════════════ */
 
 export const MEKANISMER = [];

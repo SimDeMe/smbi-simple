@@ -9,18 +9,16 @@
 import {byggScene}        from './model.js';
 import {byggMembran}      from './struktur.js';
 import {opretForklaring}  from './forklaring.js';
-import {MEKANISMER, find as findVej} from './transport.js';
-import {find as findMolekyle}        from './molekyler.js';
+import {MEKANISMER}       from './transport.js';
 
-/* Transportmekanismerne registrerer sig selv, når de indlæses.
-   Rækkefølgen her er den, knapperne står i. Trin 6-9 fylder
-   mekanikken ud; indtil da leverer de kun deres beskrivelse. */
+/* Transportmekanismerne registrerer sig selv, når de indlæses, og
+   de kører alle sammen samtidig: membranen er levende, ikke en
+   række adskilte forsøg. En ny mekanisme er én ny fil plus én
+   importlinje her. */
 import './transport-diffusion.js';
-import './transport-kanal.js';
-import './transport-baerer.js';
-import './transport-pumpe.js';
 
-const el = id => document.getElementById(id);
+const el  = id => document.getElementById(id);
+const tal = v  => v.toFixed(2).replace('.', ',');
 
 /* Skjult besked til skærmlæsere — figuren siger ikke selv fra. */
 let fortælTimer = null;
@@ -28,6 +26,15 @@ function fortæl(tekst){
   clearTimeout(fortælTimer);
   fortælTimer = setTimeout(() => { el('status').textContent = tekst; }, 120);
 }
+
+/* ── Sidens model ──────────────────────────────────────── *
+ * Koncentrationerne i mmol/L på hver side af membranen. Tallene
+ * er ilt: vand i ligevægt med atmosfærisk luft har ca. 0,26
+ * mmol/L, og en celle, der forbrænder, ligger langt under.
+ * `fast` betyder, at cellen forbruger ilten og får ny tilført,
+ * så forskellen holdes ved lige — slås den fra, er systemet
+ * lukket, og diffusionen udligner selv gradienten.            */
+const tilstand = {ude:0.26, inde:0.05, fast:true};
 
 /* ── Figuren ───────────────────────────────────────────── */
 const model = byggScene({
@@ -39,7 +46,6 @@ const model = byggScene({
 });
 
 const membran = byggMembran(model.scene);
-model.naarOpdater(t => membran.opdater(t));
 
 const forklaring = opretForklaring({
   model, membran,
@@ -49,54 +55,95 @@ const forklaring = opretForklaring({
   naarValgt:  () => gemTilstand(),
 });
 
-/* ── Transportvælgeren ─────────────────────────────────── */
-const vejknapper = [...document.querySelectorAll('.pill[data-vej]')];
-let valgtVej = null;
+/* Det, mekanismerne får at arbejde med. Se kontrakten i transport.js. */
+const ctx = {scene:model.scene, membran, tilstand};
+for(const m of MEKANISMER) m.byg?.(ctx);
 
-/** Instrumenterne viser det, der er kendt om den valgte vej.
-    Trin 6-9 supplerer med tal fra mekanismens `aflaes()`. */
-function visInstrumenter(m){
-  el('g-type').textContent   = m.slags === 'aktiv' ? 'Aktiv transport' : 'Passiv transport';
-  el('g-energi').textContent = m.energi;
-  el('g-protein').textContent = m.protein
-    ? membran.findProtein(m.protein).navn
-    : 'Intet protein';
-  el('g-stoffer').textContent = m.molekyler
-    .map(id => findMolekyle(id)?.formel ?? id)
-    .join(' · ');
-}
+/* ── Instrumenter ──────────────────────────────────────── *
+ * Rækken bygges af det, mekanismerne aflæser, så en ny
+ * transportvej selv tager sine tal med ind på siden.        */
+const gaugeBoks = el('gauges');
+let opsætning = '';
 
-function vælgVej(id, {flyv = true} = {}){
-  const m = findVej(id);
-  if(!m) return;
-  valgtVej = m;
-  for(const b of vejknapper){
-    b.setAttribute('aria-pressed', b.dataset.vej === id ? 'true' : 'false');
+function visInstrumenter(){
+  const læst = MEKANISMER.flatMap(m => m.aflaes?.(ctx) ?? []);
+  const nøgle = læst.map(g => g.mærkat).join('|');
+  if(nøgle !== opsætning){
+    opsætning = nøgle;
+    gaugeBoks.innerHTML = læst.map(g =>
+      `<div class="gauge"><dt></dt><dd><span class="tal"></span> <span class="enhed"></span></dd></div>`
+    ).join('');
+    gaugeBoks.querySelectorAll('dt')
+      .forEach((dt, i) => { dt.textContent = læst[i].mærkat; });
   }
-  visInstrumenter(m);
-  forklaring.visVej(m);
+  const felter = gaugeBoks.querySelectorAll('.gauge');
+  læst.forEach((g, i) => {
+    felter[i].querySelector('.tal').textContent   = g.værdi;
+    felter[i].querySelector('.enhed').textContent = g.enhed ?? '';
+  });
+}
 
-  /* Det protein, vejen bruger — eller det stykke rent dobbeltlag,
-     hvor den simple diffusion foregår. */
-  const sted = m.protein ? membran.findProtein(m.protein) : m.sted;
+/* ── Skydere ───────────────────────────────────────────── *
+ * Skyderne står i hundrededele mmol/L, så adressen kan holde
+ * dem som hele tal.                                          */
+const skydere = {};
 
-  /* Tværsnittet skal skære lige foran vejen, så knappen viser ind i
-     membranen det rigtige sted — uden at save proteinet over. */
-  model.saetSnitPunkt({x:sted.x, y:0, z:sted.z}, m.protein ? 2.2 : 0.8);
+function opretSkyder(navn, hvor){
+  const input = el(`inp-${navn}`), visning = el(`val-${navn}`);
+  let trækker = false;
 
-  if(flyv){
-    model.flyvTil({
-      el:   m.kamera?.el   ?? 0.40,
-      dist: m.kamera?.dist ?? 13,
-      mål:  {x:sted.x, y:m.kamera?.y ?? 0, z:sted.z},
-    });
+  function vis(){
+    visning.textContent = tal(tilstand[navn]);
+    input.setAttribute('aria-valuetext', `${tal(tilstand[navn])} millimol per liter`);
   }
-  gemTilstand();
+  input.addEventListener('input', () => {
+    tilstand[navn] = Number(input.value) / 100;
+    vis();
+    fortæl(`Iltkoncentrationen ${hvor} er ${tal(tilstand[navn])} millimol per liter.`);
+    gemTilstand();
+  });
+  input.addEventListener('pointerdown', () => { trækker = true; });
+  addEventListener('pointerup', () => { trækker = false; });
+
+  vis();
+  skydere[navn] = {
+    sæt(v){ tilstand[navn] = v; input.value = Math.round(v * 100); vis(); },
+    /* Når gradienten udligner sig selv, er det modellen der fører
+       skyderen — men ikke midt i et træk, hvor eleven fører den. */
+    følg(){
+      if(trækker) return;
+      const trin = Math.round(tilstand[navn] * 100);
+      if(Number(input.value) !== trin) input.value = trin;
+      vis();
+    },
+  };
+  return skydere[navn];
 }
 
-for(const b of vejknapper){
-  b.addEventListener('click', () => vælgVej(b.dataset.vej));
-}
+opretSkyder('ude',  'uden for cellen');
+opretSkyder('inde', 'inde i cellen');
+
+/* ── Render-løkken ─────────────────────────────────────── */
+let sidstAflæst = 0, sidstGemt = 0;
+
+model.naarOpdater((t, dt) => {
+  membran.opdater(t);
+  for(const m of MEKANISMER) m.opdater?.(t, dt, ctx);
+
+  /* Aflæsningen følger uret, ikke billederne: er bevægelse slået
+     fra, står figuren stille, men tallene skal stadig komme frem. */
+  const nu = performance.now();
+  if(nu - sidstAflæst > 200){
+    sidstAflæst = nu;
+    visInstrumenter();
+    if(!tilstand.fast){
+      skydere.ude.følg(); skydere.inde.følg();
+      /* Gradienten udligner sig selv, og skyderne flytter sig med.
+         Adressen skal følge med, men ikke skrives om ved hvert tik. */
+      if(nu - sidstGemt > 1500){ sidstGemt = nu; gemTilstand(); }
+    }
+  }
+});
 
 /* ── Værktøjsknapper ───────────────────────────────────── */
 const knapper = {};
@@ -136,6 +183,12 @@ trykknap('btn-snit', false, v => {
            : 'Membranen vises hel.');
 });
 
+trykknap('btn-fast', true, v => {
+  tilstand.fast = v;
+  fortæl(v ? 'Cellen forbruger ilten og får ny tilført, så forskellen holdes ved lige.'
+           : 'Lukket system: diffusionen udligner nu forskellen af sig selv.');
+});
+
 trykknap('btn-projektor', false, v => {
   document.body.dataset.projektor = v ? '1' : '0';
   requestAnimationFrame(model.tilpasStoerrelse);
@@ -146,14 +199,22 @@ el('btn-nulstil').addEventListener('click', () => {
   fortæl('Kameraet viser hele membranen igen.');
 });
 
+/* Snittet vender altid mod kameraet og lægger sig gennem midten,
+   så man kan se ind i lipidlaget dér, hvor molekylerne krydser. */
+model.saetSnitPunkt({x:0, y:0, z:0}, 0);
+
 /* ── Tilstand i adressen ───────────────────────────────── *
- * Så en figur kan deles præcis som den står på tavlen.      */
+ * Så en figur kan deles præcis som den står på tavlen. Ventetiden
+ * gør også, at der ikke skrives i adressen, mens gradienten er i
+ * gang med at udligne sig — først når den er faldet til ro.     */
 let gemTimer = null;
 function gemTilstand(){
   clearTimeout(gemTimer);
   gemTimer = setTimeout(() => {
     const h = [
-      `vej=${valgtVej ? valgtVej.id : MEKANISMER[0].id}`,
+      `ude=${Math.round(tilstand.ude * 100)}`,
+      `inde=${Math.round(tilstand.inde * 100)}`,
+      `fast=${tilstand.fast ? 1 : 0}`,
       `kolesterol=${knapper['btn-kolesterol'].værdi ? 1 : 0}`,
       `sukker=${knapper['btn-sukker'].værdi ? 1 : 0}`,
       `snit=${knapper['btn-snit'].værdi ? 1 : 0}`,
@@ -161,7 +222,7 @@ function gemTilstand(){
     const del = membran.fremhævet;
     if(del) h.push(`del=${del}`);
     history.replaceState(null, '', '#' + h.join('&'));
-  }, 250);
+  }, 500);
 }
 
 (function læsTilstand(){
@@ -169,7 +230,15 @@ function gemTilstand(){
   const h = new URLSearchParams(location.hash.replace(/^#/, ''));
   const hent = k => h.get(k) ?? q.get(k);
 
+  for(const navn of ['ude', 'inde']){
+    const v = Number(hent(navn));
+    if(hent(navn) != null && Number.isFinite(v)){
+      skydere[navn].sæt(Math.max(0, Math.min(30, Math.round(v))) / 100);
+    }
+  }
+
   for(const [nøgle, knap] of [
+    ['fast',       'btn-fast'],
     ['kolesterol', 'btn-kolesterol'],
     ['sukker',     'btn-sukker'],
     ['snit',       'btn-snit'],
@@ -178,18 +247,19 @@ function gemTilstand(){
     if(v != null) knapper[knap].sæt(v === '1', false);
   }
 
-  /* Ved indlæsning vises hele membranen — der flyves ikke.
-     Vejen er stadig valgt, så instrumenterne har noget at vise. */
-  vælgVej(hent('vej') ?? MEKANISMER[0].id, {flyv:false});
-
+  /* Er der ikke peget på noget endnu, står den transport, der
+     kører, i ruden. */
   const del = hent('del');
-  if(del) forklaring.visDel(del);
+  if(!(del && forklaring.visDel(del)) && MEKANISMER.length){
+    forklaring.visTransport(MEKANISMER[0]);
+  }
 
   if(q.get('projektor') === '1' || q.get('mode') === 'teach'){
     knapper['btn-projektor'].sæt(true, false);
   }
 })();
 
+visInstrumenter();
 model.start();
 
 /* Iframe-krom: figuren skal kunne lægges ind på en anden side. */

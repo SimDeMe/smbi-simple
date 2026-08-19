@@ -463,6 +463,10 @@ export function byggMembran(scene){
     /** Alt hvad en musepeger kan ramme — hele figuren, gennemsøgt
         rekursivt. Hver del bærer sit `userData.delId`. */
     maalObjekter: [gruppe],
+    /** En transportmekanisme melder sine egne materialer ind, så dens
+        molekyler kan lyse op på samme måde som membranens egne dele.
+        Modulet får ikke af den grund at vide, hvad transport er. */
+    tilfoejDel(delId, materialer){ delMaterialer[delId] = materialer; },
     /** Hvor står et protein? Grundpositionen, ikke den drivende. */
     findProtein: id => proteiner.find(p => p.id === id),
     sætKolesterol: v => { kolesterol.visible = v; },

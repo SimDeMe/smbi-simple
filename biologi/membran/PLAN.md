@@ -17,6 +17,7 @@ membran.html      CSS, markup, importmap
   └─ side.js      indgangen: DOM, knapper, tilstand, adresse
        ├─ model.js       scene, kamera, orbit, størrelse, render-løkke, tværsnit
        ├─ struktur.js    dobbeltlag, kolesterol, proteiner, sukkerkæder
+       ├─ forklaring.js  udpegning i figuren og forklaringsruden
        ├─ molekyler.js   fagdata om de stoffer, der skal transporteres
        └─ transport.js   registret
             └─ transport-*.js   én mekanisme pr. fil
@@ -50,43 +51,46 @@ vandkappe ca. 0,7 nm.
   alfahelixer i ring, kulhydratkæder på glykoprotein og glykolipider. Alt
   bevæger sig langsomt: lipiderne vandrer, proteinerne driver og drejer — det
   er pointen i navnet.
-* **`molekyler.js`** er skrevet med ti stoffer, men bruges endnu ikke af
-  siden. Den tages i brug i trin 4.
+* **Trin 4 — udpegning og forklaringsrude.** `forklaring.js`. Klik på en del i
+  figuren, eller på en af knapperne i signaturforklaringen, og ruden til højre
+  forklarer den. Den valgte del lyser op indefra. Teksterne ligger i
+  `struktur.js` — `DELE` for lipiddelene, `PROTEINER[].beskrivelse` for
+  proteinerne — og i `molekyler.js` for de stoffer, der er på vej igennem:
+  et delId på formen `stof:o2` slår op dér og viser `hvorfor`-sætningen.
+  Ruden har `aria-live`, og signaturknapperne giver fuld betjening med
+  tastatur alene.
+* **Trin 5 — den levende membran.** Ingen vælger: alle registrerede
+  mekanismer kører samtidig, og eleven skruer i stedet på gradienten.
+  `.knobs` fik to skydere for iltkoncentrationen uden for og inde i cellen
+  (mmol/L, 0-0,30 — vand mættet med atmosfærisk luft har ca. 0,26).
+  `.gauges` bygges nu af det, mekanismerne selv aflæser, så en ny
+  transportvej tager sine egne tal med ind på siden. Knappen **Fast
+  koncentration** afgør, om cellen holder forskellen ved lige, eller om
+  systemet er lukket og diffusionen får lov at udligne den.
+  `location.hash` fik `ude`, `inde` og `fast`.
+* **Trin 6 — `transport-diffusion.js`.** Ilt tværs gennem lipidlaget, uden
+  protein. Hvert molekyle vandrer tilfældigt rundt og har samme lille chance
+  for at krydse, når det er tæt på membranen — så følger nettostrømmen
+  gradienten helt af sig selv, uden at der er regnet på den ét sted.
+  Krydsninger uden om proteinerne, så det bliver ved at være *simpel*
+  diffusion. Aflæsning: ind, ud og netto i molekyler pr. sekund.
 
----
-
-## Uafklaret — skal besvares før trin 5
-
-1. **Hvilke transportveje skal med i første udgave?** Alle fire (diffusion,
-   kanal, bærer, pumpe), eller færre til at begynde med? - Vi starter med kun diffusion - passiv og faciliteret
-2. **Én mekanisme ad gangen eller alle på én gang?** Knapper i `.rig-head`,
-   der zoomer kameraet hen til det valgte protein og kun animerer det — eller
-   én levende membran, hvor alt kører samtidig og eleven skruer på
-   koncentrationen. Det afgør, om trin 5 bygger en vælger eller en
-   gradientmodel. - Det skal være en levende membran hvor alt kører samtidig. 
-
-Trin 4 er uafhængigt af begge og kan bygges først.
+  Efterprøvet uden for browseren (jf. afsnittet om modellen i
+  `design_rules.md`): med fast koncentration står gradienten helt stille over
+  60 s; i lukket system udlignes 0,30/0,00 til ligevægt på ca. 20 s og bliver
+  dér. Den virkelige krydsningsrate er målt til 0,109 pr. molekyle pr. sekund
+  over 600 s mod de 0,110, instrumenterne regner med — altså viser tallene
+  det, molekylerne faktisk gør.
 
 ---
 
 ## Resten af planen
 
-### Trin 4 — klik på en del, få den forklaret
-Raycast mod proteinernes grupper og mod de to `InstancedMesh`-lag (brug
-`instanceId` til at skelne hoved fra hale). Valgt del vises i en rude til
-højre for figuren (`.stage` bliver to spalter ved ≥ 960 px, én under).
-Teksterne ligger allerede i `PROTEINER[].beskrivelse` i `struktur.js`.
-Tastaturadgang: Tab mellem delene, ikke kun klik. `aria-live` på ruden.
-
-### Trin 5 — rammen om transporten
-Vælgerknapper i `.rig-head`, `.gauges`-rækken tilføjes, kameraet flyttes blødt
-hen til det valgte protein, `location.hash` får `vej=…`. `transport.js` bruges
-som registret. Ingen mekanik endnu — kun stilladset, så trin 6-9 kan hænges på.
-
-### Trin 6 — `transport-diffusion.js`
-O₂, CO₂ og steroidhormon glider tværs gennem lipidlaget uden protein. Vis, at
-det går begge veje, men at nettostrømmen følger gradienten.
-Aflæsning: netto molekyler pr. sekund, begge koncentrationer.
+Faciliteret diffusion er det næste: kanal (trin 7) og bærer (trin 8) bruger
+samme gradient og samme `.knobs` som den simple diffusion, men hver sit stof.
+Aktiv transport (trin 9) kommer efter. Filerne `transport-kanal.js`,
+`transport-baerer.js` og `transport-pumpe.js` findes med deres fagbeskrivelse,
+men er endnu ikke importeret i `side.js`.
 
 ### Trin 7 — `transport-kanal.js`
 Ionkanal, der åbner og lukker. Ioner falder igennem med gradienten, aldrig
@@ -104,10 +108,13 @@ Na⁺/K⁺-pumpen: 3 Na⁺ ud, 2 K⁺ ind, 1 ATP. ATP-molekylet skal ses forbrug
 pumpens cytosoldomæne (det er allerede bygget i `struktur.js`), og retningen
 skal tydeligt være **mod** gradienten. Tæller for forbrugt ATP i `.gauges`.
 
-### Trin 10 — koncentration på de to sider
-Skydere i `.knobs` for koncentrationen uden for og inde i cellen. Antallet af
-tegnede partikler følger koncentrationen, og nettostrømmen søger mod
-ligevægt — undtagen ved pumpen, som holder forskellen ved lige.
+### Trin 10 — én gradient pr. stof
+Skyderne i `.knobs` gælder i dag ilt alene. Når kanalen og bæreren kommer til,
+skal hvert stof have sin egen gradient — glukose og ioner udligner sig ikke i
+takt med ilten. Overvej, om `tilstand` skal være `{o2:{ude,inde}, glukose:…}`
+frem for ét par tal, og hvordan `.knobs` så holder sig kort nok til at kunne
+overskues. Pumpen er den, der bryder mønsteret: den holder forskellen ved
+lige i stedet for at udligne den.
 
 ### Trin 11 — aquaporiner
 Vandkanal, og et link over til `biologi/osmose.html`, hvor konsekvensen for
@@ -132,9 +139,18 @@ på en ældre bærbar, og link ind fra `biologi.html`.
 
 ## Ting at holde øje med
 
-* **Ydelse.** Dobbeltlaget opdaterer ca. 2400 instansmatricer pr. billede.
-  Kommer der mange partikler til i trin 6-10, så saml dem i én `InstancedMesh`
-  pr. molekyletype frem for ét `Mesh` pr. partikel.
+* **Ydelse.** Dobbeltlaget opdaterer ca. 2400 instansmatricer pr. billede, og
+  ilten ca. 220 mere. Kommer der flere stoffer til i trin 7-10, så hold fast
+  i én `InstancedMesh` pr. molekyletype frem for ét `Mesh` pr. partikel.
+* **Modellen kan afprøves uden browser.** `transport-*.js` rører kun three.js
+  til at tegne med, så mekanikken kan køres i node med en håndfuld stumper
+  (`Matrix4`, `InstancedMesh`, `Group`, …) og en `ctx` med en attrap-membran.
+  Sådan blev trin 6 efterprøvet. Det er også den eneste farbare vej: en
+  **browserfane i baggrunden får ikke `requestAnimationFrame`**, så figuren
+  står bomstille, og alt hvad der måles udefra, ser frosset ud.
+* **`python3 -m http.server` cacher moduler.** Retter man en `.js`-fil og
+  genindlæser, kan browseren stadig køre den gamle. Hård genindlæsning
+  (⇧⌘R) løser det — en almindelig `location.reload()` gør det ikke.
 * **Enheder.** `mmol/L`, `nm`, `pH` skal skrives, som de staves, også inde i
   mono-mærkater med `text-transform:uppercase` — pak dem i `<span class="enhed">`.
 * **Hold siden let.** Ingen forklarende tekstblokke under panelet, og ingen

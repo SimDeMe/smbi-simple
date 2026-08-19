@@ -15,8 +15,10 @@ export const MOLEKYLER = [
     id:'o2', navn:'Ilt', formel:'O₂',
     størrelse:'meget lille', polaritet:'upolær', ladning:'uladet',
     vej:'diffusion',
-    hvorfor:'Lille og upolær, så den glider direkte gennem de hydrofobe haler. Ingen protein, ingen energi.',
-    farve:0x9BE0F5,
+    hvorfor:'Lille og upolær, så den glider direkte gennem de hydrofobe haler. Ingen protein, ingen energi. Den skal bare være tæt på membranen og støde det rigtige sted — resten sker af sig selv.',
+    /* Rød som i kuglemodellerne. Farven skal desuden kunne skelnes fra
+       de blå fosfolipidhoveder, molekylerne driver rundt imellem. */
+    farve:0xFF5A36,
   },
   {
     id:'co2', navn:'Kuldioxid', formel:'CO₂',
