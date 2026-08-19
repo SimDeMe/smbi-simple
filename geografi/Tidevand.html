@@ -545,9 +545,9 @@ body[data-projektor="1"] .side-h b{font-size:1.2rem}
         <div class="knob">
           <div class="knob-top">
             <label class="mono" for="inp-overdriv">Bulen forstørret</label>
-            <span class="knob-val" id="v-overdriv">× 60 000</span>
+            <span class="knob-val" id="v-overdriv">× 1 145 000</span>
           </div>
-          <input type="range" id="inp-overdriv" min="0" max="100" step="1" value="65"
+          <input type="range" id="inp-overdriv" min="0" max="100" step="1" value="55"
                  aria-describedby="v-overdriv">
         </div>
       </div>
@@ -851,6 +851,9 @@ const INK = 5.14*GRAD;         // månebanens hældning
 const SPIN0 = 180*GRAD;        // t=0 er midnat ved 0-meridianen
 const K_SOL = 0.46;            // solens tidevandskraft i forhold til månens
 const MDOEGN = 360/(wE-wM);    // 24,84 timer
+const R_JORD_M = 6371000;      // jordradius i meter (scenens kugle har radius 1)
+const EKTE_BULE_M = 0.5;       // den rigtige ligevægtsbules højde, jf. teksten under figuren
+const MULT_MIN = 100000, MULT_MAX = 2000000;   // "bulen forstørret"-sliderens yderpunkter
 
 /* Ekliptika ligger i XZ-planet, så +Y er "op" både for
    banerne og for kameraet. Jordaksen hælder mod +X. */
@@ -1157,6 +1160,7 @@ tilpasStørrelse();
    ═══════════════════════════════════════════════════════════ */
 const el = id => document.getElementById(id);
 const N_KURVE = 200, FOR_UD = 14.5;   // timer frem i kurvevinduet
+const formatTal = n => Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g,' ');
 
 let refCache = {};
 function faktor(sted){
@@ -1475,8 +1479,11 @@ function opdater(dt){
 
   jord.rotation.y = spin(t);
 
-  /* vandlaget: tykkelsen følger ligevægtstidevandet */
-  const over = 0.012 + (S.overdriv/100)*0.20;
+  /* vandlaget: tykkelsen følger ligevægtstidevandet
+     slideren går fra × 100.000 til × 2.000.000 */
+  const multiplikator = MULT_MIN + (S.overdriv/100)*(MULT_MAX-MULT_MIN);
+  const over = multiplikator*EKTE_BULE_M/R_JORD_M;
+  el('v-overdriv').textContent = '× '+formatTal(multiplikator);
   const kS = S.medSol ? K_SOL : 0;
   for(let i=0;i<vandPos.count;i++){
     const bx=vandBasis[i*3], by=vandBasis[i*3+1], bz=vandBasis[i*3+2];
