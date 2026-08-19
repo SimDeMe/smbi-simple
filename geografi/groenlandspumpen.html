@@ -1,10 +1,13 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="da">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Grønlandspumpen — den termohaline cirkulation</title>
-<meta name="description" content="Grafisk simulator til NV / naturgeografi: den termohaline cirkulation som et forsøgskar, man kan skrue på. Uden tal — kun bevægelse, farve og hastighed.">
+<title>Grønlandspumpen — den termohaline cirkulation — smbi.dk</title>
+<meta name="description" content="Grafisk simulering af den termohaline cirkulation, Grønlandspumpen: skru på kulde og smeltevand og se cirkulationen bremse op og gå i stå. Uden tal — kun bevægelse, farve og fart.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,300..600&display=swap" rel="stylesheet">
 
 <!--
   ==========================================================================
@@ -82,364 +85,449 @@
 -->
 
 <style>
-.gp-app{
-  /* Ocean Gradient */
-  --gp-navy:#21295C;
-  --gp-blaa:#065A82;
-  --gp-teal:#1C7293;
-  --gp-lys:#CADCFC;
-  --gp-hvid:#F7FAFC;
-  --gp-orange:#E8734A;
-  --gp-orange-dyb:#C9552E;
+:root{
+  --paper:#FFF9EE;  --paper-2:#FFF3DC;  --panel:#FFFFFF;
+  --ink:#17211F;    --slate:#566B68;
 
-  --gp-serif:Cambria,"Hoefler Text",Constantia,Georgia,"Times New Roman",serif;
-  --gp-sans:Calibri,"Segoe UI",-apple-system,BlinkMacSystemFont,Roboto,"Helvetica Neue",Arial,sans-serif;
+  --pink:#E8336D; --blue:#0E86C8; --lime:#5FB030; --amber:#FFB300;
+  --grape:#7A4FD6; --coral:#FF6A3D; --teal:#0FA593;
 
-  font-family:var(--gp-sans);
+  --geo:var(--blue);
+
+  --display:'Archivo',system-ui,sans-serif;
+  --body:'Source Serif 4',Georgia,serif;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+
+  --wide:'wdth' 118;
+  --max:1180px;
+
+  --hard:4px 4px 0 var(--ink);
+  --hard-lg:7px 7px 0 var(--ink);
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--body);
   font-size:17px;
-  line-height:1.45;
-  color:var(--gp-navy);
-  background:var(--gp-hvid);
-  min-height:100vh;
-  display:flex;
-  flex-direction:column;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
 }
-html,body{margin:0;padding:0;background:#F7FAFC;}
-.gp-app *,.gp-app *::before,.gp-app *::after{box-sizing:border-box;}
-.gp-app h1,.gp-app h2,.gp-app h3,.gp-app p,.gp-app ul,.gp-app ol{margin:0;}
-.gp-app button,.gp-app select{font:inherit;color:inherit;}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--grape);outline-offset:3px;border-radius:4px}
 
-/* ── Topbjælke ────────────────────────────────────────────────────────── */
-.gp-top{
-  display:flex;align-items:center;gap:16px;flex-wrap:wrap;
-  padding:12px 22px 12px 132px;
-  border-bottom:2px solid var(--gp-lys);
-  background:#fff;
+.mono{
+  font-family:var(--mono);font-size:0.68rem;font-weight:500;
+  letter-spacing:0.14em;text-transform:uppercase;
 }
-.gp-top h1{
-  font-family:var(--gp-serif);
-  font-size:30px;font-weight:700;letter-spacing:.01em;
-  color:var(--gp-navy);flex:1 1 auto;
+.sr{
+  position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+  overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;
 }
-.gp-knap{
+
+/* ── Topbjælke ─────────────────────────────────────────── */
+.rainbow{
+  height:7px;
+  background:linear-gradient(90deg,
+    var(--pink) 0 14.3%, var(--coral) 14.3% 28.6%, var(--amber) 28.6% 42.9%,
+    var(--lime) 42.9% 57.2%, var(--teal) 57.2% 71.5%, var(--blue) 71.5% 85.8%,
+    var(--grape) 85.8% 100%);
+}
+.top{position:sticky;top:0;z-index:60}
+.top-bar{
+  background:rgba(255,249,238,0.93);
+  backdrop-filter:blur(10px);
+  border-bottom:2px solid var(--ink);
+}
+.top-in{
+  max-width:var(--max);margin:0 auto;padding:0 24px;
+  display:flex;align-items:center;gap:16px;height:60px;
+}
+.brand{
+  font-family:var(--display);font-variation-settings:'wdth' 125;
+  font-weight:800;font-size:1.15rem;letter-spacing:-0.02em;
+  text-decoration:none;display:flex;align-items:center;gap:8px;
+}
+.brand-mark{
+  width:25px;height:25px;border-radius:9px;border:2px solid var(--ink);
+  background:conic-gradient(var(--pink),var(--amber),var(--lime),var(--blue),var(--grape),var(--pink));
+  flex-shrink:0;
+}
+.brand em{font-family:var(--mono);font-size:0.72rem;font-weight:500;font-style:normal;color:var(--slate)}
+.top-nav{display:flex;gap:6px;margin-left:auto}
+.top-nav a{
+  font-family:var(--display);font-size:0.84rem;font-weight:600;
+  text-decoration:none;color:var(--ink);white-space:nowrap;
+  padding:7px 14px;border-radius:20px;border:2px solid transparent;
+  transition:background .15s,border-color .15s;
+}
+.top-nav a:hover{background:#C7E6F6;border-color:var(--ink)}
+
+/* ── Sidehoved ─────────────────────────────────────────── */
+.wrap{max-width:var(--max);margin:0 auto;padding:0 24px}
+.head{padding:34px 0 22px;position:relative;overflow:hidden}
+.head::before{
+  content:'';position:absolute;width:380px;height:380px;border-radius:50%;
+  background:#C7E6F6;filter:blur(70px);opacity:.5;top:-200px;right:-120px;z-index:0;
+}
+.head-in{position:relative;z-index:1}
+.eyebrow{
   display:inline-flex;align-items:center;gap:8px;
-  padding:10px 18px;min-height:44px;
-  border:2px solid var(--gp-teal);border-radius:999px;
-  background:#fff;color:var(--gp-teal);
-  font-weight:600;font-size:17px;cursor:pointer;
-  transition:background .15s,color .15s;
+  background:var(--ink);color:#FFF6E0;padding:6px 14px;border-radius:20px;
 }
-.gp-knap:hover{background:var(--gp-teal);color:#fff;}
-.gp-knap:focus-visible{outline:3px solid var(--gp-orange);outline-offset:2px;}
-.gp-knap svg{flex:none;}
+.eyebrow .blink{width:8px;height:8px;border-radius:50%;background:var(--blue);animation:pulse 1.8s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.8)}}
+h1{
+  font-family:var(--display);font-variation-settings:var(--wide);font-weight:800;
+  font-size:clamp(2rem,4.6vw,2.9rem);line-height:1.03;letter-spacing:-0.032em;
+  margin:16px 0 14px;
+}
+.hi{position:relative;display:inline-block;z-index:0;white-space:nowrap}
+.hi::before{
+  content:'';position:absolute;z-index:-1;left:-8px;right:-8px;top:12%;bottom:8%;
+  background:var(--hc,var(--amber));border-radius:6px;transform:rotate(-1.3deg);
+}
+.lead{font-size:1.06rem;color:#3E4E4C;max-width:60ch}
 
-/* ── Statusfelt ───────────────────────────────────────────────────────── */
-.gp-status{
-  display:flex;align-items:center;gap:18px;
-  padding:12px 22px;
-  background:var(--gp-hvid);
-  border-bottom:2px solid var(--gp-lys);
-  border-left:14px solid var(--gp-teal);
-  color:var(--gp-teal);
-  transition:border-color .8s ease,background .8s ease,color .8s ease;
+/* ── Signaturpanelet ───────────────────────────────────── */
+.rig{
+  --accent:var(--geo);
+  position:relative;
+  background:var(--panel);
+  border:2.5px solid var(--ink);border-radius:18px;overflow:hidden;
+  box-shadow:var(--hard-lg);
+  margin-top:26px;
 }
-.gp-status .gp-status-tekst{
-  font-family:var(--gp-serif);
-  font-size:34px;font-weight:700;line-height:1.1;
+.rig-bar{height:9px;background:var(--accent)}
+.rig-head{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:11px 15px;border-bottom:2px solid var(--ink);
+  background:#E7F4FB;
 }
-.gp-status[data-tilstand="1"],
-.gp-status[data-tilstand="2"]{border-left-color:var(--gp-orange);color:var(--gp-orange-dyb);}
-.gp-status[data-tilstand="3"]{border-left-color:var(--gp-navy);background:#EBF0F8;color:var(--gp-navy);}
-.gp-status[data-tilstand="2"]{animation:gp-puls 3.4s ease-in-out infinite;}
+.rig-live{display:flex;align-items:center;gap:7px}
+.rig-live .mono{color:var(--ink);font-weight:600}
+.dot{
+  width:9px;height:9px;border-radius:50%;background:var(--accent);
+  border:1.5px solid var(--ink);animation:pulse 2s ease-in-out infinite;
+}
+.rig-head .spacer{margin-left:auto}
+.btn-mini{
+  font-family:var(--display);font-size:0.72rem;font-weight:700;
+  background:#fff;border:2px solid var(--ink);color:var(--ink);
+  padding:4px 11px;border-radius:18px;cursor:pointer;
+  box-shadow:2px 2px 0 var(--ink);
+  display:inline-flex;align-items:center;gap:6px;
+  transition:transform .12s,box-shadow .12s,background .16s,color .16s;
+}
+.btn-mini:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--ink)}
+.btn-mini:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--ink)}
+.btn-mini[aria-pressed="true"]{
+  background:var(--accent);color:#fff;
+  transform:translate(2px,2px);box-shadow:0 0 0 var(--ink);
+}
+.rig-select{
+  font-family:var(--display);font-size:0.72rem;font-weight:700;color:var(--ink);
+  background:#fff;border:2px solid var(--ink);border-radius:18px;
+  padding:4px 28px 4px 11px;cursor:pointer;box-shadow:2px 2px 0 var(--ink);
+}
+
+/* ── Scenen ────────────────────────────────────────────── */
+.stage{
+  position:relative;aspect-ratio:1280/680;width:100%;overflow:hidden;
+  background:radial-gradient(circle at 1px 1px,#E6EDEB 1px,transparent 0) 0 0/16px 16px;
+}
+canvas{display:block;width:100%;height:100%;border:2px solid var(--ink);border-radius:0}
+
+.proc{
+  position:absolute;left:18px;top:16px;z-index:2;pointer-events:none;
+  display:inline-flex;align-items:center;gap:9px;max-width:min(60%,420px);
+  background:#fff;border:2px solid var(--ink);border-radius:22px;
+  padding:7px 14px 7px 11px;box-shadow:3px 3px 0 var(--ink);
+  transition:box-shadow .8s ease;
+}
+.proc svg{flex:none;color:var(--pc,var(--teal))}
+.proc-txt{
+  font-family:var(--display);font-size:0.82rem;font-weight:800;line-height:1.15;
+  color:var(--pc,var(--teal));
+}
+.proc[data-tilstand="1"],.proc[data-tilstand="2"]{--pc:var(--coral)}
+.proc[data-tilstand="3"]{--pc:var(--ink)}
+.proc[data-tilstand="2"]{animation:gp-puls 3.4s ease-in-out infinite}
 @keyframes gp-puls{
-  0%,100%{box-shadow:inset 0 0 0 0 rgba(232,115,74,0);}
-  50%{box-shadow:inset 0 0 0 5px rgba(232,115,74,.42);}
+  0%,100%{box-shadow:3px 3px 0 var(--ink),inset 0 0 0 0 rgba(255,106,61,0)}
+  50%{box-shadow:3px 3px 0 var(--ink),inset 0 0 0 5px rgba(255,106,61,.38)}
 }
 
-/* ── Scenen ───────────────────────────────────────────────────────────── */
-.gp-scene{
-  position:relative;flex:1 1 auto;min-height:330px;
-  background:var(--gp-hvid);
+.spg{
+  position:absolute;left:50%;top:16px;transform:translateX(-50%);z-index:2;
+  max-width:min(88%,620px);
+  padding:8px 20px;border-radius:999px;
+  background:rgba(255,255,255,.94);border:2px solid var(--ink);box-shadow:2px 2px 0 var(--ink);
+  font-family:var(--body);font-style:italic;font-size:0.98rem;
+  color:var(--ink);text-align:center;pointer-events:none;
 }
-.gp-scene canvas{display:block;width:100%;height:100%;}
-.gp-spg{
-  position:absolute;left:50%;top:10px;transform:translateX(-50%);
-  max-width:min(92%,780px);
-  padding:9px 24px;border-radius:999px;
-  background:rgba(255,255,255,.92);
-  border:2px solid var(--gp-lys);
-  font-family:var(--gp-serif);font-style:italic;font-size:20px;
-  color:var(--gp-navy);text-align:center;
-  pointer-events:none;
-}
-.gp-spg[hidden]{display:none;}
+.spg[hidden]{display:none}
 
-/* ── Kontroller ───────────────────────────────────────────────────────── */
-.gp-kontrol{
-  display:flex;align-items:flex-start;gap:30px;flex-wrap:wrap;
-  padding:14px 22px 18px;
-  border-top:2px solid var(--gp-lys);
-  background:#fff;
+/* ── Knapper (skydere) ─────────────────────────────────── */
+.knobs{
+  border-top:2px solid var(--ink);background:var(--paper-2);
+  padding:18px 15px 20px;
+  display:grid;grid-template-columns:1fr 1fr;gap:20px 26px;
 }
-.gp-skyder{flex:1 1 320px;min-width:270px;}
-.gp-skyder-raekke{display:flex;align-items:center;gap:14px;}
-.gp-skyder-raekke svg{flex:none;}
-.gp-skyder label{
-  display:block;margin-top:2px;
-  font-size:18px;font-weight:600;color:var(--gp-navy);
+.knob{display:flex;flex-direction:column;gap:9px}
+.knob-top{font-size:0.66rem;color:#3E4E4C}
+.knob-row{display:flex;align-items:center;gap:12px}
+.knob-row svg{flex:none}
+input[type=range]{
+  -webkit-appearance:none;appearance:none;flex:1 1 auto;width:100%;height:22px;background:transparent;cursor:pointer;
 }
-.gp-skyder input[type=range]{
-  flex:1 1 auto;width:100%;height:44px;
-  -webkit-appearance:none;appearance:none;background:transparent;cursor:pointer;
+input[type=range]::-webkit-slider-runnable-track{
+  height:10px;border:2px solid var(--ink);border-radius:9px;background:var(--track,#fff);
 }
-.gp-skyder input[type=range]:focus{outline:none;}
-.gp-skyder input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 2px var(--gp-teal),0 0 0 7px rgba(232,115,74,.55);}
-.gp-skyder input[type=range]:focus-visible::-moz-range-thumb{box-shadow:0 0 0 2px var(--gp-teal),0 0 0 7px rgba(232,115,74,.55);}
-.gp-skyder input[type=range]::-webkit-slider-runnable-track{
-  height:14px;border-radius:999px;background:var(--gp-lys);border:2px solid #A8BEE4;
-}
-.gp-skyder input[type=range]::-webkit-slider-thumb{
+input[type=range]::-webkit-slider-thumb{
   -webkit-appearance:none;appearance:none;
-  width:40px;height:40px;margin-top:-15px;border-radius:50%;
-  background:var(--gp-teal);border:4px solid #fff;
-  box-shadow:0 0 0 2px var(--gp-teal);
+  width:22px;height:22px;margin-top:-8px;border-radius:50%;
+  border:2.5px solid var(--ink);background:var(--kc,var(--blue));
+  box-shadow:2px 2px 0 var(--ink);
 }
-.gp-skyder input[type=range]::-moz-range-track{
-  height:14px;border-radius:999px;background:var(--gp-lys);border:2px solid #A8BEE4;
+input[type=range]::-moz-range-track{
+  height:10px;border:2px solid var(--ink);border-radius:9px;background:var(--track,#fff);
 }
-.gp-skyder input[type=range]::-moz-range-thumb{
-  width:36px;height:36px;border-radius:50%;
-  background:var(--gp-teal);border:4px solid #fff;
-  box-shadow:0 0 0 2px var(--gp-teal);
+input[type=range]::-moz-range-thumb{
+  width:20px;height:20px;border-radius:50%;
+  border:2.5px solid var(--ink);background:var(--kc,var(--blue));box-shadow:2px 2px 0 var(--ink);
 }
-.gp-vaerktoej{
-  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
-  flex:0 0 auto;padding-top:4px;
-}
-.gp-vaerktoej select{
-  padding:10px 14px;min-height:44px;
-  border:2px solid var(--gp-teal);border-radius:12px;
-  background:#fff;color:var(--gp-teal);font-weight:600;cursor:pointer;
-}
-.gp-vaerktoej select:focus-visible{outline:3px solid var(--gp-orange);outline-offset:2px;}
+#gpSkyderKulde{--track:linear-gradient(90deg,var(--blue),var(--coral));--kc:var(--blue)}
+#gpSkyderFersk{--track:linear-gradient(90deg,#C7E6F6,var(--teal));--kc:var(--teal)}
 
-/* ── Hjælpepanel ──────────────────────────────────────────────────────── */
-.gp-overlay{
-  position:fixed;inset:0;z-index:60;
+/* ── Hjælpepanel ───────────────────────────────────────── */
+.hjaelp-overlay{
+  position:fixed;inset:0;z-index:80;
   display:flex;align-items:center;justify-content:center;
-  padding:20px;background:rgba(33,41,92,.42);
+  padding:20px;background:rgba(23,33,31,.5);
 }
-.gp-overlay[hidden]{display:none;}
-.gp-panel{
-  width:min(660px,100%);max-height:88vh;overflow:auto;
-  background:#fff;border-radius:16px;border:3px solid #CADCFC;
-  padding:26px 30px 30px;
-  font-family:Calibri,"Segoe UI",system-ui,sans-serif;color:#21295C;
+.hjaelp-overlay[hidden]{display:none}
+.hjaelp-panel{
+  width:min(620px,100%);max-height:88vh;overflow:auto;
+  background:var(--panel);border:2.5px solid var(--ink);border-radius:18px;
+  box-shadow:var(--hard-lg);
+  padding:26px 28px 28px;
 }
-.gp-panel h2{
-  font-family:Cambria,Georgia,serif;font-size:26px;margin:0 0 14px;color:#21295C;
+.hjaelp-panel h2{
+  font-family:var(--display);font-variation-settings:var(--wide);font-weight:800;
+  font-size:1.5rem;letter-spacing:-0.02em;margin-bottom:16px;
 }
-.gp-legende{list-style:none;padding:0;margin:0;}
-.gp-legende li{
-  display:flex;align-items:center;gap:18px;
-  padding:11px 0;border-bottom:1px solid #CADCFC;font-size:19px;
+.legende{list-style:none;display:grid;gap:2px}
+.legende li{
+  display:flex;align-items:center;gap:16px;
+  padding:11px 4px;border-top:2px solid var(--ink);font-size:0.98rem;
 }
-.gp-legende li:last-child{border-bottom:none;}
-.gp-legende svg{flex:none;}
-.gp-panel .gp-luk{margin-top:20px;}
+.legende li:first-child{border-top:none}
+.legende svg{flex:none}
 
-/* ── Opgaver ──────────────────────────────────────────────────────────── */
-.gp-opgaver{
-  border-top:2px solid var(--gp-lys);
-  background:var(--gp-hvid);
-  padding:0 22px 30px;
+/* ── Bund ──────────────────────────────────────────────── */
+.foot{
+  margin-top:34px;background:var(--ink);color:#FFF6E0;padding:26px 0 32px;
 }
-.gp-opgaver summary{
-  cursor:pointer;padding:16px 0;
-  font-family:var(--gp-serif);font-size:23px;font-weight:700;color:var(--gp-navy);
+.foot-in{
+  max-width:var(--max);margin:0 auto;padding:0 24px;
+  display:flex;justify-content:space-between;align-items:flex-end;gap:18px;flex-wrap:wrap;
 }
-.gp-opgaver summary:focus-visible{outline:3px solid var(--gp-orange);outline-offset:3px;}
-.gp-opgaver ol{list-style:none;padding:0;display:grid;gap:14px;max-width:940px;}
-.gp-opgave{
-  background:#fff;border:2px solid var(--gp-lys);border-radius:12px;
-  padding:14px 18px;
+.foot .brand{color:#FFF6E0}
+.foot .mono{color:#8FA29E;margin-top:5px}
+.foot-links{display:flex;gap:8px;flex-wrap:wrap}
+.foot-links a{
+  font-family:var(--display);font-size:0.82rem;font-weight:700;text-decoration:none;
+  border:2px solid #FFF6E0;border-radius:20px;padding:5px 13px;
+  transition:background .16s,color .16s,border-color .16s;
 }
-.gp-opgave h3{
-  font-family:var(--gp-serif);font-size:19px;margin-bottom:5px;
-}
-.gp-opgave p{font-size:17px;}
-.gp-opgave .gp-knap{margin-top:10px;padding:7px 16px;min-height:38px;font-size:16px;}
+.foot-links a:nth-child(1):hover{background:var(--blue);border-color:var(--blue)}
+.foot-links a:nth-child(2):hover{background:var(--amber);border-color:var(--amber);color:var(--ink)}
+.foot-links a:nth-child(3):hover{background:var(--lime);border-color:var(--lime);color:var(--ink)}
 
-.gp-skjult{
-  position:absolute;width:1px;height:1px;overflow:hidden;
-  clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;
-}
+/* ── Projektortilstand ───────────────────────────────────
+   Sidens krom ryger væk, og alt der skal aflæses bagerst i
+   lokalet skaleres op. Slås til med knappen eller ?projektor=1. */
+body[data-projektor="1"] .top,
+body[data-projektor="1"] .head,
+body[data-projektor="1"] .foot{display:none}
+body[data-projektor="1"] .wrap{max-width:none;padding:0 14px}
+body[data-projektor="1"] .rig{margin-top:14px;box-shadow:var(--hard)}
+body[data-projektor="1"] .proc-txt{font-size:1.15rem}
+body[data-projektor="1"] .spg{font-size:1.2rem}
+body[data-projektor="1"] .knob-top{font-size:0.82rem}
 
-@media (max-width:900px){
-  .gp-top{padding-left:22px;padding-top:56px;}
-  .gp-top h1{font-size:25px;}
-  .gp-status .gp-status-tekst{font-size:28px;}
+/* ── Responsivt ──────────────────────────────────────────
+   Ét-spaltet sim uden faste to-spalter, så kun 620 px-bruddet
+   er relevant her (mindre skrift, tyndere skygge, mindre padding). */
+@media (max-width:620px){
+  body{font-size:16px}
+  .wrap,.top-in,.foot-in{padding-left:16px;padding-right:16px}
+  .head{padding:24px 0 18px}
+  .rig{border-radius:14px;box-shadow:var(--hard)}
+  .knobs{grid-template-columns:1fr;padding:16px 14px 18px}
+  .proc{max-width:calc(100% - 32px)}
+  .spg{font-size:0.86rem;padding:7px 14px}
+  .rig-head{padding:10px 12px}
 }
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+@media print{.top,.foot,.rig-head{display:none!important}}
 </style>
 </head>
 <body>
 
-<!-- smbi hjem-knap -->
-<a href="/" class="smbi-home" aria-label="Til forsiden" title="Til forsiden">
-<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
-<span>Hjem</span>
-</a>
-<style>
-.smbi-home{position:fixed;top:14px;left:14px;z-index:2147483000;display:inline-flex;align-items:center;gap:6px;padding:8px 13px;font:600 14px/1 system-ui,-apple-system,"Segoe UI",sans-serif;color:#F5F0E8;background:#1C2E44;border:1px solid #2E4A6A;border-radius:999px;text-decoration:none;box-shadow:0 2px 10px rgba(0,0,0,.28);opacity:.9;transition:opacity .15s,transform .15s}
-.smbi-home:hover{opacity:1;transform:translateY(-1px)}
-.smbi-home svg{flex:none}
-@media print{.smbi-home{display:none!important}}
-</style>
-<script>(function(){try{if(window.top!==window.self){var e=document.querySelector(".smbi-home");if(e)e.style.display="none";}}catch(x){}})();</script>
+<header class="top" id="site-top">
+  <div class="rainbow"></div>
+  <div class="top-bar">
+    <div class="top-in">
+      <a href="/" class="brand"><span class="brand-mark"></span>smbi<em>.dk</em></a>
+      <nav class="top-nav">
+        <a href="/geografi.html">Naturgeografi</a>
+        <a href="/">Forside</a>
+      </nav>
+    </div>
+  </div>
+</header>
 
-
-<div class="gp-app" id="gpApp">
-
-  <header class="gp-top">
-    <h1>Grønlandspumpen</h1>
-    <button type="button" class="gp-knap" id="gpHjaelp" aria-haspopup="dialog">
-      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.4 9.2a2.7 2.7 0 0 1 5.2.9c0 1.8-2.6 2.2-2.6 3.9"/><path d="M12 17.4h.01"/></svg>
-      Sådan læser du billedet
-    </button>
-    <button type="button" class="gp-knap" id="gpForfra">
-      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 12a8.5 8.5 0 1 1 2.6 6.1"/><path d="M3.2 6.4v5h5"/></svg>
-      Forfra
-    </button>
-  </header>
-
-  <div class="gp-status" id="gpStatus" data-tilstand="0">
-    <svg viewBox="0 0 34 34" width="34" height="34" aria-hidden="true">
-      <circle cx="17" cy="17" r="14" fill="none" stroke="currentColor" stroke-width="3"/>
-      <path d="M17 9v13M11.5 16.5 17 22.5l5.5-6" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-    <div class="gp-status-tekst" id="gpStatusTekst">Pumpen kører</div>
-    <div class="gp-skjult" id="gpLive" role="status" aria-live="polite"></div>
+<main>
+  <div class="wrap head">
+    <div class="head-in">
+      <span class="eyebrow mono"><span class="blink"></span>Naturgeografi · havcirkulation</span>
+      <h1>Grønlandspumpen — <span class="hi" style="--hc:#C7E6F6">den termohaline cirkulation</span></h1>
+      <p class="lead">Skru på kulde og smeltevand i nord, og se hvornår den nordatlantiske pumpe bremser op og går i stå. Uden tal — kun bevægelse, farve og fart.</p>
+    </div>
   </div>
 
-  <div class="gp-scene" id="gpScene">
-    <canvas id="gpLaerred"></canvas>
-    <div class="gp-spg" id="gpSpg" hidden></div>
-  </div>
-
-  <div class="gp-kontrol">
-    <div class="gp-skyder">
-      <div class="gp-skyder-raekke">
-        <!-- iskoldt -->
-        <svg viewBox="0 0 26 26" width="26" height="26" aria-hidden="true" fill="none" stroke="#065A82" stroke-width="2.4" stroke-linecap="round">
-          <path d="M13 2v22M3.5 7.5l19 11M22.5 7.5l-19 11"/>
-        </svg>
-        <input type="range" id="gpSkyderKulde" min="0" max="1" step="0.002" value="0.22">
-        <!-- mildt -->
-        <svg viewBox="0 0 26 26" width="26" height="26" aria-hidden="true" fill="none" stroke="#E8734A" stroke-width="2.4" stroke-linecap="round">
-          <circle cx="13" cy="13" r="5.2" fill="#E8734A" stroke="none"/>
-          <path d="M13 1.5v3.2M13 21.3v3.2M1.5 13h3.2M21.3 13h3.2M4.9 4.9l2.3 2.3M18.8 18.8l2.3 2.3M21.1 4.9l-2.3 2.3M7.2 18.8l-2.3 2.3"/>
-        </svg>
+  <div class="wrap">
+    <section class="rig">
+      <div class="rig-bar"></div>
+      <div class="rig-head">
+        <span class="rig-live"><span class="dot"></span><span class="mono">Live simulering</span></span>
+        <span class="spacer"></span>
+        <label class="sr" for="gpScenarie">Prøv et scenarie</label>
+        <select id="gpScenarie" class="rig-select">
+          <option value="" disabled selected>Prøv et scenarie …</option>
+          <option value="idag">Som i dag</option>
+          <option value="start">Sådan startede pumpen</option>
+          <option value="smelt">Isen smelter</option>
+          <option value="tilbage">Kan den komme tilbage?</option>
+          <option value="fri">Fri leg</option>
+        </select>
+        <button type="button" class="btn-mini" id="gpForfra">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 12a8.5 8.5 0 1 1 2.6 6.1"/><path d="M3.2 6.4v5h5"/></svg>
+          Forfra
+        </button>
+        <button type="button" class="btn-mini" id="gpPause" aria-pressed="false">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true" id="gpPauseIkon"><rect x="6" y="4" width="4.4" height="16" rx="1"/><rect x="13.6" y="4" width="4.4" height="16" rx="1"/></svg>
+          <span id="gpPauseTekst">Pause</span>
+        </button>
+        <button type="button" class="btn-mini" id="gpHjaelp" aria-haspopup="dialog">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.4 9.2a2.7 2.7 0 0 1 5.2.9c0 1.8-2.6 2.2-2.6 3.9"/><path d="M12 17.4h.01"/></svg>
+          Sådan læser du billedet
+        </button>
+        <button type="button" class="btn-mini" id="btn-projektor" aria-pressed="false"
+                title="Skjul sidens krom og forstør aflæsningerne">Projektor</button>
       </div>
-      <label for="gpSkyderKulde">Hvor koldt er der i nord?</label>
-    </div>
 
-    <div class="gp-skyder">
-      <div class="gp-skyder-raekke">
-        <!-- isen ligger stille -->
-        <svg viewBox="0 0 26 26" width="26" height="26" aria-hidden="true">
-          <path d="M2 22 13 5l11 17z" fill="#CADCFC" stroke="#065A82" stroke-width="2.2" stroke-linejoin="round"/>
-        </svg>
-        <input type="range" id="gpSkyderFersk" min="0" max="1" step="0.002" value="0">
-        <!-- kraftig afsmeltning -->
-        <svg viewBox="0 0 26 26" width="26" height="26" aria-hidden="true">
-          <path d="M13 3c4.6 6 7 9.4 7 12.4A7 7 0 0 1 6 15.4C6 12.4 8.4 9 13 3z" fill="#CADCFC" stroke="#1C7293" stroke-width="2.2" stroke-linejoin="round"/>
-        </svg>
+      <div class="stage" id="gpScene">
+        <canvas id="gpLaerred" aria-hidden="true"></canvas>
+        <div class="proc" id="gpStatus" data-tilstand="0">
+          <svg viewBox="0 0 34 34" width="22" height="22" aria-hidden="true">
+            <circle cx="17" cy="17" r="14" fill="none" stroke="currentColor" stroke-width="3"/>
+            <path d="M17 9v13M11.5 16.5 17 22.5l5.5-6" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span class="proc-txt" id="gpStatusTekst">Pumpen kører</span>
+        </div>
+        <div class="spg" id="gpSpg" hidden></div>
       </div>
-      <label for="gpSkyderFersk">Hvor meget smelter indlandsisen?</label>
-    </div>
 
-    <div class="gp-vaerktoej">
-      <button type="button" class="gp-knap" id="gpPause" aria-pressed="false">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true" id="gpPauseIkon"><rect x="6" y="4" width="4.4" height="16" rx="1"/><rect x="13.6" y="4" width="4.4" height="16" rx="1"/></svg>
-        <span id="gpPauseTekst">Pause</span>
-      </button>
-      <label class="gp-skjult" for="gpScenarie">Prøv et scenarie</label>
-      <select id="gpScenarie">
-        <option value="" disabled selected>Prøv et scenarie …</option>
-        <option value="idag">Som i dag</option>
-        <option value="start">Sådan startede pumpen</option>
-        <option value="smelt">Isen smelter</option>
-        <option value="tilbage">Kan den komme tilbage?</option>
-        <option value="fri">Fri leg</option>
-      </select>
-    </div>
+      <div class="knobs">
+        <label class="knob" for="gpSkyderKulde">
+          <span class="knob-top mono">Hvor koldt er der i nord?</span>
+          <div class="knob-row">
+            <svg viewBox="0 0 26 26" width="24" height="24" aria-hidden="true" fill="none" stroke="var(--blue)" stroke-width="2.4" stroke-linecap="round">
+              <path d="M13 2v22M3.5 7.5l19 11M22.5 7.5l-19 11"/>
+            </svg>
+            <input type="range" id="gpSkyderKulde" min="0" max="1" step="0.002" value="0.22">
+            <svg viewBox="0 0 26 26" width="24" height="24" aria-hidden="true" fill="none" stroke="var(--coral)" stroke-width="2.4" stroke-linecap="round">
+              <circle cx="13" cy="13" r="5.2" fill="var(--coral)" stroke="none"/>
+              <path d="M13 1.5v3.2M13 21.3v3.2M1.5 13h3.2M21.3 13h3.2M4.9 4.9l2.3 2.3M18.8 18.8l2.3 2.3M21.1 4.9l-2.3 2.3M7.2 18.8l-2.3 2.3"/>
+            </svg>
+          </div>
+        </label>
+
+        <label class="knob" for="gpSkyderFersk">
+          <span class="knob-top mono">Hvor meget smelter indlandsisen?</span>
+          <div class="knob-row">
+            <svg viewBox="0 0 26 26" width="24" height="24" aria-hidden="true">
+              <path d="M2 22 13 5l11 17z" fill="#C7E6F6" stroke="var(--blue)" stroke-width="2.2" stroke-linejoin="round"/>
+            </svg>
+            <input type="range" id="gpSkyderFersk" min="0" max="1" step="0.002" value="0">
+            <svg viewBox="0 0 26 26" width="24" height="24" aria-hidden="true">
+              <path d="M13 3c4.6 6 7 9.4 7 12.4A7 7 0 0 1 6 15.4C6 12.4 8.4 9 13 3z" fill="#C7E6F6" stroke="var(--teal)" stroke-width="2.2" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </label>
+      </div>
+    </section>
+
+    <!-- Statusteksten på figuren opdateres kun, når tilstanden faktisk skifter
+         (se opdaterStatus), og kan derfor selv bære aria-live uden at tale i ét væk. -->
+    <p class="sr" id="gpLive" role="status" aria-live="polite"></p>
   </div>
+</main>
 
-  <details class="gp-opgaver" id="gpOpgaver">
-    <summary>Elevopgaver</summary>
-    <ol>
-      <li class="gp-opgave">
-        <h3>Første opgave — Se efter</h3>
-        <p>Kør «Som i dag». Beskriv med dine egne ord, hvad vandet gør. Hvor synker det ned? Hvor stiger det op? Tegn det.</p>
-        <button type="button" class="gp-knap" data-scenarie="idag">Sæt op</button>
-      </li>
-      <li class="gp-opgave">
-        <h3>Anden opgave — Hvad driver pumpen?</h3>
-        <p>Kør «Sådan startede pumpen». Hvad var det, der skulle ændre sig, før vandet begyndte at synke?</p>
-        <button type="button" class="gp-knap" data-scenarie="start">Sæt op</button>
-      </li>
-      <li class="gp-opgave">
-        <h3>Tredje opgave — Én ting ad gangen</h3>
-        <p>Rør kun ved kuldeskyderen. Hvad sker der? Stil den tilbage. Rør nu kun ved smeltevandsskyderen. Hvad sker der? Hvilken af de to gjorde størst forskel?</p>
-        <button type="button" class="gp-knap" data-scenarie="fri">Sæt op</button>
-      </li>
-      <li class="gp-opgave">
-        <h3>Fjerde opgave — Vejen tilbage</h3>
-        <p>Kør «Kan den komme tilbage?». Skru begge skydere tilbage til udgangspunktet og vent. Hvad sker der — og hvad sagde du på forhånd, der ville ske?</p>
-        <button type="button" class="gp-knap" data-scenarie="tilbage">Sæt op</button>
-      </li>
-      <li class="gp-opgave">
-        <h3>Femte opgave — Fra kar til skærm</h3>
-        <p>Hvad på skærmen svarer til isen i jeres plexiglas-kar? Til den varme flaske? Til frugtfarven? Nævn to ting, skærmen kan, som karret ikke kan — og to ting, karret gør bedre.</p>
-        <button type="button" class="gp-knap" data-scenarie="idag">Sæt op</button>
-      </li>
-    </ol>
-  </details>
-</div>
+<footer class="foot">
+  <div class="foot-in">
+    <div>
+      <a href="/" class="brand"><span class="brand-mark"></span>smbi<em>.dk</em></a>
+      <div class="mono">Grønlandspumpen</div>
+    </div>
+    <nav class="foot-links">
+      <a href="/geografi.html">Naturgeografi</a>
+      <a href="/">Alle simuleringer</a>
+      <a href="/contact.html">Kontakt</a>
+    </nav>
+  </div>
+</footer>
 
-<div class="gp-overlay" id="gpHjaelpLag" hidden>
-  <div class="gp-panel" role="dialog" aria-modal="true" aria-labelledby="gpHjaelpTitel" tabindex="-1" id="gpPanel">
+<div class="hjaelp-overlay" id="gpHjaelpLag" hidden>
+  <div class="hjaelp-panel" role="dialog" aria-modal="true" aria-labelledby="gpHjaelpTitel" tabindex="-1" id="gpPanel">
     <h2 id="gpHjaelpTitel">Sådan læser du billedet</h2>
-    <ul class="gp-legende">
+    <ul class="legende">
       <li>
-        <svg viewBox="0 0 54 26" width="54" height="26" aria-hidden="true"><circle cx="27" cy="13" r="8" fill="#083A5F"/></svg>
+        <svg viewBox="0 0 54 26" width="48" height="24" aria-hidden="true"><circle cx="27" cy="13" r="8" fill="#083A5F"/></svg>
         <span>tungt vand</span>
       </li>
       <li>
-        <svg viewBox="0 0 54 26" width="54" height="26" aria-hidden="true"><circle cx="27" cy="13" r="8" fill="#E4EDFB" stroke="#A8BEE4" stroke-width="1.6"/></svg>
+        <svg viewBox="0 0 54 26" width="48" height="24" aria-hidden="true"><circle cx="27" cy="13" r="8" fill="#E4EDFB" stroke="#A8BEE4" stroke-width="1.6"/></svg>
         <span>let vand</span>
       </li>
       <li>
-        <svg viewBox="0 0 54 26" width="54" height="26" aria-hidden="true" fill="none" stroke="#065A82" stroke-width="4.5" stroke-linecap="round">
+        <svg viewBox="0 0 54 26" width="48" height="24" aria-hidden="true" fill="none" stroke="#065A82" stroke-width="4.5" stroke-linecap="round">
           <path d="M4 8h16M28 8h20M8 18h12M30 18h18"/>
         </svg>
         <span>hurtige partikler — kraftig strøm</span>
       </li>
       <li>
-        <svg viewBox="0 0 54 26" width="54" height="26" aria-hidden="true">
+        <svg viewBox="0 0 54 26" width="48" height="24" aria-hidden="true">
           <path d="M15 1h24l-6 16h-12z" fill="#21295C" opacity=".38"/>
           <path d="M27 6v12M20.5 13 27 20l6.5-7" fill="none" stroke="#21295C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
         <span>her synker vandet ned</span>
       </li>
       <li>
-        <svg viewBox="0 0 54 26" width="54" height="26" aria-hidden="true">
+        <svg viewBox="0 0 54 26" width="48" height="24" aria-hidden="true">
           <path d="M46 3c-9 4-14 9-18 14-2 3-5 5-9 6" fill="none" stroke="#CADCFC" stroke-width="9" stroke-linecap="round"/>
         </svg>
         <span>smeltevand</span>
       </li>
       <li>
-        <svg viewBox="0 0 54 26" width="54" height="26" aria-hidden="true">
+        <svg viewBox="0 0 54 26" width="48" height="24" aria-hidden="true">
           <rect x="3" y="9" width="23" height="14" fill="#4F8B5A"/>
           <rect x="28" y="9" width="23" height="14" fill="#8C949F"/>
           <path d="M9 9V5M15 5H9M40 9V5M46 5h-6" fill="none" stroke="#21295C" stroke-width="1.8"/>
@@ -447,9 +535,18 @@ html,body{margin:0;padding:0;background:#F7FAFC;}
         <span>grønt eller gråt landskab — klimaet i Danmark</span>
       </li>
     </ul>
-    <button type="button" class="gp-knap gp-luk" id="gpLukHjaelp">Luk</button>
+    <button type="button" class="btn-mini" id="gpLukHjaelp" style="margin-top:18px">Luk</button>
   </div>
 </div>
+
+<script>
+/* skjul side-krom, når siden vises i en iframe */
+(function(){try{if(window.top!==window.self){
+  document.getElementById('site-top').style.display='none';
+  document.querySelector('.foot').style.display='none';
+  document.querySelector('.head').style.display='none';
+}}catch(x){}})();
+</script>
 
 <script>
 (function(){
@@ -1037,8 +1134,8 @@ function saetSkydere(kulde,fersk){
   slFersk.value=String(k01(fersk));
   laesSkydere();
 }
-slKulde.addEventListener('input',function(){ auto=null; laesSkydere(); });
-slFersk.addEventListener('input',function(){ auto=null; laesSkydere(); });
+slKulde.addEventListener('input',function(){ auto=null; laesSkydere(); gemTilstand(); });
+slFersk.addEventListener('input',function(){ auto=null; laesSkydere(); gemTilstand(); });
 
 function opdaterStatus(){
   if(M.tilstand===visTilstand) return;
@@ -1077,6 +1174,7 @@ function koerScenarie(navn){
   for(var i=0;i<N_MAX;i++) P[i].tung=t;
   elSpg.textContent=s.spg; elSpg.hidden=false;
   elScenarie.value=navn;
+  gemTilstand();
 }
 
 function opdaterAuto(dt){
@@ -1111,12 +1209,47 @@ document.getElementById('gpLukHjaelp').addEventListener('click',lukHjaelp);
 hjaelpLag.addEventListener('click',function(e){ if(e.target===hjaelpLag) lukHjaelp(); });
 document.addEventListener('keydown',function(e){ if(e.key==='Escape' && !hjaelpLag.hidden) lukHjaelp(); });
 
-var opgaveKnapper=document.querySelectorAll('.gp-opgave [data-scenarie]');
-for(var q=0;q<opgaveKnapper.length;q++){
-  opgaveKnapper[q].addEventListener('click',function(){
-    koerScenarie(this.getAttribute('data-scenarie'));
-    scene.scrollIntoView({behavior:'smooth',block:'center'});
-  });
+/* ── Projektortilstand ───────────────────────────────────────────────── */
+var btnProjektor=document.getElementById('btn-projektor');
+function saetProjektor(til){
+  document.body.setAttribute('data-projektor', til?'1':'0');
+  btnProjektor.setAttribute('aria-pressed', til?'true':'false');
+}
+btnProjektor.addEventListener('click',function(){
+  saetProjektor(document.body.getAttribute('data-projektor')!=='1');
+});
+if(/mode=teach|projektor=1/.test(location.search)) saetProjektor(true);
+
+/* ── Deling: skydernes stilling ligger i adressen ────────────────────────
+   #k=kuldeskyder&f=ferskskyder — de samme nøgler accepteres som query. */
+var hashTimer=0, hashSidste='';
+function tilstandStreng(){ return '#k='+slKulde.value+'&f='+slFersk.value; }
+function gemTilstand(){
+  var h=tilstandStreng();
+  if(h===hashSidste) return;
+  hashSidste=h;
+  clearTimeout(hashTimer);
+  hashTimer=setTimeout(function(){
+    if(location.hash!==h) history.replaceState(null,'',h);
+  },400);
+}
+function laesTilstand(){
+  var p=new URLSearchParams(location.search);
+  new URLSearchParams(location.hash.replace(/^#/,'')).forEach(function(v,k){ p.set(k,v); });
+  function tal(raa){ var v=parseFloat(raa); return isFinite(v) ? k01(v) : null; }
+  var k=tal(p.get('k')), f=tal(p.get('f'));
+  if(k!==null || f!==null){
+    if(k!==null) slKulde.value=String(k);
+    if(f!==null) slFersk.value=String(f);
+    laesSkydere();
+    auto=null;
+    elSpg.hidden=true;
+  }
+  /* koerScenarie('idag') har allerede planlagt en forsinket skrivning af
+     standardværdierne til adressen — den skal annulleres, ellers overskriver
+     den et delt link et øjeblik efter, siden den er planlagt før vi når hertil. */
+  clearTimeout(hashTimer);
+  hashSidste=tilstandStreng();
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -1145,6 +1278,7 @@ function ramme(nu){
 
 tilpas();
 koerScenarie('idag');
+laesTilstand();
 requestAnimationFrame(ramme);
 
 })();

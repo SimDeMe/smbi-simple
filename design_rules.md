@@ -13,10 +13,12 @@ skal følge skabelonen herunder. Kopiér fra en side, der allerede er lagt om.
 | `geografi/drivhuseffektenSimpel.html` | trinvis SVG-figur med forklaringsspalte |
 
 Lagt om indtil videre: forsiden, fagforsiderne, `born.html`, `admin.html`,
-`Stigningsregn.html`, `drivhuseffektenSimpel.html`, `drivhuseffekten.html`,
-`poroesitetPermeabilitet.html`, `TermiskTryk3.html`, `Dugpunkt.html`,
+`contact.html`, `Stigningsregn.html`, `drivhuseffektenSimpel.html`,
+`drivhuseffekten.html`, `poroesitetPermeabilitet.html`, `TermiskTryk3.html`,
+`Dugpunkt.html`, `groenlandspumpen.html`,
 `biologi/transkription.html`, `biologi/enzymkinetik.html`,
-`biologi/osmose.html`, `biologi/DNA_Simulering.html` (brug dem som forlæg, når `--accent:var(--bio)` skal
+`biologi/osmose.html`, `biologi/DNA_Simulering.html`, `biologi/enzymhastighed.html`
+(brug dem som forlæg, når `--accent:var(--bio)` skal
 bruges). Resten af `geografi/`, `biologi/` og `style.css`-siderne kører
 stadig det gamle design — rør dem kun, når opgaven handler om dem.
 

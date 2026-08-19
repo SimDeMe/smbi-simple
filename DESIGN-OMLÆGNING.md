@@ -4,7 +4,8 @@ Status pr. 9. august 2026. Skabelonen er beskrevet i `CLAUDE.md`.
 Forlæg: `index.html` + `forside.css`, `geografi/Stigningsregn.html`,
 `geografi/drivhuseffektenSimpel.html`.
 
-**Lagt om: 10 sider. Tilbage: 37.**
+**Lagt om: 21 sider. Tilbage: 24.** (`bio-tree.html`, `geografi/straalingsbalance.html`
+og omdirigeringen `biologi/bio-blocks.html` er fjernet i stedet for lagt om.)
 
 Rækkefølgen nedenfor er valgt efter, hvad eleverne og du selv møder oftest,
 ikke efter hvad der er nemmest.
@@ -179,9 +180,44 @@ deler samme mætningsformel.
   temperatur 0–35 °C, vanddamp 0–40 g/m³ og 500 tilfældige skydeforløb (for at
   teste akkumuleringen af opsamlet nedbør), målt mod udgaven i `HEAD`.
 
-| # | Fil | Linjer | Indhold | Bemærkning |
-| --- | --- | --- | --- | --- |
-| 6 | `geografi/groenlandspumpen.html` | 1153 | canvas + 15 svg, 2 skydere | Mange SVG-lag; afsæt tid til `<title>`/`<desc>` og stregtype som andet signal end farve. |
+### ✅ 6 — `geografi/groenlandspumpen.html` (færdig)
+
+Lagt om fra 1153 til 1287 linjer. Modellen (afsnit 1–5 i scriptet: den
+skjulte fysik, geometrien, partiklerne, tidsbåndet og selve tegningen) er
+**byte-for-byte uændret** — kontrolleret med `diff` mod udgaven i `HEAD`,
+0 afvigelser. Kun rammen og brugerfladen omkring er ny.
+
+* Den bespoke `.gp-app`-fuldskærmschrome (egen topbjælke, `.smbi-home`,
+  Cambria/Calibri) er væk til fordel for skabelonens `.top`/`.wrap head`/
+  `.rig`. `.stage` låser scenen til `aspect-ratio:1280/680`, så det
+  uændrede `tilpas()` (som måler containerens `getBoundingClientRect()`)
+  fortsat fungerer uden at scriptet er rørt.
+* **De fem elevopgaver er fjernet** fra siden efter aftale — samme mønster
+  som `poroesitetPermeabilitet.html`. De kan senere lægges som et
+  selvstændigt ark ved siden af.
+* Statusteksten ("Pumpen kører" / "bliver træg" / …) er flyttet fra en stor
+  fritstående overskrift til en `.proc`-pille oven på scenen (samme mønster
+  som `Stigningsregn.html`), farvet efter tilstand. Spørgsmåls-pillen
+  (`.spg`) sidder øverst i midten. `.rig-head` samler Scenarie-vælgeren,
+  Forfra, Pause, hjælp-knappen og en ny `Projektor`-knap.
+* Hjælpepanelet (legenden med tungt/let vand, strøm, synkezone, smeltevand,
+  Danmark) er genbrugt, men skal nu se ud som sitets øvrige paneler: ink-kant,
+  hård skygge, `--display`-overskrift.
+* Ny delbar tilstand `#k=0.22&f=0` (kulde- og ferskvandsskyder), som også
+  accepteres som query, plus `Projektor`-knap / `?projektor=1` / `?mode=teach`.
+  **Fejl fundet og rettet under test:** den forsinkede skrivning til adressen,
+  som `koerScenarie('idag')` sætter i gang ved indlæsning, blev ikke
+  annulleret, når et delt link satte skyderne om lige efter — den overskrev
+  derfor det delte link med standardværdierne et øjeblik senere.
+  `laesTilstand()` rydder nu den ventende timer.
+* **Ikke lavet i denne omgang:** selve kanvas-illustrationen (sol, is,
+  Danmark, partiklernes tunghedsfarve) er stadig malet i sin egen palette,
+  ikke sitets ink-streg-stil som fx `TermiskTryk3.html`. Farve er stadig
+  vandmassens eneste signal ud over fart — et evt. sekundært signal
+  (mønster/stregtype) er ikke tilføjet. Begge dele kan tages som en separat
+  finish-runde uden at røre modellen.
+
+Etape 2 er dermed gennemført.
 
 ---
 
@@ -237,16 +273,36 @@ fra bunden som én simulering uden eksterne afhængigheder.
 * Alle links til `bio-glass/index.html` er opdateret til
   `biologi/enzymkinetik.html` (forsiden, fagforsiden).
 
+### ✅ 11 — `biologi/DNA_Simulering.html` (færdig)
+
+Lagt om fra 684 til 1356 linjer, `drivhuseffektenSimpel.html` brugt som
+forlæg (trinvis SVG-figur). `--accent:var(--bio)`, projektortilstand og
+`aria-live`-status er på plads. Modellen er urørt.
+
+### ✅ 12 — `biologi/enzymhastighed.html` (færdig)
+
+Lagt om fra 635 til 1023 linjer. Samme commit fjernede den gamle, ubrugte
+`geografi/straalingsbalance.html` og dens links fra forsiden og fagforsiden.
+
+### ✅ 13 — `biologi/osmose.html` (færdig)
+
+Lagt om fra 389 til 980 linjer.
+
+### 14 — `bio-tree.html` (fjernet)
+
+Slettet i stedet for lagt om — indgik ikke i undervisningen længere. Links
+fra `index.html` og `biologi.html` er fjernet samtidig.
+
+### 16 — `biologi/bio-blocks/index.html`
+
+Stadig uredesignet — 2 svg, egen `style.css`. Omdirigeringsfilen
+`biologi/bio-blocks.html` (12 linjer) er nu fjernet, og `index.html` linker
+direkte til `biologi/bio-blocks/`; om siden skal **fjernes** eller
+**redesignes** står stadig åbent.
+
 | # | Fil | Linjer | Indhold |
 | --- | --- | --- | --- |
-| 9 | `biologi/KvindensCyklus/FinalSim.html` | 1322 | 3 canvas, 1 skyder |
-| 11 | `biologi/DNA_Simulering.html` | 684 | svg, trinvis — `drivhuseffektenSimpel.html` er forlæg |
-| 12 | `biologi/enzymhastighed.html` | 635 | 5 canvas, 3 skydere |
-| 13 | `biologi/osmose.html` | 389 | canvas + svg, 2 skydere |
-| 14 | `bio-tree.html` | 230 | svg-netværk |
-| 16 | `biologi/bio-blocks/index.html` | 129 | 2 svg; har egen `style.css` — skal fjernes |
-
-`biologi/bio-blocks.html` er kun en redirect på 12 linjer og skal ikke røres.
+| 9 | `biologi/KvindensCyklus/FinalSim.html` | 1322 | 3 canvas, 1 skyder — links hertil er fjernet fra fagforsiden |
 
 ---
 
@@ -337,11 +393,11 @@ side i stedet for som en separat runde.
 
 ## Næste arbejdsgang
 
-**Etape 2, punkt 6:** `groenlandspumpen.html` (1153 linjer). Mange SVG-lag —
-afsæt tid til `<title>`/`<desc>` og til at give hvert lag et andet signal end
-farven. Modellen skal kontrolleres mod den gamle udgave over et gitter af
-inputkombinationer, før den kaldes færdig. Det er nu det sidste punkt i
-etape 2.
+**Etape 3:** `biologi/KvindensCyklus/FinalSim.html` (1322 linjer, 3 canvas,
+1 skyder) er nu det eneste tilbageværende punkt — links hertil er allerede
+fjernet fra fagforsiden. Derefter `biologi/bio-blocks/index.html`, hvor det
+først skal afklares, om siden skal redesignes eller fjernes (se punkt 16
+ovenfor).
 
 **Sideløbende:** opgaver til `poroesitetPermeabilitet.html` — et selvstændigt
 ark ved siden af simuleringen, i flere niveauer (C, HF), der henviser til
