@@ -17,13 +17,9 @@ membran.html      CSS, markup, importmap
   └─ side.js      indgangen: DOM, knapper, tilstand, adresse
        ├─ model.js       scene, kamera, orbit, størrelse, render-løkke, tværsnit
        ├─ struktur.js    dobbeltlag, kolesterol, proteiner, sukkerkæder
-       ├─ forklaring.js  udpegning i figuren og forklaringsruden
        ├─ molekyler.js   fagdata om de stoffer, der skal transporteres
        └─ transport.js   registret
-            ├─ transport-diffusion.js
-            ├─ transport-kanal.js
-            ├─ transport-baerer.js
-            └─ transport-pumpe.js
+            └─ transport-*.js   én mekanisme pr. fil
 ```
 
 `model.js` og `struktur.js` kender ikke hinandens indhold. `struktur.js` ved
@@ -54,34 +50,38 @@ vandkappe ca. 0,7 nm.
   alfahelixer i ring, kulhydratkæder på glykoprotein og glykolipider. Alt
   bevæger sig langsomt: lipiderne vandrer, proteinerne driver og drejer — det
   er pointen i navnet.
-* **Trin 4 — udpegning og forklaringsrude.** `forklaring.js`. Klik på en del i
-  figuren, eller på en af knapperne i signaturforklaringen, og ruden til højre
-  forklarer den. Den valgte del lyser op indefra (hele hovedlaget lyser fx op
-  på én gang). Ruden har `aria-live`, og signaturknapperne giver fuld
-  betjening med tastatur alene. Teksterne ligger i `struktur.js` — `DELE` for
-  lipiddelene, `PROTEINER[].beskrivelse` for proteinerne.
-* **Trin 5 — rammen om transporten.** Vælgerrækken `.veje` med de fire
-  transportveje, `.gauges` med transporttype, energiforbrug, protein og
-  stoffer, og en blød kameraflyvning hen til den valgte vej. De fire
-  `transport-*.js` er oprettet med deres fagbeskrivelse og deres kamera­­
-  indstilling; `byg`/`opdater`/`aflaes` er stadig tomme.
-  Tværsnittet blev samtidig lavet om: det følger nu kameraet og lægger sig
-  lige foran det, man har fokus på, så man kan se ind i membranen præcis ved
-  det valgte protein — uden at save proteinet over.
+* **`molekyler.js`** er skrevet med ti stoffer, men bruges endnu ikke af
+  siden. Den tages i brug i trin 4.
 
 ---
 
-## Besvaret undervejs
+## Uafklaret — skal besvares før trin 5
 
-* **Én mekanisme ad gangen.** Vælgerrækken flytter kameraet hen til ét
-  protein. Trin 10 lægger koncentrationsskydere oveni, men grundformen er
-  én vej ad gangen.
-* **Alle fire veje er med.** Diffusion, kanal, bærer og pumpe har hver sin
-  fil og sin plads i vælgeren.
+1. **Hvilke transportveje skal med i første udgave?** Alle fire (diffusion,
+   kanal, bærer, pumpe), eller færre til at begynde med? - Vi starter med kun diffusion - passiv og faciliteret
+2. **Én mekanisme ad gangen eller alle på én gang?** Knapper i `.rig-head`,
+   der zoomer kameraet hen til det valgte protein og kun animerer det — eller
+   én levende membran, hvor alt kører samtidig og eleven skruer på
+   koncentrationen. Det afgør, om trin 5 bygger en vælger eller en
+   gradientmodel. - Det skal være en levende membran hvor alt kører samtidig. 
+
+Trin 4 er uafhængigt af begge og kan bygges først.
 
 ---
 
 ## Resten af planen
+
+### Trin 4 — klik på en del, få den forklaret
+Raycast mod proteinernes grupper og mod de to `InstancedMesh`-lag (brug
+`instanceId` til at skelne hoved fra hale). Valgt del vises i en rude til
+højre for figuren (`.stage` bliver to spalter ved ≥ 960 px, én under).
+Teksterne ligger allerede i `PROTEINER[].beskrivelse` i `struktur.js`.
+Tastaturadgang: Tab mellem delene, ikke kun klik. `aria-live` på ruden.
+
+### Trin 5 — rammen om transporten
+Vælgerknapper i `.rig-head`, `.gauges`-rækken tilføjes, kameraet flyttes blødt
+hen til det valgte protein, `location.hash` får `vej=…`. `transport.js` bruges
+som registret. Ingen mekanik endnu — kun stilladset, så trin 6-9 kan hænges på.
 
 ### Trin 6 — `transport-diffusion.js`
 O₂, CO₂ og steroidhormon glider tværs gennem lipidlaget uden protein. Vis, at
@@ -130,39 +130,11 @@ på en ældre bærbar, og link ind fra `biologi.html`.
 
 ---
 
-## Sådan hænger en mekanisme på
-
-Trin 6-9 udfylder de fire kroge i hver `transport-*.js`:
-
-* `byg(ctx)` — lav partiklerne én gang. Læg dem i **én `InstancedMesh` pr.
-  molekyletype**, ikke ét `Mesh` pr. partikel.
-* `opdater(t, dt, ctx)` — flyt dem ét billede frem.
-* `aflaes(ctx)` — returnér `{mærkat: værdi}`. `side.js` viser i dag fire faste
-  instrumenter fra mekanismens metadata; når `aflaes` giver noget andet end
-  `null`, skal `visInstrumenter` udvide rækken med de tal (fx netto pr.
-  sekund, forbrugt ATP).
-* `ryd(ctx)` — fjern det hele igen, når vejen fravælges.
-
-Kameraet står allerede rigtigt: `kamera:{el, dist, y}` i hver fil bestemmer
-udsnittet, og der er med vilje luft over og under membranen, fordi det er
-dér, molekylerne skal bevæge sig.
-
----
-
 ## Ting at holde øje med
 
 * **Ydelse.** Dobbeltlaget opdaterer ca. 2400 instansmatricer pr. billede.
   Kommer der mange partikler til i trin 6-10, så saml dem i én `InstancedMesh`
   pr. molekyletype frem for ét `Mesh` pr. partikel.
-* **Browserfaner i baggrunden får ikke `requestAnimationFrame`.** Figuren står
-  bomstille, indtil fanen er fremme. Det er normalt — men det gør automatisk
-  afprøvning af animationer upålidelig, hvis fanen ikke er i forgrunden.
-* **`python3 -m http.server` cacher moduler.** Retter man en `.js`-fil og
-  genindlæser, kan browseren stadig køre den gamle. Hård genindlæsning
-  (⇧⌘R) løser det.
-* **Hash alene genindlæser ikke siden.** Skal en delt adresse som
-  `#vej=pumpe` afprøves, så åbn den i en ny fane eller genindlæs — at ændre
-  hash'en på en side, der allerede er åben, kører ikke `læsTilstand` igen.
 * **Enheder.** `mmol/L`, `nm`, `pH` skal skrives, som de staves, også inde i
   mono-mærkater med `text-transform:uppercase` — pak dem i `<span class="enhed">`.
 * **Hold siden let.** Ingen forklarende tekstblokke under panelet, og ingen
