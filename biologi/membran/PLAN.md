@@ -47,10 +47,15 @@ vandkappe ca. 0,7 nm.
   (træk, hjul, knib, piletaster, `0` nulstiller), `ResizeObserver`,
   render-løkke og tværsnit via en klipflade.
 * **Trin 3 — `struktur.js`.** Dobbeltlaget som `InstancedMesh` (ca. 800
-  fosfolipider, hoved + to haler), kolesterol, fem proteiner bygget af
-  alfahelixer i ring, kulhydratkæder på glykoprotein og glykolipider. Alt
-  bevæger sig langsomt: lipiderne vandrer, proteinerne driver og drejer — det
-  er pointen i navnet.
+  fosfolipider, hoved + to haler), kolesterol, fem proteiner og kulhydratkæder
+  på glykoprotein og glykolipider. Alt bevæger sig langsomt: lipiderne vandrer,
+  proteinerne driver og drejer — det er pointen i navnet.
+  Fire af proteinerne er alfahelixer stillet op i en ring (`helixbundt`).
+  **Na⁺/K⁺-pumpen** er bygget for sig efter ATPasens egen form: et skævt
+  pakket bundt af 10 transmembranhelixer, de tre cytosoldomæner N, P og A som
+  bløde klumper (`klump`), og en β-underenhed med helix, kugle og sukkerkæde
+  på ydersiden. `objekt.userData.atpSted` peger på N-domænet, så trin 9 kan
+  hænge et ATP op dér.
 * **Trin 4 — udpegning og forklaringsrude.** `forklaring.js`. Klik på en del i
   figuren, eller på en af knapperne i signaturforklaringen, og ruden til højre
   forklarer den. Den valgte del lyser op indefra. Teksterne ligger i
@@ -105,8 +110,9 @@ høj koncentration, fordi der kun er så mange transportører.
 
 ### Trin 9 — `transport-pumpe.js`
 Na⁺/K⁺-pumpen: 3 Na⁺ ud, 2 K⁺ ind, 1 ATP. ATP-molekylet skal ses forbruges i
-pumpens cytosoldomæne (det er allerede bygget i `struktur.js`), og retningen
-skal tydeligt være **mod** gradienten. Tæller for forbrugt ATP i `.gauges`.
+N-domænet (formen er allerede bygget i `struktur.js`, og
+`findProtein('pumpe').objekt.userData.atpSted` er stedet), og retningen skal
+tydeligt være **mod** gradienten. Tæller for forbrugt ATP i `.gauges`.
 
 ### Trin 10 — én gradient pr. stof
 Skyderne i `.knobs` gælder i dag ilt alene. Når kanalen og bæreren kommer til,

@@ -72,9 +72,9 @@ export const PROTEINER = [
    navn:'Transportprotein', type:'Integralt membranprotein',
    beskrivelse:'Binder ét molekyle ad gangen og skifter form for at slippe det ud på den anden side. Også passivt, men langsommere end en kanal — og det kan mættes, når alle proteiner er i brug.'},
 
-  {id:'pumpe',   slags:'pumpe',        x: 6.6, z:-2.4, r:2.2,
+  {id:'pumpe',   slags:'pumpe',        x: 6.6, z:-2.4, r:2.4,
    navn:'Na⁺/K⁺-pumpen', type:'Integralt membranprotein',
-   beskrivelse:'Flytter 3 Na⁺ ud og 2 K⁺ ind — mod koncentrationsgradienten. Det koster ATP, og derfor er det aktiv transport. Knuden nedenunder er det domæne, hvor ATP bindes.'},
+   beskrivelse:'Flytter 3 Na⁺ ud og 2 K⁺ ind — mod koncentrationsgradienten. Det koster ATP, og derfor er det aktiv transport. De tre klumper nede i cytosolen er pumpens motor: ATP binder i kløften mellem de to yderste, og hver gang det spaltes, skifter pumpen form.'},
 
   {id:'glyko',   slags:'glykoprotein', x:-2.4, z:-7.4, r:1.2,
    navn:'Glykoprotein', type:'Integralt membranprotein',
@@ -135,6 +135,30 @@ function helixbundt({antal, ringR, højde, materiale, hældning = 0}){
   return g;
 }
 
+/* En uregelmæssig, kugleformet klump — sådan tegner man et
+   proteindomæne, når man viser overfladen frem for helixerne.
+   Formen laves ved at trække en kugle ind og ud efter et blødt
+   bølgefelt: nabopunkter flytter sig næsten ens, så klumpen får
+   runde buler frem for at se hakket ud. `frø` forskyder feltet, så
+   to klumper ikke er ens — men den samme klump er ens hver gang,
+   for et protein må ikke skifte form fra indlæsning til indlæsning. */
+function klump(materiale, {skala = [1, 1, 1], ryst = 0.26, frø = 1}){
+  const geo = new THREE.SphereGeometry(1, 22, 14);
+  const pos = geo.attributes.position;
+  const f = 1 + frø * 0.37;
+  for(let i = 0; i < pos.count; i++){
+    const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
+    const k = 1 + ryst * (
+      0.62 * Math.sin(x * 2.3 + f)        * Math.sin(y * 1.9 - f) +
+      0.38 * Math.sin(z * 3.1 - f * 1.7)  * Math.sin(x * 2.7 + f * 0.6));
+    pos.setXYZ(i, x * k, y * k, z * k);
+  }
+  geo.computeVertexNormals();
+  const m = new THREE.Mesh(geo, materiale);
+  m.scale.set(...skala);
+  return m;
+}
+
 /* En tynd stav mellem to punkter — bruges til sukkerkædernes bindinger. */
 function stav(a, b, r, materiale){
   const retning = new THREE.Vector3().subVectors(b, a);
@@ -168,6 +192,116 @@ function sukkerkæde({dybde = 2, længde = 0.62, radius = 0.19, materiale}){
   })(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 1, 0), dybde, radius);
 
   return g;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Na⁺/K⁺-pumpen
+
+   Pumpen er sidens største og vigtigste protein, og dens form er
+   selv fagligt indhold. Derfor bygges den ikke som de andre — en
+   ring af ens helixer — men efter den form, Na⁺/K⁺-ATPasen
+   faktisk har, sådan som den ses i illustrationer af strukturen:
+
+     α-underenheden  10 transmembranhelixer i et skævt pakket
+                     bundt, og nede i cytosolen tre domæner:
+                     N binder ATP, P bliver fosforyleret, og A
+                     drejer pumpen mellem de to former. Det er
+                     dem, der giver pumpen dens tunge hoved
+                     forneden — og det er dét, der adskiller den
+                     fra en kanal ved første øjekast.
+     β-underenheden  én helix ude i kanten af bundtet og en stor
+                     kugleformet del på ydersiden med sukkerkæde.
+
+   Tallene er en skitse af formen, ikke koordinater fra en
+   krystalstruktur. Målene passer: pumpen fylder ca. 12 nm fra
+   sukkerkæden øverst til N-domænet nederst, hvoraf membranen kun
+   er de 4,6 i midten.
+   ═══════════════════════════════════════════════════════════ */
+
+/* α-underenhedens transmembranhelixer. v = vinkel i omgange,
+   r = afstand fra ionvejen, y = højdeskub, h = hældning udad.
+   De fire inderste står så tæt, at der ikke er hul igennem — en
+   pumpe er netop aldrig åben på begge sider samtidig, og dét er
+   forskellen på den og kanalproteinet ved siden af. */
+const PUMPE_TM = [
+  {v:0.03, r:0.48, y: 0.20, h:0.03},
+  {v:0.30, r:0.56, y:-0.12, h:0.05},
+  {v:0.62, r:0.52, y: 0.08, h:0.04},
+  {v:0.86, r:0.62, y: 0.24, h:0.02},
+
+  {v:0.10, r:1.24, y:-0.18, h:0.15},
+  {v:0.20, r:1.34, y: 0.10, h:0.18},
+  {v:0.41, r:1.18, y: 0.02, h:0.13},
+  {v:0.50, r:1.32, y:-0.22, h:0.17},
+  {v:0.71, r:1.28, y: 0.16, h:0.16},
+  {v:0.95, r:1.16, y:-0.06, h:0.12},
+];
+
+/* De tre cytosoldomæner. s er halvakserne, drej vipper klumpen,
+   så de tre ikke ligger på linje. N ligger yderst for enden af
+   stilken — kløften mellem N og P er der, ATP'et binder. */
+const PUMPE_DOMÆNER = [
+  {id:'P', x: 0.05, y:-4.05, z: 0.10, s:[1.62, 0.90, 1.40], drej: 0.10, frø: 7},
+  {id:'A', x:-1.50, y:-3.95, z:-0.90, s:[1.05, 0.85, 0.95], drej:-0.40, frø:19},
+  {id:'N', x: 0.80, y:-5.75, z: 0.40, s:[1.40, 1.24, 1.18], drej: 0.28, frø:31},
+];
+
+const PUMPE_BETA = 0.72;   // β-helixens vinkel, i omgange
+
+function byggPumpe({materiale, sukkerMateriale, T}){
+  const g = new THREE.Group();
+  const sukkerkæder = [];
+  const højde = T + 2.0;
+  /* Tykkere tråd end sidens andre proteiner: pumpen skal se ud som
+     ét pakket bundt, ikke som løse tråde ved siden af de massive
+     domæner nedenunder. */
+  const geo = helix(højde, 0.24, højde * 0.5, 0.165);
+  const akse = new THREE.Vector3();
+
+  /* ── α: bundtet gennem membranen ─────────────────────── *
+   * Skubbet en anelse ned, fordi pumpen rager meget længere ud
+   * på cytosolsiden end på ydersiden — også dét er sådan, den
+   * ser ud i virkeligheden.                                   */
+  for(const H of PUMPE_TM){
+    const a = H.v * Math.PI * 2;
+    const m = new THREE.Mesh(geo, materiale);
+    m.position.set(Math.cos(a) * H.r, H.y - 0.45, Math.sin(a) * H.r);
+    m.quaternion.setFromAxisAngle(akse.set(-Math.sin(a), 0, Math.cos(a)), -H.h);
+    g.add(m);
+  }
+
+  /* ── α: hovedet nede i cytosolen ─────────────────────── */
+  let atpSted = null;
+  for(const D of PUMPE_DOMÆNER){
+    const k = klump(materiale, {skala:D.s, ryst:0.26, frø:D.frø});
+    k.position.set(D.x, D.y, D.z);
+    k.rotation.set(D.drej * 0.6, D.drej, D.drej * 0.4);
+    g.add(k);
+    if(D.id === 'N') atpSted = k.position.clone();
+  }
+  /* Halsen mellem P og N — hængslet, der lukker sig om ATP'et. */
+  g.add(stav(new THREE.Vector3(0.25, -4.50, 0.15),
+             new THREE.Vector3(0.70, -5.35, 0.35), 0.38, materiale));
+
+  /* ── β: helix i kanten, kugle og sukker på ydersiden ─── */
+  {
+    const a = PUMPE_BETA * Math.PI * 2;
+    const m = new THREE.Mesh(geo, materiale);
+    m.position.set(Math.cos(a) * 1.80, 0.70, Math.sin(a) * 1.80);
+    g.add(m);
+
+    const kugle = klump(materiale, {skala:[1.05, 0.92, 0.98], ryst:0.30, frø:41});
+    kugle.position.set(Math.cos(a) * 1.60, 3.95, Math.sin(a) * 1.60);
+    g.add(kugle);
+
+    const kæde = sukkerkæde({dybde:1, længde:0.5, radius:0.15, materiale:sukkerMateriale});
+    kæde.position.set(kugle.position.x, kugle.position.y + 0.80, kugle.position.z);
+    kæde.userData.delId = 'sukker';
+    g.add(kæde);
+    sukkerkæder.push(kæde);
+  }
+
+  return {gruppe:g, sukkerkæder, atpSted};
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -319,14 +453,12 @@ export function byggMembran(scene){
       g.add(helixbundt({antal:8, ringR:0.98, højde:T + 1.8, materiale:pm, hældning:0.05}));
 
     } else if(P.slags === 'pumpe'){
-      g.add(helixbundt({antal:10, ringR:1.26, højde:T + 2.4, materiale:pm, hældning:0.04}));
-      /* Pumpens indre domæne, hvor ATP bindes. Det er den knude,
-         der gør den til aktiv transport, så den skal kunne ses. */
-      for(const [y, s] of [[-4.0, 1.05], [-5.1, 0.78]]){
-        const k = new THREE.Mesh(new THREE.SphereGeometry(1, 14, 10), pm);
-        k.position.set(0, y, 0); k.scale.set(s, s * 0.72, s * 0.92);
-        g.add(k);
-      }
+      const pumpe = byggPumpe({materiale:pm, sukkerMateriale:mat.sukker, T});
+      g.add(pumpe.gruppe);
+      for(const k of pumpe.sukkerkæder) sukkerdele.push(k);
+      /* Hvor ligger N-domænet? Trin 9 skal kunne hænge et ATP-molekyle
+         op dér og lade det forsvinde, når pumpen skifter form. */
+      g.userData.atpSted = pumpe.atpSted;
 
     } else if(P.slags === 'glykoprotein'){
       g.add(helixbundt({antal:3, ringR:0.46, højde:T + 1.6, materiale:pm, hældning:0.06}));
@@ -338,19 +470,9 @@ export function byggMembran(scene){
 
     } else if(P.slags === 'perifert'){
       const s = P.side === 'ind' ? -1 : 1;
-      const geo = new THREE.IcosahedronGeometry(0.9, 1);
-      /* Ryst hjørnerne lidt, så klumpen ikke ligner en perfekt kugle. */
-      const pos = geo.attributes.position;
-      for(let i = 0; i < pos.count; i++){
-        pos.setXYZ(i,
-          pos.getX(i) * (0.86 + Math.random() * 0.28),
-          pos.getY(i) * (0.86 + Math.random() * 0.28),
-          pos.getZ(i) * (0.86 + Math.random() * 0.28));
-      }
-      geo.computeVertexNormals();
-      const k = new THREE.Mesh(geo, pm);
+      const k = klump(pm, {skala:[1.04, 0.70, 0.90], ryst:0.28,
+                           frø:P.side === 'ind' ? 3 : 23});
       k.position.set(0, s * (T / 2 + 0.55), 0);
-      k.scale.set(1.15, 0.78, 1.0);
       g.add(k);
     }
 
