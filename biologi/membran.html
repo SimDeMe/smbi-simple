@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cellemembranen i 3D — smbi.dk</title>
+<meta name="description" content="Drej cellemembranen rundt og se fosfolipidernes hoveder og haler, kolesterolet mellem dem, proteinerne der ligger og flyder i lipidlaget, og sukkerkæderne på ydersiden.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,300..600&display=swap" rel="stylesheet">
+<style>
+/* ─────────────────────────────────────────────────────────
+   Cellemembranen — 3D-model efter væskemosaikmodellen.
+   Følger smbi.dk's designskabelon (design_rules.md).
+   Siden er delt op i moduler, se design_rules.md afsnit 0
+   og biologi/membran/PLAN.md.
+   Undtagelse aftalt med Simon: three.js hentes fra CDN.
+   ───────────────────────────────────────────────────────── */
+:root{
+  --paper:#FFF9EE;  --paper-2:#FFF3DC;  --panel:#FFFFFF;
+  --ink:#17211F;    --slate:#566B68;
+
+  --pink:#E8336D; --blue:#0E86C8; --lime:#5FB030; --amber:#FFB300;
+  --grape:#7A4FD6; --coral:#FF6A3D; --teal:#0FA593;
+
+  --bio:var(--pink);
+  --geo:var(--blue);
+  --accent:var(--bio);
+
+  --display:'Archivo',system-ui,sans-serif;
+  --body:'Source Serif 4',Georgia,serif;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+
+  --wide:'wdth' 118;
+  --max:1180px;
+
+  --hard:4px 4px 0 var(--ink);
+  --hard-lg:7px 7px 0 var(--ink);
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--paper);color:var(--ink);
+  font-family:var(--body);font-size:17px;line-height:1.6;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden;
+}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--grape);outline-offset:3px;border-radius:4px}
+
+.mono{font-family:var(--mono);font-size:0.68rem;font-weight:500;letter-spacing:0.14em;text-transform:uppercase}
+.enhed{text-transform:none}
+.sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+/* ── Topbjælke ─────────────────────────────────────────── */
+.rainbow{
+  height:7px;
+  background:linear-gradient(90deg,
+    var(--pink) 0 14.3%, var(--coral) 14.3% 28.6%, var(--amber) 28.6% 42.9%,
+    var(--lime) 42.9% 57.2%, var(--teal) 57.2% 71.5%, var(--blue) 71.5% 85.8%,
+    var(--grape) 85.8% 100%);
+}
+.top{position:sticky;top:0;z-index:60}
+.top-bar{background:rgba(255,249,238,0.93);backdrop-filter:blur(10px);border-bottom:2px solid var(--ink)}
+.top-in{max-width:var(--max);margin:0 auto;padding:0 24px;display:flex;align-items:center;gap:16px;height:60px}
+.brand{
+  font-family:var(--display);font-variation-settings:'wdth' 125;
+  font-weight:800;font-size:1.15rem;letter-spacing:-0.02em;
+  text-decoration:none;display:flex;align-items:center;gap:8px;
+}
+.brand-mark{
+  width:25px;height:25px;border-radius:9px;border:2px solid var(--ink);
+  background:conic-gradient(var(--pink),var(--amber),var(--lime),var(--blue),var(--grape),var(--pink));
+  flex-shrink:0;
+}
+.brand em{font-family:var(--mono);font-size:0.72rem;font-weight:500;font-style:normal;color:var(--slate)}
+.top-nav{display:flex;gap:6px;margin-left:auto}
+.top-nav a{
+  font-family:var(--display);font-size:0.84rem;font-weight:600;
+  text-decoration:none;color:var(--ink);white-space:nowrap;
+  padding:7px 14px;border-radius:20px;border:2px solid transparent;
+  transition:background .15s,border-color .15s;
+}
+.top-nav a:hover{background:#FBD3E1;border-color:var(--ink)}
+
+/* ── Sidehoved ─────────────────────────────────────────── */
+.wrap{max-width:var(--max);margin:0 auto;padding:0 24px}
+.head{padding:34px 0 22px;position:relative;overflow:hidden}
+.head::before{
+  content:'';position:absolute;width:380px;height:380px;border-radius:50%;
+  background:#F7B9D2;filter:blur(70px);opacity:.5;top:-200px;right:-120px;z-index:0;
+}
+.head-in{position:relative;z-index:1}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;background:var(--ink);color:#FFF6E0;padding:6px 14px;border-radius:20px}
+.eyebrow .blink{width:8px;height:8px;border-radius:50%;background:var(--accent);animation:pulse 1.8s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.8)}}
+h1{
+  font-family:var(--display);font-variation-settings:var(--wide);font-weight:800;
+  font-size:clamp(2rem,4.6vw,2.9rem);line-height:1.03;letter-spacing:-0.032em;margin:16px 0 14px;
+}
+.hi{position:relative;display:inline-block;z-index:0;white-space:nowrap}
+.hi::before{
+  content:'';position:absolute;z-index:-1;left:-8px;right:-8px;top:12%;bottom:8%;
+  background:var(--hc,var(--amber));border-radius:6px;transform:rotate(-1.3deg);
+}
+.lead{font-size:1.06rem;color:#3E4E4C;max-width:58ch}
+
+/* ── Signaturpanel ─────────────────────────────────────── */
+.rig{
+  position:relative;background:var(--panel);
+  border:2.5px solid var(--ink);border-radius:18px;overflow:hidden;
+  box-shadow:var(--hard-lg);margin-top:26px;
+}
+.rig-bar{height:9px;background:var(--accent)}
+.rig-head{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  padding:11px 15px;border-bottom:2px solid var(--ink);background:#FDEAF1;
+}
+.rig-live{display:flex;align-items:center;gap:7px}
+.rig-live .mono{color:var(--ink);font-weight:600}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--accent);border:1.5px solid var(--ink);animation:pulse 2s ease-in-out infinite}
+.rig-head .spacer{margin-left:auto}
+.btn-mini{
+  font-family:var(--display);font-size:0.72rem;font-weight:700;
+  background:#fff;border:2px solid var(--ink);color:var(--ink);
+  padding:4px 11px;border-radius:18px;cursor:pointer;box-shadow:2px 2px 0 var(--ink);
+  transition:transform .12s,box-shadow .12s,background .16s,color .16s;
+}
+.btn-mini:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--ink)}
+.btn-mini:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--ink)}
+.btn-mini[aria-pressed="true"]{background:var(--accent);color:#fff;transform:translate(2px,2px);box-shadow:0 0 0 var(--ink)}
+
+/* ── Transportvælger ───────────────────────────────────── */
+.veje{
+  background:#fff;padding:11px 15px;
+  display:flex;gap:10px;flex-wrap:wrap;align-items:center;
+}
+.veje > .mono{color:#5A6C69;font-size:0.57rem;flex:1 1 100%;margin-bottom:1px}
+.pill{
+  font-family:var(--display);font-size:0.76rem;font-weight:700;
+  background:var(--paper);border:2px solid var(--ink);color:var(--ink);
+  padding:4px 12px;border-radius:20px;cursor:pointer;box-shadow:2px 2px 0 var(--ink);
+  transition:transform .12s,box-shadow .12s,background .16s,color .16s;
+  display:inline-flex;align-items:center;gap:7px;
+}
+.pill::before{content:'';width:9px;height:9px;border-radius:3px;background:var(--pc,var(--slate));border:1.5px solid var(--ink);flex:none}
+.pill:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--ink)}
+.pill[aria-pressed="true"]{background:var(--ink);color:#FFF6E0;transform:translate(2px,2px);box-shadow:0 0 0 var(--ink)}
+
+/* ── Scenen: figur til venstre, forklaring til højre ───── */
+.stage{
+  position:relative;display:grid;grid-template-columns:1fr 302px;
+  border-top:2px solid var(--ink);
+  background:radial-gradient(circle at 1px 1px,#E6EDEB 1px,transparent 0) 0 0/16px 16px;
+}
+.view{position:relative;padding:10px;touch-action:none}
+.view canvas{
+  display:block;width:100%;height:auto;
+  border:2px solid var(--ink);border-radius:12px;background:#0B1220;cursor:grab;
+}
+.view canvas.dragging{cursor:grabbing}
+
+/* mærkater på figuren: hvilken side af membranen er hvad */
+.lag{
+  position:absolute;left:22px;z-index:2;pointer-events:none;
+  font-family:var(--mono);font-size:0.54rem;font-weight:600;
+  letter-spacing:0.12em;text-transform:uppercase;
+  color:#FFF6E0;background:rgba(23,33,31,.74);border-radius:12px;padding:4px 11px;
+}
+.lag-ud{top:22px}
+.lag-ind{bottom:22px}
+.hint{
+  position:absolute;right:22px;bottom:22px;z-index:2;pointer-events:none;
+  font-family:var(--mono);font-size:0.58rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;
+  color:var(--ink);background:rgba(255,249,238,.9);border:1.5px solid var(--ink);
+  border-radius:14px;padding:4px 10px;transition:opacity .3s;
+}
+.hint.gone{opacity:0}
+.maalestok{
+  position:absolute;right:22px;top:22px;z-index:2;pointer-events:none;
+  font-family:var(--mono);font-size:0.52rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;
+  color:#FFF6E0;background:rgba(23,33,31,.72);border-radius:12px;padding:3px 9px;
+}
+
+/* ── Forklaringsruden ──────────────────────────────────── */
+.side{border-left:2px solid var(--ink);background:#fff;display:flex;flex-direction:column}
+.side-h{padding:11px 14px 10px;border-bottom:2px solid var(--ink);background:var(--paper-2)}
+.side-h .mono{color:#5A6C69;font-size:0.57rem;display:block}
+.side-h b{
+  font-family:var(--display);font-variation-settings:'wdth' 110;font-weight:800;
+  font-size:1.02rem;line-height:1.15;display:block;margin-top:3px;
+}
+.side-body{padding:12px 14px 14px;font-size:0.94rem;line-height:1.55;color:#2A3735}
+.side-tip{
+  margin-top:auto;border-top:2px solid var(--ink);padding:9px 14px;
+  background:#F7FBFA;color:#5A6C69;
+  font-family:var(--mono);font-size:0.54rem;font-weight:500;
+  letter-spacing:0.1em;text-transform:uppercase;line-height:1.5;
+}
+
+/* ── Instrumenter ──────────────────────────────────────── */
+.gauges{display:grid;grid-template-columns:repeat(4,1fr);border-top:2px solid var(--ink)}
+.gauge{padding:12px 15px 13px;border-left:2px solid var(--ink);display:flex;flex-direction:column;gap:7px}
+.gauge:first-child{border-left:none}
+.g-type{background:#FDEAF1}
+.g-energi{background:#FFF1EC}
+.g-protein{background:#F1ECFC}
+.g-stoffer{background:#EDF8E4}
+.gauge dt{font-family:var(--mono);font-size:0.57rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#5A6C69}
+.gauge dd{
+  font-family:var(--display);font-variation-settings:'wdth' 108;font-weight:800;
+  font-size:1.06rem;line-height:1.2;
+}
+.g-stoffer dd{font-size:0.95rem;font-family:var(--mono);font-weight:600;letter-spacing:0.02em}
+
+/* ── Signaturforklaring, der også er en vælger ─────────── */
+.facts{border-top:2px solid var(--ink);background:#fff;padding:12px 15px;display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+.fact{
+  display:inline-flex;align-items:center;gap:8px;background:var(--paper);
+  border:2px solid var(--ink);border-radius:22px;padding:5px 13px;color:var(--ink);
+  font-family:var(--mono);font-size:0.6rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;
+  cursor:pointer;transition:transform .12s,box-shadow .12s,background .16s,color .16s;
+}
+.fact::before{content:'';width:10px;height:10px;border-radius:3px;background:var(--fc,var(--slate));border:1.5px solid var(--ink);flex:none}
+.fact:hover{transform:translate(-2px,-2px);box-shadow:3px 3px 0 var(--ink)}
+.fact[aria-pressed="true"]{background:var(--ink);color:#FFF6E0}
+
+/* ── Bund ──────────────────────────────────────────────── */
+.foot{margin-top:34px;background:var(--ink);color:#FFF6E0;padding:26px 0 32px}
+.foot-in{max-width:var(--max);margin:0 auto;padding:0 24px;display:flex;justify-content:space-between;align-items:flex-end;gap:18px;flex-wrap:wrap}
+.foot .brand{color:#FFF6E0}
+.foot .mono{color:#8FA29E;margin-top:5px}
+.foot-links{display:flex;gap:8px;flex-wrap:wrap}
+.foot-links a{
+  font-family:var(--display);font-size:0.82rem;font-weight:700;text-decoration:none;
+  border:2px solid #FFF6E0;border-radius:20px;padding:5px 13px;
+  transition:background .16s,color .16s,border-color .16s;
+}
+.foot-links a:nth-child(1):hover{background:var(--pink);border-color:var(--pink)}
+.foot-links a:nth-child(2):hover{background:var(--amber);border-color:var(--amber);color:var(--ink)}
+.foot-links a:nth-child(3):hover{background:var(--lime);border-color:var(--lime);color:var(--ink)}
+
+/* ── Projektortilstand ─────────────────────────────────── */
+body[data-projektor="1"] .top,
+body[data-projektor="1"] .head,
+body[data-projektor="1"] .foot{display:none}
+body[data-projektor="1"] .wrap{max-width:none;padding:0 14px}
+body[data-projektor="1"] .rig{margin-top:14px;box-shadow:var(--hard)}
+body[data-projektor="1"] .fact{font-size:0.76rem}
+body[data-projektor="1"] .lag{font-size:0.72rem}
+body[data-projektor="1"] .pill{font-size:0.92rem}
+body[data-projektor="1"] .gauge dt{font-size:0.74rem}
+body[data-projektor="1"] .gauge dd{font-size:1.4rem}
+body[data-projektor="1"] .side-h b{font-size:1.2rem}
+body[data-projektor="1"] .side-body{font-size:1.06rem}
+
+/* ── Responsivt ────────────────────────────────────────── */
+@media (max-width:960px){
+  .stage{grid-template-columns:1fr}
+  .side{border-left:none;border-top:2px solid var(--ink)}
+  .side-tip{margin-top:0}
+}
+@media (max-width:700px){
+  .gauges{grid-template-columns:1fr 1fr}
+  .gauge:nth-child(3){border-left:none}
+  .gauge:nth-child(n+3){border-top:2px solid var(--ink)}
+}
+@media (max-width:620px){
+  body{font-size:16px}
+  .wrap,.top-in,.foot-in{padding-left:16px;padding-right:16px}
+  .head{padding:24px 0 18px}
+  .rig{border-radius:14px;box-shadow:var(--hard)}
+  .facts,.rig-head,.veje{padding-left:16px;padding-right:16px}
+  .gauges{grid-template-columns:1fr}
+  .gauge{border-left:none}
+  .gauge:nth-child(n+2){border-top:2px solid var(--ink)}
+  .lag{left:16px;font-size:0.5rem;padding:3px 9px}
+  .lag-ud{top:16px}
+  .lag-ind{bottom:16px}
+  .maalestok{right:16px;top:16px}
+  .hint{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+@media print{
+  .top,.foot,.rig-head .btn-mini,.veje{display:none!important}
+  .stage{grid-template-columns:1fr 260px}
+  .rig{box-shadow:none;break-inside:avoid}
+}
+</style>
+</head>
+
+<body>
+
+<header class="top" id="site-top">
+  <div class="rainbow"></div>
+  <div class="top-bar">
+    <div class="top-in">
+      <a href="/" class="brand"><span class="brand-mark"></span>smbi<em>.dk</em></a>
+      <nav class="top-nav">
+        <a href="/biologi.html">Biologi</a>
+        <a href="/">Forside</a>
+      </nav>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap head">
+    <div class="head-in">
+      <span class="eyebrow mono"><span class="blink"></span>Biologi · cellemembranen</span>
+      <h1>Cellemembranen som <span class="hi" style="--hc:#FBD3E1">væskemosaik</span></h1>
+      <p class="lead">Drej membranen rundt og se, hvordan fosfolipiderne vender de hydrofile hoveder ud mod vandet på begge sider og gemmer de hydrofobe haler indeni — og hvordan proteinerne ligger og flyder i lipidlaget som isflager i en sø.</p>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <section class="rig">
+      <div class="rig-bar"></div>
+      <div class="rig-head">
+        <span class="rig-live"><span class="dot"></span><span class="mono">3D-model</span></span>
+        <span class="spacer"></span>
+        <button type="button" class="btn-mini" id="btn-kolesterol" aria-pressed="true" title="Vis eller skjul kolesterolet mellem fosfolipiderne">Kolesterol</button>
+        <button type="button" class="btn-mini" id="btn-sukker" aria-pressed="true" title="Vis eller skjul kulhydratkæderne på ydersiden">Sukkerkæder</button>
+        <button type="button" class="btn-mini" id="btn-snit" aria-pressed="false" title="Skær membranen over på midten, så man kan se ind i lipidlaget">Tværsnit</button>
+        <button type="button" class="btn-mini" id="btn-nulstil" title="Sæt kameraet tilbage til udgangspunktet">Nulstil</button>
+        <button type="button" class="btn-mini" id="btn-projektor" aria-pressed="false" title="Skjul sidens krom og forstør teksten">Projektor</button>
+      </div>
+
+      <div class="veje">
+        <span class="mono">Transportvej gennem membranen</span>
+        <button type="button" class="pill" data-vej="diffusion"  aria-pressed="false" style="--pc:#9BE0F5">Simpel diffusion</button>
+        <button type="button" class="pill" data-vej="kanal"      aria-pressed="false" style="--pc:#C9A9F0">Kanalprotein</button>
+        <button type="button" class="pill" data-vej="baerer"     aria-pressed="false" style="--pc:#FFAE8A">Transportprotein</button>
+        <button type="button" class="pill" data-vej="pumpe"      aria-pressed="false" style="--pc:#FF7FA8">Na⁺/K⁺-pumpen</button>
+      </div>
+
+      <div class="stage">
+        <div class="view" id="view">
+          <canvas id="scene" tabindex="0" role="img"
+            aria-label="En tredimensional model af cellemembranen. To lag fosfolipider ligger med de runde hydrofile hoveder udad mod vandet og de aflange hydrofobe haler ind mod hinanden. Mellem fosfolipiderne sidder kolesterol. Tværs gennem membranen går et kanalprotein, et transportprotein, en natrium-kalium-pumpe og et glykoprotein med forgrenede kulhydratkæder på ydersiden. På indersiden sidder et perifert protein på overfladen."></canvas>
+          <span class="lag lag-ud">Uden for cellen</span>
+          <span class="lag lag-ind">Inde i cellen · cytosol</span>
+          <span class="maalestok">Membranen er ca. 5 <span class="enhed">nm</span> tyk</span>
+          <span class="hint" id="hint">Træk for at dreje · rul for at zoome</span>
+        </div>
+
+        <div class="side">
+          <div class="side-h">
+            <span class="mono" id="fork-stempel">Transportvej</span>
+            <b id="fork-navn">Simpel diffusion</b>
+          </div>
+          <div class="side-body" id="fork-tekst" aria-live="polite"></div>
+          <p class="side-tip">Klik på en del af figuren — eller brug knapperne nederst</p>
+        </div>
+      </div>
+
+      <dl class="gauges">
+        <div class="gauge g-type"><dt>Transporttype</dt><dd id="g-type">—</dd></div>
+        <div class="gauge g-energi"><dt>Energiforbrug</dt><dd id="g-energi">—</dd></div>
+        <div class="gauge g-protein"><dt>Protein</dt><dd id="g-protein">—</dd></div>
+        <div class="gauge g-stoffer"><dt>Stoffer</dt><dd id="g-stoffer">—</dd></div>
+      </dl>
+
+      <div class="facts">
+        <button type="button" class="fact" data-del="hoved"       aria-pressed="false" style="--fc:#7EC8E8">Hydrofilt hoved</button>
+        <button type="button" class="fact" data-del="hale"        aria-pressed="false" style="--fc:#F2C14E">Hydrofob hale</button>
+        <button type="button" class="fact" data-del="kolesterol"  aria-pressed="false" style="--fc:#B9E08A">Kolesterol</button>
+        <button type="button" class="fact" data-del="kanal"       aria-pressed="false" style="--fc:#C9A9F0">Kanalprotein</button>
+        <button type="button" class="fact" data-del="baerer"      aria-pressed="false" style="--fc:#FFAE8A">Transportprotein</button>
+        <button type="button" class="fact" data-del="pumpe"       aria-pressed="false" style="--fc:#FF7FA8">Na⁺/K⁺-pumpe</button>
+        <button type="button" class="fact" data-del="glyko"       aria-pressed="false" style="--fc:#3E9E92">Glykoprotein</button>
+        <button type="button" class="fact" data-del="perifer-ind" aria-pressed="false" style="--fc:#E8E0CF">Perifert protein</button>
+        <button type="button" class="fact" data-del="sukker"      aria-pressed="false" style="--fc:#7FE3D0">Kulhydratkæde</button>
+      </div>
+    </section>
+  </div>
+
+  <p class="sr" id="status" aria-live="polite"></p>
+</main>
+
+<footer class="foot">
+  <div class="foot-in">
+    <div>
+      <a href="/" class="brand"><span class="brand-mark"></span>smbi<em>.dk</em></a>
+      <div class="mono">Biologi · cellemembranen</div>
+    </div>
+    <nav class="foot-links">
+      <a href="/biologi.html">Biologi</a>
+      <a href="/geografi.html">Geografi</a>
+      <a href="/contact.html">Kontakt</a>
+    </nav>
+  </div>
+</footer>
+
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js"}}
+</script>
+<script type="module" src="membran/side.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,1502 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Årstider — mål solens højde over året — smbi.dk</title>
+<meta name="description" content="Se hvordan solens højde, middagshøjde, daglængde og indstråling ændrer sig over året på forskellige breddegrader — og hvad der sker, hvis jordaksen ikke hælder.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,300..600&display=swap" rel="stylesheet">
+<style>
+/* ─────────────────────────────────────────────────────────
+   Årstider — 3D-model af jorden i sin bane om solen
+   Følger smbi.dk's designskabelon (design_rules.md).
+   Kloden, teksturbyggeren og kamerastyringen er genbrugt fra
+   geografi/Tidevand.html. Samme undtagelse: three.js fra CDN.
+   ───────────────────────────────────────────────────────── */
+:root{
+  --paper:#FFF9EE;  --paper-2:#FFF3DC;  --panel:#FFFFFF;
+  --ink:#17211F;    --slate:#566B68;
+
+  --pink:#E8336D; --blue:#0E86C8; --lime:#5FB030; --amber:#FFB300;
+  --grape:#7A4FD6; --coral:#FF6A3D; --teal:#0FA593;
+
+  --geo:var(--blue);
+
+  --display:'Archivo',system-ui,sans-serif;
+  --body:'Source Serif 4',Georgia,serif;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+
+  --wide:'wdth' 118;
+  --max:1180px;
+
+  --hard:4px 4px 0 var(--ink);
+  --hard-lg:7px 7px 0 var(--ink);
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--paper);color:var(--ink);
+  font-family:var(--body);font-size:17px;line-height:1.6;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden;
+}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--grape);outline-offset:3px;border-radius:4px}
+
+.mono{font-family:var(--mono);font-size:0.68rem;font-weight:500;letter-spacing:0.14em;text-transform:uppercase}
+.enhed{text-transform:none}
+.sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+/* ── Topbjælke ─────────────────────────────────────────── */
+.rainbow{
+  height:7px;
+  background:linear-gradient(90deg,
+    var(--pink) 0 14.3%, var(--coral) 14.3% 28.6%, var(--amber) 28.6% 42.9%,
+    var(--lime) 42.9% 57.2%, var(--teal) 57.2% 71.5%, var(--blue) 71.5% 85.8%,
+    var(--grape) 85.8% 100%);
+}
+.top{position:sticky;top:0;z-index:60}
+.top-bar{background:rgba(255,249,238,0.93);backdrop-filter:blur(10px);border-bottom:2px solid var(--ink)}
+.top-in{max-width:var(--max);margin:0 auto;padding:0 24px;display:flex;align-items:center;gap:16px;height:60px}
+.brand{
+  font-family:var(--display);font-variation-settings:'wdth' 125;
+  font-weight:800;font-size:1.15rem;letter-spacing:-0.02em;
+  text-decoration:none;display:flex;align-items:center;gap:8px;
+}
+.brand-mark{
+  width:25px;height:25px;border-radius:9px;border:2px solid var(--ink);
+  background:conic-gradient(var(--pink),var(--amber),var(--lime),var(--blue),var(--grape),var(--pink));
+  flex-shrink:0;
+}
+.brand em{font-family:var(--mono);font-size:0.72rem;font-weight:500;font-style:normal;color:var(--slate)}
+.top-nav{display:flex;gap:6px;margin-left:auto}
+.top-nav a{
+  font-family:var(--display);font-size:0.84rem;font-weight:600;
+  text-decoration:none;color:var(--ink);white-space:nowrap;
+  padding:7px 14px;border-radius:20px;border:2px solid transparent;
+  transition:background .15s,border-color .15s;
+}
+.top-nav a:hover{background:#C7E6F6;border-color:var(--ink)}
+
+/* ── Sidehoved ─────────────────────────────────────────── */
+.wrap{max-width:var(--max);margin:0 auto;padding:0 24px}
+.head{padding:34px 0 22px;position:relative;overflow:hidden}
+.head::before{
+  content:'';position:absolute;width:380px;height:380px;border-radius:50%;
+  background:#9BE0F5;filter:blur(70px);opacity:.5;top:-200px;right:-120px;z-index:0;
+}
+.head-in{position:relative;z-index:1}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;background:var(--ink);color:#FFF6E0;padding:6px 14px;border-radius:20px}
+.eyebrow .blink{width:8px;height:8px;border-radius:50%;background:var(--blue);animation:pulse 1.8s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.8)}}
+h1{
+  font-family:var(--display);font-variation-settings:var(--wide);font-weight:800;
+  font-size:clamp(2rem,4.6vw,2.9rem);line-height:1.03;letter-spacing:-0.032em;margin:16px 0 14px;
+}
+.hi{position:relative;display:inline-block;z-index:0;white-space:nowrap}
+.hi::before{
+  content:'';position:absolute;z-index:-1;left:-8px;right:-8px;top:12%;bottom:8%;
+  background:var(--hc,var(--amber));border-radius:6px;transform:rotate(-1.3deg);
+}
+.lead{font-size:1.06rem;color:#3E4E4C;max-width:58ch}
+
+/* ── Signaturpanel ─────────────────────────────────────── */
+.rig{
+  --accent:var(--geo);position:relative;background:var(--panel);
+  border:2.5px solid var(--ink);border-radius:18px;overflow:hidden;
+  box-shadow:var(--hard-lg);margin-top:26px;
+}
+.rig-bar{height:9px;background:var(--accent)}
+.rig-head{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  padding:11px 15px;border-bottom:2px solid var(--ink);background:#E7F4FB;
+}
+.rig-live{display:flex;align-items:center;gap:7px}
+.rig-live .mono{color:var(--ink);font-weight:600}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--accent);border:1.5px solid var(--ink);animation:pulse 2s ease-in-out infinite}
+.rig-head .spacer{margin-left:auto}
+.btn-mini{
+  font-family:var(--display);font-size:0.72rem;font-weight:700;
+  background:#fff;border:2px solid var(--ink);color:var(--ink);
+  padding:4px 11px;border-radius:18px;cursor:pointer;box-shadow:2px 2px 0 var(--ink);
+  transition:transform .12s,box-shadow .12s,background .16s,color .16s;
+}
+.btn-mini:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--ink)}
+.btn-mini:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--ink)}
+.btn-mini[aria-pressed="true"]{background:var(--accent);color:#fff;transform:translate(2px,2px);box-shadow:0 0 0 var(--ink)}
+
+/* ── Scenen: 3D til venstre, aflæsning til højre ───────── */
+.stage{
+  position:relative;display:grid;grid-template-columns:1fr 300px;
+  background:radial-gradient(circle at 1px 1px,#E6EDEB 1px,transparent 0) 0 0/16px 16px;
+}
+.view{position:relative;padding:10px;touch-action:none}
+.view canvas{
+  display:block;width:100%;height:auto;
+  border:2px solid var(--ink);border-radius:12px;background:#0B1220;cursor:grab;
+}
+.view canvas.dragging{cursor:grabbing}
+.badge{
+  position:absolute;left:22px;top:22px;z-index:2;pointer-events:none;
+  display:inline-flex;align-items:center;gap:9px;max-width:calc(100% - 44px);
+  background:#fff;border:2px solid var(--ink);border-radius:22px;
+  padding:7px 14px 7px 11px;box-shadow:3px 3px 0 var(--ink);
+}
+.badge-dot{width:11px;height:11px;border-radius:4px;flex:none;border:1.5px solid var(--ink);background:var(--pc,var(--slate))}
+.badge-txt{font-family:var(--display);font-size:0.82rem;font-weight:700;line-height:1.25}
+.hint{
+  position:absolute;right:22px;bottom:22px;z-index:2;pointer-events:none;
+  font-family:var(--mono);font-size:0.58rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;
+  color:var(--ink);background:rgba(255,249,238,.9);border:1.5px solid var(--ink);
+  border-radius:14px;padding:4px 10px;transition:opacity .3s;
+}
+.hint.gone{opacity:0}
+.scalenote{
+  position:absolute;right:22px;top:22px;z-index:2;pointer-events:none;
+  font-family:var(--mono);font-size:0.52rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;
+  color:#FFF6E0;background:rgba(23,33,31,.72);border-radius:12px;padding:3px 9px;
+}
+@media (max-width:620px){
+  .scalenote{display:none}   /* forbeholdet står i teksten nedenfor */
+}
+
+/* højre spalte: kurve + legende */
+.side{border-left:2px solid var(--ink);background:#fff;display:flex;flex-direction:column}
+.side-h{
+  padding:10px 14px 8px;border-bottom:2px solid var(--ink);background:var(--paper-2);
+}
+.side-h .mono{color:#5A6C69;font-size:0.57rem;display:block}
+.side-h b{font-family:var(--display);font-variation-settings:'wdth' 110;font-weight:800;font-size:1.02rem;line-height:1.15;display:block;margin-top:3px}
+.curve-box{padding:10px 12px 6px}
+.curve-box canvas{display:block;width:100%;height:auto;border:2px solid var(--ink);border-radius:10px;background:#F3FAFE}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;padding:10px 12px 0}
+.tab{
+  font-family:var(--display);font-size:0.7rem;font-weight:700;
+  background:#fff;border:2px solid var(--ink);color:var(--ink);
+  padding:3px 10px;border-radius:16px;cursor:pointer;box-shadow:2px 2px 0 var(--ink);
+  transition:transform .12s,box-shadow .12s,background .16s,color .16s;
+}
+.tab:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--ink)}
+.tab[aria-selected="true"]{background:var(--accent);color:#fff;transform:translate(2px,2px);box-shadow:0 0 0 var(--ink)}
+.laes{list-style:none;margin:10px 0 2px;display:flex;flex-direction:column;gap:5px}
+.laes li{
+  display:flex;align-items:center;gap:8px;
+  font-family:var(--mono);font-size:0.55rem;font-weight:500;
+  letter-spacing:0.08em;text-transform:uppercase;color:#5A6C69;line-height:1.35;
+}
+.laes i{width:9px;height:9px;border-radius:3px;border:1.5px solid var(--ink);flex:none}
+.paa-kloden{padding:2px 12px 10px}
+.paa-kloden > .mono{color:#5A6C69;font-size:0.55rem;display:block}
+.legend{border-top:2px solid var(--ink);padding:10px 12px 12px;margin-top:auto;background:#F7FBFA}
+.legend .mono{color:#5A6C69;font-size:0.55rem;margin-bottom:7px;display:block}
+.lg-bar{height:13px;border:2px solid var(--ink);border-radius:8px;overflow:hidden;display:flex}
+.lg-bar i{flex:1;display:block}
+.lg-tick{display:flex;justify-content:space-between;margin-top:4px}
+.lg-tick span{font-family:var(--mono);font-size:0.5rem;font-weight:600;color:#5A6C69;letter-spacing:.04em}
+
+/* ── Stedvælger ────────────────────────────────────────── */
+.places{
+  border-top:2px solid var(--ink);background:#fff;padding:11px 15px;
+  display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start;
+}
+.pl-group{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.pl-group > .mono{color:#5A6C69;font-size:0.55rem;width:100%;margin-bottom:1px}
+.pill{
+  font-family:var(--display);font-size:0.76rem;font-weight:700;
+  background:var(--paper);border:2px solid var(--ink);color:var(--ink);
+  padding:4px 12px;border-radius:20px;cursor:pointer;box-shadow:2px 2px 0 var(--ink);
+  transition:transform .12s,box-shadow .12s,background .16s,color .16s;
+  display:inline-flex;align-items:center;gap:7px;
+}
+.pill::before{content:'';width:9px;height:9px;border-radius:3px;background:var(--pc,var(--slate));border:1.5px solid var(--ink);flex:none}
+.pill:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--ink)}
+.pill[aria-pressed="true"]{background:var(--ink);color:#FFF6E0;transform:translate(2px,2px);box-shadow:0 0 0 var(--ink)}
+
+/* ── Instrumenter ──────────────────────────────────────── */
+.gauges{display:grid;grid-template-columns:repeat(4,1fr);border-top:2px solid var(--ink)}
+.gauge{padding:13px 15px 14px;border-left:2px solid var(--ink);display:flex;flex-direction:column;gap:9px}
+.gauge:first-child{border-left:none}
+.g-hoejde{background:#FFF1EC}
+.g-middag{background:#E7F4FB}
+.g-dag{background:#F1ECFC}
+.g-straal{background:#EDF8E4}
+.gauge dt{font-family:var(--mono);font-size:0.57rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#5A6C69}
+.gauge dd{
+  font-family:var(--display);font-variation-settings:'wdth' 108;font-weight:800;
+  font-size:1.28rem;line-height:1;font-variant-numeric:tabular-nums;
+}
+.gauge dd small{font-size:0.66em;font-weight:700;color:#5A6C69;margin-left:3px;text-transform:none}
+.g-viz{display:flex;align-items:flex-end;gap:10px;height:46px}
+
+/* vandsøjle */
+.tank{position:relative;width:30px;height:44px;flex:none;border:2px solid var(--ink);border-radius:8px;background:#fff;overflow:hidden}
+.tank i{position:absolute;left:0;right:0;bottom:0;display:block;background:linear-gradient(180deg,#4FB3E8,#0E86C8);height:50%;transition:height .1s linear}
+.tank u{position:absolute;left:0;right:0;height:2px;background:var(--ink);opacity:.55;bottom:50%}
+.ticks{display:flex;flex-direction:column;justify-content:space-between;height:44px}
+.ticks span{font-family:var(--mono);font-size:0.5rem;font-weight:600;color:#7E8F8C;letter-spacing:.04em}
+
+/* solhøjdebue */
+.bue{width:74px;height:44px;flex:none;overflow:visible}
+.bue-jord{fill:none;stroke:var(--ink);stroke-width:2;stroke-linecap:round}
+.bue-bg{fill:none;stroke:#fff;stroke-width:2;stroke-dasharray:2.5 3.5;opacity:.9}
+.bue-str{stroke:var(--amber);stroke-width:3;stroke-linecap:round}
+.bue-sol{fill:var(--amber);stroke:var(--ink);stroke-width:1.8}
+.bue-sol.nede{fill:#4A5A75}
+
+/* døgnbjælke: lys del af døgnet */
+.doegn{
+  position:relative;width:100%;max-width:130px;height:26px;flex:1;
+  align-self:center;border:2px solid var(--ink);border-radius:8px;overflow:hidden;
+  background:linear-gradient(180deg,#2A3A55,#17263B);
+}
+.doegn i{
+  position:absolute;top:0;bottom:0;display:block;
+  background:linear-gradient(180deg,#FFD86B,#FFB300);
+  border-left:2px solid var(--ink);border-right:2px solid var(--ink);
+  left:50%;width:0%;transform:translateX(-50%);transition:width .2s;
+}
+.doegn u{position:absolute;top:0;bottom:0;width:1.5px;background:rgba(255,246,224,.30)}
+.doegn u.m6{left:25%}.doegn u.m12{left:50%;background:rgba(255,246,224,.55)}.doegn u.m18{left:75%}
+
+/* spændsøjle */
+.col{
+  position:relative;width:100%;max-width:130px;height:44px;flex:1;
+  border:2px solid var(--ink);border-radius:9px;overflow:hidden;
+  background:repeating-linear-gradient(90deg,rgba(23,33,31,.09) 0 1.5px,transparent 1.5px 25%),#fff;
+}
+.col i{position:absolute;left:0;bottom:0;top:0;display:block;background:linear-gradient(90deg,#5FB030,#0FA593);width:0%;border-right:2px solid var(--ink);transition:width .2s}
+.col b{position:absolute;right:5px;bottom:3px;font-family:var(--mono);font-size:0.5rem;font-weight:600;color:#5A6C69;letter-spacing:.06em;background:rgba(255,255,255,.82);border-radius:5px;padding:0 3px}
+
+/* måneskive */
+.moon{width:44px;height:44px;flex:none;border:2px solid var(--ink);border-radius:50%;background:#2A3330;overflow:hidden;position:relative}
+.moon canvas{display:block;width:100%;height:100%}
+
+/* urskive */
+.clock{width:44px;height:44px;flex:none}
+.clock circle{fill:#fff;stroke:var(--ink);stroke-width:2.5}
+.clock line{stroke:var(--ink);stroke-width:2.5;stroke-linecap:round}
+.clock .hand{stroke:var(--coral);stroke-width:3}
+
+/* ── Kontrolpanel ──────────────────────────────────────── */
+.knobs{
+  border-top:2px solid var(--ink);background:var(--paper-2);padding:18px 15px 20px;
+  display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px 26px;
+}
+.knob{display:flex;flex-direction:column;gap:7px}
+.knob-top{display:flex;align-items:baseline;gap:10px}
+.knob-top .mono{color:#5A6C69;font-size:0.62rem}
+.knob-val{
+  margin-left:auto;font-family:var(--display);font-variation-settings:'wdth' 108;
+  font-weight:800;font-size:1rem;font-variant-numeric:tabular-nums;
+  background:#fff;border:2px solid var(--ink);border-radius:16px;padding:1px 11px;white-space:nowrap;
+}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:22px;background:transparent;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:10px;border:2px solid var(--ink);border-radius:9px;background:var(--track,#fff)}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;width:22px;height:22px;margin-top:-8px;border-radius:50%;
+  border:2.5px solid var(--ink);background:var(--kc,var(--amber));box-shadow:2px 2px 0 var(--ink);
+}
+input[type=range]::-moz-range-track{height:10px;border:2px solid var(--ink);border-radius:9px;background:var(--track,#fff)}
+input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;border:2.5px solid var(--ink);background:var(--kc,var(--amber));box-shadow:2px 2px 0 var(--ink)}
+#inp-dato{--track:linear-gradient(90deg,#5B7FB8,#7FC8A0,#FFD166,#FF8C42,#C77DBB,#5B7FB8);--kc:var(--lime)}
+#inp-time{--track:linear-gradient(90deg,#0B1220,#4A6FA5,#9BE0F5,#FFB300,#9BE0F5,#4A6FA5,#0B1220);--kc:var(--amber)}
+#inp-haeld{--track:linear-gradient(90deg,#F3FAFE,#0E86C8);--kc:var(--blue)}
+
+/* ── Fakta-fod ─────────────────────────────────────────── */
+.facts{border-top:2px solid var(--ink);background:#fff;padding:12px 15px;display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+.fact{
+  display:inline-flex;align-items:center;gap:8px;background:var(--paper);
+  border:2px solid var(--ink);border-radius:22px;padding:5px 13px;
+  font-family:var(--mono);font-size:0.6rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;
+}
+.fact::before{content:'';width:10px;height:10px;border-radius:3px;background:var(--fc,var(--slate));border:1.5px solid var(--ink)}
+.fact b{font-family:var(--display);font-size:0.84rem;font-weight:800;letter-spacing:0}
+
+/* ── Uddybning til B-niveau ────────────────────────────── */
+.dig{max-width:var(--max);margin:26px auto 0;padding:0 24px;display:grid;grid-template-columns:1fr;gap:16px}
+details{
+  background:var(--panel);border:2.5px solid var(--ink);border-radius:14px;
+  box-shadow:var(--hard);overflow:hidden;
+}
+summary{
+  list-style:none;cursor:pointer;padding:12px 16px;background:#F1ECFC;
+  border-bottom:2px solid transparent;
+  font-family:var(--display);font-weight:800;font-size:0.95rem;
+  display:flex;align-items:center;gap:10px;
+}
+summary::-webkit-details-marker{display:none}
+summary::after{
+  content:'+';margin-left:auto;font-family:var(--mono);font-weight:600;font-size:1.05rem;
+  width:22px;height:22px;border:2px solid var(--ink);border-radius:50%;
+  display:grid;place-items:center;line-height:1;background:#fff;flex:none;
+}
+details[open] summary{border-bottom-color:var(--ink)}
+details[open] summary::after{content:'−'}
+summary .tag{
+  font-family:var(--mono);font-size:0.52rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;
+  background:var(--grape);color:#fff;border:1.5px solid var(--ink);border-radius:12px;padding:2px 8px;flex:none;
+}
+.dig-body{padding:14px 16px 16px;font-size:0.96rem}
+.dig-body p+p{margin-top:9px}
+.dig-body b{font-weight:600}
+.dig-body .form{
+  font-family:var(--mono);font-size:0.78rem;background:var(--paper-2);
+  border:2px solid var(--ink);border-radius:9px;padding:9px 12px;margin:10px 0;text-align:center;
+}
+
+/* ── Bund ──────────────────────────────────────────────── */
+.foot{margin-top:34px;background:var(--ink);color:#FFF6E0;padding:26px 0 32px}
+.foot-in{max-width:var(--max);margin:0 auto;padding:0 24px;display:flex;justify-content:space-between;align-items:flex-end;gap:18px;flex-wrap:wrap}
+.foot .brand{color:#FFF6E0}
+.foot .mono{color:#8FA29E;margin-top:5px}
+.foot-links{display:flex;gap:8px;flex-wrap:wrap}
+.foot-links a{
+  font-family:var(--display);font-size:0.82rem;font-weight:700;text-decoration:none;
+  border:2px solid #FFF6E0;border-radius:20px;padding:5px 13px;
+  transition:background .16s,color .16s,border-color .16s;
+}
+.foot-links a:nth-child(1):hover{background:var(--blue);border-color:var(--blue)}
+.foot-links a:nth-child(2):hover{background:var(--amber);border-color:var(--amber);color:var(--ink)}
+.foot-links a:nth-child(3):hover{background:var(--lime);border-color:var(--lime);color:var(--ink)}
+
+/* ── Projektortilstand ─────────────────────────────────── */
+body[data-projektor="1"] .top,
+body[data-projektor="1"] .head,
+body[data-projektor="1"] .dig,
+body[data-projektor="1"] .foot{display:none}
+body[data-projektor="1"] .wrap{max-width:none;padding:0 14px}
+body[data-projektor="1"] .rig{margin-top:14px;box-shadow:var(--hard)}
+body[data-projektor="1"] .gauge dt{font-size:0.78rem}
+body[data-projektor="1"] .gauge dd{font-size:1.9rem}
+body[data-projektor="1"] .gauge dd small{font-size:0.95rem}
+body[data-projektor="1"] .badge-txt{font-size:1.05rem}
+body[data-projektor="1"] .knob-top .mono{font-size:0.82rem}
+body[data-projektor="1"] .knob-val{font-size:1.05rem}
+body[data-projektor="1"] .pill{font-size:0.92rem}
+body[data-projektor="1"] .fact{font-size:0.74rem}
+body[data-projektor="1"] .fact b{font-size:0.92rem}
+body[data-projektor="1"] .side-h b{font-size:1.2rem}
+
+/* ── Responsivt ────────────────────────────────────────── */
+@media (max-width:960px){
+  .stage{grid-template-columns:1fr}
+  .side{border-left:none;border-top:2px solid var(--ink);flex-direction:row;flex-wrap:wrap}
+  .side-h{flex:1 1 100%}
+  .curve-box{flex:1 1 320px}
+  .paa-kloden{flex:1 1 240px;border-left:2px solid var(--ink);padding-top:10px}
+  .legend{flex:1 1 240px;margin-top:0;border-top:none;border-left:2px solid var(--ink)}
+  .knobs{grid-template-columns:1fr 1fr}
+}
+@media (max-width:700px){
+  .gauges{grid-template-columns:1fr 1fr}
+  .gauge:nth-child(3){border-left:none}
+  .gauge:nth-child(n+3){border-top:2px solid var(--ink)}
+  .legend{border-left:none;border-top:2px solid var(--ink)}
+}
+@media (max-width:620px){
+  /* Stedmærkatet på figuren skal ikke sejle oven i hinanden
+     med badgen på en telefon: navnet står allerede i højre spalte. */
+  .ovl{font-size:0.58rem!important;padding:2px 7px!important}
+  .ovl-sted{display:none}
+  .badge{max-width:calc(100% - 32px)}
+  body{font-size:16px}
+  .wrap,.top-in,.foot-in,.dig{padding-left:16px;padding-right:16px}
+  .head{padding:24px 0 18px}
+  .rig{border-radius:14px;box-shadow:var(--hard)}
+  .knobs{grid-template-columns:1fr;padding:16px}
+  .places,.facts,.rig-head{padding-left:16px;padding-right:16px}
+  .badge{left:16px;top:16px;padding:5px 11px 5px 9px}
+  .badge-txt{font-size:0.72rem}
+  .hint{display:none}
+  .gauge dd{font-size:1.1rem}
+  details{box-shadow:3px 3px 0 var(--ink)}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+@media print{
+  .top,.foot,.knobs,.places,.rig-head .btn-mini{display:none!important}
+  .rig{box-shadow:none;break-inside:avoid}
+  .dig{display:block}
+  details{box-shadow:none;break-inside:avoid;margin-bottom:10px}
+}
+</style>
+</head>
+
+<body>
+
+<header class="top" id="site-top">
+  <div class="rainbow"></div>
+  <div class="top-bar">
+    <div class="top-in">
+      <a href="/" class="brand"><span class="brand-mark"></span>smbi<em>.dk</em></a>
+      <nav class="top-nav">
+        <a href="/geografi.html">Naturgeografi</a>
+        <a href="/">Forside</a>
+      </nav>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap head">
+    <div class="head-in">
+      <span class="eyebrow mono"><span class="blink"></span>Naturgeografi · årstider &amp; indstråling</span>
+      <h1>Årstider: mål solens <span class="hi" style="--hc:#FFE0A3">højde</span> over året</h1>
+      <p class="lead">Vælg et sted og flyt datoen: se hvordan solens højde, middagshøjde og daglængde ændrer sig over året. Jordaksen står fast i rummet; det er derfor, årstiderne opstår.</p>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <section class="rig">
+      <div class="rig-bar"></div>
+      <div class="rig-head">
+        <span class="rig-live"><span class="dot"></span><span class="mono">Live model</span></span>
+        <span class="spacer"></span>
+        <button type="button" class="btn-mini" id="btn-doegn" aria-pressed="false" title="Kør timerne frem, så dag og nat skifter">Kør døgnet</button>
+        <button type="button" class="btn-mini" id="btn-aar" aria-pressed="true" title="Kør datoen frem, så årstiderne skifter">Kør året</button>
+        <button type="button" class="btn-mini" id="btn-bane" aria-pressed="false" title="Zoom ud og se hele jordbanen">Hele banen</button>
+        <button type="button" class="btn-mini" id="btn-ringe" aria-pressed="true" title="Vis ækvator, vendekredse og polarcirkler">Breddecirkler</button>
+        <button type="button" class="btn-mini" id="btn-projektor" aria-pressed="false" title="Skjul sidens krom og forstør aflæsningerne">Projektor</button>
+      </div>
+
+      <div class="stage">
+        <div class="view" id="view">
+          <canvas id="scene" width="900" height="600" tabindex="0" role="application"
+                  aria-label="3D-model af jorden i sin bane om solen. Træk for at dreje. Brug piletasterne til at dreje, plus og minus til at zoome."></canvas>
+          <div class="badge" id="badge" style="--pc:var(--amber)">
+            <span class="badge-dot"></span>
+            <span class="badge-txt" id="badge-txt">Sommersolhverv — nordpolen hælder mod solen</span>
+          </div>
+          <div class="hint" id="hint">Træk for at dreje</div>
+          <div class="scalenote">Ikke i størrelsesforhold</div>
+        </div>
+
+        <aside class="side">
+          <div class="side-h">
+            <span class="mono">Solen set fra</span>
+            <b id="sted-navn">København, 55,7° N</b>
+          </div>
+
+          <div class="tabs" role="tablist" aria-label="Vælg graf">
+            <button type="button" class="tab" role="tab" data-graf="doegn" aria-selected="true">Døgnet</button>
+            <button type="button" class="tab" role="tab" data-graf="middag" aria-selected="false">Middagshøjde</button>
+            <button type="button" class="tab" role="tab" data-graf="dagl" aria-selected="false">Daglængde</button>
+            <button type="button" class="tab" role="tab" data-graf="straal" aria-selected="false">Indstråling</button>
+          </div>
+
+          <div class="curve-box">
+            <canvas id="graf" width="560" height="400" aria-hidden="true"></canvas>
+            <p class="sr" id="graf-sr"></p>
+            <ul class="laes" id="graf-laes"></ul>
+          </div>
+
+          <div class="legend">
+            <span class="mono">På kloden</span>
+            <ul class="laes">
+              <li><i style="background:#E8336D"></i>Ækvator</li>
+              <li><i style="background:#FF6A3D"></i>Vendekredsene, ± aksens hældning</li>
+              <li><i style="background:#7A4FD6"></i>Polarcirklerne, 90° minus hældningen</li>
+            </ul>
+          </div>
+        </aside>
+      </div>
+
+      <div class="places" id="places">
+        <div class="pl-group" data-g="nord">
+          <span class="mono">Nordlig halvkugle</span>
+        </div>
+        <div class="pl-group" data-g="syd">
+          <span class="mono">Ækvator og sydlig halvkugle</span>
+        </div>
+      </div>
+
+      <div class="places">
+        <div class="pl-group">
+          <span class="mono">Gå til mærkedag</span>
+          <button type="button" class="pill" id="btn-foraar" style="--pc:var(--lime)">Forårsjævndøgn</button>
+          <button type="button" class="pill" id="btn-sommer" style="--pc:var(--coral)">Sommersolhverv</button>
+          <button type="button" class="pill" id="btn-efteraar" style="--pc:var(--teal)">Efterårsjævndøgn</button>
+          <button type="button" class="pill" id="btn-vinter" style="--pc:var(--blue)">Vintersolhverv</button>
+        </div>
+      </div>
+
+      <dl class="gauges">
+        <div class="gauge g-hoejde">
+          <dt>Solhøjde nu</dt>
+          <div class="g-viz">
+            <svg class="bue" viewBox="0 0 74 44" aria-hidden="true">
+              <path class="bue-jord" d="M4 40 H70"/>
+              <path class="bue-bg" d="M8 40 A29 29 0 0 1 66 40"/>
+              <line class="bue-str" id="anim-hoejde" x1="37" y1="40" x2="66" y2="40"/>
+              <circle class="bue-sol" id="anim-sol" cx="66" cy="40" r="4.5"/>
+            </svg>
+          </div>
+          <dd id="val-hoejde">0,0<small>°</small></dd>
+        </div>
+
+        <div class="gauge g-middag">
+          <dt>Middagshøjde i dag</dt>
+          <div class="g-viz">
+            <div class="col"><i id="anim-middag"></i><b>0–90°</b></div>
+          </div>
+          <dd id="val-middag">0,0<small>°</small></dd>
+        </div>
+
+        <div class="gauge g-dag">
+          <dt>Daglængde i dag</dt>
+          <div class="g-viz">
+            <div class="doegn"><i id="anim-dagl"></i><u class="m6"></u><u class="m12"></u><u class="m18"></u></div>
+          </div>
+          <dd id="val-dagl">00:00<small>t:min</small></dd>
+        </div>
+
+        <div class="gauge g-straal">
+          <dt>Indstråling pr. døgn</dt>
+          <div class="g-viz">
+            <div class="col"><i id="anim-straal"></i><b>0–13</b></div>
+          </div>
+          <dd id="val-straal">0,00<small>kWh/m²</small></dd>
+        </div>
+      </dl>
+
+      <div class="knobs">
+        <div class="knob">
+          <div class="knob-top">
+            <label class="mono" for="inp-dato">Dato</label>
+            <span class="knob-val" id="v-dato">21. juni</span>
+          </div>
+          <input type="range" id="inp-dato" min="1" max="365" step="1" value="172" aria-describedby="v-dato">
+        </div>
+        <div class="knob">
+          <div class="knob-top">
+            <label class="mono" for="inp-time">Lokal soltid</label>
+            <span class="knob-val" id="v-time">12:00</span>
+          </div>
+          <input type="range" id="inp-time" min="0" max="24" step="0.05" value="12" aria-describedby="v-time">
+        </div>
+        <div class="knob">
+          <div class="knob-top">
+            <label class="mono" for="inp-haeld">Jordaksens hældning</label>
+            <span class="knob-val" id="v-haeld">23,4°</span>
+          </div>
+          <input type="range" id="inp-haeld" min="0" max="45" step="0.1" value="23.44" aria-describedby="v-haeld">
+        </div>
+      </div>
+
+      <div class="facts">
+        <span class="fact" style="--fc:var(--amber)">Aksens hældning <b>23,4°</b></span>
+        <span class="fact" style="--fc:var(--coral)">Sommer minus vinter <b>47°</b></span>
+        <span class="fact" style="--fc:var(--grape)">Polarcirklen <b>66,6° N</b></span>
+        <span class="fact" style="--fc:var(--blue)">Jorden tættest på solen <b>4. januar</b></span>
+      </div>
+      <p class="sr" id="live" aria-live="polite"></p>
+    </section>
+  </div>
+
+  <div class="dig">
+    <details>
+      <summary>Hvorfor er det ikke afstanden til solen? <span class="tag">B-niveau</span></summary>
+      <div class="dig-body">
+        <p>Det er den mest udbredte misforståelse om årstider, og modellen kan modbevise den på ti sekunder: jorden er <b>tættest</b> på solen omkring den 4. januar og længst væk omkring den 4. juli. Havde afstanden været forklaringen, skulle januar altså være den varmeste måned på hele kloden.</p>
+        <p>Banen er næsten cirkulær. Forskellen mellem nærmeste og fjerneste punkt er ca. 3 %, og det giver ca. 7 % forskel i den energi, hele jorden modtager — fordelt jævnt over begge halvkugler. Hældningen giver til sammenligning en forskel på <b>47°</b> i middagshøjde mellem sommer og vinter det samme sted. Sæt hældningen på <b>0°</b> med skyderen: årstiderne forsvinder helt, selvom afstanden til solen ikke har ændret sig.</p>
+        <p>Prøv indstrålingsgrafen for et sted på den sydlige halvkugle. Deres sommer falder sammen med, at jorden er tættest på solen — så de får faktisk en anelse kraftigere sommerindstråling end vi gør. At de alligevel ikke har varmere somre skyldes, at den sydlige halvkugle er dækket af hav, og hav er langsomt at varme op.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>Regn middagshøjden ud uden modellen <span class="tag">B-niveau</span></summary>
+      <div class="dig-body">
+        <p>Solens højde ved middag afhænger kun af to ting: hvor du står (<b>breddegraden φ</b>) og hvor solen står den dag (<b>deklinationen δ</b>, altså hvilken breddegrad solen står lodret over).</p>
+        <div class="form">h<sub>middag</sub> = 90° − |φ − δ|</div>
+        <p>Deklinationen svinger mellem +23,4° ved sommersolhverv og −23,4° ved vintersolhverv, og er 0° ved jævndøgn. For København (55,7° N) giver det 57,7° om sommeren og 10,9° om vinteren — forskellen er de 2 × 23,4° = <b>46,9°</b>. Prøv at regne efter og sammenlign med måleren.</p>
+        <p>Solhøjden på et vilkårligt tidspunkt kræver også <b>timevinklen H</b>, som er 0° ved lokal middag og skifter 15° pr. time:</p>
+        <div class="form">sin h = sin φ · sin δ + cos φ · cos δ · cos H</div>
+        <p>Skyggen af en lodret pind har længden <b>pindens højde ÷ tan h</b>. Ved 45° solhøjde er skyggen præcis lige så lang som pinden — prøv at finde den dato for dit sted.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>Hvorfor ligger polarcirklen ved 66,6°? <span class="tag">B-niveau</span></summary>
+      <div class="dig-body">
+        <p>Polarcirklen er ikke et rundt tal, nogen har fundet på. Den ligger præcis dér, hvor solen lige akkurat ikke går ned ved sommersolhverv — og det sted er bestemt af aksens hældning:</p>
+        <div class="form">polarcirkel = 90° − 23,4° = 66,6°</div>
+        <p>Vendekredsene ligger tilsvarende ved ±23,4°, altså den højeste breddegrad hvor solen kan stå i zenit. Træk i hældningsskyderen og se de fire cirkler flytte sig på kloden: ved 0° falder vendekredsene sammen med ækvator og polarcirklerne med polerne. Ved 45° ville vendekredsen ligge nord for Barcelona, og polarcirklen syd for København.</p>
+        <p>Aksens hældning er ikke helt konstant. Den svinger mellem ca. 22,1° og 24,5° over ca. 41 000 år — en af <b>Milanković-cyklerne</b>, som er med til at styre istiderne.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>Hvad modellen regner med — og hvad den ser bort fra <span class="tag">Forbehold</span></summary>
+      <div class="dig-body">
+        <p>Banen er en <b>rigtig Kepler-ellipse</b> med excentricitet 0,0167 og perihel den 4. januar, løst numerisk for hver dato. Derfor rammer jævndøgn og solhverv de rigtige datoer, og indstrålingen tager højde for, at afstanden til solen skifter.</p>
+        <p>Solhøjden er ren <b>geometri</b>. Modellen ser bort fra atmosfærens brydning, som løfter solen ca. 0,6° når den står i horisonten. Daglængden er dog regnet med den sædvanlige korrektion (solens centrum 0,833° under horisonten ved op- og nedgang), så tallene passer med en almanak.</p>
+        <p>Tiden er <b>lokal sand soltid</b>: klokken 12 står solen altid præcis i syd (eller nord, syd for vendekredsen). Rigtige ure viser zonetid og afviger op til ±16 minutter hen over året på grund af tidsudligningen — plus sommertid og afstanden til zonens midtermeridian.</p>
+        <p>Indstrålingen er den energi, der rammer <b>toppen af atmosfæren</b> pr. vandret kvadratmeter, regnet med solarkonstanten 1361 W/m². Ved jordoverfladen er tallet noget mindre — skyer, luftens spredning og den længere vej gennem atmosfæren ved lav solhøjde tager en god del. Rækkefølgen mellem årstider og breddegrader er den samme.</p>
+        <p>Kloden og afstanden til solen er kraftigt overdrevne i forhold til hinanden — modellen er en lærebogstegning, ikke en målestok.</p>
+      </div>
+    </details>
+  </div>
+</main>
+
+<footer class="foot">
+  <div class="foot-in">
+    <div>
+      <a href="/" class="brand"><span class="brand-mark"></span>smbi<em>.dk</em></a>
+      <div class="mono">Simuleringer til naturgeografi og biologi</div>
+    </div>
+    <nav class="foot-links">
+      <a href="/geografi.html">Naturgeografi</a>
+      <a href="/biologi.html">Biologi</a>
+      <a href="/contact.html">Kontakt</a>
+    </nav>
+  </div>
+</footer>
+
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+/* ═══════════════════════════════════════════════════════════
+   1. DATA
+   ═══════════════════════════════════════════════════════════ */
+
+/* Kystlinjer: Natural Earth 110m (public domain), delta-kodet.
+   Samme data og samme afkoder som geografi/Tidevand.html. */
+const LAND_PACKED = "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|vwDrK0gHDNDBIKEGAzgHGECBJBB|j2B4tBQNSQ0BKiBVDLoBGUIsBLcHCJmBGUNwBHSHSRjBJuBLgBFeReAFNhBXXIfUZBBLULcJIDMTFNZExBQcPWLCH1BIpBMXKGGdKbKAF5BDRIOOmBAoBEFGIKYUDIHIdKpBGOEVORAPIJFjBDnCGrBGfCPIUIbAFUQSUI0BGPL|5qB+zB2BBqBBkBFADvBJxBDRDsBAtBLhBFhBPnBDND7BBcBNDQJRFfFJHbFEDiBAAD1BLzBG5BDdClBCBKkBEJOOC0BJZOhBEQIkBEGGbIHM2BBQBgBItBClCBjBIPIXGDGeEYAmBEeIYBWFQMaCkBC8BCMB6BCqBAsBB|6zCXGfWLQWWMSASHOFWDiBNmBLOJKJELgBLGJRBENSLMVMAAHODFDWHBFNBDGRCTEPMJMLQZKPFLFCPPFJCVCRQTEDFZAIQOGFWJQlBSPAdUFJHBDIAIPKWGOABGdAHMREHKcEKGgBHCH|2pCkBWRXBFNARRNBTHdBGVHHMNCJGXHHKNAPCBaJGJQBSCSMOOFQEEQIEYEOQKMIISKOOKQIAKJCHMFSFBHNAEJNHLRORBJ|rnC2tBJHuBGaJYKSHQRKINUSCUBWHMTGNiBJkBJBHfBMHFFjBCjBGVBlBF7BDZBLKZGRBXQMCgBCcAaElBErBBbAJIuBIfAhBGQOOI2BMUD|qfvICXGHBJDFFMDFEPBHFDBRHVJbLlBHbHVPFRHLGPGDKBSHQAOCQKCAIKOCOFIDOASGKCOKAMEIEIAMMQMGKBIIBKOCMGKGJGHGN|vwD2sBghHNVADGlgHI|2e6ZKNKBGDPBDPDHFDAJGNSDOJeDeGCEDOEWPGGONAESUFQINMFKPDBPFOBEGIDIXGHSLGAGUBAOSEQBESDOTBPEXHRDJLRDTTSRBNWXKJ|kiC1DVAPSZQHMPQJOPcPSFQHQROJQPMTWBKMBgBDSRONMHSVWAQNMPOJHPMHIACNIJOBKNDXBf|7B0kBVTUCWADPRRUBUZOBMXGHYDBLLFIJRJZAhBFJELJRCNFLEeUSEfEFIWGLKEOeBEMNMXEFGIIFGLJAULKIUQQQAYA|k4CmXHPEJJNZHjBBbVNGAQjBDVJXAUPNfLJJIESLGHOUGKMUMOMoBGWDUkBOJeUKIOYDYIMWEKbAPRTAV|+jBmsBLB/BEFIjBGBKUEBMoBQREwBQFKuBKiCOiCCiBIoBCOHNFnCJ7BH9BTdTfRERmBP|hJypBDNWNZN5BNRDZC3BIUIrBKkBEAGpBEMOgBCeNeMaFgBKiBA|nc3wBaJILCHCJfFfFlBDpBDvBAZIEIqBGSGMIKIMGMKKAeEeD|prC0sBzBJJItBMGGQQSOTMkCCcDyBAUFWHZFvBNZNAH|r2B6xBYHbFjBNjBBpBCVKCGQGlBAVGLKOIOGUCHEuBCaLiBDgBDQL|l7BmwBWFoBASFFHYFMDcAcBgBEoBCiBBUHGHNDbFZE5BDnBAhBCzBGHMBKTIpBCVIIIoBB|uL6xBgCNxBHJPRDJPXApBMSGdGnBSPQ4BGKFcAIGeCaH|ksDxZEHQIEHAJFHNPJHIJPAPFFNLTPJJDRALGVCDGKQaUMEQGQMMKKOIGCKOKEH|ouCcPTNDTEfARDDNSRMIkBIAJJEHLRHUZDFSXALLFHGKQTHDGCINMCUNFCXAbLDHGGSDUHAFOIOCOKgBEISOQFYBYAUOCD|hjB2fNROGMDFFSFIGUHFNOECJINJPHBNEEQDEXRLAOKTETAnBABGMIHEQMUgBOMQGKADFJL|zjC0vBIHSEUAEJLJjCBxBJdADGqBK5CDbEcUSG4BHkBLiBAbSSIUBIJ|u+BqxBpBB3BEhBIPOZE0BOqBGoBLuBRFR|ktDzWOTCOIFEPQFMBMIKBDRFLPCFFCJBDHJJNPHBGHCKQFMVICIOGCQAMHOAEJINSJOIAMJOFGR|5qBrsBEHDHFHXBVDZAKIXBVDPGAIWIOCWAGKCIAQKKSCMHEFIJIHEJ|rqBzhBaNcDHJTAJGFHPFVCPGTCZMTKbYSDcNaHKKGOUIOBGJKN|8jCnEmBBGIkBHINeDYLVHVKRBVCREXINCHDjBIDKRAOUYBQFIBCH|45C2fWhBdGLbSVANPMLNDQCUBWEOCcLSCcSKHIKEENITBRIV|5xBoOIHUCGDSLMJGAMDBFQAOHBDNDLANCdBOKHGLAHGDMLAREFEZEHEIETCNJHADFHBJCMGEIIEKEQCECSBQASF|+5C0bODOIEVbFRTfOJVVADUKOWCGcGQWVQF|6rCyLMFGGCFBHGNDPLHDPEPMBICaJBLGDBJPKHMDHNMRDJGCIGEFGBHJMDIAUIHCgBGSMA|nE2gBjBLbCQWJUcQOISCULJNENPR|3+BkuBYDkBEGFTJgBHDRhBHRCNGxBQAGqBBVOWI|26CovBPPpCAfDnBOKMaE2BAoCJ|gvCoFCLALFRHUHJGPFHXMFOGKLIFHJCNLDGIQMGMIGJQGEKOABQQJCJCH|8PoyBoBFdL5BB5BEDEbCVI+BGcDUGyBF|n1BipBEJKEMFWFYFAJQCOHRFdGLITJbJHKZBQKEQGSOA|86CvZUFKCQEMBCXHFBPFGNNDANCLQBOLQAKOB|n6BwtBVPVCLQAKKKUEqBAmBDdRXD|rtBuMSDCEQAMFEAEFMABFKAKHHHJEHAHABDHADEFBHNFEAENEHBNCHDLGCIUDOBIGJIAILCEGMA|x9B+vBQHALJNfBVEAKfABOWAeGcACC|zoCwwBBNPHRAlBHfDbEiBQqBMeAcC|4yB8DRDHQDcIgBOJKNKVDTHF|2hC+wBxDHmBaQCOA0BLFH|nlB/xBFJFJpBCrBAXGACLEuBAqBBQIKIUH|ltCqeJBhBIFIPGDGVEFKAGWDMDSBIHKHUHIL|x+B+wBIHfCfGtBCUGXEBIoBB2BHOJ|vjD1xBlBBZGLIBALGMImBDUFOFGJ|1vB2tBAFTCVAVDFCVKCIICuBBkBL|g/CtDJBDDJFLDJAPGLGCGSDKCEKCACJMAGIKGBMMCEDALFL|4rCoOJPJQBQMSQQKFDLLf|79B9sBWDWCMJPCXBXCbBTEJIMEaDcA|+kC2LPJPGBSKIWGMAEHHHFL|37BmrBNFZGPBbISGOIUDMDGDOH|2J8XFPCFDJPIJCbKEKWBWCOC|4F4ZMNBZJAHFHGAYDMKBKG|4tCpGPFBECGIMUICEQGOAICGBFFVHPFNN|+fqyBZBRBBBXDVEMItBAoBEeAEFMGSCeDHD|v6B8uBLHbCXEKKcESFIF|uP2wBrBJjBGOELIqBEIHcD|77B6wBdFPGJIAIaBKAYHDF|xkB9fQHFHbFHIRJJKYKQDOI|uwCWBPJCBNIJFBHMFaEQGICLMBCH|uoD7NHDJGNINMLODGKAKHKFGFQLKJ|m+C+uBVHfClBIGGkBDyBD|k0CqVEFLLHGJDFLLGAKKMMDIKOF|tvB+pBVADKIKSEQFAHBDNF|z/C2jBTHJGDKSGMEMBKFRJ|uuC0HGXPGAFGLJFAOFCDMMBAILQSBGF|7kCywBlBFbGQIcCcDFF|wtCuGHHFLFFLOEGEGCMMADLQSBR|45C4tBdApBCBCSIaCcHCF|9yC4hBUCHVSPHALIHKJGBKAGKD|3rC9tBaDYELFRFbCTGEIYD|yxC9BGPPKPALANAEMaAWF|+rBhffBAMEIAEOFSDCDFH|+H4iBLPVMBIeGGJ|6sChFBLdDbCAIQEMFOASI|vwD2sBCCSAcFBDTDZBAO|2pChFIFMCEHVDNBLAIKKCGG|phC8tBRLdOGCaAQD|iqC6FZRKOOMMOKUEPNLJN|hwBmLFDLEJGCGIAEAOBKDEFNA|gGsaHPHEFOEGOIEP|lzBmnBXJNADGQIaAAD|prD8nBMDMCQFUBBBNDPEHERBDCCI|msCuHMFMAAHJJLFAKAKBK|2/C5CFFDMDIHGLKNGEEMFGDIDIJIFCJ|0VqWNJCBABTHJCDIIACACGQASG|wvD5KGFBLNBJCBKIGIBGE|zmB2eJAZGRKGCaFWHAD|lhD+LDDDEAEDICCCEAEACCBIBEBCBGHHFFB|6OqWKFQAQABDMCBFdBAEXEEI|uhDnEFBHIJMDQECCFGFILKFBF|5nBidQBSAJHHAXIFGIGGJ|urCrGHBZOSEKFIFBD|xkCkxBXDfAAEUGKBaD|/oBsLDDPALBAKCCQAKBED|+rCmIDRJKJQSBGF|vnDulBLBLCNGUEQBCH|twB8OFBDMHGEMGAIRAJ|z6BuwBJAlBCDEoBAODBB|vuC9tBgBHLCZCbEOGUF|hmBqGRBDCGGAIMCEAAP";
+
+const STEDER = [
+  {id:'nordpol',  navn:'Nordpolen',            lat: 90.0, lon:   0.0, g:'nord'},
+  {id:'longyear', navn:'Longyearbyen, Svalbard',lat:78.2, lon:  15.6, g:'nord'},
+  {id:'tromsoe',  navn:'Tromsø, Norge',        lat: 69.7, lon:  18.9, g:'nord'},
+  {id:'kbh',      navn:'København',            lat: 55.7, lon:  12.6, g:'nord'},
+  {id:'rom',      navn:'Rom, Italien',         lat: 41.9, lon:  12.5, g:'nord'},
+  {id:'kairo',    navn:'Kairo, Egypten',       lat: 30.0, lon:  31.2, g:'nord'},
+  {id:'chiayi',   navn:'Chiayi, Taiwan',       lat: 23.5, lon: 120.4, g:'nord'},
+  {id:'quito',    navn:'Quito, Ecuador',       lat: -0.2, lon: -78.5, g:'syd'},
+  {id:'nairobi',  navn:'Nairobi, Kenya',       lat: -1.3, lon:  36.8, g:'syd'},
+  {id:'saopaulo', navn:'São Paulo, Brasilien', lat:-23.5, lon: -46.6, g:'syd'},
+  {id:'sydney',   navn:'Sydney, Australien',   lat:-33.9, lon: 151.2, g:'syd'},
+  {id:'ushuaia',  navn:'Ushuaia, Argentina',   lat:-54.8, lon: -68.3, g:'syd'},
+  {id:'sydpol',   navn:'Sydpolen',             lat:-90.0, lon:   0.0, g:'syd'}
+];
+
+/* ═══════════════════════════════════════════════════════════
+   2. AFKODNING AF KYSTLINJER
+   ═══════════════════════════════════════════════════════════ */
+function afkodLand(str){
+  const CS="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+  const M={}; for(let i=0;i<64;i++) M[CS[i]]=i;
+  const ud=[];
+  for(const seg of str.split('|')){
+    const tal=[]; let z=0,sh=0;
+    for(const ch of seg){
+      const v=M[ch]; z |= (v&31)<<sh;
+      if(v&32){ sh+=5; } else { tal.push(z&1 ? -((z+1)/2) : z/2); z=0; sh=0; }
+    }
+    const pts=[]; let px=0,py=0;
+    for(let i=0;i<tal.length;i+=2){ px+=tal[i]; py+=tal[i+1]; pts.push(px/10,py/10); }
+    for(let i=2;i<pts.length;i+=2){
+      while(pts[i]-pts[i-2] >  180) pts[i]-=360;
+      while(pts[i]-pts[i-2] < -180) pts[i]+=360;
+    }
+    ud.push(pts);
+  }
+  return ud;
+}
+const RINGE = afkodLand(LAND_PACKED);
+for(const r of RINGE){
+  let minLat=90, minLon=1e9, maxLon=-1e9;
+  for(let i=0;i<r.length;i+=2){ if(r[i+1]<minLat)minLat=r[i+1];
+    if(r[i]<minLon)minLon=r[i]; if(r[i]>maxLon)maxLon=r[i]; }
+  if(minLat<-80 && (maxLon-minLon)>300) r.push(r[r.length-2],-91, r[0],-91);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   3. TEKSTUR
+   ═══════════════════════════════════════════════════════════ */
+const TEX_W=2048, TEX_H=1024;
+function nyCanvas(w,h){ const c=document.createElement('canvas'); c.width=w; c.height=h; return c; }
+
+function tegnLand(g,w,h,medStreg){
+  const sx=w/360, sy=h/180;
+  for(const off of [-360,0,360]){
+    for(const r of RINGE){
+      g.beginPath();
+      for(let i=0;i<r.length;i+=2){
+        const x=(r[i]+off+180)*sx, y=(90-r[i+1])*sy;
+        if(i===0) g.moveTo(x,y); else g.lineTo(x,y);
+      }
+      g.closePath(); g.fill();
+      if(medStreg) g.stroke();
+    }
+  }
+}
+
+function byggTekstur(){
+  const c=nyCanvas(TEX_W,TEX_H), g=c.getContext('2d');
+  /* havet: lidt lysere mod ækvator, så kloden ikke bliver flad */
+  const grad=g.createLinearGradient(0,0,0,TEX_H);
+  grad.addColorStop(0,'#0E3D5E'); grad.addColorStop(0.5,'#166B9C'); grad.addColorStop(1,'#0E3D5E');
+  g.fillStyle=grad; g.fillRect(0,0,TEX_W,TEX_H);
+
+  /* gradnet hver 15° — man skal kunne se kloden dreje */
+  g.strokeStyle='rgba(255,255,255,0.13)'; g.lineWidth=2;
+  for(let la=-75;la<=75;la+=15){ const y=(90-la)/180*TEX_H;
+    g.beginPath(); g.moveTo(0,y); g.lineTo(TEX_W,y); g.stroke(); }
+  for(let lo=-180;lo<180;lo+=15){ const x=(lo+180)/360*TEX_W;
+    g.beginPath(); g.moveTo(x,0); g.lineTo(x,TEX_H); g.stroke(); }
+
+  g.fillStyle='#EDE4CE'; g.strokeStyle='#17211F'; g.lineWidth=3; g.lineJoin='round';
+  tegnLand(g,TEX_W,TEX_H,true);
+
+  const t=new THREE.CanvasTexture(c);
+  t.colorSpace=THREE.SRGBColorSpace; t.anisotropy=4;
+  return t;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   4. HIMMELMEKANIK
+   ───────────────────────────────────────────────────────────
+   Ekliptika ligger i XZ-planet, +Y er ekliptikas nordpol.
+   Solen står i origo. Jorden løber i en ægte Kepler-ellipse.
+   ═══════════════════════════════════════════════════════════ */
+const GRAD = Math.PI/180;
+const AAR = 365.2422;
+const EXC = 0.0167;            // banens excentricitet
+const DAG_PERIHEL = 4;         // jorden tættest på solen ca. 4. januar
+const OMEGA = 13.93*GRAD;      // perihelets længde i vores nulpunkt
+const S0 = 1361;               // solarkonstanten, W/m²
+const H_OPGANG = -0.833*GRAD;  // solens centrum ved op- og nedgang (brydning)
+
+/* Kepler: middelanomali → sand anomali og afstand */
+function bane(dag){
+  const M = 2*Math.PI*((dag - DAG_PERIHEL)/AAR);
+  let E = M;
+  for(let i=0;i<6;i++) E = E - (E - EXC*Math.sin(E) - M)/(1 - EXC*Math.cos(E));
+  const nu = 2*Math.atan2(Math.sqrt(1+EXC)*Math.sin(E/2), Math.sqrt(1-EXC)*Math.cos(E/2));
+  return {lam: nu + OMEGA, r: 1 - EXC*Math.cos(E)};
+}
+
+/* Aksen står FAST i rummet — den følger ikke med rundt i banen.
+   Det er hele forklaringen på årstiderne. */
+let EPS = 23.44*GRAD;
+const AKSE = new THREE.Vector3(), Q_AKSE = new THREE.Quaternion();
+const E1 = new THREE.Vector3(), E2 = new THREE.Vector3();
+const _op = new THREE.Vector3(0,1,0);
+function saetHaeldning(gr){
+  EPS = gr*GRAD;
+  AKSE.set(Math.sin(EPS), Math.cos(EPS), 0).normalize();
+  Q_AKSE.setFromUnitVectors(_op, AKSE);
+  E1.set(1,0,0).applyQuaternion(Q_AKSE);
+  E2.set(0,0,1).applyQuaternion(Q_AKSE).negate();
+}
+saetHaeldning(23.44);
+
+const jordPos = (dag,ud)=>{ const b=bane(dag);
+  return ud.set(Math.cos(b.lam), 0, -Math.sin(b.lam)).multiplyScalar(b.r); };
+
+/* Solens retning set fra jorden */
+const _jp = new THREE.Vector3();
+const solRetning = (dag,ud)=> ud.copy(jordPos(dag,_jp)).negate().normalize();
+
+/* Solens deklination: den breddegrad, solen står lodret over */
+function deklination(dag){
+  const s = solRetning(dag, new THREE.Vector3());
+  return Math.asin(Math.max(-1,Math.min(1, s.dot(AKSE))));
+}
+
+/* Solens position langs ækvator i det inertiale system.
+   Herfra kan vi regne timevinklen for et hvilket som helst sted. */
+function alfaSol(dag){
+  const s = solRetning(dag, new THREE.Vector3());
+  return Math.atan2(s.dot(E2), s.dot(E1));
+}
+
+/* Solhøjden — den klassiske formel. Modellen og aflæsningen
+   bruger nøjagtig den samme, så figur og tal ikke kan skride
+   fra hinanden. */
+function solhoejde(lat, dag, time){
+  const d = deklination(dag), p = lat*GRAD, H = (time-12)*15*GRAD;
+  return Math.asin(Math.max(-1,Math.min(1,
+    Math.sin(p)*Math.sin(d) + Math.cos(p)*Math.cos(d)*Math.cos(H))));
+}
+
+/* Middagshøjden: h = 90° − |φ − δ| */
+function middagshoejde(lat, dag){
+  return Math.PI/2 - Math.abs(lat*GRAD - deklination(dag));
+}
+
+/* Halv daglængde som timevinkel. Uden for ±1 er der midnatssol
+   eller polarnat, og så findes der ingen op- og nedgang. */
+function halvDag(lat, dag){
+  const d = deklination(dag), p = lat*GRAD;
+  const c = (Math.sin(H_OPGANG) - Math.sin(p)*Math.sin(d)) / (Math.cos(p)*Math.cos(d));
+  if(!isFinite(c)) return Math.sin(d)*Math.sin(p) > 0 ? Math.PI : 0;
+  if(c <= -1) return Math.PI;   // midnatssol
+  if(c >=  1) return 0;         // polarnat
+  return Math.acos(c);
+}
+const daglaengde = (lat,dag)=> halvDag(lat,dag)/Math.PI*24;
+
+/* Indstråling pr. døgn på en vandret flade i toppen af
+   atmosfæren, kWh pr. m². Afstanden til solen tæller med. */
+function indstraaling(lat, dag){
+  const d = deklination(dag), p = lat*GRAD, H0 = halvDag(lat,dag), b = bane(dag);
+  const q = (S0/Math.PI)/(b.r*b.r) *
+            (H0*Math.sin(p)*Math.sin(d) + Math.cos(p)*Math.cos(d)*Math.sin(H0));
+  return Math.max(0, q)*24/1000;
+}
+
+/* Punkt på jorden i klodens eget system — samme konvention som
+   SphereGeometry's uv-afbildning. */
+function kropPos(lat,lon,ud){
+  const p=lat*GRAD, phi=Math.PI+lon*GRAD;
+  return ud.set(-Math.cos(phi)*Math.cos(p), Math.sin(p), Math.sin(phi)*Math.cos(p));
+}
+
+/* Klodens drejning, sat så klokken 12 er lokal middag på det
+   valgte sted. Derfor afhænger den af stedets længdegrad. */
+const spinVinkel = (dag,time,lon)=> alfaSol(dag) + (time-12)*15*GRAD - lon*GRAD;
+
+/* ═══════════════════════════════════════════════════════════
+   5. DATOER
+   ═══════════════════════════════════════════════════════════ */
+const MDR = ['januar','februar','marts','april','maj','juni',
+             'juli','august','september','oktober','november','december'];
+const MDR_LGD = [31,28,31,30,31,30,31,31,30,31,30,31];
+const MDR_KORT = ['J','F','M','A','M','J','J','A','S','O','N','D'];
+function datoNavn(dag){
+  let d=Math.max(1,Math.min(365,Math.round(dag))), m=0;
+  while(d > MDR_LGD[m]){ d-=MDR_LGD[m]; m++; }
+  return d+'. '+MDR[m];
+}
+const MDR_START = (()=>{ const a=[]; let s=1;
+  for(const l of MDR_LGD){ a.push(s); s+=l; } return a; })();
+
+/* ═══════════════════════════════════════════════════════════
+   6. TILSTAND
+   ═══════════════════════════════════════════════════════════ */
+const S = {
+  dato: 172, time: 12, haeld: 23.44,
+  sted: STEDER.find(s=>s.id==='kbh'),
+  koerDoegn:false, koerAar:true, baneview:false,
+  ringe:true, projektor:false, graf:'doegn'
+};
+
+/* ═══════════════════════════════════════════════════════════
+   7. SCENEN
+   ═══════════════════════════════════════════════════════════ */
+const lærred = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({canvas:lærred, antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio||1, 2));
+renderer.setClearColor(0x0B1220, 1);
+
+const scene = new THREE.Scene();
+const kamera = new THREE.PerspectiveCamera(38, 1.6, 0.05, 400);
+
+const BANE_R = 11;            // banens radius i klodens radier — ikke i skala
+const texJord = byggTekstur();
+
+/* ── Solen ─────────────────────────────────────────────── */
+const sol = new THREE.Mesh(
+  new THREE.SphereGeometry(1.5, 40, 26),
+  new THREE.MeshBasicMaterial({color:0xFFD25B})
+);
+scene.add(sol);
+const solGlød = new THREE.Sprite(new THREE.SpriteMaterial({
+  map:(()=>{ const c=nyCanvas(128,128), g=c.getContext('2d');
+    const gr=g.createRadialGradient(64,64,6,64,64,64);
+    gr.addColorStop(0,'rgba(255,226,140,0.95)'); gr.addColorStop(0.32,'rgba(255,190,60,0.4)');
+    gr.addColorStop(1,'rgba(255,180,0,0)'); g.fillStyle=gr; g.fillRect(0,0,128,128);
+    const t=new THREE.CanvasTexture(c); t.colorSpace=THREE.SRGBColorSpace; return t; })(),
+  transparent:true, depthWrite:false
+}));
+solGlød.scale.set(9,9,1);
+scene.add(solGlød);
+
+const solLys = new THREE.DirectionalLight(0xFFF3DC, 2.9);
+scene.add(solLys);
+scene.add(new THREE.AmbientLight(0x33507C, 0.62));
+
+/* ── Banen ─────────────────────────────────────────────── */
+const baneLinje = new THREE.LineLoop(
+  new THREE.BufferGeometry().setFromPoints(
+    Array.from({length:361},(_,i)=>{ const b=bane(i*AAR/360);
+      return new THREE.Vector3(Math.cos(b.lam),0,-Math.sin(b.lam)).multiplyScalar(b.r*BANE_R); })),
+  new THREE.LineBasicMaterial({color:0x8FA29E, transparent:true, opacity:0.5})
+);
+scene.add(baneLinje);
+
+/* Perihel og aphel — hele pointen om, at afstanden ikke
+   forklarer årstiderne. */
+function banePunkt(dag, farve){
+  const b=bane(dag);
+  const m=new THREE.Mesh(new THREE.SphereGeometry(0.16,14,10),
+          new THREE.MeshBasicMaterial({color:farve}));
+  m.position.set(Math.cos(b.lam),0,-Math.sin(b.lam)).multiplyScalar(b.r*BANE_R);
+  m.visible=false; scene.add(m); return m;
+}
+const perihel = banePunkt(DAG_PERIHEL, 0xE8336D);
+const aphel   = banePunkt(DAG_PERIHEL+AAR/2, 0x0E86C8);
+
+/* ── Jorden ────────────────────────────────────────────── */
+const jordGruppe = new THREE.Object3D();      // flytter sig i banen
+scene.add(jordGruppe);
+const jordPivot = new THREE.Object3D();       // holder aksens hældning
+jordGruppe.add(jordPivot);
+
+const jord = new THREE.Mesh(
+  new THREE.SphereGeometry(1, 96, 64),
+  new THREE.MeshStandardMaterial({map:texJord, roughness:1, metalness:0})
+);
+jordPivot.add(jord);
+
+const akseLinje = new THREE.Line(
+  new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,-1.45,0), new THREE.Vector3(0,1.45,0)]),
+  new THREE.LineBasicMaterial({color:0xFFF6E0, transparent:true, opacity:0.55})
+);
+jordPivot.add(akseLinje);
+
+/* Breddecirkler. De flytter sig, når hældningen ændres —
+   ækvator står fast, de fire andre følger aksen. */
+function breddeRing(farve, bredde){
+  const g=new THREE.BufferGeometry().setFromPoints(
+    Array.from({length:129},(_,i)=>new THREE.Vector3(Math.cos(i/128*Math.PI*2),0,Math.sin(i/128*Math.PI*2))));
+  const l=new THREE.LineLoop(g, new THREE.LineBasicMaterial({color:farve, transparent:true, opacity:0.95}));
+  l.userData.bredde=bredde; jordPivot.add(l); return l;
+}
+const RINGENE = [
+  breddeRing(0xE8336D,'aekvator'),
+  breddeRing(0xFF6A3D,'vende+'), breddeRing(0xFF6A3D,'vende-'),
+  breddeRing(0x7A4FD6,'polar+'), breddeRing(0x7A4FD6,'polar-')
+];
+function placerRinge(){
+  const v = EPS/GRAD, sæt = {aekvator:0, 'vende+':v, 'vende-':-v, 'polar+':90-v, 'polar-':-(90-v)};
+  for(const r of RINGENE){
+    const p = sæt[r.userData.bredde]*GRAD;
+    r.scale.setScalar(Math.cos(p)*1.004);
+    r.position.y = Math.sin(p)*1.004;
+  }
+}
+placerRinge();
+
+/* Anker for det valgte sted på kloden — bruges kun til at regne
+   solhøjden ud og placere stedmærkatet, ingen synlig geometri. */
+const stedAnker = new THREE.Object3D();  jord.add(stedAnker);
+
+/* ── Stjerner ──────────────────────────────────────────── */
+{
+  const n=600, pos=new Float32Array(n*3);
+  for(let i=0;i<n;i++){
+    const u=Math.random()*2-1, a=Math.random()*Math.PI*2, r=Math.sqrt(1-u*u)*140;
+    pos[i*3]=Math.cos(a)*r; pos[i*3+1]=u*140; pos[i*3+2]=Math.sin(a)*r;
+  }
+  const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  scene.add(new THREE.Points(g,new THREE.PointsMaterial({color:0xBFD3E8,size:0.5,sizeAttenuation:true,transparent:true,opacity:0.7})));
+}
+
+/* ── Kamera: samme lille orbit-styring som tidevandssiden,
+      men med et mål der kan flytte sig mellem klode og sol ── */
+const cam = {az: 0.55, el: 0.42, dist: 4.7};
+const camMaal = new THREE.Vector3();
+const camMaalOenske = new THREE.Vector3();
+function opdaterKamera(){
+  cam.el = Math.max(-1.35, Math.min(1.35, cam.el));
+  cam.dist = Math.max(2.2, Math.min(60, cam.dist));
+  kamera.position.set(
+    cam.dist*Math.cos(cam.el)*Math.sin(cam.az),
+    cam.dist*Math.sin(cam.el),
+    cam.dist*Math.cos(cam.el)*Math.cos(cam.az)
+  ).add(camMaal);
+  kamera.lookAt(camMaal);
+}
+
+(function styring(){
+  let trækker=false, sidst=null, pinch=null;
+  const hint=document.getElementById('hint');
+  const skjulHint=()=>hint&&hint.classList.add('gone');
+  lærred.addEventListener('pointerdown', e=>{
+    if(e.pointerType==='touch'&&e.isPrimary===false) return;
+    trækker=true; sidst={x:e.clientX,y:e.clientY};
+    lærred.setPointerCapture(e.pointerId); lærred.classList.add('dragging'); skjulHint();
+  });
+  lærred.addEventListener('pointermove', e=>{
+    if(!trækker||!sidst) return;
+    cam.az -= (e.clientX-sidst.x)*0.006;
+    cam.el += (e.clientY-sidst.y)*0.006;
+    sidst={x:e.clientX,y:e.clientY}; opdaterKamera();
+  });
+  const slip=e=>{ trækker=false; sidst=null; lærred.classList.remove('dragging');
+    try{lærred.releasePointerCapture(e.pointerId);}catch(_){} };
+  lærred.addEventListener('pointerup',slip);
+  lærred.addEventListener('pointercancel',slip);
+  lærred.addEventListener('wheel', e=>{ e.preventDefault(); skjulHint();
+    cam.dist *= (1 + Math.sign(e.deltaY)*0.09); opdaterKamera(); }, {passive:false});
+  lærred.addEventListener('touchstart', e=>{ if(e.touches.length===2){
+    pinch=Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY); }},{passive:true});
+  lærred.addEventListener('touchmove', e=>{ if(e.touches.length===2&&pinch){
+    const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
+    cam.dist *= pinch/d; pinch=d; opdaterKamera(); e.preventDefault(); }},{passive:false});
+  lærred.addEventListener('touchend', ()=>{ pinch=null; });
+  lærred.addEventListener('keydown', e=>{
+    const k=e.key; let brugt=true;
+    if(k==='ArrowLeft') cam.az+=0.09;
+    else if(k==='ArrowRight') cam.az-=0.09;
+    else if(k==='ArrowUp') cam.el+=0.07;
+    else if(k==='ArrowDown') cam.el-=0.07;
+    else if(k==='+'||k==='=') cam.dist*=0.9;
+    else if(k==='-') cam.dist*=1.1;
+    else brugt=false;
+    if(brugt){ e.preventDefault(); skjulHint(); opdaterKamera(); }
+  });
+})();
+
+function tilpasStørrelse(){
+  const boks=document.getElementById('view');
+  const b=boks.clientWidth-20;
+  if(b<=0) return;
+  const forhold = b<560 ? 0.92 : 0.62;
+  const h=Math.round(Math.min(Math.max(b*forhold,240),620));
+  renderer.setSize(b,h,true);
+  kamera.aspect=b/h; kamera.updateProjectionMatrix();
+}
+new ResizeObserver(tilpasStørrelse).observe(document.getElementById('view'));
+tilpasStørrelse();
+
+
+/* ═══════════════════════════════════════════════════════════
+   8. AFLÆSNINGER
+   ═══════════════════════════════════════════════════════════ */
+const el = id => document.getElementById(id);
+const komma = (v,n)=> v.toFixed(n).replace('.',',');
+
+/* ── Graferne ──────────────────────────────────────────── */
+const gl = el('graf'), gg = gl.getContext('2d');
+
+const GRAFER = {
+  doegn: {
+    titel:'Solhøjde gennem døgnet',
+    laes:[['#FFB300','Solens højde time for time'],
+          ['#FF6A3D','Lodret streg: klokken nu'],
+          ['#3E4E4C','Under stregen: solen er nede']]
+  },
+  middag: {
+    titel:'Middagshøjde gennem året',
+    laes:[['#0E86C8','Solhøjden ved lokal middag'],
+          ['#FF6A3D','Lodret streg: datoen nu'],
+          ['#7A4FD6','Forskellen sommer–vinter er 2 × 23,4°']]
+  },
+  dagl: {
+    titel:'Daglængde gennem året',
+    laes:[['#FFB300','Timer med sol over horisonten'],
+          ['#FF6A3D','Lodret streg: datoen nu'],
+          ['#7A4FD6','Flad i toppen: midnatssol']]
+  },
+  straal: {
+    titel:'Indstråling pr. døgn',
+    laes:[['#5FB030','kWh pr. m² i toppen af atmosfæren'],
+          ['#FF6A3D','Lodret streg: datoen nu'],
+          ['#E8336D','Højde × daglængde tilsammen']]
+  }
+};
+
+function grafRamme(bw,bh){
+  const dpr=Math.min(devicePixelRatio||1,2);
+  if(gl.width!==Math.round(bw*dpr)||gl.height!==Math.round(bh*dpr)){
+    gl.width=Math.round(bw*dpr); gl.height=Math.round(bh*dpr); gl.style.height=bh+'px';
+  }
+  gg.setTransform(dpr,0,0,dpr,0,0);
+  gg.clearRect(0,0,bw,bh);
+}
+
+function tegnGraf(){
+  const bw=gl.clientWidth||280, bh=Math.round(bw*0.70);
+  grafRamme(bw,bh);
+  const L=36,R=8,T=10,B=22, w=bw-L-R, h=bh-T-B;
+  const lat=S.sted.lat;
+
+  gg.fillStyle='#F3FAFE'; gg.fillRect(L,T,w,h);
+  gg.font='600 8px IBM Plex Mono, monospace';
+  gg.textAlign='center'; gg.fillStyle='#7E8F8C';
+
+  const PAD=5;
+  let X, Y, ymin, ymax, punkter, farve, nuX, nuY, enhed;
+
+  if(S.graf==='doegn'){
+    const N=193; punkter=[];
+    let lo=90, hi=-90;
+    for(let i=0;i<N;i++){
+      const t=i*24/(N-1), v=solhoejde(lat,S.dato,t)/GRAD;
+      punkter.push([t,v]); if(v<lo)lo=v; if(v>hi)hi=v;
+    }
+    ymin=Math.max(-90,Math.min(-12,Math.floor(lo/10)*10));
+    ymax=Math.min(90,Math.max(15,Math.ceil(hi/10)*10));
+    X=v=>L+v/24*w; Y=v=>T+h-PAD-(v-ymin)/(ymax-ymin)*(h-2*PAD);
+    farve='#FFB300'; enhed='GRADER';
+    /* natten tones ned */
+    gg.fillStyle='rgba(23,33,31,0.10)';
+    gg.fillRect(L,Y(0),w,T+h-Y(0));
+    gg.strokeStyle='rgba(23,33,31,0.12)'; gg.lineWidth=1;
+    for(let t=0;t<=24;t+=6){ const x=X(t);
+      gg.beginPath(); gg.moveTo(x,T); gg.lineTo(x,T+h); gg.stroke();
+      gg.fillStyle='#7E8F8C'; gg.fillText(t+':00', x, bh-4); }
+    nuX=X(S.time); nuY=Y(solhoejde(lat,S.dato,S.time)/GRAD);
+  } else {
+    const N=183; punkter=[];
+    let lo=1e9, hi=-1e9;
+    const f = S.graf==='middag' ? d=>Math.max(0,middagshoejde(lat,d)/GRAD)
+            : S.graf==='dagl'   ? d=>daglaengde(lat,d)
+            :                     d=>indstraaling(lat,d);
+    for(let i=0;i<N;i++){
+      const d=1+i*364/(N-1), v=f(d);
+      punkter.push([d,v]); if(v<lo)lo=v; if(v>hi)hi=v;
+    }
+    ymin=0;
+    ymax = S.graf==='middag' ? 90 : S.graf==='dagl' ? 24 : 13;
+    X=v=>L+(v-1)/364*w; Y=v=>T+h-PAD-(v-ymin)/(ymax-ymin)*(h-2*PAD);
+    farve = S.graf==='middag' ? '#0E86C8' : S.graf==='dagl' ? '#FFB300' : '#5FB030';
+    enhed = S.graf==='middag' ? 'GRADER' : S.graf==='dagl' ? 'TIMER' : 'kWh/m²';
+    gg.strokeStyle='rgba(23,33,31,0.12)'; gg.lineWidth=1;
+    for(let m=0;m<12;m++){ const x=X(MDR_START[m]);
+      gg.beginPath(); gg.moveTo(x,T); gg.lineTo(x,T+h); gg.stroke();
+      if(m%2===0){ gg.fillStyle='#7E8F8C'; gg.fillText(MDR_KORT[m], x+w/24, bh-4); } }
+    nuX=X(S.dato); nuY=Y(f(S.dato));
+  }
+
+  /* nul-linje */
+  if(ymin<0){
+    gg.strokeStyle='rgba(23,33,31,0.45)'; gg.setLineDash([3,3]); gg.lineWidth=1.5;
+    gg.beginPath(); gg.moveTo(L,Y(0)); gg.lineTo(L+w,Y(0)); gg.stroke(); gg.setLineDash([]);
+  }
+
+  /* y-akse — faste, pæne trin i stedet for skæve fjerdedele */
+  gg.textAlign='right'; gg.fillStyle='#7E8F8C';
+  let maerker;
+  if(S.graf==='middag') maerker=[0,30,60,90];
+  else if(S.graf==='dagl') maerker=[0,6,12,18,24];
+  else if(S.graf==='straal') maerker=[0,3,6,9,12];
+  else { maerker=[]; const n=4;
+    for(let i=0;i<=n;i++) maerker.push(ymin+(ymax-ymin)*i/n); }
+  for(const v of maerker){
+    if(v<ymin-1e-6||v>ymax+1e-6) continue;
+    gg.fillText(Math.abs(v)<10&&v%1 ? komma(v,1) : String(Math.round(v)), L-4, Y(v)+3);
+  }
+  gg.save(); gg.translate(9,T+h/2); gg.rotate(-Math.PI/2);
+  gg.textAlign='center'; gg.fillText(enhed,0,0); gg.restore();
+
+  /* fladen under kurven */
+  const nul = Math.max(T, Math.min(T+h, Y(Math.max(ymin,0))));
+  gg.beginPath();
+  punkter.forEach(([a,b],i)=> i? gg.lineTo(X(a),Y(b)) : gg.moveTo(X(a),Y(b)));
+  gg.lineTo(X(punkter[punkter.length-1][0]),nul); gg.lineTo(X(punkter[0][0]),nul); gg.closePath();
+  gg.fillStyle=farve+'33'; gg.fill();
+
+  gg.beginPath();
+  punkter.forEach(([a,b],i)=> i? gg.lineTo(X(a),Y(b)) : gg.moveTo(X(a),Y(b)));
+  gg.strokeStyle=farve; gg.lineWidth=2.4; gg.lineJoin='round'; gg.stroke();
+
+  /* hvor er vi nu */
+  gg.strokeStyle='#FF6A3D'; gg.lineWidth=2;
+  gg.beginPath(); gg.moveTo(nuX,T); gg.lineTo(nuX,T+h); gg.stroke();
+  gg.beginPath(); gg.arc(nuX,Math.max(T,Math.min(T+h,nuY)),4.5,0,Math.PI*2);
+  gg.fillStyle='#FF6A3D'; gg.fill();
+  gg.strokeStyle='#17211F'; gg.lineWidth=1.8; gg.stroke();
+
+  gg.strokeStyle='#17211F'; gg.lineWidth=2; gg.strokeRect(L,T,w,h);
+}
+
+function saetGrafLaes(){
+  const ul=el('graf-laes'); ul.innerHTML='';
+  for(const [c,t] of GRAFER[S.graf].laes){
+    const li=document.createElement('li');
+    li.innerHTML=`<i style="background:${c}"></i>${t}`;
+    ul.appendChild(li);
+  }
+}
+
+/* ── Stedvælger ────────────────────────────────────────── */
+(function steder(){
+  for(const g of ['nord','syd']){
+    const boks=document.querySelector(`.pl-group[data-g="${g}"]`);
+    for(const s of STEDER.filter(x=>x.g===g)){
+      const b=document.createElement('button');
+      b.type='button'; b.className='pill'; b.dataset.sted=s.id;
+      b.setAttribute('aria-pressed', String(s.id===S.sted.id));
+      /* farven følger breddegraden: rød ved ækvator, lilla ved polerne */
+      const f=Math.abs(s.lat)/90;
+      b.style.setProperty('--pc',`rgb(${Math.round(232-150*f)},${Math.round(51+30*f)},${Math.round(109+105*f)})`);
+      b.textContent=s.navn.split(',')[0];
+      const t=document.createElement('span'); t.className='mono';
+      t.style.cssText='font-size:0.55rem;opacity:.75;margin-left:2px';
+      t.textContent = Math.abs(s.lat).toFixed(s.lat%1?1:0).replace('.',',')+'° '+(s.lat<0?'S':s.lat>0?'N':'');
+      b.appendChild(t);
+      b.addEventListener('click',()=>vaelgSted(s.id));
+      boks.appendChild(b);
+    }
+  }
+})();
+
+function stedNavn(s){
+  const b=Math.abs(s.lat);
+  return s.navn+', '+komma(b, b%1?1:0)+'° '+(s.lat<0?'S':s.lat>0?'N':'');
+}
+function vaelgSted(id){
+  const s=STEDER.find(x=>x.id===id); if(!s) return;
+  S.sted=s;
+  document.querySelectorAll('.pill[data-sted]').forEach(b=>
+    b.setAttribute('aria-pressed', String(b.dataset.sted===id)));
+  el('sted-navn').textContent=stedNavn(s);
+  gemTilstand();
+}
+
+/* ── Knapper og skydere ────────────────────────────────── */
+function trykknap(id, start, fn){
+  const b=el(id);
+  b.setAttribute('aria-pressed', String(start));
+  b.addEventListener('click', ()=>{
+    const ny=b.getAttribute('aria-pressed')!=='true';
+    b.setAttribute('aria-pressed', String(ny)); fn(ny);
+  });
+  return b;
+}
+trykknap('btn-doegn', S.koerDoegn, v=>{ S.koerDoegn=v; });
+trykknap('btn-aar',   S.koerAar,   v=>{ S.koerAar=v; });
+trykknap('btn-bane',  S.baneview,  v=>{
+  S.baneview=v;
+  cam.dist = v ? 27 : 4.7;
+  cam.el   = v ? 0.80 : 0.42;
+  perihel.visible = aphel.visible = v;
+  /* Kloden forstørres, så den overhovedet kan ses ved siden af
+     banen. Figuren er en lærebogstegning, ikke en målestok. */
+  jordPivot.scale.setScalar(v ? 2.6 : 1);
+  opdaterKamera();
+});
+trykknap('btn-ringe', S.ringe,     v=>{ S.ringe=v; RINGENE.forEach(r=>r.visible=v); });
+trykknap('btn-projektor', S.projektor, v=>{ S.projektor=v;
+  document.body.dataset.projektor = v?'1':'0';
+  requestAnimationFrame(tilpasStørrelse); });
+
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click', ()=>{
+    S.graf=t.dataset.graf;
+    document.querySelectorAll('.tab').forEach(o=>
+      o.setAttribute('aria-selected', String(o===t)));
+    saetGrafLaes();
+  });
+});
+
+const inpDato=el('inp-dato'), inpTime=el('inp-time'), inpHaeld=el('inp-haeld');
+inpDato.addEventListener('input', ()=>{ S.dato=+inpDato.value; gemTilstand(); });
+inpTime.addEventListener('input', ()=>{ S.time=+inpTime.value; gemTilstand(); });
+inpHaeld.addEventListener('input', ()=>{
+  S.haeld=+inpHaeld.value; saetHaeldning(S.haeld); placerRinge(); gemTilstand();
+});
+
+/* ── Mærkedage: hop direkte til solhverv og jævndøgn ────── */
+function gaaTilDato(dag){
+  S.koerDoegn=false; S.koerAar=false;
+  el('btn-doegn').setAttribute('aria-pressed','false');
+  el('btn-aar').setAttribute('aria-pressed','false');
+  S.dato=dag; inpDato.value=dag;
+  gemTilstand();
+}
+el('btn-foraar').addEventListener('click',   ()=>gaaTilDato(79));
+el('btn-sommer').addEventListener('click',   ()=>gaaTilDato(172));
+el('btn-efteraar').addEventListener('click', ()=>gaaTilDato(266));
+el('btn-vinter').addEventListener('click',   ()=>gaaTilDato(355));
+
+/* ── Tilstand i adressen ───────────────────────────────── */
+let gemTimer=null;
+function gemTilstand(){
+  clearTimeout(gemTimer);
+  gemTimer=setTimeout(()=>{
+    history.replaceState(null,'',
+      `#sted=${S.sted.id}&dato=${S.dato}&time=${S.time.toFixed(1)}&haeld=${komma(S.haeld,2).replace(',','.')}`);
+  },250);
+}
+(function laesTilstand(){
+  const q=new URLSearchParams(location.search);
+  const hh=new URLSearchParams(location.hash.replace(/^#/,''));
+  const hent=k=>hh.get(k) ?? q.get(k);
+  if(hent('sted')) vaelgSted(hent('sted'));
+  if(hent('dato')!=null){ S.dato=Math.max(1,Math.min(365,+hent('dato')||172)); inpDato.value=S.dato; }
+  if(hent('time')!=null){ S.time=Math.max(0,Math.min(24,+hent('time')||12)); inpTime.value=S.time; }
+  if(hent('haeld')!=null){ S.haeld=Math.max(0,Math.min(45,+hent('haeld')));
+    inpHaeld.value=S.haeld; saetHaeldning(S.haeld); placerRinge(); }
+  if(q.get('graf') && GRAFER[q.get('graf')]){
+    S.graf=q.get('graf');
+    document.querySelectorAll('.tab').forEach(o=>
+      o.setAttribute('aria-selected', String(o.dataset.graf===S.graf)));
+  }
+  if(q.get('projektor')==='1'||q.get('mode')==='teach') el('btn-projektor').click();
+})();
+el('sted-navn').textContent=stedNavn(S.sted);
+saetGrafLaes();
+
+/* ── Mærkater på figuren ───────────────────────────────── */
+const visning = document.getElementById('view');
+function nyt(klasse, tekst){
+  const d=document.createElement('div'); d.className=klasse;
+  if(tekst) d.textContent=tekst; visning.appendChild(d); return d;
+}
+const mSted = nyt('ovl ovl-sted');
+Object.assign(mSted.style,{
+  position:'absolute', pointerEvents:'none', zIndex:'3',
+  font:'700 0.7rem/1.1 Archivo, system-ui, sans-serif',
+  background:'#fff', border:'2px solid #17211F', borderRadius:'13px',
+  padding:'2px 8px', boxShadow:'2px 2px 0 #17211F', whiteSpace:'nowrap',
+  transform:'translate(-50%,-330%)'
+});
+
+/* ═══════════════════════════════════════════════════════════
+   9. LØKKEN
+   ═══════════════════════════════════════════════════════════ */
+const sHat=new THREE.Vector3(), tmp=new THREE.Vector3(), tmp2=new THREE.Vector3();
+const qInv=new THREE.Quaternion(), sBody=new THREE.Vector3(), sLocal=new THREE.Vector3();
+const badge=el('badge'), badgeTxt=el('badge-txt'), live=el('live');
+let sidstTid=performance.now(), sidstLive=-99;
+
+/* Ligger punktet bag kloden set fra kameraet? */
+const _a=new THREE.Vector3(), _b=new THREE.Vector3(), _c=new THREE.Vector3();
+function bagKloden(P){
+  _a.copy(kamera.position).sub(jordGruppe.position);   // kamera i klodens system
+  _b.copy(P).sub(jordGruppe.position);                 // punktet i klodens system
+  _c.copy(_b).sub(_a);
+  const l2=_c.lengthSq();
+  let s = l2>0 ? -_a.dot(_c)/l2 : 0;
+  s = Math.max(0, Math.min(1, s));
+  return _c.multiplyScalar(s).add(_a).length() < 0.999;
+}
+function placer(d, P, synlig){
+  if(!synlig){ d.style.opacity='0'; return; }
+  const v=tmp2.copy(P).project(kamera);
+  if(v.z>1){ d.style.opacity='0'; return; }
+  d.style.opacity='1';
+  d.style.left=(lærred.offsetLeft + (v.x*0.5+0.5)*lærred.clientWidth)+'px';
+  d.style.top =(lærred.offsetTop  + (-v.y*0.5+0.5)*lærred.clientHeight)+'px';
+}
+
+function aarstidTekst(dag, dagl){
+  if(S.haeld < 0.35) return ['Ingen hældning — så er der ingen årstider','var(--slate)'];
+  if(dagl>=23.99) return ['Midnatssol — solen går slet ikke ned','var(--amber)'];
+  if(dagl<=0.01)  return ['Polarnat — solen kommer slet ikke op','var(--grape)'];
+  const naer=(a,b)=>Math.abs(((a-b+182.5)%365+365)%365-182.5)<4;
+  if(naer(dag,172)) return ['Sommersolhverv — nordpolen hælder mod solen','var(--coral)'];
+  if(naer(dag,355)) return ['Vintersolhverv — nordpolen hælder fra solen','var(--blue)'];
+  if(naer(dag,79))  return ['Forårsjævndøgn — aksen står på tværs af solen','var(--lime)'];
+  if(naer(dag,266)) return ['Efterårsjævndøgn — aksen står på tværs af solen','var(--teal)'];
+  const d=deklination(dag)/GRAD;
+  return ['Solen står lodret over '+komma(Math.abs(d),1)+'° '+(d<0?'S':'N'),'var(--amber)'];
+}
+
+function opdater(dt){
+  if(S.koerDoegn){
+    S.time += dt*2.2;
+    if(S.time>=24){ S.time-=24; if(!S.koerAar){ S.dato=S.dato%365+1; inpDato.value=S.dato; } }
+    inpTime.value=S.time.toFixed(2);
+  }
+  if(S.koerAar){
+    S.dato += dt*11;
+    if(S.dato>365) S.dato-=365;
+    inpDato.value=Math.round(S.dato);
+  }
+
+  const dag=S.dato, lat=S.sted.lat, lon=S.sted.lon;
+
+  el('v-dato').textContent = datoNavn(dag);
+  el('v-time').textContent = String(Math.floor(S.time)).padStart(2,'0')+':'
+                           + String(Math.floor((S.time%1)*60)).padStart(2,'0');
+  el('v-haeld').textContent = komma(S.haeld,1)+'°';
+
+  /* ── himmelmekanik ── */
+  jordPos(dag, tmp);
+  jordGruppe.position.copy(tmp).multiplyScalar(BANE_R);
+  solRetning(dag, sHat);
+  solLys.position.copy(sHat).multiplyScalar(300);
+  jordPivot.quaternion.copy(Q_AKSE);
+  jord.rotation.y = spinVinkel(dag, S.time, lon);
+
+  /* ── kameraet ── */
+  camMaalOenske.copy(S.baneview ? new THREE.Vector3(0,0,0) : jordGruppe.position);
+  camMaal.lerp(camMaalOenske, 0.25);
+  opdaterKamera();
+
+  /* ── solhøjden på det valgte sted ── */
+  kropPos(lat, lon, tmp);
+  stedAnker.position.copy(tmp);
+  stedAnker.quaternion.setFromUnitVectors(_op, tmp.clone().normalize());
+
+  jord.getWorldQuaternion(qInv).invert();
+  sBody.copy(sHat).applyQuaternion(qInv);
+  sLocal.copy(sBody).applyQuaternion(stedAnker.quaternion.clone().invert());
+
+  const h = Math.asin(Math.max(-1,Math.min(1,sLocal.y)));
+
+  /* ── aflæsninger ── */
+  const hGr = h/GRAD;
+  const mid = Math.max(0, middagshoejde(lat,dag)/GRAD);
+  const dagl = daglaengde(lat,dag);
+  const q = indstraaling(lat,dag);
+
+  el('val-hoejde').innerHTML = komma(hGr,1)+'<small>°</small>';
+  {
+    const hv=Math.max(-20,Math.min(90,hGr))*GRAD;
+    const x=37+29*Math.cos(hv), y=40-29*Math.sin(hv);
+    const s=el('anim-hoejde'); s.setAttribute('x2',x.toFixed(1)); s.setAttribute('y2',y.toFixed(1));
+    s.setAttribute('stroke', hGr>=0?'#FFB300':'#4A5A75');
+    const c=el('anim-sol'); c.setAttribute('cx',x.toFixed(1)); c.setAttribute('cy',y.toFixed(1));
+    c.classList.toggle('nede', hGr<0);
+  }
+  el('val-middag').innerHTML = komma(mid,1)+'<small>°</small>';
+  el('anim-middag').style.width = (mid/90*100).toFixed(1)+'%';
+  el('val-dagl').innerHTML = String(Math.floor(dagl)).padStart(2,'0')+':'
+      + String(Math.round((dagl%1)*60)).padStart(2,'0')+'<small>t:min</small>';
+  el('anim-dagl').style.width = (dagl/24*100).toFixed(1)+'%';
+  el('val-straal').innerHTML = komma(q,2)+'<small>kWh/m²</small>';
+  el('anim-straal').style.width = Math.min(100,q/13*100).toFixed(1)+'%';
+
+  tegnGraf();
+
+  /* ── mærkat ── */
+  stedAnker.getWorldPosition(tmp);
+  placer(mSted, tmp, !S.baneview && !bagKloden(tmp));
+  mSted.textContent = S.sted.navn.split(',')[0];
+
+  /* ── forklaringen på figuren ── */
+  const [tekst,pc]=aarstidTekst(dag,dagl);
+  if(badgeTxt.textContent!==tekst){ badgeTxt.textContent=tekst; badge.style.setProperty('--pc',pc); }
+
+  /* ── skærmlæsere ── */
+  if(Math.abs(dag-sidstLive)>0.6 || sidstLive<-90){
+    sidstLive=dag;
+    live.textContent = `${stedNavn(S.sted)}, ${datoNavn(dag)}: solhøjde ${komma(hGr,1)} grader. `
+      + `Middagshøjde ${komma(mid,1)} grader. Daglængde ${komma(dagl,1)} timer. `
+      + `Indstråling ${komma(q,2)} kilowatttimer pr. kvadratmeter i døgnet.`;
+    el('graf-sr').textContent = GRAFER[S.graf].titel + ' for ' + stedNavn(S.sted) + '.';
+  }
+}
+
+function løkke(nu){
+  const dt=Math.min((nu-sidstTid)/1000, 0.1);
+  sidstTid=nu;
+  opdater(dt);
+  renderer.render(scene, kamera);
+  requestAnimationFrame(løkke);
+}
+camMaal.copy(jordPos(S.dato,new THREE.Vector3()).multiplyScalar(BANE_R));
+requestAnimationFrame(løkke);
+
+/* Iframe-krom: figuren skal kunne lægges ind på en anden side. */
+if(window.top!==window.self){
+  const n=el('site-top'); if(n) n.style.display='none';
+  document.querySelectorAll('.foot,.head,.dig').forEach(x=>x.style.display='none');
+  requestAnimationFrame(tilpasStørrelse);
+}
+</script>
+
+</body>
+</html>

@@ -11,16 +11,72 @@ skal følge skabelonen herunder. Kopiér fra en side, der allerede er lagt om.
 | `index.html` + `forside.css` | forside, kort, sektioner, knapper |
 | `geografi/Stigningsregn.html` | simulering med canvas + skydere + instrumenter |
 | `geografi/drivhuseffektenSimpel.html` | trinvis SVG-figur med forklaringsspalte |
+| `biologi/membran.html` + `biologi/membran/` | større simulering delt op i moduler |
 
 Lagt om indtil videre: forsiden, fagforsiderne, `born.html`, `admin.html`,
 `contact.html`, `Stigningsregn.html`, `drivhuseffektenSimpel.html`,
 `drivhuseffekten.html`, `poroesitetPermeabilitet.html`, `TermiskTryk3.html`,
 `Dugpunkt.html`, `groenlandspumpen.html`,
 `biologi/transkription.html`, `biologi/enzymkinetik.html`,
-`biologi/osmose.html`, `biologi/DNA_Simulering.html`, `biologi/enzymhastighed.html`
+`biologi/osmose.html`, `biologi/DNA_Simulering.html`, `biologi/enzymhastighed.html`,
+`geografi/Tidevand.html`, `biologi/membran.html`
 (brug dem som forlæg, når `--accent:var(--bio)` skal
 bruges). Resten af `geografi/`, `biologi/` og `style.css`-siderne kører
 stadig det gamle design — rør dem kun, når opgaven handler om dem.
+
+## 0. Filstruktur — én fil eller flere
+
+Små figurer bliver i én selvstændig HTML-fil, som hidtil. **Større simuleringer
+deles op i moduler** — 2D såvel som 3D. Del op, når mindst ét af disse er sandt:
+
+* JavaScript-delen er over ca. 600 linjer,
+* siden består af flere uafhængige dele, der kan bygges og rettes hver for sig
+  (fx én transportmekanisme ad gangen),
+* siden indeholder fagdata, som skal kunne rettes uden at scrolle forbi kode.
+
+Koden lægges i ES-moduler i en undermappe med sidens navn:
+
+```
+biologi/membran.html            CSS, markup, importmap — siden selv
+biologi/membran/side.js         indgangen: binder DOM, moduler og løkke sammen
+biologi/membran/model.js        rammen: scene, kamera, styring, render-løkke
+biologi/membran/struktur.js     figurens opbygning
+biologi/membran/molekyler.js    fagdata
+biologi/membran/transport.js    registret over sidens delmekanismer
+biologi/membran/transport-*.js  én delmekanisme pr. fil
+```
+
+**Bliver i HTML-filen:** `:root`-tokens, al CSS, hele markup'en og importmappet.
+Skabelonen bygger på, at hver side har sin egen tokenblok og kan bruges som
+forlæg for den næste — en fælles stilfil ville ødelægge det. (`forside.css` er
+forsidens, `style.css` er det gamle design; ingen af dem er fælles kode for nye
+sider.)
+
+**Flytter ud:** beregningsmodellen, figurens opbygning, fagdata og de
+uafhængige delmekanismer.
+
+**Del efter fagligt indhold, ikke efter teknisk lag.** En fil pr.
+transportmekanisme eller pr. klimazone giver mening; en fil ved navn `utils.js`
+eller `state.js` gør ikke — den slags opdeling skaber bare tilstand, der skal
+sendes frem og tilbage. De uafhængige dele samles i et lille register med én
+fast kontrakt, så en ny del er *én ny fil plus én linje*:
+
+```js
+export default {
+  id:'pumpe', navn:'Na⁺/K⁺-pumpen',
+  byg(ctx),              // laver figurens dele
+  opdater(t, dt, ctx),   // flytter dem ét billede frem
+  aflaes(ctx),           // returnerer tallene til .gauges
+  ryd(ctx)               // ved skift
+};
+```
+
+**Krav:** `<script type="module" src="…/side.js">`, importmappet placeret
+**før** det første modul, og stadig ingen build og ingen npm-pakker. Moduler
+kræver en server — det gør siderne i forvejen på grund af de rod-relative
+links, så `python3 -m http.server 8777` er uændret arbejdsgangen. Modulerne
+arver dokumentets importmap, så de kan skrive `import * as THREE from 'three'`
+uden at kende CDN-adressen.
 
 ## 1. Tokens — kopiér uændret ind i `:root`
 
@@ -210,8 +266,9 @@ Spørg, hvis det er uklart om siden skal have forklarende tekst under panelet
   `location.hash` (`#trin=3`) og accepter dem også som query (`?trin=3`).
   Projektortilstand (`?projektor=1` / `?mode=teach`) skjuler sidens krom og
   skalerer teksten op.
-* **Ingen eksterne afhængigheder** ud over Google Fonts. Ingen build, ingen
-  npm-pakker, ingen ikonbibliotek-CDN i nye sider.
+* **Ingen eksterne afhængigheder** ud over Google Fonts — og three.js fra CDN
+  på de sider, der er ægte 3D (aftalt undtagelse, se `geografi/Tidevand.html`).
+  Ingen build, ingen npm-pakker, ingen ikonbibliotek-CDN i nye sider.
 
 ## 6. Når fysikken/modellen ændres
 
