@@ -154,10 +154,34 @@ Cormorant Garamond) og de tre løse spalter er væk; alt bor nu i ét `.rig`.
   over døgnet, alle ni overfladekombinationer, ekspert-ΔT fra −15 til +15 og
   alle gate-trin, målt mod udgaven i `HEAD`.
 
+### ✅ 8 — `geografi/Dugpunkt.html` (færdig)
+
+Lagt om fra 324 til 782 linjer. Grafen, de tre løse instrumenter og de to
+skydere er nu skabelonens `.rig` — Stigningsregn-siden brugt som forlæg, da de
+deler samme mætningsformel.
+
+* **Instrumenterne genbruger sidens faste komponenter:** termometer (`.thermo`),
+  bue-hygrometer (`.arc`, samme geometri som på `Stigningsregn.html`) og en
+  regnmåler-cylinder (`.cyl`) med nulstil-knap. Kun tre instrumenter — ingen
+  fjerde gauge er tilføjet, da siden ikke har en fjerde størrelse at vise.
+  Grafen selv er stadig kernen: mætningskurven, aksefelterne og luftens punkt.
+* **Regnskyen er malet om fra emoji til vektor.** Den gamle `🌧️`-sky med en
+  CSS-positioneret overlay er erstattet af en blækstreget sky med dråber,
+  tegnet direkte på kanvasset over punktet, når luften er mættet — samme
+  visuelle sprog som resten af sitet, uden overlay-positionering der skal
+  følge kanvassets skalering.
+* Den flydende `.smbi-home` er væk til fordel for topbjælken, og der er
+  tilføjet en `Projektor`-knap (`?projektor=1` / `?mode=teach`) samt delbar
+  tilstand `#t=20&v=10`, som også accepteres som query.
+* Modellen er **uændret: 0 afvigelser over 186.265 sammenlignede værdier
+  fordelt på 37.253 inputkombinationer og -sekvenser** — `getMaxCapacity` og
+  hele forgreningen i `updateSimulation` (temperatur- og vanddamp-kilde) over
+  temperatur 0–35 °C, vanddamp 0–40 g/m³ og 500 tilfældige skydeforløb (for at
+  teste akkumuleringen af opsamlet nedbør), målt mod udgaven i `HEAD`.
+
 | # | Fil | Linjer | Indhold | Bemærkning |
 | --- | --- | --- | --- | --- |
 | 6 | `geografi/groenlandspumpen.html` | 1153 | canvas + 15 svg, 2 skydere | Mange SVG-lag; afsæt tid til `<title>`/`<desc>` og stregtype som andet signal end farve. |
-| 8 | `geografi/Dugpunkt.html` | 324 | canvas + svg, 2 skydere | Mindst af dem. God at tage som opvarmning, hvis etape 2 skal deles op. |
 
 ---
 
@@ -316,10 +340,8 @@ side i stedet for som en separat runde.
 **Etape 2, punkt 6:** `groenlandspumpen.html` (1153 linjer). Mange SVG-lag —
 afsæt tid til `<title>`/`<desc>` og til at give hvert lag et andet signal end
 farven. Modellen skal kontrolleres mod den gamle udgave over et gitter af
-inputkombinationer, før den kaldes færdig.
-
-Alternativt `Dugpunkt.html` (324 linjer) som en kort omgang, hvis der kun er
-tid til én.
+inputkombinationer, før den kaldes færdig. Det er nu det sidste punkt i
+etape 2.
 
 **Sideløbende:** opgaver til `poroesitetPermeabilitet.html` — et selvstændigt
 ark ved siden af simuleringen, i flere niveauer (C, HF), der henviser til
