@@ -37,7 +37,7 @@ export const MOLEKYLER = [
   {
     id:'h2o', navn:'Vand', formel:'H₂O',
     størrelse:'lille', polaritet:'polær', ladning:'uladet',
-    vej:'kanal',
+    vej:'aquaporin',
     hvorfor:'Lille nok til at snige sig igennem hist og her, men polær. Gennem en aquaporin går det tusind gange hurtigere — det er den vej, osmosen reelt løber.',
     farve:0x7EC8E8,
   },

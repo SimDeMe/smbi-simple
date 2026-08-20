@@ -31,6 +31,7 @@ export const FARVER = {
   kanal:      0xC9A9F0,
   baerer:     0xFFAE8A,
   pumpe:      0xFF7FA8,
+  aquaporin:  0x2F9BD6,
   glyko:      0x3E9E92,   /* dybere end sukkerkæderne, men samme familie */
   perifert:   0xE8E0CF,
   sukker:     0x7FE3D0,
@@ -75,6 +76,10 @@ export const PROTEINER = [
   {id:'pumpe',   slags:'pumpe',        x: 6.6, z:-2.4, r:2.4,
    navn:'Na⁺/K⁺-pumpen', type:'Integralt membranprotein',
    beskrivelse:'Flytter 3 Na⁺ ud og 2 K⁺ ind — mod koncentrationsgradienten. Det koster ATP, og derfor er det aktiv transport. De tre klumper nede i cytosolen er pumpens motor: ATP binder i kløften mellem de to yderste, og hver gang det spaltes, skifter pumpen form.'},
+
+  {id:'aquaporin', slags:'aquaporin',  x:-1.6, z: 0.8, r:1.3,
+   navn:'Aquaporin', type:'Integralt membranprotein',
+   beskrivelse:'En smal, altid åben vandkanal. Vandmolekylerne går på række gennem poren, ét lag brintbindinger ad gangen — langt hurtigere end de få, der siver tilfældigt gennem lipidlaget. Drivkraften er osmose: se konsekvensen for hele cellen i osmosesimuleringen.'},
 
   {id:'glyko',   slags:'glykoprotein', x:-2.4, z:-7.4, r:1.2,
    navn:'Glykoprotein', type:'Integralt membranprotein',
@@ -320,6 +325,7 @@ export function byggMembran(scene){
     kanal:      new THREE.MeshStandardMaterial({color:FARVER.kanal,      roughness:0.50, metalness:0.06}),
     baerer:     new THREE.MeshStandardMaterial({color:FARVER.baerer,     roughness:0.50, metalness:0.06}),
     pumpe:      new THREE.MeshStandardMaterial({color:FARVER.pumpe,      roughness:0.48, metalness:0.06}),
+    aquaporin:  new THREE.MeshStandardMaterial({color:FARVER.aquaporin,  roughness:0.42, metalness:0.08}),
     perifert:   new THREE.MeshStandardMaterial({color:FARVER.perifert,   roughness:0.62, metalness:0.02}),
     glyko:      new THREE.MeshStandardMaterial({color:FARVER.glyko,      roughness:0.50, metalness:0.06}),
     sukker:     new THREE.MeshStandardMaterial({color:FARVER.sukker,     roughness:0.42, metalness:0.04}),
@@ -460,6 +466,9 @@ export function byggMembran(scene){
          op dér og lade det forsvinde, når pumpen skifter form. */
       g.userData.atpSted = pumpe.atpSted;
 
+    } else if(P.slags === 'aquaporin'){
+      g.add(helixbundt({antal:6, ringR:0.60, højde:T + 1.6, materiale:pm, hældning:0.16}));
+
     } else if(P.slags === 'glykoprotein'){
       g.add(helixbundt({antal:3, ringR:0.46, højde:T + 1.6, materiale:pm, hældning:0.06}));
       const kæde = sukkerkæde({materiale:mat.sukker});
@@ -587,8 +596,13 @@ export function byggMembran(scene){
     maalObjekter: [gruppe],
     /** En transportmekanisme melder sine egne materialer ind, så dens
         molekyler kan lyse op på samme måde som membranens egne dele.
-        Modulet får ikke af den grund at vide, hvad transport er. */
-    tilfoejDel(delId, materialer){ delMaterialer[delId] = materialer; },
+        Modulet får ikke af den grund at vide, hvad transport er. To
+        mekanismer kan begge sende molekyler af samme slags igennem
+        (fx både kanalen og pumpen flytter Na⁺) — derfor lægges nye
+        materialer til listen i stedet for at overskrive den. */
+    tilfoejDel(delId, materialer){
+      delMaterialer[delId] = [...(delMaterialer[delId] ?? []), ...materialer];
+    },
     /** Hvor står et protein? Grundpositionen, ikke den drivende. */
     findProtein: id => proteiner.find(p => p.id === id),
     sætKolesterol: v => { kolesterol.visible = v; },

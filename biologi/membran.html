@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cellemembranen i 3D — smbi.dk</title>
-<meta name="description" content="Drej cellemembranen rundt, se fosfolipidernes hoveder og haler, proteinerne der flyder i lipidlaget — og følg transporten igennem: ilt tværs gennem lipidlaget og kaliumioner gennem en kanal, der åbner og lukker.">
+<meta name="description" content="Drej cellemembranen rundt, se fosfolipidernes hoveder og haler, proteinerne der flyder i lipidlaget — og følg transporten igennem: simpel diffusion, en kaliumkanal, et transportprotein til glukose, Na⁺/K⁺-pumpen og en aquaporin.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,300..600&display=swap" rel="stylesheet">
@@ -341,7 +341,7 @@ body[data-projektor="1"] .side-body{font-size:1.06rem}
     <div class="head-in">
       <span class="eyebrow mono"><span class="blink"></span>Biologi · cellemembranen</span>
       <h1>Cellemembranen som <span class="hi" style="--hc:#FBD3E1">væskemosaik</span></h1>
-      <p class="lead">Drej membranen rundt og se, hvordan fosfolipiderne vender de hydrofile hoveder ud mod vandet på begge sider og gemmer de hydrofobe haler indeni — og hvordan proteinerne ligger og flyder i lipidlaget som isflager i en sø. Skru på iltkoncentrationen på hver side, og følg molekylerne tværs igennem.</p>
+      <p class="lead">Drej membranen rundt og se, hvordan fosfolipiderne vender de hydrofile hoveder ud mod vandet på begge sider og gemmer de hydrofobe haler indeni — og hvordan proteinerne ligger og flyder i lipidlaget som isflager i en sø. Skru på gradienten for et stof ad gangen, og følg det tværs igennem: frit gennem lipidlaget, gennem en kanal eller en aquaporin, båret af et transportprotein — eller pumpet mod sin egen gradient af Na⁺/K⁺-pumpen.</p>
     </div>
   </div>
 
@@ -354,7 +354,7 @@ body[data-projektor="1"] .side-body{font-size:1.06rem}
         <button type="button" class="btn-mini" id="btn-kolesterol" aria-pressed="true" title="Vis eller skjul kolesterolet mellem fosfolipiderne">Kolesterol</button>
         <button type="button" class="btn-mini" id="btn-sukker" aria-pressed="true" title="Vis eller skjul kulhydratkæderne på ydersiden">Sukkerkæder</button>
         <button type="button" class="btn-mini" id="btn-snit" aria-pressed="false" title="Skær membranen over på midten, så man kan se ind i lipidlaget">Tværsnit</button>
-        <button type="button" class="btn-mini" id="btn-fast" aria-pressed="true" title="Til: cellen bruger ilten, så forskellen holdes ved lige. Fra: lukket system, hvor diffusionen udligner forskellen af sig selv">Fast koncentration</button>
+        <button type="button" class="btn-mini" id="btn-fast" aria-pressed="true" title="Gælder ilt, glukose og vand. Til: cellen tilfører og forbruger dem, så forskellen holdes ved lige. Fra: lukket system, hvor transporten udligner forskellen af sig selv. Natrium og kalium styres altid af pumpen, uanset denne knap">Fast koncentration</button>
         <button type="button" class="btn-mini" id="btn-nulstil" title="Sæt kameraet tilbage til udgangspunktet">Nulstil</button>
         <button type="button" class="btn-mini" id="btn-projektor" aria-pressed="false" title="Skjul sidens krom og forstør teksten">Projektor</button>
       </div>
@@ -362,7 +362,7 @@ body[data-projektor="1"] .side-body{font-size:1.06rem}
       <div class="stage">
         <div class="view" id="view">
           <canvas id="scene" tabindex="0" role="img"
-            aria-label="En tredimensional model af cellemembranen. To lag fosfolipider ligger med de runde hydrofile hoveder udad mod vandet og de aflange hydrofobe haler ind mod hinanden. Mellem fosfolipiderne sidder kolesterol. Tværs gennem membranen går et kanalprotein, et transportprotein, en natrium-kalium-pumpe og et glykoprotein med forgrenede kulhydratkæder på ydersiden. På indersiden sidder et perifert protein på overfladen. I vandet på begge sider driver røde iltmolekyler rundt, hver med to atomer, og enkelte af dem glider tværs gennem lipidlaget — flest fra den side, hvor koncentrationen er højest. Omkring kanalproteinet ligger kaliumioner og natriumioner, hver med en gennemsigtig vandkappe om sig. Kanalen åbner og lukker, og mens den er åben, falder kaliumionerne gennem den ud af cellen, mens natriumionerne bliver vist bort ved mundingen."></canvas>
+            aria-label="En tredimensional model af cellemembranen. To lag fosfolipider ligger med de runde hydrofile hoveder udad mod vandet og de aflange hydrofobe haler ind mod hinanden. Mellem fosfolipiderne sidder kolesterol. Tværs gennem membranen går et kanalprotein, et transportprotein, en natrium-kalium-pumpe, en aquaporin og et glykoprotein med forgrenede kulhydratkæder på ydersiden. På indersiden sidder et perifert protein på overfladen. I vandet på begge sider driver røde iltmolekyler rundt, hver med to atomer, og enkelte af dem glider tværs gennem lipidlaget — flest fra den side, hvor koncentrationen er højest. Omkring kanalproteinet ligger kaliumioner og natriumioner, hver med en gennemsigtig vandkappe om sig. Kanalen åbner og lukker, og mens den er åben, falder kaliumionerne gennem den ud af cellen, mens natriumionerne bliver vist bort ved mundingen. Transportproteinet skifter form og bærer glukosemolekyler igennem ét ad gangen. Na⁺/K⁺-pumpen binder tre natriumioner ad gangen, spalter et ATP-molekyle og slipper dem ud, før den binder to kaliumioner og slipper dem ind igen. Gennem aquaporinen glider vandmolekyler hurtigt igennem på række."></canvas>
           <span class="lag lag-ud">Uden for cellen</span>
           <span class="lag lag-ind">Inde i cellen · cytosol</span>
           <span class="maalestok">Membranen er ca. 5 <span class="enhed">nm</span> tyk</span>
@@ -381,18 +381,18 @@ body[data-projektor="1"] .side-body{font-size:1.06rem}
 
       <dl class="gauges" id="gauges"></dl>
 
-      <div class="knobs">
+      <div class="knobs" id="knobs">
         <div class="knob">
           <div class="knob-top">
-            <label class="mono" for="inp-ude">Ilt uden for cellen</label>
-            <span class="knob-val"><span id="val-ude">0,26</span> <span class="enhed">mmol/L</span></span>
+            <label class="mono" for="inp-ude" id="lab-ude">Ilt uden for cellen</label>
+            <span class="knob-val"><span id="val-ude">0,26</span> <span class="enhed" id="enh-ude">mmol/L</span></span>
           </div>
           <input type="range" id="inp-ude" min="0" max="30" step="1" value="26">
         </div>
         <div class="knob">
           <div class="knob-top">
-            <label class="mono" for="inp-inde">Ilt inde i cellen</label>
-            <span class="knob-val"><span id="val-inde">0,05</span> <span class="enhed">mmol/L</span></span>
+            <label class="mono" for="inp-inde" id="lab-inde">Ilt inde i cellen</label>
+            <span class="knob-val"><span id="val-inde">0,05</span> <span class="enhed" id="enh-inde">mmol/L</span></span>
           </div>
           <input type="range" id="inp-inde" min="0" max="30" step="1" value="5">
         </div>
@@ -402,12 +402,15 @@ body[data-projektor="1"] .side-body{font-size:1.06rem}
         <button type="button" class="fact" data-del="stof:o2"     aria-pressed="false" style="--fc:#FF5A36">Ilt O₂</button>
         <button type="button" class="fact" data-del="stof:k"      aria-pressed="false" style="--fc:#C9A9F0">Kalium K⁺</button>
         <button type="button" class="fact" data-del="stof:na"     aria-pressed="false" style="--fc:#FFB300">Natrium Na⁺</button>
+        <button type="button" class="fact" data-del="stof:glukose" aria-pressed="false" style="--fc:#FFAE8A">Glukose</button>
+        <button type="button" class="fact" data-del="stof:h2o"    aria-pressed="false" style="--fc:#7EC8E8">Vand H₂O</button>
         <button type="button" class="fact" data-del="hoved"       aria-pressed="false" style="--fc:#7EC8E8">Hydrofilt hoved</button>
         <button type="button" class="fact" data-del="hale"        aria-pressed="false" style="--fc:#F2C14E">Hydrofob hale</button>
         <button type="button" class="fact" data-del="kolesterol"  aria-pressed="false" style="--fc:#B9E08A">Kolesterol</button>
         <button type="button" class="fact" data-del="kanal"       aria-pressed="false" style="--fc:#C9A9F0">Kanalprotein</button>
         <button type="button" class="fact" data-del="baerer"      aria-pressed="false" style="--fc:#FFAE8A">Transportprotein</button>
         <button type="button" class="fact" data-del="pumpe"       aria-pressed="false" style="--fc:#FF7FA8">Na⁺/K⁺-pumpe</button>
+        <button type="button" class="fact" data-del="aquaporin"   aria-pressed="false" style="--fc:#2F9BD6">Aquaporin</button>
         <button type="button" class="fact" data-del="glyko"       aria-pressed="false" style="--fc:#3E9E92">Glykoprotein</button>
         <button type="button" class="fact" data-del="perifer-ind" aria-pressed="false" style="--fc:#E8E0CF">Perifert protein</button>
         <button type="button" class="fact" data-del="sukker"      aria-pressed="false" style="--fc:#7FE3D0">Kulhydratkæde</button>

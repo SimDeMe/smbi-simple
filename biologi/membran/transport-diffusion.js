@@ -169,14 +169,14 @@ export default registrer({
     spærret = ctx.membran.proteiner.filter(p => p.r > 0);
 
     for(let i = 0; i < N; i++){ saetUd(i, i < PR_SIDE ? 1 : -1); aktiv[i] = 0; }
-    justér( 1, Math.round(ctx.tilstand.ude  * PR_MMOL), true);
-    justér(-1, Math.round(ctx.tilstand.inde * PR_MMOL), true);
-    skrevet.ude = ctx.tilstand.ude; skrevet.inde = ctx.tilstand.inde;
+    justér( 1, Math.round(ctx.tilstand.stof.o2.ude  * PR_MMOL), true);
+    justér(-1, Math.round(ctx.tilstand.stof.o2.inde * PR_MMOL), true);
+    skrevet.ude = ctx.tilstand.stof.o2.ude; skrevet.inde = ctx.tilstand.stof.o2.inde;
     tegn();
   },
 
   opdater(t, dt, ctx){
-    const T = ctx.tilstand;
+    const T = ctx.tilstand.stof.o2;
 
     /* Har eleven flyttet en skyder, siden modulet sidst skrev? Så
        skal antallet af molekyler passe med det samme. */
@@ -238,7 +238,7 @@ export default registrer({
     /* Holdes koncentrationerne fast, forbruger og tilfører cellen,
        så antallet passer igen. Ellers er systemet lukket, og
        koncentrationerne er simpelthen dét, molekylerne viser. */
-    if(T.fast){
+    if(ctx.tilstand.fast){
       justér( 1, Math.round(T.ude  * PR_MMOL), false);
       justér(-1, Math.round(T.inde * PR_MMOL), false);
     } else {
