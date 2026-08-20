@@ -260,12 +260,14 @@ export default registrer({
     const netto = indad - udad;
     const en    = v => v.toFixed(1).replace('.', ',');
 
+    /* Mærkaterne nævner stoffet: instrumentrækken har nu mere end
+       ét stof i sig, og et tal uden stofnavn kan ikke aflæses. */
     return [
-      {mærkat:'Ind i cellen', værdi:en(indad), enhed:'molekyler/s'},
-      {mærkat:'Ud af cellen', værdi:en(udad),  enhed:'molekyler/s'},
+      {mærkat:'O₂ ind i cellen', værdi:en(indad), enhed:'molekyler/s'},
+      {mærkat:'O₂ ud af cellen', værdi:en(udad),  enhed:'molekyler/s'},
       Math.abs(netto) < 0.05
-        ? {mærkat:'Nettostrøm', værdi:'0', enhed:'ligevægt'}
-        : {mærkat:'Nettostrøm', værdi:en(Math.abs(netto)),
+        ? {mærkat:'Nettostrøm O₂', værdi:'0', enhed:'ligevægt'}
+        : {mærkat:'Nettostrøm O₂', værdi:en(Math.abs(netto)),
            enhed:netto > 0 ? 'molekyler/s ind i cellen' : 'molekyler/s ud af cellen'},
     ];
   },

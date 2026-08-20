@@ -87,20 +87,37 @@ vandkappe ca. 0,7 nm.
   over 600 s mod de 0,110, instrumenterne regner med — altså viser tallene
   det, molekylerne faktisk gør.
 
+* **Trin 7 — `transport-kanal.js`.** Kaliumkanal, der åbner og lukker af sig
+  selv (ca. 70 % af tiden åben) ved at trække kanalproteinets stave ind mod
+  midten som en blænder — `userData.grundvinkel` fra `struktur.js` er hagen,
+  det hænger på. Ionen, der er tættest på mundingen, er den, der finder vejen
+  ind; strømmen den ene vej er koncentrationen dér gange en fast rate, så
+  nettostrømmen følger gradienten og standser af sig selv. Både K⁺ og Na⁺
+  tegnes med vandkappe: natrium har den mindste kerne og den *største* kappe,
+  og bliver derfor vist bort ved filteret — selektiviteten kan ses, ikke bare
+  læses. Aflæsning: K⁺ ude, K⁺ inde og netto.
+
+  **Kalium fik sin egen gradient** i stedet for at dele iltskyderne, som
+  ellers skitseret herunder. 4 og 140 mmol/L kan ikke presses ned i skydernes
+  0-0,30, og delt gradient ville sende kalium *ind* i cellen, så snart der er
+  mest ilt udenfor — stik imod virkeligheden og imod pumpen i trin 9.
+  `konc` ligger derfor i modulet selv, og trin 10 løfter den op i `tilstand`.
+  Knappen **Fast koncentration** gælder også kaliummet.
+
+  Efterprøvet uden for browseren: med fast koncentration står 4/140 helt
+  stille over 60 s; i lukket system udlignes de til 71/73 på 60 s med summen
+  bevaret, og nettostrømmen falder til 0,1. Den virkelige strøm er målt til
+  5,93 ud og 0,17 ind pr. sekund over 600 s mod de 5,92 og 0,17,
+  instrumenterne viser. Ingen ion kom nogensinde ind i lipidlaget uden om
+  poren, og ingen natriumion kom ind i poren.
+
 ---
 
 ## Resten af planen
 
-Faciliteret diffusion er det næste: kanal (trin 7) og bærer (trin 8) bruger
-samme gradient og samme `.knobs` som den simple diffusion, men hver sit stof.
-Aktiv transport (trin 9) kommer efter. Filerne `transport-kanal.js`,
+Bæreren (trin 8) er det næste, og så aktiv transport (trin 9). Filerne
 `transport-baerer.js` og `transport-pumpe.js` findes med deres fagbeskrivelse,
 men er endnu ikke importeret i `side.js`.
-
-### Trin 7 — `transport-kanal.js`
-Ionkanal, der åbner og lukker. Ioner falder igennem med gradienten, aldrig
-imod. Pointe: passiv, hurtig, selektiv — en kaliumkanal lukker ikke natrium
-igennem, selv om natrium er mindre.
 
 ### Trin 8 — `transport-baerer.js`
 Glukosetransportør. Proteinet skifter form: bind → luk → åbn på den anden side
@@ -113,14 +130,19 @@ Na⁺/K⁺-pumpen: 3 Na⁺ ud, 2 K⁺ ind, 1 ATP. ATP-molekylet skal ses forbrug
 N-domænet (formen er allerede bygget i `struktur.js`, og
 `findProtein('pumpe').objekt.userData.atpSted` er stedet), og retningen skal
 tydeligt være **mod** gradienten. Tæller for forbrugt ATP i `.gauges`.
+Natriumionerne tegnes i dag af kanalen, som noget der bliver vist bort — når
+pumpen skal flytte dem, skal de to moduler enten dele puljen eller vente på
+trin 10.
 
 ### Trin 10 — én gradient pr. stof
-Skyderne i `.knobs` gælder i dag ilt alene. Når kanalen og bæreren kommer til,
-skal hvert stof have sin egen gradient — glukose og ioner udligner sig ikke i
-takt med ilten. Overvej, om `tilstand` skal være `{o2:{ude,inde}, glukose:…}`
-frem for ét par tal, og hvordan `.knobs` så holder sig kort nok til at kunne
-overskues. Pumpen er den, der bryder mønsteret: den holder forskellen ved
-lige i stedet for at udligne den.
+Skyderne i `.knobs` gælder ilt alene, og kanalen har sin egen `konc` inde i
+`transport-kanal.js`. Hvert stof skal have sin egen gradient ét fælles sted —
+glukose og ioner udligner sig ikke i takt med ilten. Overvej, om `tilstand`
+skal være `{o2:{ude,inde}, k:…, glukose:…}` frem for ét par tal, og hvordan
+`.knobs` så holder sig kort nok til at kunne overskues (måske kun skydere for
+det stof, der er valgt i forklaringsruden). Pumpen er den, der bryder
+mønsteret: den holder forskellen ved lige i stedet for at udligne den — og
+det er præcis det, kanalens **Fast koncentration** i dag gør i hånden.
 
 ### Trin 11 — aquaporiner
 Vandkanal, og et link over til `biologi/osmose.html`, hvor konsekvensen for
@@ -145,9 +167,10 @@ på en ældre bærbar, og link ind fra `biologi.html`.
 
 ## Ting at holde øje med
 
-* **Ydelse.** Dobbeltlaget opdaterer ca. 2400 instansmatricer pr. billede, og
-  ilten ca. 220 mere. Kommer der flere stoffer til i trin 7-10, så hold fast
-  i én `InstancedMesh` pr. molekyletype frem for ét `Mesh` pr. partikel.
+* **Ydelse.** Dobbeltlaget opdaterer ca. 2400 instansmatricer pr. billede,
+  ilten ca. 220 mere og ionerne ca. 130. Kommer der flere stoffer til i trin
+  8-10, så hold fast i én `InstancedMesh` pr. molekyletype frem for ét `Mesh`
+  pr. partikel.
 * **Modellen kan afprøves uden browser.** `transport-*.js` rører kun three.js
   til at tegne med, så mekanikken kan køres i node med en håndfuld stumper
   (`Matrix4`, `InstancedMesh`, `Group`, …) og en `ctx` med en attrap-membran.

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cellemembranen i 3D — smbi.dk</title>
-<meta name="description" content="Drej cellemembranen rundt, se fosfolipidernes hoveder og haler, proteinerne der flyder i lipidlaget — og skru på iltkoncentrationen på hver side, så diffusionen gennem membranen kan følges molekyle for molekyle.">
+<meta name="description" content="Drej cellemembranen rundt, se fosfolipidernes hoveder og haler, proteinerne der flyder i lipidlaget — og følg transporten igennem: ilt tværs gennem lipidlaget og kaliumioner gennem en kanal, der åbner og lukker.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,300..600&display=swap" rel="stylesheet">
@@ -186,7 +186,10 @@ h1{
  * derfor pladsen i rækken, ikke et fast id.                   */
 .gauges{display:grid;grid-template-columns:repeat(3,1fr);border-top:2px solid var(--ink);min-height:76px}
 .gauge{padding:12px 15px 13px;border-left:2px solid var(--ink);display:flex;flex-direction:column;gap:7px}
-.gauge:first-child{border-left:none}
+/* Rækken kan blive til flere rækker, når der er mere end ét stof i
+   membranen — blækstregerne skal følge gitteret, ikke rækkefølgen. */
+.gauge:nth-child(3n+1){border-left:none}
+.gauge:nth-child(n+4){border-top:2px solid var(--ink)}
 .gauge:nth-child(4n+1){background:#FFF1EC}
 .gauge:nth-child(4n+2){background:#F1ECFC}
 .gauge:nth-child(4n+3){background:#EDF8E4}
@@ -287,7 +290,8 @@ body[data-projektor="1"] .side-body{font-size:1.06rem}
 }
 @media (max-width:700px){
   .gauges{grid-template-columns:1fr 1fr}
-  .gauge:nth-child(3){border-left:none}
+  .gauge:nth-child(n){border-left:2px solid var(--ink)}
+  .gauge:nth-child(2n+1){border-left:none}
   .gauge:nth-child(n+3){border-top:2px solid var(--ink)}
 }
 @media (max-width:620px){
@@ -298,7 +302,7 @@ body[data-projektor="1"] .side-body{font-size:1.06rem}
   .facts,.rig-head,.knobs{padding-left:16px;padding-right:16px}
   .knobs{grid-template-columns:1fr}
   .gauges{grid-template-columns:1fr}
-  .gauge{border-left:none}
+  .gauge:nth-child(n){border-left:none}
   .gauge:nth-child(n+2){border-top:2px solid var(--ink)}
   .lag{left:16px;font-size:0.5rem;padding:3px 9px}
   .lag-ud{top:16px}
@@ -358,7 +362,7 @@ body[data-projektor="1"] .side-body{font-size:1.06rem}
       <div class="stage">
         <div class="view" id="view">
           <canvas id="scene" tabindex="0" role="img"
-            aria-label="En tredimensional model af cellemembranen. To lag fosfolipider ligger med de runde hydrofile hoveder udad mod vandet og de aflange hydrofobe haler ind mod hinanden. Mellem fosfolipiderne sidder kolesterol. Tværs gennem membranen går et kanalprotein, et transportprotein, en natrium-kalium-pumpe og et glykoprotein med forgrenede kulhydratkæder på ydersiden. På indersiden sidder et perifert protein på overfladen. I vandet på begge sider driver røde iltmolekyler rundt, hver med to atomer, og enkelte af dem glider tværs gennem lipidlaget — flest fra den side, hvor koncentrationen er højest."></canvas>
+            aria-label="En tredimensional model af cellemembranen. To lag fosfolipider ligger med de runde hydrofile hoveder udad mod vandet og de aflange hydrofobe haler ind mod hinanden. Mellem fosfolipiderne sidder kolesterol. Tværs gennem membranen går et kanalprotein, et transportprotein, en natrium-kalium-pumpe og et glykoprotein med forgrenede kulhydratkæder på ydersiden. På indersiden sidder et perifert protein på overfladen. I vandet på begge sider driver røde iltmolekyler rundt, hver med to atomer, og enkelte af dem glider tværs gennem lipidlaget — flest fra den side, hvor koncentrationen er højest. Omkring kanalproteinet ligger kaliumioner og natriumioner, hver med en gennemsigtig vandkappe om sig. Kanalen åbner og lukker, og mens den er åben, falder kaliumionerne gennem den ud af cellen, mens natriumionerne bliver vist bort ved mundingen."></canvas>
           <span class="lag lag-ud">Uden for cellen</span>
           <span class="lag lag-ind">Inde i cellen · cytosol</span>
           <span class="maalestok">Membranen er ca. 5 <span class="enhed">nm</span> tyk</span>
@@ -396,6 +400,8 @@ body[data-projektor="1"] .side-body{font-size:1.06rem}
 
       <div class="facts">
         <button type="button" class="fact" data-del="stof:o2"     aria-pressed="false" style="--fc:#FF5A36">Ilt O₂</button>
+        <button type="button" class="fact" data-del="stof:k"      aria-pressed="false" style="--fc:#C9A9F0">Kalium K⁺</button>
+        <button type="button" class="fact" data-del="stof:na"     aria-pressed="false" style="--fc:#FFB300">Natrium Na⁺</button>
         <button type="button" class="fact" data-del="hoved"       aria-pressed="false" style="--fc:#7EC8E8">Hydrofilt hoved</button>
         <button type="button" class="fact" data-del="hale"        aria-pressed="false" style="--fc:#F2C14E">Hydrofob hale</button>
         <button type="button" class="fact" data-del="kolesterol"  aria-pressed="false" style="--fc:#B9E08A">Kolesterol</button>

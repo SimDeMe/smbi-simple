@@ -16,6 +16,7 @@ import {MEKANISMER}       from './transport.js';
    række adskilte forsøg. En ny mekanisme er én ny fil plus én
    importlinje her. */
 import './transport-diffusion.js';
+import './transport-kanal.js';
 
 const el  = id => document.getElementById(id);
 const tal = v  => v.toFixed(2).replace('.', ',');
