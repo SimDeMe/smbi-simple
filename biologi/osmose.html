@@ -338,6 +338,14 @@ body[data-projektor="1"] .fact{font-size:0.74rem}
 @media (max-width:620px){
   body{font-size:16px}
   .wrap,.top-in,.foot-in{padding-left:16px;padding-right:16px}
+  /* Tre links i topbjælken skal kunne være der ved siden af brandet,
+     uden at siden begynder at rulle på tværs. Er skærmen så smal, at
+     de alligevel ikke kan være der, ombrydes rækken frem for at
+     skubbe siden ud i siden. */
+  .top-in{gap:10px;height:auto;min-height:54px;
+          padding-top:7px;padding-bottom:7px;flex-wrap:wrap}
+  .top-nav{gap:4px}
+  .top-nav a{font-size:0.74rem;padding:6px 9px}
   .head{padding:24px 0 18px}
   .rig{border-radius:14px;box-shadow:var(--hard)}
   .gauges{grid-template-columns:1fr}
@@ -365,6 +373,7 @@ body[data-projektor="1"] .fact{font-size:0.74rem}
     <div class="top-in">
       <a href="/" class="brand"><span class="brand-mark"></span>smbi<em>.dk</em></a>
       <nav class="top-nav">
+        <a href="/biologi/membran.html">Membranen</a>
         <a href="/biologi.html">Biologi</a>
         <a href="/">Forside</a>
       </nav>
