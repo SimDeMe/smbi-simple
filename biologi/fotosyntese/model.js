@@ -19,11 +19,11 @@ export const K = {
   daggry:6, skumring:18,      /* solen står op kl. 6 og ned kl. 18       */
   timerPrSekund:0.22,         /* et døgn tager ca. 110 sekunder          */
 
-  fotoMaks:1.05,              /* glukose pr. time ved fuldt lys, 25 °C   */
+  fotoMaks:1.22,              /* glukose pr. time ved fuldt lys, 25 °C   */
   optimumTemp:25,             /* fotosyntesens optimum                   */
   tempBredde:13,              /* hvor bredt optimum er (°C)              */
 
-  respBasis:0.22,             /* glukose pr. time ved 20 °C              */
+  respBasis:0.16,             /* glukose pr. time ved 20 °C              */
   respQ10:2,                  /* respirationen fordobles pr. 10 °C       */
   respTemp0:20,
 
