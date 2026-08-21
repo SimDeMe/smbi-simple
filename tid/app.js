@@ -11,6 +11,7 @@ import { firebaseConfig } from './firebase-config.js';
 import { initActivitiesView } from './activities.js';
 import { initTimerView, refreshQuickStart } from './timer.js';
 import { initHistorikView, refreshHistorik } from './historik.js';
+import { initKalenderView, refreshKalender } from './kalender.js';
 import { initRapporterView, refreshRapporter } from './rapporter.js';
 import { initIndstillingerView, refreshIndstillinger, getSettings } from './indstillinger.js';
 
@@ -116,6 +117,7 @@ onAuthStateChanged(auth, async user => {
       initActivitiesView(user.uid);
       initTimerView(user.uid);
       initHistorikView(user.uid);
+      initKalenderView(user.uid);
       initRapporterView(user.uid);
       await checkFirstRun(user.uid);
     } catch (err) {
@@ -202,7 +204,7 @@ navBtns.forEach(btn => {
   btn.addEventListener('click', () => {
     navigateTo(btn.dataset.view);
     if (btn.dataset.view === 'hjem')     refreshQuickStart();
-    if (btn.dataset.view === 'historik')  refreshHistorik();
+    if (btn.dataset.view === 'historik') { refreshHistorik(); refreshKalender(); }
     if (btn.dataset.view === 'rapporter')      refreshRapporter();
     if (btn.dataset.view === 'indstillinger')  refreshIndstillinger();
   });

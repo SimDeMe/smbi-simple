@@ -1287,3 +1287,253 @@ html, body {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
 }
+
+/* ─── Kalender (dagsvisning i Historik) ──────────────── */
+.hist-mode-tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--surface-2);
+  border-radius: var(--r-md);
+  padding: 4px;
+  margin: 12px 0 16px;
+}
+.hist-mode-tab {
+  flex: 1;
+  padding: 8px 4px;
+  border: none;
+  border-radius: var(--r-sm);
+  background: none;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-2);
+  cursor: pointer;
+  min-height: 36px;
+  -webkit-tap-highlight-color: transparent;
+}
+.hist-mode-tab-active {
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+
+/* Dagvælger */
+.kal-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.kal-bar-mid { flex: 1; text-align: center; min-width: 0; }
+.kal-title    { font-size: 17px; font-weight: 700; }
+.kal-sub      { font-size: 12px; color: var(--text-3); margin-top: 1px; }
+
+.kal-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.kal-chip {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  padding: 7px 14px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  min-height: 34px;
+}
+.kal-chip:active { background: var(--border); }
+
+.kal-date {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  padding: 6px 12px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  min-height: 34px;
+}
+
+.kal-stats {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--text-2);
+  white-space: nowrap;
+}
+.kal-stats b { font-size: 13px; color: var(--text); }
+.kal-gapstat::before { content: ' · '; color: var(--text-3); }
+.kal-gapstat { color: var(--warning); font-weight: 600; }
+
+/* Tidsakse */
+.kal-grid {
+  position: relative;
+  margin-bottom: 8px;
+  padding-left: 46px;      /* plads til timetallene */
+}
+
+.kal-hour {
+  position: absolute;
+  left: 46px; right: 0;
+  border-top: 1px solid var(--border);
+  pointer-events: none;
+}
+.kal-hour-lab {
+  position: absolute;
+  left: -46px;
+  top: -8px;
+  width: 38px;
+  text-align: right;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+.kal-halfhour {
+  position: absolute;
+  left: 46px; right: 0;
+  border-top: 1px dashed var(--border);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.kal-lane {
+  position: absolute;
+  inset: 0 0 0 46px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Registrering */
+.kal-block {
+  position: absolute;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 1px;
+  text-align: left;
+  font-family: inherit;
+  padding: 3px 6px;
+  border: 1px solid var(--act-color, var(--border));
+  border-left: 4px solid var(--act-color, var(--border));
+  border-radius: var(--r-sm);
+  background: var(--surface);   /* fallback hvis color-mix ikke kendes */
+  background: color-mix(in srgb, var(--act-color) 14%, #fff);
+  color: var(--text);
+  cursor: pointer;
+  /* de sidste 3 px holdes fri, så nabo-blokke i et overlap kan skelnes */
+  margin-right: 3px;
+  box-sizing: border-box;
+  z-index: 2;
+  -webkit-tap-highlight-color: transparent;
+}
+.kal-block:active { filter: brightness(0.96); }
+
+.kal-block-title {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.kal-block-wt { font-weight: 400; color: var(--text-2); }
+.kal-block-time {
+  font-size: 10.5px;
+  color: var(--text-2);
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Korte registreringer: kun én linje */
+.kal-block-sm { flex-direction: row; align-items: center; gap: 6px; padding: 1px 6px; }
+.kal-block-sm .kal-block-title { flex: 1 1 auto; min-width: 0; }
+.kal-block-sm .kal-block-time  { flex: 0 1 auto; min-width: 0; }
+
+/* Igangværende registrering */
+.kal-block-active {
+  border-style: dashed;
+  border-left-style: solid;
+  background:
+    repeating-linear-gradient(45deg,
+      color-mix(in srgb, var(--act-color) 20%, #fff) 0 6px,
+      color-mix(in srgb, var(--act-color) 10%, #fff) 6px 12px);
+}
+
+/* Registrering der løber hen over midnat */
+.kal-block-clip-top    { border-top-style: dotted;    border-top-left-radius: 0;    border-top-right-radius: 0; }
+.kal-block-clip-bottom { border-bottom-style: dotted; border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+
+/* Hul i registreringen */
+.kal-gap {
+  position: absolute;
+  left: 0; right: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  border: 1px dashed var(--warning);
+  border-radius: var(--r-sm);
+  background:
+    repeating-linear-gradient(135deg,
+      rgba(245,158,11,0.16) 0 7px,
+      rgba(245,158,11,0.05) 7px 14px);
+  color: #a16207;
+  cursor: pointer;
+  overflow: hidden;
+  z-index: 1;
+  -webkit-tap-highlight-color: transparent;
+}
+.kal-gap:active { filter: brightness(0.96); }
+.kal-gap-lab {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.kal-gap-sm .kal-gap-lab { font-size: 10px; }
+
+/* Nu-linje */
+.kal-now {
+  position: absolute;
+  left: -4px; right: 0;
+  border-top: 2px solid var(--danger);
+  pointer-events: none;
+  z-index: 3;
+}
+.kal-now-dot {
+  position: absolute;
+  left: -1px; top: -4px;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--danger);
+}
+
+.kal-empty {
+  position: absolute;
+  top: 40%; left: 0; right: 0;
+  text-align: center;
+  font-size: 14px;
+  color: var(--text-3);
+  pointer-events: none;
+  line-height: 1.6;
+}
+.kal-empty span { font-size: 12px; }
+
+.kal-hint {
+  font-size: 12px;
+  color: var(--text-3);
+  text-align: center;
+  padding-bottom: 8px;
+}

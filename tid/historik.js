@@ -152,7 +152,9 @@ function renderActivityFilter() {
 }
 
 // ─── Open entry sheet ─────────────────────────────────────
-function openEntrySheet(entryId) {
+// prefill: {start: Date, end: Date|null} — bruges når kalenderen åbner arket
+// på et bestemt tidsrum (fx et hul, der skal udfyldes).
+export function openEntrySheet(entryId, prefill = null) {
   editingId = entryId || null;
   const e   = entryId ? entries.find(x => x.id === entryId) : null;
   const acts = getLoadedActivities();
@@ -180,10 +182,10 @@ function openEntrySheet(entryId) {
       r.checked = r.value === e.workType;
     });
   } else {
-    const now = new Date();
-    document.getElementById('hist-date').value  = toDateInput(now);
-    document.getElementById('hist-start').value = fmtTime(now);
-    document.getElementById('hist-end').value   = '';
+    const start = prefill?.start || new Date();
+    document.getElementById('hist-date').value  = toDateInput(start);
+    document.getElementById('hist-start').value = fmtTime(start);
+    document.getElementById('hist-end').value   = prefill?.end ? fmtTime(prefill.end) : '';
     document.getElementById('hist-note').value  = '';
     document.querySelectorAll('input[name="hist-wt"]').forEach(r => r.checked = false);
   }

@@ -127,7 +127,11 @@ Tryk på en anden aktivitet mens en timer kører:
 - Vis advarsel næste gang appen åbnes
 
 ### 5. Historik
-Egen side. Liste over alle registreringer, nyeste først. Filter på dato-interval og aktivitet. Hver post kan redigeres (start, slut, aktivitet, arbejdstype, note) eller slettes. Manuel oprettelse af bagudrettet post.
+Egen side med to visninger, der skiftes med en fane øverst:
+
+**Liste** — alle registreringer, nyeste først. Filter på dato-interval og aktivitet. Hver post kan redigeres (start, slut, aktivitet, arbejdstype, note) eller slettes. Manuel oprettelse af bagudrettet post.
+
+**Kalender** — én dag ad gangen på en lodret tidsakse (1 time = 48 px). Overlappende registreringer fordeles på kolonner ved siden af hinanden, så alle er synlige. Uregistreret tid mellem to poster markeres som et skraveret "hul" med varighed; tryk på hullet opretter en post, der udfylder tidsrummet. Tryk et vilkårligt sted på aksen opretter en post fra det tidspunkt (afrundet til 15 min). Igangværende registrering løber til "nu" og vises skraveret, og en rød streg markerer det aktuelle tidspunkt. Registreringer hen over midnat klippes ved døgnskiftet og markeres med prikket kant.
 
 ### 6. Rapporter
 Egen side. Vælg interval:
