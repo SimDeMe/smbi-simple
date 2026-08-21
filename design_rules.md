@@ -19,7 +19,8 @@ Lagt om indtil videre: forsiden, fagforsiderne, `born.html`, `admin.html`,
 `Dugpunkt.html`, `groenlandspumpen.html`,
 `biologi/transkription.html`, `biologi/enzymkinetik.html`,
 `biologi/osmose.html`, `biologi/DNA_Simulering.html`, `biologi/enzymhastighed.html`,
-`geografi/Tidevand.html`, `biologi/membran.html`
+`geografi/Tidevand.html`, `biologi/membran.html`,
+`biologi/fotosyntese.html`
 (brug dem som forlæg, når `--accent:var(--bio)` skal
 bruges). Resten af `geografi/`, `biologi/` og `style.css`-siderne kører
 stadig det gamle design — rør dem kun, når opgaven handler om dem.
