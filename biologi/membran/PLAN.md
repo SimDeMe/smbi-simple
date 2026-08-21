@@ -111,72 +111,144 @@ vandkappe ca. 0,7 nm.
   instrumenterne viser. Ingen ion kom nogensinde ind i lipidlaget uden om
   poren, og ingen natriumion kom ind i poren.
 
+  *Lavet om i trin 10:* `konc` er flyttet op i `tilstand`, natriumionerne
+  følger nu også en koncentration i stedet for et fast antal, og ionerne er
+  samlet i en cirkel (`REVIR`) omkring kanalen, så pumpen kan tegne sine egne.
+  Instrumentet er skåret ned til nettostrømmen alene — koncentrationerne står
+  nu på skyderne.
+
+* **Trin 10 — én gradient pr. stof.** Fire stoffer har hver sin gradient i
+  `tilstand`: `o2`, `k`, `na` og `glukose`, hver med `{ude, inde}` i mmol/L.
+  Tallene, skydernes spænd og trin bor i `molekyler.js` under `gradient`, hvor
+  resten af fagdataene er — ikke i koden. Otte skydere kunne ikke overskues,
+  så **de to skydere gælder det stof, der er valgt i forklaringsruden**: klik
+  på Glukose eller på transportproteinet, og skyderne bliver til glukose. Det
+  koster ingen ny knapperække — signaturforklaringen, der allerede var der,
+  gør arbejdet. Adressen skriver kun det, der er lavet om, så et delt link
+  ikke fylder en hel linje med tal, ingen har rørt.
+
+* **Trin 8 — `transport-baerer.js`.** Glukosetransportør som tilstandsmaskine:
+  `VENTER → BIND → VEND → SLIP`. Proteinet står aldrig åbent til begge sider
+  på én gang — stavene i bundtet vippes om ringens tangent, så toppen spiler
+  sig ud, netop mens bunden knibes sammen. Glukose tegnes som sin ring af seks
+  kugler, så den kan skelnes fra iltens håndvægt og ionernes kugle med kappe
+  uden at bruge farve på det.
+
+  **Mætningen er regnet, ikke påstået.** Mens proteinet er tomt, venter det på
+  et molekyle; ventetiden trækkes som en ægte eksponentialfordeling med en
+  rate, der følger koncentrationen, og hver tur tager den samme faste tid
+  (`T_TUR` = 1,5 s). Det giver Michaelis-Menten helt af sig selv, med
+  K_M = 5 mmol/L som for GLUT1 og et loft på 1/1,5 molekyler pr. sekund.
+  Blodsukkeret på ca. 5 mmol/L rammer derfor lige dér, hvor kurven bøjer af.
+
+  Efterprøvet: over 400 s pr. måling passer instrumentet med de ture, der
+  faktisk køres, på under 0,05 molekyler/s — ved 2/0, 5,5/1, 10/1, 20/1 og
+  8/8. Strømmen stiger med koncentrationen, men mindre og mindre (29 → 57 →
+  69 → 81 % optaget). Lige meget på begge sider giver ligevægt, og vendt
+  gradient vender strømmen: bæreren er passiv.
+
+* **Trin 9 — `transport-pumpe.js`.** 3 Na⁺ ud, 2 K⁺ ind, 1 ATP, i ni trin
+  (`TRIN`-tabellen, 4,70 s pr. omgang). ATP toner frem i kløften ved
+  N-domænet, N lukker sig om det, og ved spaltningen **flyver γ-fosfatgruppen
+  over på P-domænet** og bliver siddende, indtil pumpen har vendt og skal
+  hjem igen. A-domænet drejer med formskiftet, som det gør i virkeligheden.
+  `struktur.js` mærker delene med `pumpeStav` og `pumpeDomæne` og lægger
+  `atpSted`/`pSted` i `userData` — den ved stadig ikke, at der findes
+  transport. ATP-molekylet hænger i pumpens egen gruppe, så det følger med,
+  når proteinet driver rundt, og det kan udpeges som `stof:atp`.
+
+  **Natriumlækagen** (`LÆK`) er regnet med: natrium siver hele tiden tilbage
+  ind i cellen. Uden den ville pumpen tømme cellen på et kvart minut og gå i
+  stå. Med den bliver den hvilende celle det, den er i virkeligheden — en
+  **ligevægt, der koster energi**: kanalen lader kalium løbe ud, pumpen henter
+  det ind, og tallene bliver stående, mens ATP-tælleren løber.
+
+  Efterprøvet: med fast koncentration står alle fire gradienter helt stille
+  over 60 s. I lukket system holder 4/140 og 145/12 i ti minutter (de svinger
+  om ca. 6/138 og 144/13). Sat ud af drift ved 70/70 bygger pumpen begge
+  gradienter op igen inden for to minutter. Tømmes cellen for natrium, går
+  pumpen i stå — og bruger ingen ATP. Ingen koncentration kom under 0 eller
+  over skyderens loft, heller ikke fra yderstillingerne over 180 s.
+
+* **Prøven kan køres igen.** Modellen blev prøvet af i node med en attrap-
+  three.js (jf. afsnittet nederst) *og* i en rigtig browser med Playwright:
+  ingen fejl i konsollen, ingen vandret rulning ved 700, 620 og 380 px, og et
+  delt link genskaber alle fire gradienter, det valgte stof, den udpegede del
+  og alle fire knapper.
+
 ---
 
 ## Resten af planen
 
-Bæreren (trin 8) er det næste, og så aktiv transport (trin 9). Filerne
-`transport-baerer.js` og `transport-pumpe.js` findes med deres fagbeskrivelse,
-men er endnu ikke importeret i `side.js`.
-
-### Trin 8 — `transport-baerer.js`
-Glukosetransportør. Proteinet skifter form: bind → luk → åbn på den anden side
-→ slip. Bygges som en tilstandsmaskine, så trinnene kan sættes i stå og
-gennemgås ét ad gangen. Kontrasten til kanalen er hele pointen: mætning ved
-høj koncentration, fordi der kun er så mange transportører.
-
-### Trin 9 — `transport-pumpe.js`
-Na⁺/K⁺-pumpen: 3 Na⁺ ud, 2 K⁺ ind, 1 ATP. ATP-molekylet skal ses forbruges i
-N-domænet (formen er allerede bygget i `struktur.js`, og
-`findProtein('pumpe').objekt.userData.atpSted` er stedet), og retningen skal
-tydeligt være **mod** gradienten. Tæller for forbrugt ATP i `.gauges`.
-Natriumionerne tegnes i dag af kanalen, som noget der bliver vist bort — når
-pumpen skal flytte dem, skal de to moduler enten dele puljen eller vente på
-trin 10.
-
-### Trin 10 — én gradient pr. stof
-Skyderne i `.knobs` gælder ilt alene, og kanalen har sin egen `konc` inde i
-`transport-kanal.js`. Hvert stof skal have sin egen gradient ét fælles sted —
-glukose og ioner udligner sig ikke i takt med ilten. Overvej, om `tilstand`
-skal være `{o2:{ude,inde}, k:…, glukose:…}` frem for ét par tal, og hvordan
-`.knobs` så holder sig kort nok til at kunne overskues (måske kun skydere for
-det stof, der er valgt i forklaringsruden). Pumpen er den, der bryder
-mønsteret: den holder forskellen ved lige i stedet for at udligne den — og
-det er præcis det, kanalens **Fast koncentration** i dag gør i hånden.
+Trin 8, 9 og 10 er lavet. Tilbage står aquaporinerne (11), de to ekstraer
+(12 og 13) og den sidste gennemgang (14).
 
 ### Trin 11 — aquaporiner
-Vandkanal, og et link over til `biologi/osmose.html`, hvor konsekvensen for
-hele cellen kan ses. Osmosesiden er 2D og har ikke aquaporiner — overvej et
-link den anden vej også.
+Linkene mellem de to sider er lavet: `membran.html` og `osmose.html` peger nu
+på hinanden i topbjælken. **Selve vandkanalen mangler**, og den er ikke bare
+en kanal mere — vand løber ikke efter sin egen koncentration, men efter den
+*samlede* mængde opløst stof på hver side. Den regning kan nu laves, for alle
+fire stoffer ligger i `tilstand`: læg dem sammen på hver side, og vandet går
+mod den side, hvor der er mest. Ved startværdierne er de to sider næsten lige
+(155 mod 153 mmol/L) — altså en celle i ligevægt med sine omgivelser, præcis
+som den skal være, og skruer man natrium udenfor op, går vandet ud.
+
+Det, der holdt den tilbage: `.gauges` har seks felter i to rækker af tre, og
+en syvende ville brække gitteret. Skal aquaporinen med, så find ud af, hvilket
+tal der kan undværes — eller giv rækken fire spalter på brede skærme.
 
 ### Trin 12 — gæt transporttypen
 Eleven får et molekyle fra `molekyler.js` og skal vælge vej. Svaret begrundes
-med `hvorfor`-feltet. Kun hvis trin 6-9 står stabilt — det er en ekstra, ikke
-en forudsætning.
+med `hvorfor`-feltet. Bevidst fravalgt indtil videre: siden kører alle
+mekanismer samtidig uden vælger (trin 5), og en quiz oven på det ville trække
+i den modsatte retning og fylde panelet. Hører nok bedre hjemme i
+undervisningsmaterialet ved siden af (`design_rules.md` afsnit 4).
 
 ### Trin 13 — endo- og exocytose
 Vesikel, der knopskyder ind eller ud. Kræver, at dobbeltlaget kan bules ud, og
 er derfor den teknisk tungeste del. Tages til sidst, og kun hvis den skal med.
 
 ### Trin 14 — færdiggørelse
-Gennemgang af tilgængelighed (tastatur alene, skærmlæserstatus, farve aldrig
-eneste signal), brydepunkter ved 960/700/620 px, `@media print`, ydelsestjek
-på en ældre bærbar, og link ind fra `biologi.html`.
+Lavet: link ind fra `biologi.html` og over til `osmose.html`, `aria-label` på
+lærredet skrevet om, så alle fire transportveje er beskrevet, betjening med
+tastatur alene prøvet af, brydepunkterne 960/700/620 px efterset (ingen
+vandret rulning ved 700, 620 eller 380 px), og instrumentrækkens blækstreger
+rettet til, så de følger gitteret, når der er to rækker.
+
+Mangler: **ydelsestjek på en ældre bærbar.** Figuren opdaterer nu ca. 2400
+instansmatricer for dobbeltlaget, ca. 220 for ilten, ca. 140 for kanalens
+ioner, ca. 100 for pumpens og 6 × 28 for glukoseringene. Det kører fint på en
+ny maskine, men er ikke prøvet på en gammel.
 
 ---
 
 ## Ting at holde øje med
 
 * **Ydelse.** Dobbeltlaget opdaterer ca. 2400 instansmatricer pr. billede,
-  ilten ca. 220 mere og ionerne ca. 130. Kommer der flere stoffer til i trin
-  8-10, så hold fast i én `InstancedMesh` pr. molekyletype frem for ét `Mesh`
-  pr. partikel.
+  ilten ca. 220, kanalens ioner ca. 140, pumpens ca. 100 og glukoseringene
+  6 × 28. Kommer der flere stoffer til, så hold fast i én `InstancedMesh` pr.
+  molekyletype frem for ét `Mesh` pr. partikel.
 * **Modellen kan afprøves uden browser.** `transport-*.js` rører kun three.js
-  til at tegne med, så mekanikken kan køres i node med en håndfuld stumper
-  (`Matrix4`, `InstancedMesh`, `Group`, …) og en `ctx` med en attrap-membran.
-  Sådan blev trin 6 efterprøvet. Det er også den eneste farbare vej: en
-  **browserfane i baggrunden får ikke `requestAnimationFrame`**, så figuren
-  står bomstille, og alt hvad der måles udefra, ser frosset ud.
+  til at tegne med, så hele mekanikken kan køres i node med en attrap-three.js
+  på ca. 60 linjer (`Vector3`, `Quaternion`, `Matrix4`, `Group`, `Mesh`,
+  `InstancedMesh`, `MeshStandardMaterial` og tomme geometrier) plus en
+  `window.matchMedia`-stump, fordi `struktur.js` henter `ROLIG` fra
+  `model.js`. Så kan `byggMembran` køres, som den er, og `ctx` bliver ægte.
+  Sådan blev trin 6, 7, 8, 9 og 10 efterprøvet. Det er også den eneste
+  farbare vej: en **browserfane i baggrunden får ikke
+  `requestAnimationFrame`**, så figuren står bomstille, og alt hvad der måles
+  udefra, ser frosset ud.
+* **Sådan måles en strøm ved en fast koncentration.** Kør ét billede i lukket
+  system, læs hvad modulerne nåede at flytte, og sæt så *alle* koncentrationer
+  tilbage igen. Så kan strømmen måles, uden at gradienten når at ændre sig —
+  og uden at fx natriumlækagen når at starte pumpen op midt i en måling af,
+  hvad kanalen alene gør. Det er sådan, instrumenternes tal er holdt op mod
+  det, der faktisk sker.
+* **Ilten sitrer.** Nettostrømmen for ilt regnes ud fra få dusin tegnede
+  kugler, så forskellen mellem de to sider svinger omkring nul i stedet for at
+  stå på nul. Ved ligevægt kan instrumentet derfor vise 0,4 molekyler/s den
+  ene vej et øjeblik. Skal det efterprøves, så mål gennemsnittet over et
+  stykke tid, ikke ét øjebliksbillede.
 * **`python3 -m http.server` cacher moduler.** Retter man en `.js`-fil og
   genindlæser, kan browseren stadig køre den gamle. Hård genindlæsning
   (⇧⌘R) løser det — en almindelig `location.reload()` gør det ikke.

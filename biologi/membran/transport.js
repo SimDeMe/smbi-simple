@@ -25,12 +25,27 @@
 
    ctx = {scene, membran, tilstand}
 
-   `tilstand` er sidens model, ikke mekanismens egen: {ude, inde}
-   er koncentrationerne i mmol/L på hver side af membranen, og
-   `fast` fortæller, om de holdes ved lige (cellen forbruger og
-   tilfører), eller om transporten må udligne dem. En mekanisme
-   må gerne skrive i `ude`/`inde` — det er netop det, den gør ved
-   at flytte molekyler.
+   `tilstand` er sidens model, ikke mekanismens egen. Hvert stof
+   har sin egen gradient — glukose og ioner udligner sig ikke i
+   takt med ilten:
+
+     tilstand.o2      {ude, inde}   mmol/L
+     tilstand.k       {ude, inde}
+     tilstand.na      {ude, inde}
+     tilstand.glukose {ude, inde}
+     tilstand.fast    holder cellen forskellene ved lige?
+
+   Tallene og skydernes spænd står i molekyler.js sammen med
+   resten af fagdataene. En mekanisme må gerne skrive i `ude` og
+   `inde` — det er netop det, den gør ved at flytte molekyler. Er
+   `fast` sat, sørger cellen for gradienten, og mekanismen skal
+   lade koncentrationerne være.
+
+   Flere mekanismer må gerne røre det samme stof: kanalen lader
+   kalium løbe ud, mens pumpen henter det ind igen. De deler
+   koncentrationen i `tilstand`, men tegner hver sine molekyler
+   omkring hver sit protein — så slipper de for at sende ioner
+   frem og tilbage mellem sig.
    ═══════════════════════════════════════════════════════════ */
 
 export const MEKANISMER = [];

@@ -23,23 +23,23 @@
    kanal står ikke åben hele tiden, og mens den er lukket, går
    der ingen ioner igennem — heller ikke med gradienten.
 
-   ── Kaliums egen gradient ──────────────────────────────────
-   Modulet har sine egne koncentrationer og rører ikke sidens
-   iltskydere. En hvilende celle har ca. 140 mmol/L kalium
-   indeni og 4 udenfor, og de tal kan ikke presses ned i
-   iltskydernes 0-0,30 mmol/L. Delte man dem, ville kaliummet
-   desuden løbe *ind* i cellen, så snart der er mest ilt
-   udenfor — stik imod virkeligheden og imod pumpen i trin 9.
-   Knappen **Fast koncentration** gælder til gengæld også her:
-   slås den fra, er systemet lukket, og kaliumgradienten
-   udlignes af sig selv. Trin 10 løfter `konc` op i `tilstand`
-   og giver den sine egne skydere.
+   ── Kalium og natrium kommer fra sidens tilstand ───────────
+   Kaliumgradienten er `tilstand.k` og natriums `tilstand.na` —
+   de samme tal, pumpen arbejder på. Kanalen lader kalium løbe
+   ud af cellen, pumpen henter det ind igen, og eleven kan se de
+   to trække i hver sin retning på den samme skyder. Knappen
+   **Fast koncentration** afgør, hvem der får lov: er den slået
+   til, sørger cellen selv for gradienten; er den slået fra, er
+   systemet lukket, og så er det kanalen mod pumpen.
 
-   De tegnede ioner er et udsnit — der er ikke plads til 140
-   mmol/L på skærmen. Antallet følger √c, så forskellen kan ses
-   uden at inderside n bliver et tæppe, og chancen for at krydse
-   regnes derfor ud fra koncentrationen, ikke ud fra hvor mange
-   kugler der tilfældigvis er tegnet.
+   De tegnede ioner ligger i en lille cirkel omkring kanalen og
+   er kun et udsnit — der er ikke plads til 140 mmol/L på
+   skærmen. Pumpen tegner sine egne omkring sit protein, så de
+   to moduler slipper for at sende ioner frem og tilbage mellem
+   sig. Antallet følger √c, så forskellen kan ses uden at
+   indersiden bliver et tæppe, og chancen for at krydse regnes
+   derfor ud fra koncentrationen, ikke ud fra hvor mange kugler
+   der tilfældigvis er tegnet.
    ═══════════════════════════════════════════════════════════ */
 import * as THREE from 'three';
 import {registrer}             from './transport.js';
@@ -47,14 +47,16 @@ import {MÅL}                   from './struktur.js';
 import {find as findMolekyle}  from './molekyler.js';
 
 /* ── Modellens tal ─────────────────────────────────────── */
-const K_START  = {ude:4, inde:140};   // mmol/L — kalium i en hvilende celle
-const NA_ANTAL = {ude:12, inde:4};    // tegnede natriumioner
-
 const RATE  = 0.06;   // krydsninger pr. sekund pr. mmol/L på siden
 const DELTA = 1.2;    // mmol/L, ét ions bidrag, når systemet er lukket
-const TEGN  = 2.4;    // tegnede ioner på en side = TEGN·√c
-const N_K   = 46;     // plads i instansmeshet
-const N_NA  = NA_ANTAL.ude + NA_ANTAL.inde;
+const TEGN  = 1.15;   // tegnede ioner på en side = TEGN·√c
+const MAKS  = 15;     // … men aldrig flere end så mange pr. side
+const N_K   = 36;     // plads i instansmeshet
+const N_NA  = 36;
+
+/* Kaliumskyderens loft — en krydsning må ikke skubbe koncentrationen
+   længere op, end eleven kan følge den på skyderen. */
+const K_LOFT = findMolekyle('k').gradient.maks;
 
 /* Låget: hvor længe kanalen står åben og lukket ad gangen. */
 const ÅBEN = [0.9, 2.2], LUKKET = [0.35, 0.95];
@@ -74,8 +76,9 @@ const FART = 2.6;    // nm/s — ionerne er tungere end ilt og går lidt langsom
 const LIV  = 3.2;    // 1/s — ioner tones ind og ud i stedet for at blinke
 
 const OVER = MÅL.tykkelse / 2 + MÅL.hoved * 0.85;   // membranens overflade
-const KANT = MÅL.bredde / 2 - 0.6;
 const MUND = OVER + 0.62;                           // porens munding
+const REVIR = 4.6;   // nm — ionerne holder sig i en cirkel om kanalen
+const FRIRUM = 1.7;  // nm — helst ikke oven i selve poren
 
 /* Kerne og vandkappe i nm. Natrium har den mindste kerne og den
    største kappe — hele forklaringen på, hvorfor den bliver afvist
@@ -108,15 +111,19 @@ function pulje(n){
 const K  = pulje(N_K);
 const NA = pulje(N_NA);
 
-const konc = {ude:K_START.ude, inde:K_START.inde};   // mmol/L kalium
-const akk  = {ude:0, inde:0};                        // opsparede krydsninger
+/* Koncentrationerne bor i sidens tilstand, ikke her — pumpen skal
+   kunne trække i de samme tal. Modulet holder kun en henvisning. */
+let konc = null;      // tilstand.k  — den ion, kanalen slipper igennem
+let koncNa = null;    // tilstand.na — den, den viser bort
+const akk = {ude:0, inde:0};                         // opsparede krydsninger
 
 let gruppeK = null, gruppeNa = null;
 let materialer = [];
 let spærret = [];
 let helixer = [];                  // kanalproteinets stave — de er selve låget
 let kanal = null;                  // proteinet, ionerne søger hen til
-let poreX = 0, poreZ = 0;
+let midtX = 0, midtZ = 0;          // revirets midte: proteinets faste plads
+let poreX = 0, poreZ = 0;          // porens midte lige nu — proteinet driver
 
 let åben = true, gateTid = 0, lukning = 0;
 let afvisAkk = 0;
@@ -127,15 +134,18 @@ const SKJULT = new THREE.Matrix4().makeScale(0, 0, 0);
 /* ── Små hjælpere ──────────────────────────────────────── */
 const mellem = (a, b) => a + Math.random() * (b - a);
 const blødt  = u => u * u * (3 - 2 * u);
-const målAntal = c => Math.max(1, Math.min(30, Math.round(TEGN * Math.sqrt(Math.max(0, c)))));
+const målAntal = c => Math.max(0, Math.min(MAKS, Math.round(TEGN * Math.sqrt(Math.max(0, c)))));
 
-/** Et tilfældigt sted i vandet på den ene side, helst væk fra kanalen,
-    så en ion ikke toner frem midt i det, man kigger på. */
+/** Et tilfældigt sted i vandet på den ene side af membranen, inden
+    for kanalens revir og helst ikke lige oven i poren — så toner en
+    ion ikke frem midt i det, man kigger på. */
 function saetUd(P, i, s){
   let x = 0, z = 0;
-  for(let forsøg = 0; forsøg < 6; forsøg++){
-    x = mellem(-KANT, KANT); z = mellem(-KANT, KANT);
-    if(Math.hypot(x - poreX, z - poreZ) > 5) break;
+  for(let forsøg = 0; forsøg < 8; forsøg++){
+    const a = Math.random() * Math.PI * 2;
+    const r = REVIR * Math.sqrt(Math.random());     // jævnt fordelt i cirklen
+    x = midtX + Math.cos(a) * r; z = midtZ + Math.sin(a) * r;
+    if(Math.hypot(x - poreX, z - poreZ) > FRIRUM) break;
   }
   P.px[i] = x; P.pz[i] = z;
   P.py[i] = s * mellem(OVER + 0.5, OVER + VAND);
@@ -214,9 +224,11 @@ function startKryds(s){
   return true;
 }
 
-/** En natriumion prøver — og bliver vist bort ved filteret. */
+/** En natriumion prøver — og bliver vist bort ved filteret. Den
+    kommer oftest fra den side, hvor der er mest natrium. */
 function startAfvis(){
-  const først = Math.random() < NA_ANTAL.ude / N_NA ? 1 : -1;
+  const sum = koncNa.ude + koncNa.inde;
+  const først = Math.random() * (sum || 1) < koncNa.ude ? 1 : -1;
   for(const s of [først, -først]){
     const i = nærmeste(NA, s);
     if(i >= 0){ begynd(NA, i, AFVIS_IND); return true; }
@@ -249,10 +261,15 @@ function vandr(P, i, dt, drej){
 
   P.px[i] += P.vx[i] * dt; P.py[i] += P.vy[i] * dt; P.pz[i] += P.vz[i] * dt;
 
-  if(P.px[i] < -KANT){ P.px[i] = -KANT; P.vx[i] =  Math.abs(P.vx[i]); }
-  if(P.px[i] >  KANT){ P.px[i] =  KANT; P.vx[i] = -Math.abs(P.vx[i]); }
-  if(P.pz[i] < -KANT){ P.pz[i] = -KANT; P.vz[i] =  Math.abs(P.vz[i]); }
-  if(P.pz[i] >  KANT){ P.pz[i] =  KANT; P.vz[i] = -Math.abs(P.vz[i]); }
+  /* Reviret er en cirkel om kanalen. Ionen preller af på kanten. */
+  const dx = P.px[i] - midtX, dz = P.pz[i] - midtZ;
+  const d = Math.hypot(dx, dz);
+  if(d > REVIR){
+    const nx = dx / d, nz = dz / d;
+    P.px[i] = midtX + nx * REVIR; P.pz[i] = midtZ + nz * REVIR;
+    const ind = P.vx[i] * nx + P.vz[i] * nz;
+    if(ind > 0){ P.vx[i] -= 2 * ind * nx; P.vz[i] -= 2 * ind * nz; }
+  }
 
   const s = P.side[i];
   const nær = s * (OVER + 0.4), fjern = s * (OVER + VAND);
@@ -271,9 +288,9 @@ function glid(P, i, k, x, y, z){
 
 /** Et sted at slippe ionen fri igen, et stykke fra mundingen. */
 function slipPunkt(P, i, s){
-  const a = Math.random() * Math.PI * 2, r = mellem(1.6, 3.4);
-  P.tilX[i] = Math.max(-KANT, Math.min(KANT, poreX + Math.cos(a) * r));
-  P.tilZ[i] = Math.max(-KANT, Math.min(KANT, poreZ + Math.sin(a) * r));
+  const a = Math.random() * Math.PI * 2, r = mellem(1.6, 3.0);
+  P.tilX[i] = poreX + Math.cos(a) * r;
+  P.tilZ[i] = poreZ + Math.sin(a) * r;
   P.tilY[i] = s * mellem(OVER + 0.8, OVER + 2.6);
 }
 
@@ -306,7 +323,7 @@ function frem(P, i, dt, drej, fast){
         if(!fast){
           const fra = s === 1 ? 'ude' : 'inde', til = s === 1 ? 'inde' : 'ude';
           konc[fra] = Math.max(0, konc[fra] - DELTA);
-          konc[til] += DELTA;
+          konc[til] = Math.min(K_LOFT, konc[til] + DELTA);
         }
         begynd(P, i, FRA_MUND);
         slipPunkt(P, i, -s);
@@ -376,7 +393,11 @@ export default registrer({
   beskrivelse:'Ioner kan ikke komme forbi de hydrofobe haler, men en kanal giver dem en vandfyldt vej igennem. Kanalen åbner og lukker, og mens den er åben, falder kaliumionerne ud af cellen med deres egen gradient — hurtigt, og uden at det koster energi. Natrium bliver vist bort ved filteret: den er den mindste af de to ioner, men holder fastere på sin vandkappe og er med den for stor til at slippe igennem.',
 
   byg(ctx){
+    konc   = ctx.tilstand.k;
+    koncNa = ctx.tilstand.na;
+
     kanal = ctx.membran.findProtein('kanal');
+    midtX = kanal.x; midtZ = kanal.z;          // proteinets faste plads
     poreX = kanal.objekt.position.x;
     poreZ = kanal.objekt.position.z;
     spærret = ctx.membran.proteiner.filter(p => p.r > 0);
@@ -421,10 +442,10 @@ export default registrer({
     for(let i = 0; i < N_K; i++){ saetUd(K, i, i % 2 ? 1 : -1); K.aktiv[i] = 0; }
     for(let i = 0; i < N_NA; i++){ saetUd(NA, i, 1); NA.aktiv[i] = 0; }
 
-    justér(K,   1, målAntal(konc.ude),  true);
-    justér(K,  -1, målAntal(konc.inde), true);
-    justér(NA,  1, NA_ANTAL.ude,  true);
-    justér(NA, -1, NA_ANTAL.inde, true);
+    justér(K,   1, målAntal(konc.ude),    true);
+    justér(K,  -1, målAntal(konc.inde),   true);
+    justér(NA,  1, målAntal(koncNa.ude),  true);
+    justér(NA, -1, målAntal(koncNa.inde), true);
     for(const P of [K, NA]) for(let i = 0; i < P.n; i++) if(P.aktiv[i]) P.liv[i] = 1;
 
     gateTid = mellem(...ÅBEN);
@@ -479,38 +500,32 @@ export default registrer({
       }
     }
 
-    /* ── Koncentrationerne ───────────────────────────── *
-     * Holdes de fast, sørger cellen for gradienten — det er jo
-     * netop dét, pumpen bruger sin ATP på. Ellers er systemet
-     * lukket, og hver krydsning har allerede flyttet lidt.      */
-    if(fast && dt > 0){
-      const k = Math.min(1, dt * 0.6);
-      konc.ude  += (K_START.ude  - konc.ude ) * k;
-      konc.inde += (K_START.inde - konc.inde) * k;
-    }
-    justér(K,  1, målAntal(konc.ude),  false);
-    justér(K, -1, målAntal(konc.inde), false);
+    /* ── Antallet af tegnede ioner ───────────────────── *
+     * Koncentrationerne bor i sidens tilstand: holdes de fast,
+     * sørger cellen for dem, og ellers har hver krydsning
+     * herover allerede flyttet lidt. Kanalen skal kun sørge
+     * for, at der er tegnet så mange ioner, som tallene siger —
+     * også når det var pumpen, der flyttede dem.               */
+    justér(K,   1, målAntal(konc.ude),    false);
+    justér(K,  -1, målAntal(konc.inde),   false);
+    justér(NA,  1, målAntal(koncNa.ude),  false);
+    justér(NA, -1, målAntal(koncNa.inde), false);
 
     tegn(K); tegn(NA);
   },
 
   aflaes(){
-    /* Tallene regnes på samme model, billedet kører efter: strømmen
+    /* Tallet regnes på samme model, billedet kører efter: strømmen
        den ene vej er koncentrationen gange raten, og kanalen står
        kun åben en del af tiden. */
-    const udad  = RATE * konc.inde * ÅBENDEL;
-    const indad = RATE * konc.ude  * ÅBENDEL;
-    const netto = udad - indad;
-    const en  = (v, d) => v.toFixed(d).replace('.', ',');
-    const mmol = v => v >= 10 ? en(v, 0) : en(v, 1);
+    const netto = RATE * (konc.inde - konc.ude) * ÅBENDEL;
+    const en = v => v.toFixed(1).replace('.', ',');
 
     return [
-      {mærkat:'K⁺ uden for cellen', værdi:mmol(konc.ude),  enhed:'mmol/L'},
-      {mærkat:'K⁺ inde i cellen',   værdi:mmol(konc.inde), enhed:'mmol/L'},
       Math.abs(netto) < 0.05
-        ? {mærkat:'Nettostrøm K⁺', værdi:'0', enhed:'ligevægt'}
-        : {mærkat:'Nettostrøm K⁺', værdi:en(Math.abs(netto), 1),
-           enhed:netto > 0 ? 'ioner/s ud af cellen' : 'ioner/s ind i cellen'},
+        ? {mærkat:'K⁺ gennem kanalen', værdi:'0', enhed:'ligevægt'}
+        : {mærkat:'K⁺ gennem kanalen', værdi:en(Math.abs(netto)),
+           enhed:netto > 0 ? 'ioner/s ud' : 'ioner/s ind'},
     ];
   },
 

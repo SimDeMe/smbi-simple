@@ -23,7 +23,7 @@ import {MÅL}                   from './struktur.js';
 import {find as findMolekyle}  from './molekyler.js';
 
 /* ── Modellens tal ─────────────────────────────────────── */
-const C_MAKS  = 0.30;               // mmol/L — skydernes øverste værdi
+const C_MAKS  = findMolekyle('o2').gradient.maks;   // mmol/L, skyderens loft
 const PR_SIDE = 54;                 // molekyler tegnet ved C_MAKS på én side
 const PR_MMOL = PR_SIDE / C_MAKS;   // molekyler pr. mmol/L
 const N       = PR_SIDE * 2;        // hele puljen
@@ -169,14 +169,14 @@ export default registrer({
     spærret = ctx.membran.proteiner.filter(p => p.r > 0);
 
     for(let i = 0; i < N; i++){ saetUd(i, i < PR_SIDE ? 1 : -1); aktiv[i] = 0; }
-    justér( 1, Math.round(ctx.tilstand.ude  * PR_MMOL), true);
-    justér(-1, Math.round(ctx.tilstand.inde * PR_MMOL), true);
-    skrevet.ude = ctx.tilstand.ude; skrevet.inde = ctx.tilstand.inde;
+    justér( 1, Math.round(ctx.tilstand.o2.ude  * PR_MMOL), true);
+    justér(-1, Math.round(ctx.tilstand.o2.inde * PR_MMOL), true);
+    skrevet.ude = ctx.tilstand.o2.ude; skrevet.inde = ctx.tilstand.o2.inde;
     tegn();
   },
 
   opdater(t, dt, ctx){
-    const T = ctx.tilstand;
+    const T = ctx.tilstand.o2, fast = ctx.tilstand.fast;
 
     /* Har eleven flyttet en skyder, siden modulet sidst skrev? Så
        skal antallet af molekyler passe med det samme. */
@@ -238,7 +238,7 @@ export default registrer({
     /* Holdes koncentrationerne fast, forbruger og tilfører cellen,
        så antallet passer igen. Ellers er systemet lukket, og
        koncentrationerne er simpelthen dét, molekylerne viser. */
-    if(T.fast){
+    if(fast){
       justér( 1, Math.round(T.ude  * PR_MMOL), false);
       justér(-1, Math.round(T.inde * PR_MMOL), false);
     } else {
@@ -250,25 +250,26 @@ export default registrer({
     tegn();
   },
 
-  aflaes(ctx){
+  aflaes(){
     /* Strømmen den ene vej er antallet på siden gange chancen pr.
        molekyle. Tallene regnes altså på samme model, som billedet
        kører efter — de er bare ikke behæftet med tilfældighederne,
-       så de står stille nok til at kunne aflæses. */
-    const indad = tælSide( 1) * RATE;
-    const udad  = tælSide(-1) * RATE;
-    const netto = indad - udad;
+       så de står stille nok til at kunne aflæses.
+
+       Kun nettostrømmen står i instrumentet. At molekylerne går
+       begge veje, kan man se på figuren, og det står i ruden ved
+       siden af — instrumentrækken skal have plads til, at der nu
+       er fire transportveje i gang på én gang. */
+    const netto = (tælSide(1) - tælSide(-1)) * RATE;
     const en    = v => v.toFixed(1).replace('.', ',');
 
-    /* Mærkaterne nævner stoffet: instrumentrækken har nu mere end
-       ét stof i sig, og et tal uden stofnavn kan ikke aflæses. */
+    /* Mærkaten nævner stoffet: instrumentrækken har mere end ét
+       stof i sig, og et tal uden stofnavn kan ikke aflæses. */
     return [
-      {mærkat:'O₂ ind i cellen', værdi:en(indad), enhed:'molekyler/s'},
-      {mærkat:'O₂ ud af cellen', værdi:en(udad),  enhed:'molekyler/s'},
       Math.abs(netto) < 0.05
         ? {mærkat:'Nettostrøm O₂', værdi:'0', enhed:'ligevægt'}
         : {mærkat:'Nettostrøm O₂', værdi:en(Math.abs(netto)),
-           enhed:netto > 0 ? 'molekyler/s ind i cellen' : 'molekyler/s ud af cellen'},
+           enhed:netto > 0 ? 'molekyler/s ind' : 'molekyler/s ud'},
     ];
   },
 

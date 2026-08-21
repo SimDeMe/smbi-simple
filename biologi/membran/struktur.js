@@ -267,18 +267,25 @@ function byggPumpe({materiale, sukkerMateriale, T}){
     const m = new THREE.Mesh(geo, materiale);
     m.position.set(Math.cos(a) * H.r, H.y - 0.45, Math.sin(a) * H.r);
     m.quaternion.setFromAxisAngle(akse.set(-Math.sin(a), 0, Math.cos(a)), -H.h);
+    /* Trin 9 vipper stavene mellem pumpens to former. Vinklen i
+       ringen er det, hældningen skal regnes ud fra — samme hage som
+       `grundvinkel` på kanalproteinet, og struktur.js behøver
+       stadig ikke vide, at der findes transport. */
+    m.userData.pumpeStav = a;
     g.add(m);
   }
 
   /* ── α: hovedet nede i cytosolen ─────────────────────── */
-  let atpSted = null;
+  const domæner = {};
   for(const D of PUMPE_DOMÆNER){
     const k = klump(materiale, {skala:D.s, ryst:0.26, frø:D.frø});
     k.position.set(D.x, D.y, D.z);
     k.rotation.set(D.drej * 0.6, D.drej, D.drej * 0.4);
+    k.userData.pumpeDomæne = D.id;
     g.add(k);
-    if(D.id === 'N') atpSted = k.position.clone();
+    domæner[D.id] = k;
   }
+  const atpSted = domæner.N.position.clone();
   /* Halsen mellem P og N — hængslet, der lukker sig om ATP'et. */
   g.add(stav(new THREE.Vector3(0.25, -4.50, 0.15),
              new THREE.Vector3(0.70, -5.35, 0.35), 0.38, materiale));
@@ -301,7 +308,7 @@ function byggPumpe({materiale, sukkerMateriale, T}){
     sukkerkæder.push(kæde);
   }
 
-  return {gruppe:g, sukkerkæder, atpSted};
+  return {gruppe:g, sukkerkæder, atpSted, pSted:domæner.P.position.clone()};
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -456,9 +463,11 @@ export function byggMembran(scene){
       const pumpe = byggPumpe({materiale:pm, sukkerMateriale:mat.sukker, T});
       g.add(pumpe.gruppe);
       for(const k of pumpe.sukkerkæder) sukkerdele.push(k);
-      /* Hvor ligger N-domænet? Trin 9 skal kunne hænge et ATP-molekyle
-         op dér og lade det forsvinde, når pumpen skifter form. */
+      /* Hvor ligger N- og P-domænet? Trin 9 hænger et ATP-molekyle op
+         i kløften ved N og lader fosfatgruppen flyve over på P, når
+         det spaltes — det er dét, der driver formskiftet. */
       g.userData.atpSted = pumpe.atpSted;
+      g.userData.pSted   = pumpe.pSted;
 
     } else if(P.slags === 'glykoprotein'){
       g.add(helixbundt({antal:3, ringR:0.46, højde:T + 1.6, materiale:pm, hældning:0.06}));

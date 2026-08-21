@@ -6,10 +6,11 @@
    *knapper og tilstand*, hører hjemme her; alt der handler om
    *figuren*, hører hjemme i model.js og struktur.js.
    ═══════════════════════════════════════════════════════════ */
-import {byggScene}        from './model.js';
-import {byggMembran}      from './struktur.js';
-import {opretForklaring}  from './forklaring.js';
-import {MEKANISMER}       from './transport.js';
+import {byggScene}                 from './model.js';
+import {byggMembran}               from './struktur.js';
+import {opretForklaring}           from './forklaring.js';
+import {MEKANISMER}                from './transport.js';
+import {MED_GRADIENT, find as findMolekyle} from './molekyler.js';
 
 /* Transportmekanismerne registrerer sig selv, når de indlæses, og
    de kører alle sammen samtidig: membranen er levende, ikke en
@@ -17,9 +18,10 @@ import {MEKANISMER}       from './transport.js';
    importlinje her. */
 import './transport-diffusion.js';
 import './transport-kanal.js';
+import './transport-baerer.js';
+import './transport-pumpe.js';
 
-const el  = id => document.getElementById(id);
-const tal = v  => v.toFixed(2).replace('.', ',');
+const el = id => document.getElementById(id);
 
 /* Skjult besked til skærmlæsere — figuren siger ikke selv fra. */
 let fortælTimer = null;
@@ -29,13 +31,30 @@ function fortæl(tekst){
 }
 
 /* ── Sidens model ──────────────────────────────────────── *
- * Koncentrationerne i mmol/L på hver side af membranen. Tallene
- * er ilt: vand i ligevægt med atmosfærisk luft har ca. 0,26
- * mmol/L, og en celle, der forbrænder, ligger langt under.
- * `fast` betyder, at cellen forbruger ilten og får ny tilført,
- * så forskellen holdes ved lige — slås den fra, er systemet
- * lukket, og diffusionen udligner selv gradienten.            */
-const tilstand = {ude:0.26, inde:0.05, fast:true};
+ * Én gradient pr. stof. Koncentrationerne er i mmol/L på hver
+ * side af membranen, og tallene kommer fra molekyler.js, hvor de
+ * hører hjemme sammen med resten af fagdataene: ilt 0,26/0,05,
+ * kalium 4/140, natrium 145/12, glukose 5,5/1.
+ *
+ * `fast` betyder, at cellen holder alle forskellene ved lige —
+ * den forbruger og tilfører. Slås den fra, er systemet lukket:
+ * så udligner diffusionen, kanalen og bæreren gradienterne, mens
+ * pumpen bruger ATP på at trække dem den anden vej. Det er den
+ * modsætning, hele siden handler om.                           */
+const tilstand = {fast:true};
+for(const m of MED_GRADIENT){
+  tilstand[m.id] = {ude:m.gradient.ude, inde:m.gradient.inde};
+}
+
+/* Det stof, de to skydere skruer på lige nu. Fire stoffer ville
+   give otte skydere, og så kan panelet ikke overskues — i stedet
+   gælder skyderne det stof, der er valgt i forklaringsruden. */
+let valgtStof = MED_GRADIENT[0].id;
+
+const tal = (id, v) => {
+  const g = findMolekyle(id).gradient;
+  return v.toFixed(g.decimaler).replace('.', ',');
+};
 
 /* ── Figuren ───────────────────────────────────────────── */
 const model = byggScene({
@@ -48,17 +67,17 @@ const model = byggScene({
 
 const membran = byggMembran(model.scene);
 
+/* Det, mekanismerne får at arbejde med. Se kontrakten i transport.js. */
+const ctx = {scene:model.scene, membran, tilstand};
+for(const m of MEKANISMER) m.byg?.(ctx);
+
 const forklaring = opretForklaring({
   model, membran,
   lærred:     el('scene'),
   felter:     {stempel:el('fork-stempel'), navn:el('fork-navn'), tekst:el('fork-tekst')},
   signaturer: [...document.querySelectorAll('.fact[data-del]')],
-  naarValgt:  () => gemTilstand(),
+  naarValgt:  delId => { følgValg(delId); gemTilstand(); },
 });
-
-/* Det, mekanismerne får at arbejde med. Se kontrakten i transport.js. */
-const ctx = {scene:model.scene, membran, tilstand};
-for(const m of MEKANISMER) m.byg?.(ctx);
 
 /* ── Instrumenter ──────────────────────────────────────── *
  * Rækken bygges af det, mekanismerne aflæser, så en ny
@@ -71,7 +90,7 @@ function visInstrumenter(){
   const nøgle = læst.map(g => g.mærkat).join('|');
   if(nøgle !== opsætning){
     opsætning = nøgle;
-    gaugeBoks.innerHTML = læst.map(g =>
+    gaugeBoks.innerHTML = læst.map(() =>
       `<div class="gauge"><dt></dt><dd><span class="tal"></span> <span class="enhed"></span></dd></div>`
     ).join('');
     gaugeBoks.querySelectorAll('dt')
@@ -85,44 +104,80 @@ function visInstrumenter(){
 }
 
 /* ── Skydere ───────────────────────────────────────────── *
- * Skyderne står i hundrededele mmol/L, så adressen kan holde
- * dem som hele tal.                                          */
-const skydere = {};
-
-function opretSkyder(navn, hvor){
-  const input = el(`inp-${navn}`), visning = el(`val-${navn}`);
+ * Skyderne står i hele trin (0,01 mmol/L for ilt, 1 for ionerne,
+ * 0,5 for glukose), så adressen kan holde dem som hele tal, og
+ * så browseren ikke skal validere kommatal op mod `step`.     */
+function opretSkyder(hvor, hvorTekst){
+  const input   = el(`inp-${hvor}`);
+  const visning = el(`val-${hvor}`);
+  const mærkat  = el(`lab-${hvor}`);
   let trækker = false;
 
   function vis(){
-    visning.textContent = tal(tilstand[navn]);
-    input.setAttribute('aria-valuetext', `${tal(tilstand[navn])} millimol per liter`);
+    const navn = findMolekyle(valgtStof).gradient.kort;
+    const v = tilstand[valgtStof][hvor];
+    visning.textContent = tal(valgtStof, v);
+    mærkat.textContent  = `${navn} ${hvorTekst}`;
+    input.setAttribute('aria-valuetext',
+      `${tal(valgtStof, v)} millimol per liter ${navn.toLowerCase()}`);
   }
-  input.addEventListener('input', () => {
-    tilstand[navn] = Number(input.value) / 100;
+
+  /* Skift af stof: skyderen får nyt spænd, ny værdi og ny mærkat. */
+  function stof(){
+    const g = findMolekyle(valgtStof).gradient;
+    input.min  = 0;
+    input.max  = Math.round(g.maks / g.trin);
+    input.step = 1;
+    input.value = Math.round(tilstand[valgtStof][hvor] / g.trin);
     vis();
-    fortæl(`Iltkoncentrationen ${hvor} er ${tal(tilstand[navn])} millimol per liter.`);
+  }
+
+  input.addEventListener('input', () => {
+    const g = findMolekyle(valgtStof).gradient;
+    tilstand[valgtStof][hvor] = Number(input.value) * g.trin;
+    vis();
+    fortæl(`${g.kort} ${hvorTekst} er `
+         + `${tal(valgtStof, tilstand[valgtStof][hvor])} millimol per liter.`);
     gemTilstand();
   });
   input.addEventListener('pointerdown', () => { trækker = true; });
   addEventListener('pointerup', () => { trækker = false; });
 
-  vis();
-  skydere[navn] = {
-    sæt(v){ tilstand[navn] = v; input.value = Math.round(v * 100); vis(); },
-    /* Når gradienten udligner sig selv, er det modellen der fører
-       skyderen — men ikke midt i et træk, hvor eleven fører den. */
+  return {
+    stof,
+    /* Når gradienten udligner sig selv — eller pumpen trækker den
+       op igen — er det modellen, der fører skyderen. Men ikke midt
+       i et træk, hvor eleven fører den. */
     følg(){
       if(trækker) return;
-      const trin = Math.round(tilstand[navn] * 100);
+      const g = findMolekyle(valgtStof).gradient;
+      const trin = Math.round(tilstand[valgtStof][hvor] / g.trin);
       if(Number(input.value) !== trin) input.value = trin;
       vis();
     },
   };
-  return skydere[navn];
 }
 
-opretSkyder('ude',  'uden for cellen');
-opretSkyder('inde', 'inde i cellen');
+const skydere = {
+  ude:  opretSkyder('ude',  'uden for cellen'),
+  inde: opretSkyder('inde', 'inde i cellen'),
+};
+
+function sætStof(id, sig = true){
+  if(!tilstand[id] || id === valgtStof) return;
+  valgtStof = id;
+  skydere.ude.stof(); skydere.inde.stof();
+  if(sig) fortæl(`Skyderne gælder nu ${findMolekyle(id).gradient.kort.toLowerCase()}.`);
+}
+
+/* Peger eleven på et stof — eller på det protein, der flytter det
+   — så skal skyderne handle om netop dét. Ellers bliver de stående:
+   at klikke på en fosfolipidhale skal ikke flytte rundt på noget. */
+function følgValg(delId){
+  if(delId.startsWith('stof:')) return sætStof(delId.slice(5));
+  const m = MEKANISMER.find(m => m.protein === delId);
+  if(m) sætStof(m.molekyler.find(id => tilstand[id]));
+}
 
 /* ── Render-løkken ─────────────────────────────────────── */
 let sidstAflæst = 0, sidstGemt = 0;
@@ -139,7 +194,7 @@ model.naarOpdater((t, dt) => {
     visInstrumenter();
     if(!tilstand.fast){
       skydere.ude.følg(); skydere.inde.følg();
-      /* Gradienten udligner sig selv, og skyderne flytter sig med.
+      /* Gradienterne flytter sig selv, og skyderne følger med.
          Adressen skal følge med, men ikke skrives om ved hvert tik. */
       if(nu - sidstGemt > 1500){ sidstGemt = nu; gemTilstand(); }
     }
@@ -186,8 +241,8 @@ trykknap('btn-snit', false, v => {
 
 trykknap('btn-fast', true, v => {
   tilstand.fast = v;
-  fortæl(v ? 'Cellen forbruger ilten og får ny tilført, så forskellen holdes ved lige.'
-           : 'Lukket system: diffusionen udligner nu forskellen af sig selv.');
+  fortæl(v ? 'Cellen holder alle forskellene ved lige — den forbruger og tilfører.'
+           : 'Lukket system: nu udligner transporten forskellene, mens pumpen bruger ATP på at trække dem den anden vej.');
 });
 
 trykknap('btn-projektor', false, v => {
@@ -205,24 +260,44 @@ el('btn-nulstil').addEventListener('click', () => {
 model.saetSnitPunkt({x:0, y:0, z:0}, 0);
 
 /* ── Tilstand i adressen ───────────────────────────────── *
- * Så en figur kan deles præcis som den står på tavlen. Ventetiden
- * gør også, at der ikke skrives i adressen, mens gradienten er i
- * gang med at udligne sig — først når den er faldet til ro.     */
+ * Så en figur kan deles præcis som den står på tavlen. Kun det,
+ * der er lavet om, kommer med — ellers ville adressen fylde en
+ * hel linje med tal, ingen har rørt. Ventetiden gør også, at der
+ * ikke skrives i adressen, mens gradienterne er i gang med at
+ * flytte sig — først når de er faldet til ro.                  */
 let gemTimer = null;
 function gemTilstand(){
   clearTimeout(gemTimer);
   gemTimer = setTimeout(() => {
-    const h = [
-      `ude=${Math.round(tilstand.ude * 100)}`,
-      `inde=${Math.round(tilstand.inde * 100)}`,
-      `fast=${tilstand.fast ? 1 : 0}`,
-      `kolesterol=${knapper['btn-kolesterol'].værdi ? 1 : 0}`,
-      `sukker=${knapper['btn-sukker'].værdi ? 1 : 0}`,
-      `snit=${knapper['btn-snit'].værdi ? 1 : 0}`,
-    ];
+    const h = [];
+
+    for(const M of MED_GRADIENT){
+      const g = M.gradient, T = tilstand[M.id];
+      const ude  = Math.round(T.ude  / g.trin);
+      const inde = Math.round(T.inde / g.trin);
+      if(ude !== Math.round(g.ude / g.trin) || inde !== Math.round(g.inde / g.trin)){
+        h.push(`${M.id}=${ude},${inde}`);
+      }
+    }
+    if(valgtStof !== MED_GRADIENT[0].id) h.push(`stof=${valgtStof}`);
+
+    for(const [nøgle, knap, standard] of [
+      ['fast',       'btn-fast',       true],
+      ['kolesterol', 'btn-kolesterol', true],
+      ['sukker',     'btn-sukker',     true],
+      ['snit',       'btn-snit',       false],
+    ]){
+      if(knapper[knap].værdi !== standard) h.push(`${nøgle}=${knapper[knap].værdi ? 1 : 0}`);
+    }
+
     const del = membran.fremhævet;
     if(del) h.push(`del=${del}`);
-    history.replaceState(null, '', '#' + h.join('&'));
+
+    /* Står alt på standardværdierne, skal fragmentet væk igen — men
+       ikke sidens query: `?projektor=1` skal overleve, at man skruer
+       tilbage til udgangspunktet. */
+    history.replaceState(null, '',
+      h.length ? '#' + h.join('&') : location.pathname + location.search);
   }, 500);
 }
 
@@ -231,12 +306,27 @@ function gemTilstand(){
   const h = new URLSearchParams(location.hash.replace(/^#/, ''));
   const hent = k => h.get(k) ?? q.get(k);
 
-  for(const navn of ['ude', 'inde']){
-    const v = Number(hent(navn));
-    if(hent(navn) != null && Number.isFinite(v)){
-      skydere[navn].sæt(Math.max(0, Math.min(30, Math.round(v))) / 100);
-    }
+  const sæt = (id, ude, inde) => {
+    const g = findMolekyle(id).gradient, loft = Math.round(g.maks / g.trin);
+    const rens = v => Math.max(0, Math.min(loft, Math.round(v))) * g.trin;
+    if(Number.isFinite(ude))  tilstand[id].ude  = rens(ude);
+    if(Number.isFinite(inde)) tilstand[id].inde = rens(inde);
+  };
+
+  for(const M of MED_GRADIENT){
+    const v = hent(M.id);
+    if(v == null) continue;
+    const [ude, inde] = v.split(',').map(Number);
+    sæt(M.id, ude, inde);
   }
+  /* Ældre links delte ilt-skyderne som `ude` og `inde` alene. */
+  if(hent('ude') != null || hent('inde') != null){
+    sæt('o2', Number(hent('ude')), Number(hent('inde')));
+  }
+
+  const stof = hent('stof');
+  if(stof && tilstand[stof]) valgtStof = stof;
+  skydere.ude.stof(); skydere.inde.stof();
 
   for(const [nøgle, knap] of [
     ['fast',       'btn-fast'],

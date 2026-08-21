@@ -47,7 +47,7 @@ export function opretForklaring({model, membran, lærred, felter, signaturer,
     skriv(d.type ?? 'Del af membranen', d.navn, d.beskrivelse);
     membran.fremhæv(delId);
     markerSignatur(delId);
-    naarValgt();
+    naarValgt(delId);
     return true;
   }
 
