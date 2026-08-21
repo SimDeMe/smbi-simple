@@ -17,19 +17,19 @@
 
 export const K = {
   daggry:6, skumring:18,      /* solen står op kl. 6 og ned kl. 18       */
-  timerPrSekund:0.40,         /* et døgn tager ca. 60 sekunder           */
+  timerPrSekund:0.22,         /* et døgn tager ca. 110 sekunder          */
 
-  fotoMaks:1.25,              /* glukose pr. time ved fuldt lys, 25 °C   */
+  fotoMaks:1.05,              /* glukose pr. time ved fuldt lys, 25 °C   */
   optimumTemp:25,             /* fotosyntesens optimum                   */
   tempBredde:13,              /* hvor bredt optimum er (°C)              */
 
-  respBasis:0.13,             /* glukose pr. time ved 20 °C              */
+  respBasis:0.22,             /* glukose pr. time ved 20 °C              */
   respQ10:2,                  /* respirationen fordobles pr. 10 °C       */
   respTemp0:20,
 
   perGlukose:6,               /* 6 CO₂ + 6 H₂O pr. glukose               */
   lagerTilVaekst:3,           /* over dette går glukosen til ny plante   */
-  vaekstFart:0.55,            /* hvor hurtigt overskuddet bliver plante  */
+  vaekstFart:0.22,            /* hvor hurtigt overskuddet bliver plante  */
   startBiomasse:6,
   maksLager:8,                /* kun til søjlens skala                   */
 };
@@ -152,14 +152,15 @@ export function opdater(dt){
   return haendelser;
 }
 
-/* Hvilken råvare mangler kloroplasten mest? Tæller op mod 6 af hver. */
+/* Hvilken råvare skal der hentes nu? Den, der er færrest af, når
+   dem undervejs regnes med — så de to rækker fyldes side om side.
+   Molekylerne er længe om turen, så der må godt være flere på vej,
+   end der lige er plads til: de tæller med i næste runde. */
 export function naesteRaavare(){
   const co2 = tilstand.co2 + paaVej.co2;
   const h2o = tilstand.h2o + paaVej.h2o;
-  if (co2 >= K.perGlukose && h2o >= K.perGlukose) return null;
-  if (co2 <= h2o && co2 < K.perGlukose) return 'co2';
-  if (h2o < K.perGlukose) return 'h2o';
-  return 'co2';
+  if (co2 >= 2*K.perGlukose && h2o >= 2*K.perGlukose) return null;
+  return co2 <= h2o ? 'co2' : 'h2o';
 }
 
 /* Molekyler, der er lettet, men endnu ikke landet i kloroplasten.
@@ -175,7 +176,6 @@ export const frigiv   = type => { paaVej[type] = Math.max(0, paaVej[type]-1); };
  * Kaldes af side.js, når et molekyle rent faktisk lander i
  * kloroplasten — så følger tallene det, man kan se.            */
 export function modtag(type){
-  if (tilstand[type] >= K.perGlukose) return {ok:false, grund:'fuld'};
   tilstand[type]++;
   return {ok:true, reaktion:tjekReaktion()};
 }
@@ -184,8 +184,8 @@ export function modtag(type){
 export function tjekReaktion(){
   if (tilstand.co2 < K.perGlukose || tilstand.h2o < K.perGlukose) return false;
   if (!erLyst()) return false;
-  tilstand.co2 = 0;
-  tilstand.h2o = 0;
+  tilstand.co2 -= K.perGlukose;
+  tilstand.h2o -= K.perGlukose;
   tilstand.lager++;
   tilstand.bpp++;
   return true;

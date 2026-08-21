@@ -20,14 +20,19 @@ for (const felt of document.querySelectorAll('.fact svg[data-signatur]')){
   felt.appendChild(tegnMolekyle(felt.dataset.signatur, {navn:false, skala:0.8}));
 }
 
-/* ── Molekyler, der er på vej et sted hen ──────────────── */
+/* ── Molekyler, der er på vej et sted hen ──────────────── *
+ * Farten er sat, så man kan følge det enkelte molekyle med øjnene.
+ * `drift` er den rolige svæven ind mod planten: nærmest jævn fart
+ * og en flad bue, i modsætning til det korte spring inde i cellen. */
 const flyvende = [];
 
-function nyFlugt(node, fra, til, tid, naarFremme){
+function nyFlugt(node, fra, til, tid, naarFremme, drift){
   flyt(node, fra.x, fra.y);
+  const spred = drift ? 30 : 90;
   flyvende.push({
-    node, fra, til, tid, t:0, naarFremme,
-    bue:{x:(fra.x+til.x)/2 + (Math.random()-0.5)*90, y:(fra.y+til.y)/2 - 40 - Math.random()*50},
+    node, fra, til, tid, t:0, naarFremme, drift,
+    bue:{x:(fra.x+til.x)/2 + (Math.random()-0.5)*spred,
+         y:(fra.y+til.y)/2 - (drift ? 8 + Math.random()*26 : 40 + Math.random()*50)},
   });
 }
 
@@ -40,7 +45,8 @@ function flytFlyvende(dt){
     const f = flyvende[i];
     f.t += dt;
     const u = Math.min(1, f.t/f.tid);
-    const e = u<0.5 ? 2*u*u : 1-Math.pow(-2*u+2,2)/2;   /* blød start og slut */
+    /* driften holder farten; springet inde i cellen sætter blødt af og i */
+    const e = f.drift ? u : (u<0.5 ? 2*u*u : 1-Math.pow(-2*u+2,2)/2);
     const m = 1-e;
     const x = m*m*f.fra.x + 2*m*e*f.bue.x + e*e*f.til.x;
     const y = m*m*f.fra.y + 2*m*e*f.bue.y + e*e*f.til.y;
@@ -60,14 +66,47 @@ function nyToken(type, x, y, klasse){
   return g;
 }
 
-/* Et molekyle, der forsvinder ud i luften eller ned i jorden. */
-function sendVaek(type, fra, til){
-  if (flyvende.length > 130) return;
+/* Et molekyle, planten slipper ud. Det driver ud i luften eller ned
+   i jorden og bliver hængende dér et stykke tid — ilten forsvinder
+   ikke i samme sekund, den blander sig med luften og forsvinder så
+   ét molekyle ad gangen. */
+const haengende = [];
+const MAKS_HAENGENDE = 14;
+
+function sendUd(type, fra, til){
+  if (flyvende.length + haengende.length > 150) return;
   const g = nyToken(type, fra.x, fra.y, 'flyver');
-  nyFlugt(g, fra, til, 1.1 + Math.random()*0.5, () => {
-    g.animate?.([{opacity:1},{opacity:0}],{duration:420,fill:'forwards'});
-    setTimeout(() => g.remove(), 430);
+  nyFlugt(g, fra, til, 2.2 + Math.random()*1.1, () => {
+    haengende.push({node:g, type, x:til.x, y:til.y,
+                    fase:Math.random()*6.3, tid:5 + Math.random()*10});
+    /* bliver der for mange i luften, får den ældste kort snor */
+    if (haengende.length > MAKS_HAENGENDE && haengende[0].tid > 2)
+      haengende[0].tid = 0.5 + Math.random()*1.2;
   });
+}
+
+function flytHaengende(dt){
+  for (let i=haengende.length-1;i>=0;i--){
+    const h = haengende[i];
+    h.tid -= dt;
+    if (h.tid <= 0){ haengende.splice(i,1); fortonet(h.node); continue; }
+    flyt(h.node, h.x + Math.sin(urSek*0.5 + h.fase)*7, h.y + Math.cos(urSek*0.37 + h.fase)*5);
+  }
+}
+
+function fortonet(node, tid = 600){
+  node.animate?.([{opacity:1},{opacity:0}],{duration:tid, fill:'forwards'});
+  setTimeout(() => node.remove(), tid + 20);
+}
+
+/* Respirationen henter helst den ilt, der allerede hænger i luften
+   efter fotosyntesen — det er den samme ilt, der bliver brugt igen. */
+function hentIlt(antal){
+  const fundet = [];
+  for (let i=haengende.length-1;i>=0 && fundet.length<antal;i--){
+    if (haengende[i].type === 'o2') fundet.push(haengende.splice(i,1)[0]);
+  }
+  return fundet;
 }
 
 /* ── Råvarerne i luften og i jorden ────────────────────── */
@@ -158,9 +197,9 @@ function bindTraek(kort){
     kort.node.classList.remove('traekkes');
     traek = null;
     visZoner(false);
-    const ramt = Object.values(scene.zoner).some(z => iZone(z,p));
-    if (ramt) sendInd(kort, p);
-    else nyFlugt(kort.node, p, kort.hjem, 0.4);
+    const iCellen = iZone(scene.zoner.celle, p);
+    if (iCellen || iZone(scene.zoner.plante, p)) sendInd(kort, p, iCellen);
+    else nyFlugt(kort.node, p, kort.hjem, 0.8);
   };
   kort.node.addEventListener('pointerup', slip);
   kort.node.addEventListener('pointercancel', slip);
@@ -168,7 +207,7 @@ function bindTraek(kort){
     if (e.key !== 'Enter' && e.key !== ' ') return;
     e.preventDefault();
     tavsHint();
-    sendInd(kort, kort.hjem);
+    sendInd(kort, kort.hjem, false);
   });
 }
 
@@ -179,13 +218,16 @@ function visZoner(til){
   }
 }
 
-/* Molekylet er sluppet det rigtige sted: send det ind i kloroplasten. */
-function sendInd(kort, fra){
+/* Molekylet er sluppet det rigtige sted. Slippes det ude ved planten,
+   svæver det ind gennem bladet eller roden; slippes det inde i cellen,
+   lægger det sig direkte i kloroplastens plads. Begge veje ender med,
+   at cellebilledet tæller én op. */
+function sendInd(kort, fra, iCellen){
   const type = kort.type;
   if (!M.erPlads(type)){
     visHint('Kloroplasten har allerede 6 '+MOLEKYLER[type].formel+' — der mangler '+
             (type === 'co2' ? MOLEKYLER.h2o.formel : MOLEKYLER.co2.formel), true);
-    nyFlugt(kort.node, fra, kort.hjem, 0.45);
+    nyFlugt(kort.node, fra, kort.hjem, 0.9);
     return;
   }
   const node = kort.node;
@@ -193,73 +235,106 @@ function sendInd(kort, fra){
   node.removeAttribute('tabindex');
   genopfyld(kort);
   scene.lag.molekyler.appendChild(node);
-  flyvTilPlads(type, node, fra);
+  if (iCellen) flyvTilPlads(type, node, fra);
+  else         flyvIndIPlanten(type, node, fra, false);
 }
 
-/* Fælles vej for elevens molekyler og modellens egne. */
-function flyvTilPlads(type, node, fra){
-  const i = M.tilstand[type] + M.paaVej[type];
+/* Ind gennem bladet (CO₂) eller op gennem roden (H₂O). */
+function flyvIndIPlanten(type, node, fra, drift){
   M.reserver(type);
-  const til = S.slotPos(type, Math.min(i,5));
-  nyFlugt(node, fra, til, 0.9 + Math.random()*0.25, () => {
+  const til = type === 'co2' ? S.bladPos() : S.rodPos();
+  const tid = drift ? 2.8 + Math.random()*1.4 : 1.9 + Math.random()*0.6;
+  nyFlugt(node, fra, til, tid, () => {
+    fortonet(node, 340);
     M.frigiv(type);
-    const svar = M.modtag(type);
+    lever(type);
+  }, drift);
+}
+
+/* Det korte spring fra cellens kant ned i kloroplastens plads. */
+function flyvTilPlads(type, node, fra){
+  M.reserver(type);
+  const til = S.slotPos(type, Math.min(M.tilstand[type] + M.paaVej[type] - 1, 5));
+  nyFlugt(node, fra, til, 1.5 + Math.random()*0.5, () => {
     node.remove();
-    if (!svar.ok) return;
-    scene.saetSlots(M.tilstand.co2, M.tilstand.h2o);
-    if (svar.reaktion) fotosyntese();
-    else if (M.tilstand.co2 === 6 && M.tilstand.h2o === 6 && !M.erLyst())
-      visHint('6 CO₂ og 6 H₂O er klar — men fotosyntesen mangler lys', true);
+    M.frigiv(type);
+    lever(type);
   });
 }
 
+/* Molekylet er nået frem: cellen tæller op, og er der seks af hver
+   og lys nok, går fotosyntesen i gang. */
+function lever(type){
+  const svar = M.modtag(type);
+  scene.saetSlots(M.tilstand.co2, M.tilstand.h2o);
+  if (svar.reaktion) fotosyntese();
+  else if (M.tilstand.co2 >= 6 && M.tilstand.h2o >= 6 && !M.erLyst())
+    visHint('6 CO₂ og 6 H₂O er klar — men fotosyntesen mangler lys', true);
+}
+
+/* Modellens egne råvarer: de dukker op i luften eller i jorden og
+   svæver stille og roligt ind mod planten. */
 function nytRaastof(type){
-  if (flyvende.length > 130) return;
+  if (flyvende.length + haengende.length > 150) return;
   const fra = type === 'co2' ? S.luftPos() : S.jordPos();
   const node = nyToken(type, fra.x, fra.y, 'flyver');
-  flyvTilPlads(type, node, fra);
+  node.animate?.([{opacity:0},{opacity:1}],{duration:600});
+  flyvIndIPlanten(type, node, fra, true);
 }
 
 /* ── De to processer, når de sker ──────────────────────── */
 let fotoBlink = 0, respBlink = 0;
 
 function fotosyntese(){
-  fotoBlink = 1.4;
+  fotoBlink = 2.4;
   scene.blink('foto');
-  scene.saetSlots(0,0);
+  scene.saetSlots(M.tilstand.co2, M.tilstand.h2o);
   const kl = S.kloroplastPos();
-  /* seks ilt ud i luften */
-  for (let i=0;i<6;i++) setTimeout(() => sendVaek('o2', kl, S.luftPos()), i*70);
+  /* seks ilt ud i luften, hvor de bliver hængende */
+  for (let i=0;i<6;i++) setTimeout(() => sendUd('o2', kl, S.luftPos()), i*180);
   /* og én glukose ned i lageret */
   const g = nyToken('glukose', kl.x, kl.y, 'flyver');
-  nyFlugt(g, kl, S.lagerPos(M.tilstand.lager-1), 0.8, () => {
+  nyFlugt(g, kl, S.lagerPos(M.tilstand.lager-1), 1.6, () => {
     g.remove();
     scene.saetLager(M.tilstand.lager);
   });
 }
 
 function respiration(fra){
-  respBlink = 1.4;
+  respBlink = 3.4;
   scene.blink('mito');
   const mi = S.mitokondriePos();
   const start = fra === 'lager' ? S.lagerPos(M.tilstand.lager) : S.plantePos();
   scene.saetLager(M.tilstand.lager);
   const g = nyToken('glukose', start.x, start.y, 'flyver');
-  nyFlugt(g, start, mi, 0.75, () => g.remove());
-  /* ilten hentes ind, og kuldioxid og vand sendes ud igen */
-  for (let i=0;i<6;i++) setTimeout(() => sendVaek('o2', S.luftPos(), mi), i*60);
+  nyFlugt(g, start, mi, 1.5, () => g.remove());
+
+  /* seks ilt samles ind fra luften — helst den ilt, fotosyntesen
+     lige har sluppet ud */
+  const fundet = hentIlt(6);
+  for (let i=0;i<6;i++){
+    const h = fundet[i];
+    const sted = h ? {x:h.x, y:h.y} : S.luftPos();
+    const node = h ? h.node : nyToken('o2', sted.x, sted.y, 'flyver');
+    if (!h) node.animate?.([{opacity:0},{opacity:1}],{duration:500});
+    setTimeout(() => nyFlugt(node, sted, mi, 2.4 + Math.random()*1.0,
+                             () => node.remove(), true), i*170);
+  }
+
+  /* og kuldioxid og vand ud igen — de bliver hængende som ilten */
   setTimeout(() => {
     for (let i=0;i<6;i++){
-      setTimeout(() => sendVaek('co2', mi, S.luftPos()), i*60);
-      setTimeout(() => sendVaek('h2o', mi, S.jordPos()), i*60+30);
+      setTimeout(() => sendUd('co2', mi, S.luftPos()), i*180);
+      setTimeout(() => sendUd('h2o', mi, S.jordPos()), i*180+90);
     }
-  }, 800);
+  }, 2600);
 }
 
 function vaekst(){
-  const g = nyToken('glukose', S.lagerPos(M.tilstand.lager).x, S.lagerPos(M.tilstand.lager).y, 'flyver');
+  const fra = S.lagerPos(M.tilstand.lager);
+  const g = nyToken('glukose', fra.x, fra.y, 'flyver');
   scene.saetLager(M.tilstand.lager);
-  nyFlugt(g, S.lagerPos(M.tilstand.lager), S.plantePos(), 1.0, () => g.remove());
+  nyFlugt(g, fra, S.plantePos(), 2.0, () => g.remove(), true);
 }
 
 function haandter(haendelser){
@@ -360,8 +435,13 @@ function saetModus(modus){
   el('btn-traek').setAttribute('aria-pressed', modus === 'traek' ? 'true' : 'false');
   el('btn-auto').setAttribute('aria-pressed', modus === 'auto' ? 'true' : 'false');
   visPulje();
-  if (modus === 'auto') visHint('Modellen leverer nu selv molekylerne — lys og temperatur bestemmer farten');
-  else visHint('Træk 6 CO₂ og 6 H₂O ind i bladet');
+  if (modus === 'auto'){
+    /* automatisk tilstand giver kun mening, når døgnet også går */
+    if (!M.tilstand.urKoerer) saetUr(true);
+    visHint('Modellen leverer nu selv molekylerne — lys og temperatur bestemmer farten');
+  } else {
+    visHint('Træk 6 CO₂ og 6 H₂O ind i bladet');
+  }
   gemTilstand();
 }
 
@@ -380,6 +460,8 @@ el('btn-nulstil').addEventListener('click', () => {
   M.nulstil();
   for (const f of flyvende) f.node.remove();
   flyvende.length = 0;
+  for (const h of haengende) h.node.remove();
+  haengende.length = 0;
   scene.saetSlots(0,0);
   scene.saetLager(0);
   visBiomasse = -1;
@@ -455,18 +537,21 @@ function laesTilstand(){
   felter.lys.textContent = M.tilstand.lysstyrke;
   felter.temp.textContent = M.tilstand.temperatur;
   saetModus(M.tilstand.modus);
-  saetUr(p.get('ur') === '1');
+  saetUr(p.get('ur') === '1' || M.tilstand.modus === 'auto');
   if (/mode=teach|projektor=1/.test(location.search)) saetProjektor(true);
   hashSidste = tilstandStreng();
 }
 
 /* ── Løkken ────────────────────────────────────────────── */
 let sidst = performance.now();
+let urSek = 0;
 function loep(nu){
   const dt = Math.min(0.1, (nu - sidst)/1000);
   sidst = nu;
+  urSek += dt;
   if (M.tilstand.urKoerer) haandter(M.opdater(dt * M.K.timerPrSekund));
   flytFlyvende(dt);
+  flytHaengende(dt);
   fotoBlink = Math.max(0, fotoBlink - dt);
   respBlink = Math.max(0, respBlink - dt);
   opdaterUdseende();

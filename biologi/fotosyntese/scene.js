@@ -118,6 +118,7 @@ export function byggScene(svg){
   function tegnPlante(biomasse, sulten){
     plante.textContent = '';
     const {x, fod} = MAAL.plante;
+    planteHoejde = sulten ? 40 : 60 + 168*(1 - Math.exp(-biomasse/9));
 
     for (const [dx,dy] of [[-34,44],[0,52],[34,44]]){
       plante.appendChild(el('path',{
@@ -138,7 +139,7 @@ export function byggScene(svg){
       return;
     }
 
-    const hoejde = 60 + 168*(1 - Math.exp(-biomasse/9));
+    const hoejde = planteHoejde;
     const top = fod - hoejde;
     plante.appendChild(el('path',{
       d:'M'+x+' '+fod+' C'+(x-7)+' '+(fod-hoejde*0.45)+' '+(x+7)+' '+(fod-hoejde*0.7)+' '+x+' '+top,
@@ -274,9 +275,10 @@ export function byggScene(svg){
     }
   }
 
-  function saetSlots(co2, h2o){
+  function saetSlots(raaCo2, raaH2o){
     slotIndhold.textContent = '';
-    for (const [type, antal] of [['co2',co2],['h2o',h2o]]){
+    for (const [type, raa] of [['co2',raaCo2],['h2o',raaH2o]]){
+      const antal = Math.min(6, raa);
       slots[type].forEach((ring,i) => {
         const fyldt = i < antal;
         ring.setAttribute('fill', fyldt ? '#FFFFFF' : '#FFF9EE');
@@ -332,13 +334,29 @@ export function lagerPos(i){
   return {x:MAAL.lager.x + Math.min(i, MAAL.lager.maks-1)*MAAL.lager.spring, y:MAAL.lager.y};
 }
 /* Et tilfældigt sted i luften eller i jorden — dér kommer og går
-   molekylerne, når modellen selv leverer dem. */
+   molekylerne, når modellen selv leverer dem. Luften vælges ved
+   siden af planten, så kronen ikke bliver dækket til. */
 export function luftPos(){
-  return {x:60 + Math.random()*380, y:50 + Math.random()*200};
+  const venstre = Math.random() < 0.5;
+  return {x:venstre ? 40 + Math.random()*130 : 310 + Math.random()*140,
+          y:46 + Math.random()*210};
 }
 export function jordPos(){
   return {x:60 + Math.random()*380, y:MAAL.horisont + 26 + Math.random()*70};
 }
 export const kloroplastPos = () => ({x:MAAL.kloroplast.x, y:MAAL.kloroplast.y});
+
+/* Hvor molekylerne går ind i planten: kuldioxiden gennem bladene,
+   vandet op gennem rødderne. Punkterne følger plantens højde. */
+let planteHoejde = 120;
+export function bladPos(){
+  const {x, fod} = MAAL.plante;
+  const side = Math.random() < 0.5 ? -1 : 1;
+  return {x:x + side*(12 + Math.random()*34), y:fod - planteHoejde*(0.45 + Math.random()*0.45)};
+}
+export function rodPos(){
+  const {x, fod} = MAAL.plante;
+  return {x:x + (Math.random()-0.5)*46, y:fod + 8 + Math.random()*18};
+}
 export const mitokondriePos = () => ({x:MAAL.mitokondrie.x, y:MAAL.mitokondrie.y});
 export const plantePos = () => ({x:MAAL.plante.x, y:MAAL.plante.fod - 120});
