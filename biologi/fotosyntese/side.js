@@ -10,6 +10,7 @@
 import {tegnMolekyle, MOLEKYLER} from './molekyler.js';
 import * as S from './scene.js';
 import * as M from './model.js';
+import {nyRing} from './reaktion.js';
 
 const el = id => document.getElementById(id);
 const svg = el('scene');
@@ -82,9 +83,9 @@ function byggPulje(){
       node.setAttribute('tabindex','0');
       node.setAttribute('role','button');
       node.setAttribute('aria-label', MOLEKYLER[type].navn+' '+MOLEKYLER[type].formel+' '+MOLEKYLER[type].hvor+
-                        ' — træk det ind i bladet, eller tryk Enter');
+                        ' — klik for at sende det ind i bladet, eller træk det derind');
       const kort = {type, node, hjem:{x,y}, ledig:true};
-      bindTraek(kort);
+      bindGreb(kort);
       puljen.push(kort);
     });
   }
@@ -112,7 +113,7 @@ function genopfyld(kort){
     node.setAttribute('aria-label', kort.node.getAttribute('aria-label'));
     node.animate?.([{opacity:0},{opacity:1}],{duration:300});
     kort.node = node; kort.ledig = true;
-    bindTraek(kort);
+    bindGreb(kort);
   }, 520);
 }
 
@@ -129,34 +130,48 @@ const iZone = (z,p) => {
 };
 
 let traek = null;
+const SLOER = 6;   /* så mange px må fingeren skride, før det er et træk */
 
-function bindTraek(kort){
+/* Molekylerne kan gribes på to måder: et klik sender molekylet ind i
+   bladet af sig selv, og et træk lader eleven selv føre det derind. Det
+   er den samme gestus, der begynder begge dele — først når pegeren har
+   flyttet sig mere end nogle få pixels, bliver det til et træk. */
+function bindGreb(kort){
   kort.node.addEventListener('pointerdown', e => {
     if (!kort.ledig || M.tilstand.modus !== 'traek') return;
     e.preventDefault();
     /* er den på vej hjem efter et fejlslag, så stop flugten først */
     const i = flyvende.findIndex(f => f.node === kort.node);
     if (i >= 0) flyvende.splice(i,1);
-    kort.node.classList.add('traekkes');
     /* flyt den øverst, FØR pointeren fanges — et flyt i DOM'en
        ville ellers slippe fangsten igen */
     scene.lag.molekyler.appendChild(kort.node);
     kort.node.setPointerCapture(e.pointerId);
-    traek = {kort, id:e.pointerId};
-    visZoner(true);
+    traek = {kort, id:e.pointerId, x0:e.clientX, y0:e.clientY, traekker:false};
     tavsHint();
   });
   kort.node.addEventListener('pointermove', e => {
     if (!traek || traek.id !== e.pointerId) return;
+    if (!traek.traekker){
+      if (Math.hypot(e.clientX-traek.x0, e.clientY-traek.y0) < SLOER) return;
+      traek.traekker = true;
+      kort.node.classList.add('traekkes');
+      visZoner(true);
+    }
     const p = tilScene(e);
     flyt(kort.node, p.x, p.y);
     for (const z of Object.values(scene.zoner)) z.classList.toggle('over', iZone(z,p));
   });
   const slip = e => {
     if (!traek || traek.id !== e.pointerId) return;
+    const traekker = traek.traekker;
+    traek = null;
+    if (!traekker){                     /* et klik: molekylet svæver selv ind */
+      sendInd(kort, kort.hjem);
+      return;
+    }
     const p = tilScene(e);
     kort.node.classList.remove('traekkes');
-    traek = null;
     visZoner(false);
     const ramt = Object.values(scene.zoner).some(z => iZone(z,p));
     if (ramt) sendInd(kort, p);
@@ -208,6 +223,8 @@ function flyvTilPlads(type, node, fra){
     if (!svar.ok) return;
     scene.saetSlots(M.tilstand.co2, M.tilstand.h2o);
     if (svar.reaktion) fotosyntese();
+    else if (M.klarTilReaktion())
+      visHint('6 CO₂ og 6 H₂O er samlet — tryk på «Udfør fotosyntese»', true);
     else if (M.tilstand.co2 === 6 && M.tilstand.h2o === 6 && !M.erLyst())
       visHint('6 CO₂ og 6 H₂O er klar — men fotosyntesen mangler lys', true);
   });
@@ -222,12 +239,30 @@ function nytRaastof(type){
 
 /* ── De to processer, når de sker ──────────────────────── */
 let fotoBlink = 0, respBlink = 0;
+let ring = null;
 
+/* Reaktionen vises i to tempi: først lægger de tolv molekyler sig i en
+   ring og bliver til ét glukose, og derefter sendes udbyttet ud —
+   glukosen til lageret og de seks ilt ud i luften. */
 function fotosyntese(){
-  fotoBlink = 1.4;
-  scene.blink('foto');
-  scene.saetSlots(0,0);
+  fotoBlink = 2.4;
   const kl = S.kloroplastPos();
+  if (ring){            /* en ring kører allerede — vis kun udbyttet */
+    udbytte(kl);
+    return;
+  }
+  /* molekylerne stilles skiftevis, så ringen læses CO₂, H₂O, CO₂ … */
+  const start = [];
+  for (let i=0;i<6;i++){
+    start.push({type:'co2', fra:S.slotPos('co2',i)});
+    start.push({type:'h2o', fra:S.slotPos('h2o',i)});
+  }
+  scene.saetSlots(0,0);
+  ring = nyRing(scene.lag.molekyler, kl, start, () => { ring = null; udbytte(kl); });
+}
+
+function udbytte(kl){
+  scene.blink('foto');
   /* seks ilt ud i luften */
   for (let i=0;i<6;i++) setTimeout(() => sendVaek('o2', kl, S.luftPos()), i*70);
   /* og én glukose ned i lageret */
@@ -264,7 +299,8 @@ function vaekst(){
 
 function haandter(haendelser){
   for (const h of haendelser){
-    if (h.type === 'behov')       nytRaastof(h.molekyle);
+    if (h.type === 'behov')            nytRaastof(h.molekyle);
+    else if (h.type === 'reaktion')    fotosyntese();
     else if (h.type === 'respiration') respiration(h.fra);
     else if (h.type === 'vaekst')      vaekst();
     else if (h.type === 'sult')        visHint('Planten har hverken lager eller biomasse tilbage at forbrænde', true);
@@ -281,6 +317,7 @@ const felter = {
   lignFoto:el('lign-foto'), lignResp:el('lign-resp'),
 };
 const sliderTid = el('slider-tid'), sliderLys = el('slider-lys'), sliderTemp = el('slider-temp');
+const btnFoto = el('btn-foto');
 
 const klokkeslet = t => {
   const timer = Math.floor(t) % 24;
@@ -321,9 +358,21 @@ function opdaterUdseende(){
   felter.tid.textContent = klokkeslet(t.klokken);
   if (document.activeElement !== sliderTid) sliderTid.value = t.klokken.toFixed(2);
 
+  /* Knappen er kun eleven vedkommende, når eleven selv samler molekylerne.
+     I automatisk tilstand bliver dens plads stående tom, så værktøjslinjen
+     ikke hopper, når man skifter tilstand. */
+  const manuel = t.modus === 'traek';
+  const klar = M.klarTilReaktion();
+  btnFoto.classList.toggle('skjult', !manuel);
+  btnFoto.classList.toggle('klar', manuel && klar);
+  btnFoto.disabled = !manuel || !klar;
+
   const kørerFoto = fotoBlink > 0 || (t.modus === 'auto' && lys > 0.02);
-  felter.lignFoto.dataset.aktiv = kørerFoto ? 'true' : 'false';
-  felter.standFoto.textContent = kørerFoto ? 'Kører' : (lys > 0.02 ? 'Klar' : 'Venter på lys');
+  felter.lignFoto.dataset.aktiv = (kørerFoto || (manuel && klar)) ? 'true' : 'false';
+  felter.standFoto.textContent =
+    kørerFoto ? 'Kører' :
+    lys <= 0.02 ? 'Venter på lys' :
+    manuel && klar ? 'Tryk Udfør fotosyntese' : 'Klar';
 
   const braendstof = t.lager > 0 || t.biomasse > 0;
   const kørerResp = respBlink > 0 || (t.urKoerer && braendstof);
@@ -338,6 +387,8 @@ function fortael(){
   el('sr-status').textContent =
     'Klokken '+klokkeslet(t.klokken)+', '+(M.erLyst() ? 'lyst' : 'mørkt')+'. '+
     'Kloroplasten har '+t.co2+' af 6 kuldioxid og '+t.h2o+' af 6 vand. '+
+    (t.modus === 'traek' && M.klarTilReaktion()
+      ? 'Seks af hver er samlet — tryk på knappen Udfør fotosyntese. ' : '')+
     'BPP '+t.bpp+', respiration '+t.r+', NPP '+medFortegn(M.npp())+' glukose. '+
     'Lager '+t.lager+', plantens biomasse '+t.biomasse+'.';
 }
@@ -360,8 +411,11 @@ function saetModus(modus){
   el('btn-traek').setAttribute('aria-pressed', modus === 'traek' ? 'true' : 'false');
   el('btn-auto').setAttribute('aria-pressed', modus === 'auto' ? 'true' : 'false');
   visPulje();
+  /* har eleven samlet de tolv og skifter til automatisk, skal reaktionen
+     ikke vente på et molekyle, der aldrig kommer */
+  if (modus === 'auto' && M.tjekReaktion()) fotosyntese();
   if (modus === 'auto') visHint('Modellen leverer nu selv molekylerne — lys og temperatur bestemmer farten');
-  else visHint('Træk 6 CO₂ og 6 H₂O ind i bladet');
+  else visHint('Klik 6 CO₂ og 6 H₂O ind i bladet, og tryk så på «Udfør fotosyntese»');
   gemTilstand();
 }
 
@@ -376,10 +430,17 @@ function saetUr(koerer){
 el('btn-traek').addEventListener('click', () => saetModus('traek'));
 el('btn-auto').addEventListener('click', () => saetModus('auto'));
 el('btn-ur').addEventListener('click', () => saetUr(!M.tilstand.urKoerer));
+btnFoto.addEventListener('click', () => {
+  if (!M.udfoerReaktion()) return;
+  tavsHint();
+  fotosyntese();
+});
 el('btn-nulstil').addEventListener('click', () => {
   M.nulstil();
   for (const f of flyvende) f.node.remove();
   flyvende.length = 0;
+  ring?.ryd();
+  ring = null;
   scene.saetSlots(0,0);
   scene.saetLager(0);
   visBiomasse = -1;
@@ -467,6 +528,7 @@ function loep(nu){
   sidst = nu;
   if (M.tilstand.urKoerer) haandter(M.opdater(dt * M.K.timerPrSekund));
   flytFlyvende(dt);
+  ring?.opdater(dt);
   fotoBlink = Math.max(0, fotoBlink - dt);
   respBlink = Math.max(0, respBlink - dt);
   opdaterUdseende();
@@ -481,6 +543,6 @@ scene.saetSlots(0,0);
 scene.saetLager(0);
 byggPulje();
 laesTilstand();
-visHint('Træk 6 CO₂ og 6 H₂O ind i bladet — eller vælg et molekyle med tab og tryk Enter');
+visHint('Klik 6 CO₂ og 6 H₂O ind i bladet — eller vælg et molekyle med tab og tryk Enter');
 fortael();
 requestAnimationFrame(loep);

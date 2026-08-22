@@ -134,6 +134,12 @@ export function opdater(dt){
   /* I automatisk tilstand leverer modellen selv råvarerne. Ét
      molekyle ad gangen, så eleven kan følge de 6 + 6. */
   if (tilstand.modus === 'auto'){
+    /* Står de tolv allerede klar — fx fordi eleven har samlet dem selv og
+       så skiftet tilstand, eller fordi det lige er blevet lyst — så går
+       reaktionen i gang med det samme. Ellers ville kloroplasten stå
+       fyldt op i det uendelige: der er jo ikke plads til flere molekyler,
+       og det er et nyt molekyle, der ellers sætter reaktionen i gang. */
+    if (tjekReaktion()) haendelser.push({type:'reaktion'});
     tilstand._foto += fotoRate() * dt;
     const perMolekyle = 1 / (2 * K.perGlukose);
     let vagt = 24;
@@ -180,15 +186,27 @@ export function modtag(type){
   return {ok:true, reaktion:tjekReaktion()};
 }
 
-/* Seks af hver og lys nok? Så bliver de til glukose og ilt. */
-export function tjekReaktion(){
-  if (tilstand.co2 < K.perGlukose || tilstand.h2o < K.perGlukose) return false;
-  if (!erLyst()) return false;
+/* Seks af hver og lys nok? Så kan fotosyntesen udføres. */
+export function klarTilReaktion(){
+  return tilstand.co2 >= K.perGlukose && tilstand.h2o >= K.perGlukose && erLyst();
+}
+
+/* Reaktionen selv: de tolv molekyler bliver til ét glukose og seks ilt. */
+export function udfoerReaktion(){
+  if (!klarTilReaktion()) return false;
   tilstand.co2 = 0;
   tilstand.h2o = 0;
   tilstand.lager++;
   tilstand.bpp++;
   return true;
+}
+
+/* Går reaktionen i gang af sig selv? Kun i automatisk tilstand. Samler
+   eleven selv molekylerne, venter kloroplasten på, at der bliver trykket
+   på «Udfør fotosyntese» — så er det eleven, der udfører reaktionen. */
+export function tjekReaktion(){
+  if (tilstand.modus !== 'auto') return false;
+  return udfoerReaktion();
 }
 
 /* ── Nulstil ───────────────────────────────────────────── */
