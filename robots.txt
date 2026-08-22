@@ -1,0 +1,11 @@
+# smbi.dk — undervisningssite med interaktive simuleringer
+# Alt undervisningsindhold må gerne indekseres. De interne sider (admin, tid,
+# navne-app, studiekort, censorur, gamle mockups) holdes ude med
+# <meta name="robots" content="noindex"> på selve siden — de skal kunne
+# hentes, for ellers når robotten aldrig at læse beskeden.
+
+User-agent: *
+Allow: /
+Disallow: /test-results/
+
+Sitemap: https://smbi.dk/sitemap.xml

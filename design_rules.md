@@ -238,7 +238,9 @@ Spørg, hvis det er uklart om siden skal have forklarende tekst under panelet
 ## 5. Faste krav til hver side
 
 * **`<html lang="da">`**, sigende `<title>` der ender på `— smbi.dk`, og en
-  `<meta name="description">` på én sætning.
+  `<meta name="description">` på én sætning. Dertil hovedets faste blok med
+  kanonisk adresse, delekort og ikoner — se `seo.md`, og husk sidens adresse i
+  `sitemap.xml`.
 * **Tilgængelighed:** `:focus-visible{outline:3px solid var(--grape)}`,
   `aria-label` på figurer, `aria-live="polite"` på det felt der ændrer sig,
   `<title>`/`<desc>` i SVG'er, og et skjult statusfelt (`.sr`) til skærmlæsere.
