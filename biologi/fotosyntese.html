@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Fotosyntese og respiration — smbi.dk</title>
-<meta name="description" content="Træk seks kuldioxid og seks vand ind i bladet, giv planten lys, og se glukosen blive dannet og ilten sluppet ud — og følg respirationen, væksten og regnskabet BPP, R og NPP hen over døgnet.">
+<meta name="description" content="Klik seks kuldioxid og seks vand ind i bladet, giv planten lys, og se glukosen blive dannet og ilten sluppet ud — og følg respirationen, væksten og regnskabet BPP, R og NPP hen over døgnet.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,300..600&display=swap" rel="stylesheet">
@@ -171,6 +171,22 @@ h1{
   background:var(--accent);color:#fff;
   transform:translate(2px,2px);box-shadow:0 0 0 var(--ink);
 }
+.btn-mini[disabled]{
+  opacity:.42;box-shadow:none;cursor:not-allowed;
+  transform:none;background:#fff;color:var(--ink);
+}
+/* «Udfør fotosyntese» hører kun til den manuelle tilstand. Den bliver
+   stående — usynlig, men med sin plads i behold — så værktøjslinjen ikke
+   hopper, når man skifter tilstand. */
+.btn-udfoer.skjult{visibility:hidden}
+.btn-udfoer.klar{
+  background:var(--accent);color:#fff;
+  animation:kalder 1.7s ease-in-out infinite;
+}
+@keyframes kalder{
+  0%,100%{box-shadow:2px 2px 0 var(--ink)}
+  50%{box-shadow:2px 2px 0 var(--ink),0 0 0 5px rgba(232,51,109,.26)}
+}
 
 /* ── Scenen ────────────────────────────────────────────── */
 .stage{
@@ -196,7 +212,7 @@ h1{
 .hint.raab{background:#FFE9DC;border-width:2px}
 
 /* molekylerne i scenen */
-.mol{cursor:grab}
+.mol{cursor:pointer}
 .mol.traekkes{cursor:grabbing}
 .mol .binding{stroke:var(--ink);stroke-width:2.4;stroke-linecap:round}
 .mol .atom{stroke:var(--ink);stroke-width:1.8}
@@ -206,6 +222,8 @@ h1{
   stroke:rgba(255,249,238,.85);stroke-width:2.6;
 }
 .mol.flyver{pointer-events:none}
+/* ringen af tolv molekyler lukker sig, og glukosen træder frem */
+.ring-blitz{fill:none;stroke:#2F5B1C;stroke-width:4.5}
 .svg-mono{
   font-family:var(--mono);font-size:9.5px;font-weight:600;
   letter-spacing:.11em;text-transform:uppercase;
@@ -424,7 +442,7 @@ body[data-projektor="1"] .fact{font-size:0.74rem}
     <div class="head-in">
       <span class="eyebrow mono"><span class="blink"></span>Biologi C · fotosyntese</span>
       <h1>Seks <span class="hi" style="--hc:#D6EFC4">CO₂</span>, seks <span class="hi" style="--hc:#C7E6F6">H₂O</span> og noget sollys</h1>
-      <p class="lead">Træk molekylerne ind i bladet, og se planten samle dem til én glukose og slippe seks ilt ud. Planten ånder hele døgnet — så når solen går ned, tærer den på lageret. Regnskabet står nederst: bruttoprimærproduktion, respiration og det, der bliver til ny plante.</p>
+      <p class="lead">Klik molekylerne ind i bladet, tryk på «Udfør fotosyntese», og se de tolv molekyler lægge sig i en ring og blive til én glukose og seks ilt. Planten ånder hele døgnet — så når solen går ned, tærer den på lageret. Regnskabet står nederst: bruttoprimærproduktion, respiration og det, der bliver til ny plante.</p>
     </div>
   </div>
 
@@ -436,9 +454,11 @@ body[data-projektor="1"] .fact{font-size:0.74rem}
         <span class="who mono" id="who-doegn">Døgn 1</span>
         <span class="spacer"></span>
         <div class="seg" role="group" aria-label="Hvem leverer molekylerne">
-          <button type="button" class="btn-mini" id="btn-traek" aria-pressed="true">Træk selv</button>
+          <button type="button" class="btn-mini" id="btn-traek" aria-pressed="true">Saml selv</button>
           <button type="button" class="btn-mini" id="btn-auto" aria-pressed="false">Automatisk</button>
         </div>
+        <button type="button" class="btn-mini btn-udfoer" id="btn-foto" disabled
+                title="Saml de 6 CO₂ og 6 H₂O til ét glukose">Udfør fotosyntese</button>
         <button type="button" class="btn-mini" id="btn-ur" aria-pressed="false"
                 title="Lad døgnet gå af sig selv">Start døgnet</button>
         <button type="button" class="btn-mini" id="btn-nulstil" title="Nulstil regnskab og plante">Nulstil</button>
@@ -449,12 +469,12 @@ body[data-projektor="1"] .fact{font-size:0.74rem}
       <div class="stage">
         <div class="stage-in">
           <svg id="scene" viewBox="0 0 920 470" role="group"
-               aria-label="Plante i sollys med en forstørret bladcelle. Kuldioxid i luften og vand i jorden kan trækkes ind i kloroplasten, hvor de bliver til glukose og ilt.">
+               aria-label="Plante i sollys med en forstørret bladcelle. Kuldioxid i luften og vand i jorden kan klikkes ind i kloroplasten, hvor de bliver til glukose og ilt.">
             <title>Fotosyntese og respiration i en plante</title>
             <desc>Til venstre står en plante i jorden under en sol, der følger døgnet. I luften svæver seks kuldioxidmolekyler, og i jorden ligger seks vandmolekyler. Til højre er en bladcelle forstørret op med en kloroplast, hvor molekylerne samles til glukose, og en mitokondrie, hvor glukosen forbrændes igen.</desc>
           </svg>
         </div>
-        <p class="hint" id="hint">Træk 6 CO₂ og 6 H₂O ind i bladet — eller vælg et molekyle med tab og tryk Enter</p>
+        <p class="hint" id="hint">Klik 6 CO₂ og 6 H₂O ind i bladet — eller vælg et molekyle med tab og tryk Enter</p>
       </div>
 
       <div class="ligninger">
