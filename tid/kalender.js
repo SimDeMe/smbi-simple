@@ -5,7 +5,7 @@
 // plads på aksen — tryk på den for at oprette en post. Korte pauser er
 // almindelige poster (se pauser.js) og vises dæmpet.
 
-import { db, showToast } from './app.js';
+import { db } from './app.js';
 import { getLoadedActivities } from './activities.js';
 import { openEntrySheet } from './historik.js';
 import { fmtMins } from './timer.js';
@@ -301,14 +301,13 @@ function renderHeader(items) {
 }
 
 // ─── Ny registrering fra kalenderen ───────────────────────
+// Også tomme felter frem i tiden kan trykkes — man kan lægge planlagt tid
+// ind på forhånd. Selve arket viser en OBS, når starten ligger i fremtiden.
 function newEntryAt(startMin, endMin) {
   const dayStart = selectedDay;
-  const now      = new Date();
-  let start = new Date(dayStart.getTime() + startMin * 60000);
+  const start = new Date(dayStart.getTime() + startMin * 60000);
   let end   = new Date(dayStart.getTime() + Math.min(endMin, 1440) * 60000);
 
-  if (start > now) { showToast('Kan ikke registrere i fremtiden'); return; }
-  if (end > now)   end = now;
   // Sluttid skal altid med — ellers ville posten blive oprettet som aktiv
   if (end <= start) end = new Date(start.getTime() + SNAP_MIN * 60000);
 

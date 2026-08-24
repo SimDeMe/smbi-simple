@@ -70,9 +70,13 @@ function schoolYearEnd(year) {
 // i normen.
 function getPeriodEntries() {
   const start = getPeriodStart(periodFilter);
+  const end   = getPeriodEnd(periodFilter);
   return entries.filter(e =>
     e.durationMinutes != null && !erPause(e) &&
-    (!start || (e.startTime && e.startTime.toDate() >= start))
+    (!start || (e.startTime && e.startTime.toDate() >= start)) &&
+    // Perioden har også en ende: tid registreret frem i tiden hører til den
+    // dag, uge eller måned den ligger i — ikke til den, man står i nu
+    (!end   || (e.startTime && e.startTime.toDate() <  end))
   );
 }
 
@@ -87,6 +91,16 @@ function getPeriodStart(p) {
   }
   if (p === 'maaned') return new Date(n.getFullYear(), n.getMonth(), 1);
   return null; // skoleår = alt
+}
+
+function getPeriodEnd(p) {
+  const start = getPeriodStart(p);
+  if (!start) return null;
+  const end = new Date(start);
+  if (p === 'dag')    end.setDate(end.getDate() + 1);
+  if (p === 'uge')    end.setDate(end.getDate() + 7);
+  if (p === 'maaned') end.setMonth(end.getMonth() + 1);
+  return end;
 }
 
 // ─── Aggregation ──────────────────────────────────────────

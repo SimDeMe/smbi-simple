@@ -346,6 +346,7 @@ function goToModulWhen(hold) {
   const now = new Date();
   document.getElementById('modul-tid-input').value =
     `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  syncModulFremtid();
 }
 
 // Skemaets moduler som hurtigvalg — frokosten hører ikke til her, den
@@ -380,6 +381,29 @@ function selectWhenBtn(btn) {
   modulWhen    = btn.dataset.when;
   modulSkemaId = btn.dataset.slot || null;
   document.getElementById('modul-tid-row').classList.toggle('hidden', modulWhen !== 'andet');
+  syncModulFremtid();
+}
+
+// Et modul må gerne registreres, før det er holdt — men det skal fremgå
+function syncModulFremtid() {
+  const el = document.getElementById('modul-fremtid');
+  if (!el) return;
+  el.classList.toggle('hidden', !modulStarterIFremtiden());
+}
+
+function modulStarterIFremtiden() {
+  if (modulWhen === 'slot') {
+    const sk = MODULER.find(m => m.id === modulSkemaId);
+    return !!sk && skemaDatoer(sk).start > new Date();
+  }
+  if (modulWhen === 'andet') {
+    const timeVal = document.getElementById('modul-tid-input')?.value;
+    if (!timeVal) return false;
+    const [hh, mm] = timeVal.split(':').map(Number);
+    const start = new Date(); start.setHours(hh, mm, 0, 0);
+    return start > new Date();
+  }
+  return false;
 }
 
 async function confirmModul() {
@@ -396,9 +420,17 @@ async function confirmModul() {
       const laengde = skemaLaengde(sk);
       const nu      = Date.now();
 
-      if (start.getTime() > nu) { showToast(`${sk.navn} er ikke begyndt endnu`); return; }
+      if (start.getTime() > nu) {
+        // Modulet ligger frem i tiden: det registreres som planlagt tid i hele
+        // sin længde — ikke som en timer, der skulle være startet før nu
+        await opretPost(userId, {
+          activityId: modulHoldId, workType: 'undervisning',
+          startTime: Timestamp.fromDate(start), endTime: Timestamp.fromDate(slut),
+          durationMinutes: laengde, note: '', isModule: true, autoStopped: false
+        });
+        showToast(`${sk.navn} registreret i fremtiden · ${skemaInterval(sk)}`);
 
-      if (slut.getTime() <= nu) {
+      } else if (slut.getTime() <= nu) {
         await opretPost(userId, {
           activityId: modulHoldId, workType: 'undervisning',
           startTime: Timestamp.fromDate(start), endTime: Timestamp.fromDate(slut),
@@ -447,8 +479,7 @@ async function confirmModul() {
 
       const [hh, mm] = timeVal.split(':').map(Number);
       const start = new Date(); start.setHours(hh, mm, 0, 0);
-
-      if (start > new Date()) { showToast('Starttidspunkt kan ikke ligge i fremtiden'); btn.disabled = false; return; }
+      const iFremtiden = start > new Date();
 
       const end = new Date(start.getTime() + mins * 60 * 1000);
       await opretPost(userId, {
@@ -456,7 +487,9 @@ async function confirmModul() {
         startTime: Timestamp.fromDate(start), endTime: Timestamp.fromDate(end),
         durationMinutes: mins, note: '', isModule: true, autoStopped: false
       });
-      showToast(`Modul registreret · kl. ${timeVal}`);
+      showToast(iFremtiden
+        ? `Modul registreret i fremtiden · kl. ${timeVal}`
+        : `Modul registreret · kl. ${timeVal}`);
     }
 
     closeSheet('modul-sheet', 'modul-backdrop');
@@ -559,6 +592,7 @@ function bindListeners() {
   document.querySelectorAll('.modul-when-btn').forEach(btn =>
     btn.addEventListener('click', () => selectWhenBtn(btn))
   );
+  document.getElementById('modul-tid-input')?.addEventListener('input', syncModulFremtid);
   document.getElementById('btn-do-modul')?.addEventListener('click', confirmModul);
 }
 
