@@ -529,6 +529,10 @@ Vejledning; opgave; 40</div>
           <label class="form-label" for="hist-date">Dato</label>
           <input class="form-input" type="date" id="hist-date" required>
         </div>
+        <div class="form-group">
+          <label class="form-label" id="hist-skema-label">Hurtigvalg <span class="form-optional">(modul eller pause)</span></label>
+          <div id="hist-skema-row" class="skema-row" role="group" aria-labelledby="hist-skema-label"></div>
+        </div>
         <div class="form-row">
           <div class="form-group">
             <label class="form-label" for="hist-start">Start</label>
@@ -586,7 +590,9 @@ Vejledning; opgave; 40</div>
       <!-- Trin 2: Hvornår startede modulet? -->
       <div id="modul-step-when" class="hidden">
         <div id="modul-hold-name-label" class="modul-hold-name-label"></div>
-        <p class="sheet-desc">Hvornår startede modulet?</p>
+        <p class="sheet-desc">Hvilket modul?</p>
+        <div id="modul-skema-list" class="modul-when-list"></div>
+        <p class="sheet-desc">…eller angiv tiden selv</p>
         <div class="modul-when-list">
           <button class="modul-when-btn" data-when="nu">
             <div class="modul-when-icon">▶</div>
