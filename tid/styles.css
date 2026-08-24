@@ -1201,6 +1201,40 @@ html, body {
 }
 .form-row .form-group { flex: 1; }
 
+/* ─── Skema-hurtigvalg (moduler + frokost) ───────────── */
+.skema-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.skema-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  background: var(--surface-2);
+  border: 2px solid var(--border);
+  border-radius: 100px;
+  padding: 7px 14px;
+  font-family: inherit;
+  color: var(--text);
+  cursor: pointer;
+  min-height: 44px;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.12s, border-color 0.15s;
+  user-select: none;
+}
+.skema-chip:active { background: var(--border); }
+.skema-chip-navn { font-size: 13px; font-weight: 700; line-height: 1.2; }
+.skema-chip-tid  { font-size: 11px; color: var(--text-3); line-height: 1.2; }
+.skema-chip.selected {
+  background: var(--accent-light);
+  border-color: var(--accent);
+}
+.skema-chip.selected .skema-chip-navn { color: var(--accent-dark); }
+.skema-chip.selected .skema-chip-tid  { color: var(--accent); }
+.skema-chip.nu { border-style: dashed; }
+
 /* ─── Modul sheet ────────────────────────────────────── */
 .modul-hold-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
 
@@ -1264,6 +1298,20 @@ html, body {
 .modul-when-btn.selected .modul-when-sub   { color: var(--accent); }
 
 .modul-tid-row { margin-bottom: 16px; }
+
+/* Modulnummeret som lille skilt foran skema-hurtigvalgene */
+.modul-when-btn[data-when="slot"] .modul-when-icon {
+  width: 28px; height: 28px; line-height: 26px;
+  font-size: 15px; font-weight: 800;
+  color: var(--text-2);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+}
+.modul-when-btn[data-when="slot"].selected .modul-when-icon {
+  color: var(--accent-dark);
+  border-color: var(--accent);
+}
 
 /* ─── Toast ──────────────────────────────────────────── */
 .toast {

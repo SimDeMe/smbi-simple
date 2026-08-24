@@ -2,6 +2,7 @@
 
 import { db, showToast, getCurrentSchoolYear } from './app.js';
 import { getLoadedActivities } from './activities.js';
+import { SKEMA, skemaFraTider, skemaNu, skemaInterval } from './skema.js';
 import {
   collection, doc, addDoc, updateDoc, deleteDoc,
   onSnapshot, query, orderBy, limit, Timestamp
@@ -190,9 +191,60 @@ export function openEntrySheet(entryId, prefill = null) {
     document.querySelectorAll('input[name="hist-wt"]').forEach(r => r.checked = false);
   }
 
+  renderSkemaChips();
+  syncSkemaChips();
   updateWtVisibility();
   document.getElementById('hist-delete-btn').classList.toggle('hidden', !e);
   openSheet('hist-sheet', 'hist-backdrop');
+}
+
+// ─── Skema-hurtigvalg ─────────────────────────────────────
+// Modulerne og frokostpausen udfylder blot start- og sluttidspunkt;
+// felterne kan stadig skrives i hånden.
+function renderSkemaChips() {
+  const row = document.getElementById('hist-skema-row');
+  if (!row || row.dataset.built) return;
+  row.innerHTML = SKEMA.map(sk => `
+    <button type="button" class="skema-chip" data-skema="${sk.id}"
+            aria-pressed="false" aria-label="${esc(sk.navn)} ${sk.start} til ${sk.slut}">
+      <span class="skema-chip-navn">${esc(sk.kort)}</span>
+      <span class="skema-chip-tid">${skemaInterval(sk)}</span>
+    </button>`).join('');
+  row.querySelectorAll('.skema-chip').forEach(btn =>
+    btn.addEventListener('click', () => vaelgSkema(btn.dataset.skema))
+  );
+  row.dataset.built = '1';
+}
+
+function vaelgSkema(id) {
+  const sk = SKEMA.find(x => x.id === id);
+  if (!sk) return;
+  const valgtIgen = document.querySelector(`.skema-chip[data-skema="${id}"]`)?.classList.contains('selected');
+  document.getElementById('hist-start').value = valgtIgen ? '' : sk.start;
+  document.getElementById('hist-end').value   = valgtIgen ? '' : sk.slut;
+  if (!document.getElementById('hist-date').value)
+    document.getElementById('hist-date').value = toDateInput(new Date());
+  syncSkemaChips();
+}
+
+// Fremhæver det slot, tidsfelterne præcis svarer til — også når tiderne
+// er skrevet i hånden eller kommer fra kalenderen
+function syncSkemaChips() {
+  const row = document.getElementById('hist-skema-row');
+  if (!row) return;
+  const startVal = document.getElementById('hist-start').value;
+  const endVal   = document.getElementById('hist-end').value;
+  const match    = skemaFraTider(startVal, endVal);
+  const dateVal  = document.getElementById('hist-date').value;
+  const iDag     = dateVal === toDateInput(new Date());
+  const nu       = iDag ? skemaNu() : null;
+
+  row.querySelectorAll('.skema-chip').forEach(btn => {
+    const valgt = !!match && btn.dataset.skema === match.id;
+    btn.classList.toggle('selected', valgt);
+    btn.classList.toggle('nu', !valgt && !!nu && btn.dataset.skema === nu.id);
+    btn.setAttribute('aria-pressed', valgt ? 'true' : 'false');
+  });
 }
 
 function updateWtVisibility() {
@@ -329,6 +381,10 @@ function bindListeners() {
 
   document.getElementById('hist-act-sel')
     ?.addEventListener('change', updateWtVisibility);
+
+  ['hist-start', 'hist-end', 'hist-date'].forEach(id =>
+    document.getElementById(id)?.addEventListener('input', syncSkemaChips)
+  );
 }
 
 // ─── Formattering ─────────────────────────────────────────

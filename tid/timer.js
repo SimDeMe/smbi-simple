@@ -3,6 +3,7 @@
 import { db, showToast, getCurrentSchoolYear } from './app.js';
 import { getLoadedActivities, isActivitiesLoaded } from './activities.js';
 import { getSettings } from './indstillinger.js';
+import { MODULER, skemaDatoer, skemaLaengde, skemaInterval, skemaNu } from './skema.js';
 import {
   collection, doc, addDoc, updateDoc,
   onSnapshot, query, where, limit, getDocs, orderBy,
@@ -15,6 +16,7 @@ let activeEntry     = null;
 let pendingAct      = null;
 let modulHoldId     = null;
 let modulWhen       = 'nu';
+let modulSkemaId    = null;
 let tickIv          = null;
 let unsubActive     = null;
 let listenersOk     = false;
@@ -296,8 +298,9 @@ function openModulSheet() {
   if (bagudEl) bagudEl.textContent = mins;
 
   // Reset state
-  modulHoldId = null;
-  modulWhen   = 'nu';
+  modulHoldId  = null;
+  modulWhen    = 'nu';
+  modulSkemaId = null;
   const stepHold = document.getElementById('modul-step-hold');
   const stepWhen = document.getElementById('modul-step-when');
   stepHold.classList.remove('hidden');
@@ -329,14 +332,53 @@ function goToModulWhen(hold) {
   document.getElementById('modul-step-when').classList.remove('hidden');
   document.getElementById('modul-hold-name-label').textContent = `${hold.name} · Undervisning`;
 
-  // Default: "Nu"
-  document.querySelectorAll('.modul-when-btn').forEach(b => b.classList.remove('selected'));
-  document.querySelector('.modul-when-btn[data-when="nu"]')?.classList.add('selected');
-  modulWhen = 'nu';
+  renderModulSkema();
+
+  // Kører vi midt i et modul, er det næsten altid det, man vil registrere;
+  // ellers falder vi tilbage til "Nu"
+  const nu       = skemaNu();
+  const nuKnap   = nu && MODULER.some(m => m.id === nu.id)
+    ? document.querySelector(`.modul-when-btn[data-slot="${nu.id}"]`)
+    : null;
+  selectWhenBtn(nuKnap || document.querySelector('.modul-when-btn[data-when="nu"]'));
 
   const now = new Date();
   document.getElementById('modul-tid-input').value =
     `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+}
+
+// Skemaets moduler som hurtigvalg — frokosten hører ikke til her, den
+// registreres i historikkens formular
+function renderModulSkema() {
+  const list = document.getElementById('modul-skema-list');
+  if (!list) return;
+  const nu = skemaNu();
+  list.innerHTML = MODULER.map(m => {
+    const igang = nu?.id === m.id;
+    return `<button class="modul-when-btn" data-when="slot" data-slot="${m.id}" aria-pressed="false">
+      <div class="modul-when-icon">${m.nr}</div>
+      <div class="modul-when-body">
+        <div class="modul-when-title">${esc(m.navn)}</div>
+        <div class="modul-when-sub">${skemaInterval(m)} · ${skemaLaengde(m)} min${igang ? ' · i gang nu' : ''}</div>
+      </div>
+    </button>`;
+  }).join('');
+  list.querySelectorAll('.modul-when-btn').forEach(btn =>
+    btn.addEventListener('click', () => selectWhenBtn(btn))
+  );
+}
+
+function selectWhenBtn(btn) {
+  if (!btn) return;
+  document.querySelectorAll('.modul-when-btn').forEach(b => {
+    b.classList.remove('selected');
+    b.setAttribute('aria-pressed', 'false');
+  });
+  btn.classList.add('selected');
+  btn.setAttribute('aria-pressed', 'true');
+  modulWhen    = btn.dataset.when;
+  modulSkemaId = btn.dataset.slot || null;
+  document.getElementById('modul-tid-row').classList.toggle('hidden', modulWhen !== 'andet');
 }
 
 async function confirmModul() {
@@ -346,7 +388,36 @@ async function confirmModul() {
   btn.disabled = true;
 
   try {
-    if (modulWhen === 'nu') {
+    if (modulWhen === 'slot') {
+      const sk = MODULER.find(m => m.id === modulSkemaId);
+      if (!sk) { showToast('Vælg et modul'); return; }
+      const { start, slut } = skemaDatoer(sk);
+      const laengde = skemaLaengde(sk);
+      const nu      = Date.now();
+
+      if (start.getTime() > nu) { showToast(`${sk.navn} er ikke begyndt endnu`); return; }
+
+      if (slut.getTime() <= nu) {
+        await addDoc(collection(db, `users/${userId}/entries`), {
+          activityId: modulHoldId, workType: 'undervisning',
+          startTime: Timestamp.fromDate(start), endTime: Timestamp.fromDate(slut),
+          durationMinutes: laengde, note: '', isModule: true, autoStopped: false
+        });
+        showToast(`${sk.navn} registreret · ${skemaInterval(sk)}`);
+      } else {
+        // Modulet kører stadig: timeren løber fra modulets start og stoppes
+        // automatisk ved modulets sluttid
+        if (activeEntry) await stopEntry(activeEntry, false);
+        await addDoc(collection(db, `users/${userId}/entries`), {
+          activityId: modulHoldId, workType: 'undervisning',
+          startTime: Timestamp.fromDate(start), endTime: null,
+          durationMinutes: null, note: '', isModule: true, autoStopped: false,
+          plannedDurationMinutes: laengde
+        });
+        showToast(`${sk.navn} i gang · stopper kl. ${sk.slut}`);
+      }
+
+    } else if (modulWhen === 'nu') {
       if (activeEntry) await stopEntry(activeEntry, false);
       // plannedDurationMinutes håndhæves af active-entry-lytteren, så modulet
       // også stoppes til tiden efter en genindlæsning af appen
@@ -485,12 +556,7 @@ function bindListeners() {
   document.getElementById('modul-backdrop')?.addEventListener('click', () => closeSheet('modul-sheet', 'modul-backdrop'));
   document.getElementById('modul-close')?.addEventListener('click', () => closeSheet('modul-sheet', 'modul-backdrop'));
   document.querySelectorAll('.modul-when-btn').forEach(btn =>
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.modul-when-btn').forEach(b => b.classList.remove('selected'));
-      btn.classList.add('selected');
-      modulWhen = btn.dataset.when;
-      document.getElementById('modul-tid-row').classList.toggle('hidden', modulWhen !== 'andet');
-    })
+    btn.addEventListener('click', () => selectWhenBtn(btn))
   );
   document.getElementById('btn-do-modul')?.addEventListener('click', confirmModul);
 }
