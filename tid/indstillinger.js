@@ -12,7 +12,8 @@ const DEFAULTS = {
   schoolYearStartDay:   1,
   normHours:            1650,
   moduleLengthMinutes:  90,
-  autoStopAfterMinutes: 600
+  autoStopAfterMinutes: 600,
+  autoShortBreaks:      true
 };
 
 let userId      = null;
@@ -53,9 +54,11 @@ function populateForm() {
   set('cfg-norm-hours',    s.normHours            ?? DEFAULTS.normHours);
   set('cfg-module-mins',   s.moduleLengthMinutes  ?? DEFAULTS.moduleLengthMinutes);
   set('cfg-autostop-mins', s.autoStopAfterMinutes ?? DEFAULTS.autoStopAfterMinutes);
+  check('cfg-auto-breaks', s.autoShortBreaks ?? DEFAULTS.autoShortBreaks);
 }
 
 const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+const check = (id, on) => { const el = document.getElementById(id); if (el) el.checked = !!on; };
 
 // ─── Save ─────────────────────────────────────────────────
 async function saveSettings() {
@@ -68,7 +71,8 @@ async function saveSettings() {
     schoolYearStartDay:   parseInt(document.getElementById('cfg-start-day').value)    || 1,
     normHours:            parseInt(document.getElementById('cfg-norm-hours').value)   || 1650,
     moduleLengthMinutes:  parseInt(document.getElementById('cfg-module-mins').value)  || 90,
-    autoStopAfterMinutes: parseInt(document.getElementById('cfg-autostop-mins').value)|| 600
+    autoStopAfterMinutes: parseInt(document.getElementById('cfg-autostop-mins').value)|| 600,
+    autoShortBreaks:      document.getElementById('cfg-auto-breaks')?.checked ?? true
   };
 
   const btn = document.getElementById('cfg-save-btn');

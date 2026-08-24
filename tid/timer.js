@@ -4,8 +4,9 @@ import { db, showToast, getCurrentSchoolYear } from './app.js';
 import { getLoadedActivities, isActivitiesLoaded } from './activities.js';
 import { getSettings } from './indstillinger.js';
 import { MODULER, skemaDatoer, skemaLaengde, skemaInterval, skemaNu } from './skema.js';
+import { opretPost } from './pauser.js';
 import {
-  collection, doc, addDoc, updateDoc,
+  collection, doc, updateDoc,
   onSnapshot, query, where, limit, getDocs, orderBy,
   serverTimestamp, Timestamp
 } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js';
@@ -398,7 +399,7 @@ async function confirmModul() {
       if (start.getTime() > nu) { showToast(`${sk.navn} er ikke begyndt endnu`); return; }
 
       if (slut.getTime() <= nu) {
-        await addDoc(collection(db, `users/${userId}/entries`), {
+        await opretPost(userId, {
           activityId: modulHoldId, workType: 'undervisning',
           startTime: Timestamp.fromDate(start), endTime: Timestamp.fromDate(slut),
           durationMinutes: laengde, note: '', isModule: true, autoStopped: false
@@ -408,7 +409,7 @@ async function confirmModul() {
         // Modulet kører stadig: timeren løber fra modulets start og stoppes
         // automatisk ved modulets sluttid
         if (activeEntry) await stopEntry(activeEntry, false);
-        await addDoc(collection(db, `users/${userId}/entries`), {
+        await opretPost(userId, {
           activityId: modulHoldId, workType: 'undervisning',
           startTime: Timestamp.fromDate(start), endTime: null,
           durationMinutes: null, note: '', isModule: true, autoStopped: false,
@@ -421,7 +422,7 @@ async function confirmModul() {
       if (activeEntry) await stopEntry(activeEntry, false);
       // plannedDurationMinutes håndhæves af active-entry-lytteren, så modulet
       // også stoppes til tiden efter en genindlæsning af appen
-      await addDoc(collection(db, `users/${userId}/entries`), {
+      await opretPost(userId, {
         activityId: modulHoldId, workType: 'undervisning',
         startTime: serverTimestamp(), endTime: null,
         durationMinutes: null, note: '', isModule: true, autoStopped: false,
@@ -432,7 +433,7 @@ async function confirmModul() {
     } else if (modulWhen === 'bagud') {
       const endMs   = Date.now();
       const startMs = endMs - mins * 60 * 1000;
-      await addDoc(collection(db, `users/${userId}/entries`), {
+      await opretPost(userId, {
         activityId: modulHoldId, workType: 'undervisning',
         startTime: Timestamp.fromMillis(startMs), endTime: Timestamp.fromMillis(endMs),
         durationMinutes: mins, note: '', isModule: true, autoStopped: false
@@ -450,7 +451,7 @@ async function confirmModul() {
       if (start > new Date()) { showToast('Starttidspunkt kan ikke ligge i fremtiden'); btn.disabled = false; return; }
 
       const end = new Date(start.getTime() + mins * 60 * 1000);
-      await addDoc(collection(db, `users/${userId}/entries`), {
+      await opretPost(userId, {
         activityId: modulHoldId, workType: 'undervisning',
         startTime: Timestamp.fromDate(start), endTime: Timestamp.fromDate(end),
         durationMinutes: mins, note: '', isModule: true, autoStopped: false
@@ -472,7 +473,7 @@ export async function startTimer(activityId, workType) {
   }
   try {
     if (activeEntry) await stopEntry(activeEntry, false);
-    await addDoc(collection(db, `users/${userId}/entries`), {
+    await opretPost(userId, {
       activityId: activityId || null, workType: workType || null,
       startTime: serverTimestamp(), endTime: null,
       durationMinutes: null, note: '', isModule: false, autoStopped: false
