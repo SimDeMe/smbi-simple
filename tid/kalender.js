@@ -1,13 +1,15 @@
 // kalender.js — Kalendervisning i Historik: én dag ad gangen
 //
 // Viser dagens registreringer som blokke på en tidsakse. Overlappende
-// registreringer lægges ved siden af hinanden, og huller mellem dem markeres
-// tydeligt og kan udfyldes med ét tryk.
+// registreringer lægges ved siden af hinanden. Uregistreret tid er bare tom
+// plads på aksen — tryk på den for at oprette en post. Korte pauser er
+// almindelige poster (se pauser.js) og vises dæmpet.
 
 import { db, showToast } from './app.js';
 import { getLoadedActivities } from './activities.js';
 import { openEntrySheet } from './historik.js';
 import { fmtMins } from './timer.js';
+import { erPause, PAUSE_NAVN } from './pauser.js';
 import {
   collection, onSnapshot, query, where, orderBy, Timestamp
 } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js';
@@ -15,7 +17,6 @@ import {
 // ─── Konstanter ───────────────────────────────────────────
 const HOUR_H          = 48;          // px pr. time på tidsaksen
 const PX_MIN          = HOUR_H / 60;
-const MIN_GAP_MINUTES = 5;           // huller under dette vises ikke
 const DEFAULT_FROM_H  = 6;           // tidsaksen starter tidligst her
 const DEFAULT_TO_H    = 22;          // ... og slutter senest her, hvis intet andet
 const SNAP_MIN        = 15;          // afrunding ved tryk på tom plads
@@ -121,19 +122,22 @@ function toItem(e) {
   const end      = isActive ? now : e.endTime.toDate();
   if (end <= dayStart || s >= dayEnd) return null;   // uden for dagen
 
-  const act = acts.find(a => a.id === e.activityId);
-  const raw = { start: minutesInto(s, dayStart), end: minutesInto(end, dayStart) };
+  const act    = acts.find(a => a.id === e.activityId);
+  const isPause = erPause(e);
+  const raw    = { start: minutesInto(s, dayStart), end: minutesInto(end, dayStart) };
 
   return {
     id:        e.id,
-    name:      act?.name || (e.activityId ? 'Slettet aktivitet' : 'Ubundet tid'),
+    name:      isPause ? PAUSE_NAVN
+                       : act?.name || (e.activityId ? 'Slettet aktivitet' : 'Ubundet tid'),
     color:     act?.color || '#94a3b8',
+    isPause,
     workType:  e.workType || null,
     note:      e.note || '',
     isActive,
     clipTop:    raw.start < 0,
     clipBottom: raw.end > 1440,
-    // Afrundes til hele minutter, så både placering og hul-varigheder bliver pæne
+    // Afrundes til hele minutter, så både placering og varigheder bliver pæne
     startMin:  Math.max(0, Math.round(raw.start)),
     endMin:    Math.min(1440, Math.round(raw.end)),
     realStart: s,
@@ -173,26 +177,6 @@ function layoutColumns(items) {
   return items;
 }
 
-// ─── Huller: uregistreret tid mellem første og sidste post ─
-// limitMin afskærer huller ved 'nu', så resten af dagen ikke ser ud som et hul.
-function findGaps(items, limitMin = 1440) {
-  if (!items.length) return [];
-  const merged = [];
-  items.slice().sort((a, b) => a.startMin - b.startMin).forEach(it => {
-    const last = merged[merged.length - 1];
-    if (last && it.startMin <= last.end) last.end = Math.max(last.end, it.endMin);
-    else merged.push({ start: it.startMin, end: it.endMin });
-  });
-
-  const gaps = [];
-  for (let i = 1; i < merged.length; i++) {
-    const start = merged[i - 1].end;
-    const end   = Math.min(merged[i].start, limitMin);
-    if (end - start >= MIN_GAP_MINUTES) gaps.push({ start, end });
-  }
-  return gaps;
-}
-
 // ─── Tidsvindue for aksen ─────────────────────────────────
 function windowFor(items) {
   let from = DEFAULT_FROM_H, to = DEFAULT_TO_H;
@@ -218,12 +202,10 @@ function render() {
   const items = layoutColumns(
     dayEntries.map(toItem).filter(Boolean).sort((a, b) => a.startMin - b.startMin)
   );
-  const gaps = findGaps(items,
-    isToday(selectedDay) ? minutesInto(new Date(), selectedDay) : 1440);
   const { from, to } = windowFor(items);
   const top0 = from * 60;   // minut-nulpunkt for aksen
 
-  renderHeader(items, gaps);
+  renderHeader(items);
 
   const y = min => (min - top0) * PX_MIN;
 
@@ -237,18 +219,10 @@ function render() {
 
   let lane = '';
 
-  gaps.forEach(g => {
-    const h = (g.end - g.start) * PX_MIN;
-    lane += `<button type="button" class="kal-gap${h < 26 ? ' kal-gap-sm' : ''}"
-        style="top:${y(g.start)}px;height:${h}px"
-        data-start="${g.start}" data-end="${g.end}"
-        aria-label="Hul i registreringen fra ${fmtMinOfDay(g.start)} til ${fmtMinOfDay(g.end)} — tryk for at udfylde">
-      <span class="kal-gap-lab">Hul · ${fmtMins(g.end - g.start)}</span>
-    </button>`;
-  });
-
   items.forEach(it => {
-    const h    = Math.max(16, (it.endMin - it.startMin) * PX_MIN);
+    // En pause må gerne blive lavere end en rigtig blok — den skal kunne ses,
+    // men ikke skubbe til dagens arbejde
+    const h    = Math.max(it.isPause ? 11 : 16, (it.endMin - it.startMin) * PX_MIN);
     const w    = 100 / it.cols;
     // Varigheden er den del, der ligger inden for dagen — en registrering
     // hen over midnat vises derfor med '…' og kun dagens andel.
@@ -263,6 +237,7 @@ function render() {
     const wt   = it.workType ? ` · ${capitalize(it.workType)}` : '';
     const cls  = [
       h < 34 ? 'kal-block-sm' : '',
+      it.isPause ? 'kal-block-pause' : '',
       it.isActive ? 'kal-block-active' : '',
       it.clipTop ? 'kal-block-clip-top' : '',
       it.clipBottom ? 'kal-block-clip-bottom' : ''
@@ -292,13 +267,8 @@ function render() {
   const laneEl = document.getElementById('kal-lane');
   laneEl.querySelectorAll('.kal-block').forEach(b =>
     b.addEventListener('click', ev => { ev.stopPropagation(); openEntrySheet(b.dataset.id); }));
-  laneEl.querySelectorAll('.kal-gap').forEach(b =>
-    b.addEventListener('click', ev => {
-      ev.stopPropagation();
-      newEntryAt(Number(b.dataset.start), Number(b.dataset.end));
-    }));
   laneEl.addEventListener('click', ev => {
-    if (ev.target.closest('.kal-block, .kal-gap')) return;
+    if (ev.target.closest('.kal-block')) return;
     const rect = laneEl.getBoundingClientRect();
     const min  = top0 + (ev.clientY - rect.top) / PX_MIN;
     const snap = Math.floor(min / SNAP_MIN) * SNAP_MIN;
@@ -307,7 +277,7 @@ function render() {
 }
 
 // ─── Sidehoved med dato og dagens tal ─────────────────────
-function renderHeader(items, gaps) {
+function renderHeader(items) {
   const t = document.getElementById('kal-title');
   const s = document.getElementById('kal-sub');
   const d = document.getElementById('kal-date');
@@ -315,16 +285,18 @@ function renderHeader(items, gaps) {
   if (s) s.textContent = longDate(selectedDay);
   if (d) d.value = toDateInput(selectedDay);
 
-  const total   = items.reduce((sum, it) => sum + (it.endMin - it.startMin), 0);
-  const gapMins = gaps.reduce((sum, g) => sum + (g.end - g.start), 0);
+  // Pauser er ikke arbejdstid og holdes uden for dagens total
+  const laengde   = it => it.endMin - it.startMin;
+  const total     = items.filter(it => !it.isPause).reduce((sum, it) => sum + laengde(it), 0);
+  const pauseMins = items.filter(it =>  it.isPause).reduce((sum, it) => sum + laengde(it), 0);
 
   const tot = document.getElementById('kal-total');
   if (tot) tot.textContent = total ? fmtMins(Math.round(total)) : '0m';
 
-  const gapEl = document.getElementById('kal-gapstat');
-  if (gapEl) {
-    gapEl.textContent = gapMins ? `${fmtMins(Math.round(gapMins))} i huller` : '';
-    gapEl.classList.toggle('hidden', !gapMins);
+  const pauseEl = document.getElementById('kal-pausestat');
+  if (pauseEl) {
+    pauseEl.textContent = pauseMins ? `${fmtMins(Math.round(pauseMins))} pause` : '';
+    pauseEl.classList.toggle('hidden', !pauseMins);
   }
 }
 
@@ -373,10 +345,6 @@ function minutesInto(date, dayStart) { return (date - dayStart) / 60000; }
 
 function fmtTime(d) {
   return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-}
-function fmtMinOfDay(m) {
-  const h = Math.floor(m / 60), r = Math.round(m % 60);
-  return `${String(h).padStart(2,'0')}:${String(r).padStart(2,'0')}`;
 }
 function toDateInput(d) {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;

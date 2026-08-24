@@ -180,12 +180,12 @@
             <input type="date" id="kal-date" class="kal-date" aria-label="Vælg dato">
             <span class="kal-stats">
               <b id="kal-total">0m</b> registreret
-              <span id="kal-gapstat" class="kal-gapstat hidden"></span>
+              <span id="kal-pausestat" class="kal-pausestat hidden"></span>
             </span>
           </div>
 
           <div id="kal-grid" class="kal-grid" aria-label="Dagens registreringer på tidsakse"></div>
-          <p class="kal-hint">Tryk på tidsaksen eller på et hul for at oprette en registrering.</p>
+          <p class="kal-hint">Tryk på tidsaksen for at oprette en registrering.</p>
         </div>
       </div>
 
@@ -275,6 +275,19 @@
             <label class="settings-label" for="cfg-autostop-mins">Auto-stop</label>
             <div class="settings-row-right">
               <input type="number" id="cfg-autostop-mins" class="settings-input-sm" min="30" max="1440"> min
+            </div>
+          </div>
+        </div>
+
+        <!-- Pauser -->
+        <div class="settings-section">
+          <div class="settings-section-title">Pauser</div>
+          <div class="settings-row">
+            <label class="settings-label" for="cfg-auto-breaks">Registrér korte pauser
+              <span class="settings-sub">Mellemrum under 30 minutter mellem to registreringer gemmes som &#34;Kort pause&#34;. Pauser tæller ikke med i arbejdstiden.</span>
+            </label>
+            <div class="settings-row-right">
+              <input type="checkbox" id="cfg-auto-breaks" class="settings-check">
             </div>
           </div>
         </div>

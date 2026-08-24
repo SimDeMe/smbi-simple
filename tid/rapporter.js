@@ -3,6 +3,7 @@
 import { db, getCurrentSchoolYear } from './app.js';
 import { getLoadedActivities } from './activities.js';
 import { getSettings } from './indstillinger.js';
+import { erPause } from './pauser.js';
 import {
   collection, query, orderBy, where, limit, onSnapshot, Timestamp
 } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js';
@@ -64,10 +65,13 @@ function schoolYearEnd(year) {
 }
 
 // ─── Period filtering ─────────────────────────────────────
+// Korte pauser er registreret tid, men ikke arbejdstid — de holdes ude af
+// både rapporterne og CSV-eksporten, så tallene svarer til det, der tælles med
+// i normen.
 function getPeriodEntries() {
   const start = getPeriodStart(periodFilter);
   return entries.filter(e =>
-    e.durationMinutes != null &&
+    e.durationMinutes != null && !erPause(e) &&
     (!start || (e.startTime && e.startTime.toDate() >= start))
   );
 }

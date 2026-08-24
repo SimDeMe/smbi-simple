@@ -3,8 +3,9 @@
 import { db, showToast, getCurrentSchoolYear } from './app.js';
 import { getLoadedActivities } from './activities.js';
 import { SKEMA, skemaFraTider, skemaNu, skemaInterval } from './skema.js';
+import { opretPost, erPause, PAUSE_NAVN } from './pauser.js';
 import {
-  collection, doc, addDoc, updateDoc, deleteDoc,
+  collection, doc, updateDoc, deleteDoc,
   onSnapshot, query, orderBy, limit, Timestamp
 } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js';
 
@@ -98,14 +99,17 @@ function renderList() {
   let totalMinsToday = 0;
 
   for (const [, g] of groups) {
-    const dayMins = g.list.reduce((s, e) => s + (e.durationMinutes || 0), 0);
+    // Pauser er ikke arbejdstid og tælles ikke med i dagens total
+    const dayMins = g.list.reduce((s, e) => s + (erPause(e) ? 0 : e.durationMinutes || 0), 0);
     const dayLabel = dayMins ? `<span class="hist-day-total">${fmtMins(dayMins)}</span>` : '';
     html += `<div class="hist-date-head">${fmtDateHead(g.date)}${dayLabel}</div>`;
 
     g.list.forEach(e => {
       const act      = acts.find(a => a.id === e.activityId);
       const color    = act?.color || 'var(--border)';
-      const name     = act?.name || (e.activityId ? 'Slettet aktivitet' : 'Ubundet tid');
+      const pause    = erPause(e);
+      const name     = pause ? PAUSE_NAVN
+                             : act?.name || (e.activityId ? 'Slettet aktivitet' : 'Ubundet tid');
       const isActive = !e.endTime;
 
       const startT = e.startTime ? fmtTime(e.startTime.toDate()) : '??:??';
@@ -120,7 +124,7 @@ function renderList() {
         ? `<span class="entry-running-dot"></span>`
         : '';
 
-      html += `<div class="entry-row${isActive ? ' entry-row-active' : ''}" data-id="${e.id}" style="--act-color:${color}">
+      html += `<div class="entry-row${isActive ? ' entry-row-active' : ''}${pause ? ' entry-row-pause' : ''}" data-id="${e.id}" style="--act-color:${color}">
         <div class="entry-body">
           <div class="entry-act">${esc(name)}<span class="entry-wt">${esc(wt)}</span></div>
           <div class="entry-meta">${dot}${timeStr}</div>
@@ -154,13 +158,13 @@ function renderActivityFilter() {
 
 // ─── Open entry sheet ─────────────────────────────────────
 // prefill: {start: Date, end: Date|null} — bruges når kalenderen åbner arket
-// på et bestemt tidsrum (fx et hul, der skal udfyldes).
+// på et bestemt tidsrum (fx et tryk på tidsaksen).
 export function openEntrySheet(entryId, prefill = null) {
   editingId = entryId || null;
   const e   = entryId ? entries.find(x => x.id === entryId) : null;
 
   document.getElementById('hist-sheet-title').textContent =
-    e ? 'Redigér registrering' : 'Ny registrering';
+    !e ? 'Ny registrering' : erPause(e) ? 'Redigér kort pause' : 'Redigér registrering';
 
   fyldAktivitetsliste(e);
 
@@ -342,12 +346,14 @@ async function saveEntry(ev) {
       note
     };
     if (editingId) {
-      // Kun de redigérbare felter opdateres — isModule/autoStopped bevares
-      await updateDoc(doc(db, `users/${userId}/entries/${editingId}`), data);
+      // Kun de redigérbare felter opdateres — isModule/autoStopped bevares.
+      // Får en pause tildelt en aktivitet, er den ikke længere en pause.
+      const gammel = entries.find(x => x.id === editingId);
+      const felter = erPause(gammel) && actId ? { ...data, isBreak: false } : data;
+      await updateDoc(doc(db, `users/${userId}/entries/${editingId}`), felter);
       showToast('Registrering opdateret');
     } else {
-      await addDoc(collection(db, `users/${userId}/entries`),
-        { ...data, isModule: false, autoStopped: false });
+      await opretPost(userId, { ...data, isModule: false, autoStopped: false });
       showToast('Registrering oprettet');
     }
     closeSheet('hist-sheet', 'hist-backdrop');

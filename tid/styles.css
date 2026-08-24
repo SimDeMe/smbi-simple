@@ -838,6 +838,22 @@ html, body {
   flex-shrink: 0;
 }
 
+.settings-sub {
+  display: block;
+  margin-top: 3px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text-3);
+  font-weight: 400;
+}
+
+.settings-check {
+  width: 22px;
+  height: 22px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
 .settings-input-sm {
   width: 72px;
   padding: 7px 8px;
@@ -1138,6 +1154,16 @@ html, body {
 .entry-row:active { background: var(--surface-2); }
 .entry-row-active { background: var(--surface-2); }
 
+/* Kort pause — dæmpet, så den ikke konkurrerer med dagens arbejde */
+.entry-row-pause {
+  background: var(--surface-2);
+  border-style: dashed;
+  border-left: 1px dashed var(--border);
+  padding: 8px 12px;
+}
+.entry-row-pause .entry-act,
+.entry-row-pause .entry-duration { color: var(--text-3); font-weight: 500; }
+
 .entry-body { flex: 1; min-width: 0; }
 
 .entry-act {
@@ -1417,8 +1443,8 @@ html, body {
   white-space: nowrap;
 }
 .kal-stats b { font-size: 13px; color: var(--text); }
-.kal-gapstat::before { content: ' · '; color: var(--text-3); }
-.kal-gapstat { color: var(--warning); font-weight: 600; }
+.kal-pausestat::before { content: ' · '; color: var(--text-3); }
+.kal-pausestat { color: var(--text-3); font-weight: 600; }
 
 /* Tidsakse */
 .kal-grid {
@@ -1523,34 +1549,23 @@ html, body {
 .kal-block-clip-top    { border-top-style: dotted;    border-top-left-radius: 0;    border-top-right-radius: 0; }
 .kal-block-clip-bottom { border-bottom-style: dotted; border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
 
-/* Hul i registreringen */
-.kal-gap {
-  position: absolute;
-  left: 0; right: 3px;
-  display: flex;
+/* Kort pause — en almindelig post, men dæmpet, så dagens arbejde træder frem.
+   Ligger under de rigtige blokke, så en meget kort pause ikke skubber til dem. */
+.kal-block-pause {
+  background: var(--surface-2);
+  border: 1px dashed var(--border);
+  border-left: 1px dashed var(--border);
   align-items: center;
-  justify-content: center;
-  font-family: inherit;
-  border: 1px dashed var(--warning);
-  border-radius: var(--r-sm);
-  background:
-    repeating-linear-gradient(135deg,
-      rgba(245,158,11,0.16) 0 7px,
-      rgba(245,158,11,0.05) 7px 14px);
-  color: #a16207;
-  cursor: pointer;
-  overflow: hidden;
+  padding: 0 6px;
   z-index: 1;
-  -webkit-tap-highlight-color: transparent;
 }
-.kal-gap:active { filter: brightness(0.96); }
-.kal-gap-lab {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  white-space: nowrap;
+.kal-block-pause .kal-block-title,
+.kal-block-pause .kal-block-time {
+  color: var(--text-3);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.1;
 }
-.kal-gap-sm .kal-gap-lab { font-size: 10px; }
 
 /* Nu-linje */
 .kal-now {

@@ -67,7 +67,8 @@ Regler:
   durationMinutes: 90,              // beregnet ved afslutning
   note: "",
   isModule: false,
-  autoStopped: false
+  autoStopped: false,
+  isBreak: false                    // true = kort pause, tæller ikke som arbejdstid
 }
 ```
 
@@ -78,6 +79,7 @@ Regler:
   schoolYearStartDay: 1,
   moduleLengthMinutes: 90,
   autoStopAfterMinutes: 240,
+  autoShortBreaks: true,            // luk mellemrum under 30 min som "Kort pause"
   weekStartsOn: 1,
   currentSchoolYear: "2026/27"     // den aktive der vises som standard
 }
@@ -131,7 +133,10 @@ Egen side med to visninger, der skiftes med en fane øverst:
 
 **Liste** — alle registreringer, nyeste først. Filter på dato-interval og aktivitet. Hver post kan redigeres (start, slut, aktivitet, arbejdstype, note) eller slettes. Manuel oprettelse af bagudrettet post.
 
-**Kalender** — én dag ad gangen på en lodret tidsakse (1 time = 48 px). Overlappende registreringer fordeles på kolonner ved siden af hinanden, så alle er synlige. Uregistreret tid mellem to poster markeres som et skraveret "hul" med varighed; tryk på hullet opretter en post, der udfylder tidsrummet. Tryk et vilkårligt sted på aksen opretter en post fra det tidspunkt (afrundet til 15 min). Igangværende registrering løber til "nu" og vises skraveret, og en rød streg markerer det aktuelle tidspunkt. Registreringer hen over midnat klippes ved døgnskiftet og markeres med prikket kant.
+**Kalender** — én dag ad gangen på en lodret tidsakse (1 time = 48 px). Overlappende registreringer fordeles på kolonner ved siden af hinanden, så alle er synlige. Uregistreret tid er tom plads på aksen; tryk et vilkårligt sted opretter en post fra det tidspunkt (afrundet til 15 min). Igangværende registrering løber til "nu" og vises skraveret, og en rød streg markerer det aktuelle tidspunkt. Registreringer hen over midnat klippes ved døgnskiftet og markeres med prikket kant. Korte pauser vises som dæmpede, stiplede blokke og holdes uden for dagens total, der i stedet får et lille "· 25m pause" ved siden af.
+
+### 5b. Korte pauser
+Et mellemrum på under 30 minutter mellem to registreringer er sjældent glemt tid — det er pausen mellem to moduler eller frokosten. Når en ny post oprettes, lukkes et sådant mellemrum automatisk med en pause-post (`isBreak: true`, ingen aktivitet). Længere mellemrum lades i fred. Pauser er almindelige poster, der kan redigeres og slettes, men de tæller ikke med i rapporter, norm eller CSV-eksport. Kan slås fra med `autoShortBreaks` under Indstillinger → Pauser.
 
 ### 6. Rapporter
 Egen side. Vælg interval:
