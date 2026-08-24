@@ -158,19 +158,11 @@ function renderActivityFilter() {
 export function openEntrySheet(entryId, prefill = null) {
   editingId = entryId || null;
   const e   = entryId ? entries.find(x => x.id === entryId) : null;
-  const acts = getLoadedActivities();
 
   document.getElementById('hist-sheet-title').textContent =
     e ? 'Redigér registrering' : 'Ny registrering';
 
-  // Populate activity select
-  const actSel = document.getElementById('hist-act-sel');
-  const year   = getCurrentSchoolYear();
-  const topActs = acts.filter(a => a.schoolYear === year && !a.isArchived);
-  actSel.innerHTML = `<option value="">— Ubundet tid —</option>` +
-    topActs.map(a =>
-      `<option value="${a.id}"${a.id === (e?.activityId || '') ? ' selected' : ''}>${esc(a.name)}</option>`
-    ).join('');
+  fyldAktivitetsliste(e);
 
   if (e) {
     const sd = e.startTime.toDate();
@@ -196,6 +188,51 @@ export function openEntrySheet(entryId, prefill = null) {
   updateWtVisibility();
   document.getElementById('hist-delete-btn').classList.toggle('hidden', !e);
   openSheet('hist-sheet', 'hist-backdrop');
+}
+
+// ─── Aktivitetsliste i formularen ─────────────────────────
+// De aktiviteter, der senest er registreret tid på, lægges øverst, så man
+// slipper for at rulle efter dem, man bruger i denne uge.
+function fyldAktivitetsliste(e) {
+  const actSel = document.getElementById('hist-act-sel');
+  if (!actSel) return;
+  const year    = getCurrentSchoolYear();
+  const valgbare = getLoadedActivities().filter(a => a.schoolYear === year && !a.isArchived);
+
+  const senesteIds = senesteAktiviteter(new Set(valgbare.map(a => a.id)));
+  const seneste    = senesteIds.map(id => valgbare.find(a => a.id === id));
+  const oevrige    = valgbare.filter(a => !senesteIds.includes(a.id));
+
+  const opt   = a => `<option value="${a.id}">${esc(a.name)}</option>`;
+  const gruppe = (navn, liste) =>
+    liste.length ? `<optgroup label="${navn}">${liste.map(opt).join('')}</optgroup>` : '';
+
+  // Hører posten til en aktivitet uden for listen (andet skoleår eller
+  // arkiveret), skal den stadig kunne vælges — ellers ville den blive
+  // koblet fra, næste gang posten gemmes
+  const valgt   = e?.activityId ? getLoadedActivities().find(a => a.id === e.activityId) : null;
+  const udenfor = valgt && !valgbare.some(a => a.id === valgt.id) ? valgt : null;
+
+  actSel.innerHTML =
+    `<option value="">— Ubundet tid —</option>` +
+    (udenfor ? gruppe('Fra registreringen', [udenfor]) : '') +
+    gruppe('Senest brugt', seneste) +
+    gruppe(seneste.length ? 'Øvrige aktiviteter' : 'Aktiviteter', oevrige);
+
+  actSel.value = e?.activityId || '';
+}
+
+// Aktivitets-id'er i den rækkefølge, de senest er brugt (entries er nyeste
+// først); kun dem der stadig står i listen, tæller med
+function senesteAktiviteter(gyldige, maks = 5) {
+  const ids = [];
+  for (const e of entries) {
+    const id = e.activityId;
+    if (!id || !gyldige.has(id) || ids.includes(id)) continue;
+    ids.push(id);
+    if (ids.length === maks) break;
+  }
+  return ids;
 }
 
 // ─── Skema-hurtigvalg ─────────────────────────────────────
