@@ -20,7 +20,8 @@ Lagt om indtil videre: forsiden, fagforsiderne, `born.html`, `admin.html`,
 `biologi/transkription.html`, `biologi/enzymkinetik.html`,
 `biologi/osmose.html`, `biologi/DNA_Simulering.html`, `biologi/enzymhastighed.html`,
 `geografi/Tidevand.html`, `geografi/boelger.html`, `biologi/membran.html`,
-`biologi/fotosyntese.html`, `biologi/bio-blocks/index.html`
+`biologi/fotosyntese.html`, `biologi/bio-blocks/index.html`,
+`biologi/membran2d.html`
 (brug dem som forlæg, når `--accent:var(--bio)` skal
 bruges). Resten af `geografi/`, `biologi/` og `style.css`-siderne kører
 stadig det gamle design — rør dem kun, når opgaven handler om dem.
@@ -46,6 +47,10 @@ biologi/membran/molekyler.js    fagdata
 biologi/membran/transport.js    registret over sidens delmekanismer
 biologi/membran/transport-*.js  én delmekanisme pr. fil
 ```
+
+Samme opdeling holder uden three.js: `biologi/membran2d.html` er den samme
+side i ren canvas 2D, og der er `model.js` lærred og kamera i stedet for
+scene og orbit. Se `biologi/membran2d/PLAN.md`.
 
 **Bliver i HTML-filen:** `:root`-tokens, al CSS, hele markup'en og importmappet.
 Skabelonen bygger på, at hver side har sin egen tokenblok og kan bruges som

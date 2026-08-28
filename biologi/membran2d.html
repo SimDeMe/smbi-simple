@@ -1,0 +1,500 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Transport gennem cellemembranen — smbi.dk</title>
+<meta name="description" content="Syv transportveje i den samme membran: klik en af dem, zoom ind og se molekylerne gå igennem — fra simpel diffusion over kanaler og bærerproteiner til Na⁺/K⁺-pumpen, symport og vesikeltransport.">
+<!-- Deling, ikoner og kanonisk adresse -->
+<link rel="canonical" href="https://smbi.dk/biologi/membran2d.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="smbi.dk">
+<meta property="og:locale" content="da_DK">
+<meta property="og:url" content="https://smbi.dk/biologi/membran2d.html">
+<meta property="og:title" content="Transport gennem cellemembranen">
+<meta property="og:description" content="Syv transportveje i den samme membran: klik en af dem, zoom ind og se molekylerne gå igennem — fra simpel diffusion over kanaler og bærerproteiner til Na⁺/K⁺-pumpen, symport og vesikeltransport.">
+<meta property="og:image" content="https://smbi.dk/img/og-biologi.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="smbi.dk — biologi: simuleringer, forløb og spil">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#FFF9EE">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,300..600&display=swap" rel="stylesheet">
+<style>
+/* ─────────────────────────────────────────────────────────
+   Transport gennem cellemembranen — i 2D.
+   Samme faglige indhold som biologi/membran.html, men fladt:
+   syv transportveje ved siden af hinanden i den samme membran,
+   med kameraet som den, der zoomer ind på én ad gangen.
+   Følger smbi.dk's designskabelon (design_rules.md), og siden er
+   delt op i moduler — se design_rules.md afsnit 0 og
+   biologi/membran2d/PLAN.md.
+   ───────────────────────────────────────────────────────── */
+:root{
+  --paper:#FFF9EE;  --paper-2:#FFF3DC;  --panel:#FFFFFF;
+  --ink:#17211F;    --slate:#566B68;
+
+  --pink:#E8336D; --blue:#0E86C8; --lime:#5FB030; --amber:#FFB300;
+  --grape:#7A4FD6; --coral:#FF6A3D; --teal:#0FA593;
+
+  --bio:var(--pink);
+  --geo:var(--blue);
+  --accent:var(--bio);
+
+  --display:'Archivo',system-ui,sans-serif;
+  --body:'Source Serif 4',Georgia,serif;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+
+  --wide:'wdth' 118;
+  --max:1180px;
+
+  --hard:4px 4px 0 var(--ink);
+  --hard-lg:7px 7px 0 var(--ink);
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--paper);color:var(--ink);
+  font-family:var(--body);font-size:17px;line-height:1.6;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden;
+}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--grape);outline-offset:3px;border-radius:4px}
+
+.mono{font-family:var(--mono);font-size:0.68rem;font-weight:500;letter-spacing:0.14em;text-transform:uppercase}
+.enhed{text-transform:none}
+.sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+/* ── Topbjælke ─────────────────────────────────────────── */
+.rainbow{
+  height:7px;
+  background:linear-gradient(90deg,
+    var(--pink) 0 14.3%, var(--coral) 14.3% 28.6%, var(--amber) 28.6% 42.9%,
+    var(--lime) 42.9% 57.2%, var(--teal) 57.2% 71.5%, var(--blue) 71.5% 85.8%,
+    var(--grape) 85.8% 100%);
+}
+.top{position:sticky;top:0;z-index:60}
+.top-bar{background:rgba(255,249,238,0.93);backdrop-filter:blur(10px);border-bottom:2px solid var(--ink)}
+.top-in{max-width:var(--max);margin:0 auto;padding:0 24px;display:flex;align-items:center;gap:16px;height:60px}
+.brand{
+  font-family:var(--display);font-variation-settings:'wdth' 125;
+  font-weight:800;font-size:1.15rem;letter-spacing:-0.02em;
+  text-decoration:none;display:flex;align-items:center;gap:8px;
+}
+.brand-mark{
+  width:25px;height:25px;border-radius:9px;border:2px solid var(--ink);
+  background:conic-gradient(var(--pink),var(--amber),var(--lime),var(--blue),var(--grape),var(--pink));
+  flex-shrink:0;
+}
+.brand em{font-family:var(--mono);font-size:0.72rem;font-weight:500;font-style:normal;color:var(--slate)}
+.top-nav{display:flex;gap:6px;margin-left:auto}
+.top-nav a{
+  font-family:var(--display);font-size:0.84rem;font-weight:600;
+  text-decoration:none;color:var(--ink);white-space:nowrap;
+  padding:7px 14px;border-radius:20px;border:2px solid transparent;
+  transition:background .15s,border-color .15s;
+}
+.top-nav a:hover{background:#FBD3E1;border-color:var(--ink)}
+
+/* ── Sidehoved ─────────────────────────────────────────── */
+.wrap{max-width:var(--max);margin:0 auto;padding:0 24px}
+.head{padding:34px 0 22px;position:relative;overflow:hidden}
+.head::before{
+  content:'';position:absolute;width:380px;height:380px;border-radius:50%;
+  background:#F7B9D2;filter:blur(70px);opacity:.5;top:-200px;right:-120px;z-index:0;
+}
+.head-in{position:relative;z-index:1}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;background:var(--ink);color:#FFF6E0;padding:6px 14px;border-radius:20px}
+.eyebrow .blink{width:8px;height:8px;border-radius:50%;background:var(--accent);animation:pulse 1.8s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.8)}}
+h1{
+  font-family:var(--display);font-variation-settings:var(--wide);font-weight:800;
+  font-size:clamp(2rem,4.6vw,2.9rem);line-height:1.03;letter-spacing:-0.032em;margin:16px 0 14px;
+}
+.hi{position:relative;display:inline-block;z-index:0;white-space:nowrap}
+.hi::before{
+  content:'';position:absolute;z-index:-1;left:-8px;right:-8px;top:12%;bottom:8%;
+  background:var(--hc,var(--amber));border-radius:6px;transform:rotate(-1.3deg);
+}
+.lead{font-size:1.06rem;color:#3E4E4C;max-width:58ch}
+
+/* ── Signaturpanel ─────────────────────────────────────── */
+.rig{
+  position:relative;background:var(--panel);
+  border:2.5px solid var(--ink);border-radius:18px;overflow:hidden;
+  box-shadow:var(--hard-lg);margin-top:26px;
+}
+.rig-bar{height:9px;background:var(--accent)}
+.rig-head{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  padding:11px 15px;border-bottom:2px solid var(--ink);background:#FDEAF1;
+}
+.rig-live{display:flex;align-items:center;gap:7px}
+.rig-live .mono{color:var(--ink);font-weight:600}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--accent);border:1.5px solid var(--ink);animation:pulse 2s ease-in-out infinite}
+.rig-head .spacer{margin-left:auto}
+.btn-mini{
+  font-family:var(--display);font-size:0.72rem;font-weight:700;
+  background:#fff;border:2px solid var(--ink);color:var(--ink);
+  padding:4px 11px;border-radius:18px;cursor:pointer;box-shadow:2px 2px 0 var(--ink);
+  transition:transform .12s,box-shadow .12s,background .16s,color .16s;
+}
+.btn-mini:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--ink)}
+.btn-mini:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--ink)}
+.btn-mini[aria-pressed="true"]{background:var(--accent);color:#fff;transform:translate(2px,2px);box-shadow:0 0 0 var(--ink)}
+.btn-mini[hidden]{display:none}
+
+/* ── Scenen: figuren til venstre, forklaringen til højre ── */
+.stage{
+  position:relative;display:grid;grid-template-columns:1fr 320px;
+  border-top:2px solid var(--ink);
+  background:radial-gradient(circle at 1px 1px,#E6EDEB 1px,transparent 0) 0 0/16px 16px;
+}
+.view{position:relative;padding:10px;touch-action:manipulation}
+.view canvas{
+  display:block;width:100%;height:auto;
+  border:2px solid var(--ink);border-radius:12px;background:#EAF6FC;cursor:pointer;
+}
+.hint{
+  position:absolute;right:22px;bottom:22px;z-index:2;pointer-events:none;
+  font-family:var(--mono);font-size:0.58rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;
+  color:var(--ink);background:rgba(255,249,238,.92);border:1.5px solid var(--ink);
+  border-radius:14px;padding:4px 10px;
+}
+/* Målestokken står øverst til højre — nederst til venstre ville den
+   lægge sig oven i det mærkat, figuren selv tegner for cytosolen. */
+.maalestok{
+  position:absolute;right:22px;top:22px;z-index:2;pointer-events:none;
+  font-family:var(--mono);font-size:0.52rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;
+  color:#FFF6E0;background:rgba(23,33,31,.72);border-radius:12px;padding:3px 9px;
+}
+
+/* ── Forklaringsruden ──────────────────────────────────── *
+ * Ruden må aldrig bestemme, hvor høj scenen er. Teksten skifter
+ * længde, hver gang man vælger en anden transportvej, og så ville
+ * figuren hoppe op og ned for hvert klik. Indholdet lægges derfor
+ * oven på ruden med `position:absolute` og ruller for sig selv —
+ * figuren alene sætter højden. Under 960 px står tingene under
+ * hinanden, og der skal ruden fylde det, den skal.               */
+.side{border-left:2px solid var(--ink);background:#fff;position:relative;overflow:hidden}
+.side-in{position:absolute;inset:0;display:flex;flex-direction:column;min-height:0}
+.side-h{padding:11px 14px 10px;border-bottom:2px solid var(--ink);background:var(--paper-2)}
+.side-h .mono{color:#5A6C69;font-size:0.57rem;display:block}
+.side-h b{
+  font-family:var(--display);font-variation-settings:'wdth' 110;font-weight:800;
+  font-size:1.02rem;line-height:1.15;display:block;margin-top:3px;
+}
+.side-body{padding:12px 14px 14px;font-size:0.9rem;line-height:1.5;color:#2A3735;overflow-y:auto;flex:1}
+.side-body p{margin-bottom:9px}
+.side-fakta{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.pille{
+  display:inline-flex;align-items:baseline;gap:6px;background:var(--paper);
+  border:2px solid var(--ink);border-radius:18px;padding:3px 11px;font-size:0.8rem;
+}
+.pille .mono{font-size:0.52rem;color:#5A6C69}
+.stofrække{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:10px 0 12px}
+.stofrække .mono{font-size:0.52rem;color:#5A6C69}
+.stofchip{
+  display:inline-flex;align-items:center;gap:6px;
+  border:2px solid var(--ink);border-radius:18px;padding:2px 10px;
+  font-family:var(--mono);font-size:0.66rem;font-weight:600;background:#fff;
+}
+.stofchip::before{content:'';width:9px;height:9px;border-radius:50%;background:var(--sc,var(--slate));border:1.5px solid var(--ink);flex:none}
+.ekshoved{
+  margin:14px 0 8px;padding-top:10px;border-top:2px solid var(--ink);
+  font-size:0.57rem;color:#5A6C69;
+}
+.eks{list-style:none;display:flex;flex-direction:column;gap:11px}
+.eks li{border-left:4px solid var(--accent);padding-left:10px}
+.eks b{font-family:var(--display);font-weight:800;font-size:0.92rem;display:block;line-height:1.2}
+.eks .mono{display:block;font-size:0.52rem;color:#5A6C69;margin:2px 0 4px}
+.eks p{margin:0;font-size:0.86rem;line-height:1.45}
+
+/* ── Instrumenter ──────────────────────────────────────── *
+ * Fire faste pladser, så panelet ikke hopper i højden, når man
+ * vælger en anden transportvej.                                 */
+.gauges{display:grid;grid-template-columns:repeat(4,1fr);border-top:2px solid var(--ink)}
+.gauge{padding:12px 15px 13px;border-left:2px solid var(--ink);display:flex;flex-direction:column;gap:7px}
+.gauge:nth-child(1){border-left:none;background:#FFF1EC}
+.gauge:nth-child(2){background:#F1ECFC}
+.gauge:nth-child(3){background:#EDF8E4}
+.gauge:nth-child(4){background:#E7F4FB}
+.gauge dt{font-family:var(--mono);font-size:0.57rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#5A6C69}
+.gauge dd{
+  font-family:var(--display);font-variation-settings:'wdth' 108;font-weight:800;
+  font-size:1.06rem;line-height:1.2;font-variant-numeric:tabular-nums;
+}
+.gauge dd .enhed{
+  font-family:var(--mono);font-size:0.62rem;font-weight:600;
+  letter-spacing:0.04em;color:#5A6C69;text-transform:none;
+}
+
+/* ── Skydere ───────────────────────────────────────────── */
+.knobs{
+  border-top:2px solid var(--ink);background:var(--paper-2);
+  padding:16px 15px 18px;display:grid;grid-template-columns:1fr 1fr;gap:16px 26px;
+}
+.knob{display:flex;flex-direction:column;gap:7px}
+.knob-top{display:flex;align-items:baseline;gap:10px}
+.knob-top .mono{color:#5A6C69;font-size:0.62rem}
+.knob-val{
+  margin-left:auto;font-family:var(--display);font-variation-settings:'wdth' 108;
+  font-weight:800;font-size:1rem;font-variant-numeric:tabular-nums;
+  background:#fff;border:2px solid var(--ink);border-radius:16px;padding:1px 11px;
+  white-space:nowrap;
+}
+.knob-val .enhed{font-family:var(--mono);font-size:0.62rem;font-weight:600;color:#5A6C69}
+.knobs.tom::after{
+  content:'Vælg en transportvej nedenfor — så står dens egne skydere her';
+  grid-column:1/-1;align-self:center;
+  font-family:var(--mono);font-size:0.6rem;font-weight:500;
+  letter-spacing:0.12em;text-transform:uppercase;color:#5A6C69;
+}
+.knobs.tom .knob{display:none}
+input[type=range]{
+  -webkit-appearance:none;appearance:none;width:100%;height:22px;background:transparent;cursor:pointer;
+}
+input[type=range]::-webkit-slider-runnable-track{
+  height:10px;border:2px solid var(--ink);border-radius:9px;
+  background:linear-gradient(90deg,#fff,var(--kc,var(--amber)));
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;
+  width:22px;height:22px;margin-top:-8px;border-radius:50%;
+  border:2.5px solid var(--ink);background:var(--kc,var(--amber));box-shadow:2px 2px 0 var(--ink);
+}
+input[type=range]::-moz-range-track{
+  height:10px;border:2px solid var(--ink);border-radius:9px;
+  background:linear-gradient(90deg,#fff,var(--kc,var(--amber)));
+}
+input[type=range]::-moz-range-thumb{
+  width:20px;height:20px;border-radius:50%;
+  border:2.5px solid var(--ink);background:var(--kc,var(--amber));box-shadow:2px 2px 0 var(--ink);
+}
+
+/* ── Vælgeren: de syv transportveje ────────────────────── */
+.facts{border-top:2px solid var(--ink);background:#fff;padding:12px 15px;display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+.facts > .mono{color:#5A6C69;font-size:0.55rem;margin-right:2px}
+.fact{
+  display:inline-flex;align-items:center;gap:8px;background:var(--paper);
+  border:2px solid var(--ink);border-radius:22px;padding:5px 13px;color:var(--ink);
+  font-family:var(--mono);font-size:0.6rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;
+  cursor:pointer;transition:transform .12s,box-shadow .12s,background .16s,color .16s;
+}
+.fact::before{content:'';width:10px;height:10px;border-radius:3px;background:var(--fc,var(--slate));border:1.5px solid var(--ink);flex:none}
+.fact::after{
+  content:attr(data-slags);font-family:var(--mono);font-size:0.5rem;
+  border:1.5px solid currentColor;border-radius:9px;padding:0 5px;opacity:.75;
+}
+.fact:hover{transform:translate(-2px,-2px);box-shadow:3px 3px 0 var(--ink)}
+.fact[aria-pressed="true"]{background:var(--ink);color:#FFF6E0}
+
+/* ── Bund ──────────────────────────────────────────────── */
+.foot{margin-top:34px;background:var(--ink);color:#FFF6E0;padding:26px 0 32px}
+.foot-in{max-width:var(--max);margin:0 auto;padding:0 24px;display:flex;justify-content:space-between;align-items:flex-end;gap:18px;flex-wrap:wrap}
+.foot .brand{color:#FFF6E0}
+.foot .mono{color:#8FA29E;margin-top:5px}
+.foot-links{display:flex;gap:8px;flex-wrap:wrap}
+.foot-links a{
+  font-family:var(--display);font-size:0.82rem;font-weight:700;text-decoration:none;
+  border:2px solid #FFF6E0;border-radius:20px;padding:5px 13px;
+  transition:background .16s,color .16s,border-color .16s;
+}
+.foot-links a:nth-child(1):hover{background:var(--pink);border-color:var(--pink)}
+.foot-links a:nth-child(2):hover{background:var(--amber);border-color:var(--amber);color:var(--ink)}
+.foot-links a:nth-child(3):hover{background:var(--lime);border-color:var(--lime);color:var(--ink)}
+
+/* ── Projektortilstand ─────────────────────────────────── */
+body[data-projektor="1"] .top,
+body[data-projektor="1"] .head,
+body[data-projektor="1"] .foot{display:none}
+body[data-projektor="1"] .wrap{max-width:none;padding:0 14px}
+body[data-projektor="1"] .rig{margin-top:14px;box-shadow:var(--hard)}
+body[data-projektor="1"] .fact{font-size:0.76rem}
+body[data-projektor="1"] .knob-top .mono{font-size:0.78rem}
+body[data-projektor="1"] .knob-val{font-size:1.24rem}
+body[data-projektor="1"] .gauge dt{font-size:0.74rem}
+body[data-projektor="1"] .gauge dd{font-size:1.4rem}
+body[data-projektor="1"] .side-h b{font-size:1.2rem}
+body[data-projektor="1"] .side-body{font-size:1.02rem}
+
+/* ── Responsivt ────────────────────────────────────────── */
+@media (max-width:960px){
+  .stage{grid-template-columns:1fr}
+  .side{border-left:none;border-top:2px solid var(--ink);overflow:visible}
+  .side-in{position:static}
+  .side-body{overflow:visible}
+  .gauges{grid-template-columns:1fr 1fr}
+  .gauge:nth-child(3){border-left:none}
+  .gauge:nth-child(n+3){border-top:2px solid var(--ink)}
+}
+@media (max-width:700px){
+  /* Membranen er bredere, end en telefon kan vise. Figuren får sin
+     egen vandrette rulning; resten af siden ruller kun lodret. */
+  .view{overflow-x:auto;overflow-y:hidden}
+  .view canvas{min-width:660px}
+  .hint,.maalestok{display:none}
+}
+@media (max-width:620px){
+  body{font-size:16px}
+  .wrap,.top-in,.foot-in{padding-left:16px;padding-right:16px}
+  .head{padding:24px 0 18px}
+  .rig{border-radius:14px;box-shadow:var(--hard)}
+  .facts,.rig-head,.knobs{padding-left:16px;padding-right:16px}
+  .knobs{grid-template-columns:1fr}
+  .gauges{grid-template-columns:1fr}
+  .gauge:nth-child(n){border-left:none}
+  .gauge:nth-child(n+2){border-top:2px solid var(--ink)}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+@media print{
+  .top,.foot,.rig-head .btn-mini,.knobs{display:none!important}
+  .stage{grid-template-columns:1fr 280px}
+  .rig{box-shadow:none;break-inside:avoid}
+}
+</style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "LearningResource",
+      "name": "Transport gennem cellemembranen",
+      "url": "https://smbi.dk/biologi/membran2d.html",
+      "inLanguage": "da-DK",
+      "description": "Syv transportveje i den samme membran: klik en af dem, zoom ind og se molekylerne gå igennem — fra simpel diffusion over kanaler og bærerproteiner til Na⁺/K⁺-pumpen, symport og vesikeltransport.",
+      "learningResourceType": "interaktiv simulering",
+      "educationalLevel": "Gymnasialt niveau (stx, hf)",
+      "isAccessibleForFree": true,
+      "author": {
+        "@type": "Person",
+        "name": "Simon Messell"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "smbi.dk",
+        "url": "https://smbi.dk/"
+      },
+      "image": "https://smbi.dk/img/og-biologi.png",
+      "isPartOf": {
+        "@id": "https://smbi.dk/#website"
+      },
+      "about": {
+        "@type": "Thing",
+        "name": "Transport over cellemembranen"
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {"@type": "ListItem", "position": 1, "name": "Forside", "item": "https://smbi.dk/"},
+        {"@type": "ListItem", "position": 2, "name": "Biologi", "item": "https://smbi.dk/biologi.html"},
+        {"@type": "ListItem", "position": 3, "name": "Transport gennem cellemembranen", "item": "https://smbi.dk/biologi/membran2d.html"}
+      ]
+    }
+  ]
+}
+</script>
+</head>
+
+<body>
+
+<header class="top" id="site-top">
+  <div class="rainbow"></div>
+  <div class="top-bar">
+    <div class="top-in">
+      <a href="/" class="brand"><span class="brand-mark"></span>smbi<em>.dk</em></a>
+      <nav class="top-nav">
+        <a href="/biologi.html">Biologi</a>
+        <a href="/">Forside</a>
+      </nav>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap head">
+    <div class="head-in">
+      <span class="eyebrow mono"><span class="blink"></span>Biologi · cellemembranen</span>
+      <h1>Syv veje gennem <span class="hi" style="--hc:#FBD3E1">membranen</span></h1>
+      <p class="lead">Alle transportvejene står i den samme membran og kører på samme tid. Klik på en af dem, så zoomer figuren ind, og du kan følge molekylerne hele vejen igennem — og læse, hvor netop den vej sidder i kroppen.</p>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <section class="rig">
+      <div class="rig-bar"></div>
+      <div class="rig-head">
+        <span class="rig-live"><span class="dot"></span><span class="mono">Levende membran</span></span>
+        <span class="spacer"></span>
+        <button type="button" class="btn-mini" id="btn-hjem" hidden title="Zoom ud og se hele membranen igen">Hele membranen</button>
+        <button type="button" class="btn-mini" id="btn-kolesterol" aria-pressed="true" title="Vis eller skjul kolesterolet mellem fosfolipiderne">Kolesterol</button>
+        <button type="button" class="btn-mini" id="btn-fast" aria-pressed="true" title="Til: cellen forbruger og tilfører, så forskellene holdes ved lige — som i en levende celle. Fra: lukket system, hvor transporten selv ændrer koncentrationerne">Fast koncentration</button>
+        <button type="button" class="btn-mini" id="btn-pause" aria-pressed="false" title="Sæt figuren på pause">Pause</button>
+        <button type="button" class="btn-mini" id="btn-projektor" aria-pressed="false" title="Skjul sidens krom og forstør teksten">Projektor</button>
+      </div>
+
+      <div class="stage">
+        <div class="view" id="view">
+          <canvas id="scene" tabindex="0" role="img"
+            aria-label="Et tværsnit af cellemembranen. To lag fosfolipider ligger med de runde hydrofile hoveder ud mod vandet foroven og forneden og de aflange hydrofobe haler ind mod hinanden, med kolesterol imellem. Syv transportveje står side om side gennem membranen, fra venstre: simpel diffusion, hvor iltmolekyler glider ned gennem lipidlaget og kuldioxid op; en aquaporin, hvor vandmolekyler går i én række igennem; en kaliumkanal med en port, der åbner og lukker, og et filter, der viser natriumionerne bort; bærerproteinet GLUT1, der binder ét glukosemolekyle, lukker sig om det og slipper det på den anden side; natrium-kalium-pumpen, der sender tre natriumioner ud og to kaliumioner ind og undervejs spalter et ATP-molekyle; symporten SGLT1, der tager to natriumioner og en glukose ind sammen; og til sidst vesikeltransport, hvor en vesikel indefra smelter sammen med membranen og hælder insulin ud, og hvor membranen bagefter bugter sig indad om en LDL-partikel og snører en ny vesikel af."></canvas>
+          <span class="maalestok">Membranen er ca. 7,5 <span class="enhed">nm</span> tyk</span>
+          <span class="hint">Klik en vej · piletaster skifter</span>
+        </div>
+
+        <div class="side">
+          <div class="side-in">
+            <div class="side-h">
+              <span class="mono" id="fork-stempel">Væskemosaikmodellen</span>
+              <b id="fork-navn">Hele membranen</b>
+            </div>
+            <div class="side-body" id="fork-tekst" aria-live="polite" tabindex="0"></div>
+          </div>
+        </div>
+      </div>
+
+      <dl class="gauges" id="gauges"></dl>
+
+      <div class="knobs" id="knobs"></div>
+
+      <div class="facts">
+        <span class="mono">Transportvej</span>
+        <button type="button" class="fact" data-vej="diffusion" data-slags="passiv" aria-pressed="false" style="--fc:#FF5A36">Simpel diffusion</button>
+        <button type="button" class="fact" data-vej="osmose"    data-slags="passiv" aria-pressed="false" style="--fc:#9BD8F0">Osmose · aquaporin</button>
+        <button type="button" class="fact" data-vej="kanal"     data-slags="passiv" aria-pressed="false" style="--fc:#C9A9F0">Ionkanal</button>
+        <button type="button" class="fact" data-vej="baerer"    data-slags="passiv" aria-pressed="false" style="--fc:#FFAE8A">Bærerprotein</button>
+        <button type="button" class="fact" data-vej="pumpe"     data-slags="aktiv"  aria-pressed="false" style="--fc:#FF7FA8">Na⁺/K⁺-pumpen</button>
+        <button type="button" class="fact" data-vej="symport"   data-slags="aktiv"  aria-pressed="false" style="--fc:#7FE3D0">Symport</button>
+        <button type="button" class="fact" data-vej="vesikel"   data-slags="aktiv"  aria-pressed="false" style="--fc:#FFB300">Vesikeltransport</button>
+      </div>
+    </section>
+  </div>
+
+  <p class="sr" id="status" aria-live="polite"></p>
+</main>
+
+<footer class="foot">
+  <div class="foot-in">
+    <div>
+      <a href="/" class="brand"><span class="brand-mark"></span>smbi<em>.dk</em></a>
+      <div class="mono">Biologi · cellemembranen</div>
+    </div>
+    <nav class="foot-links">
+      <a href="/biologi.html">Biologi</a>
+      <a href="/geografi.html">Geografi</a>
+      <a href="/contact.html">Kontakt</a>
+    </nav>
+  </div>
+</footer>
+
+<script type="module" src="membran2d/side.js"></script>
+
+</body>
+</html>
