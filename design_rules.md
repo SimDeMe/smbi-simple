@@ -105,13 +105,18 @@ uden at kende CDN-adressen.
 }
 ```
 
-Skrifterne hentes fra Google Fonts i `<head>`:
+Skrifterne ligger på sitet selv — **hent dem ikke fra Google**. Én linje i
+`<head>`, før sidens egen CSS:
 
 ```html
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,300..600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/fonts/skrifter.css">
 ```
+
+`fonts/skrifter.css` rummer alle sitets skrifter som `@font-face` med
+woff2-filer fra `/fonts/`; browseren henter kun dem, siden bruger. Grunden er
+privatliv: hentes skrifterne fra Google, får Google den besøgendes IP-adresse,
+blot fordi siden åbnes. Se `seo.md` for hvordan pakken bygges om, hvis en
+skrift skal skiftes.
 
 **Sådan bruges de tre skrifter:**
 
@@ -269,9 +274,10 @@ Spørg, hvis det er uklart om siden skal have forklarende tekst under panelet
   `location.hash` (`#trin=3`) og accepter dem også som query (`?trin=3`).
   Projektortilstand (`?projektor=1` / `?mode=teach`) skjuler sidens krom og
   skalerer teksten op.
-* **Ingen eksterne afhængigheder** ud over Google Fonts — og three.js fra CDN
-  på de sider, der er ægte 3D (aftalt undtagelse, se `geografi/Tidevand.html`).
-  Ingen build, ingen npm-pakker, ingen ikonbibliotek-CDN i nye sider.
+* **Ingen eksterne afhængigheder.** Skrifterne ligger lokalt, og en ny side
+  henter intet fra andre servere. Eneste aftalte undtagelse er three.js fra
+  CDN på de sider, der er ægte 3D (se `geografi/Tidevand.html`). Ingen build,
+  ingen npm-pakker, ingen ikonbibliotek-CDN i nye sider.
 * **Besøgstælling:** `<script src="/analytics.js"></script>` som sidste linje i
   `<head>` — se `seo.md`. Cloudflare Web Analytics er cookiefri, så sitet har
   ingen samtykkedialog. **Den frihed skal holdes:** indlejrer du noget udefra,

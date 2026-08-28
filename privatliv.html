@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privatliv — smbi.dk</title>
+<meta name="description" content="Hvad smbi.dk registrerer, når du besøger siden — og hvad siden med vilje ikke gør.">
+<!-- Deling, ikoner og kanonisk adresse -->
+<link rel="canonical" href="https://smbi.dk/privatliv.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="smbi.dk">
+<meta property="og:locale" content="da_DK">
+<meta property="og:url" content="https://smbi.dk/privatliv.html">
+<meta property="og:title" content="Privatliv">
+<meta property="og:description" content="Hvad smbi.dk registrerer, når du besøger siden — og hvad siden med vilje ikke gør.">
+<meta property="og:image" content="https://smbi.dk/img/og-smbi.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="smbi.dk — interaktive simuleringer til biologi og naturgeografi">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#FFF9EE">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="stylesheet" href="/fonts/skrifter.css">
+<link rel="stylesheet" href="forside.css">
+<style>
+  /* sidens ene accentfarve — privatliv hører hverken til bio eller geo */
+  :root{--accent:var(--grape);--max:820px}
+
+  .pv{
+    background:var(--panel);
+    border:2.5px solid var(--ink);
+    border-radius:18px;
+    overflow:hidden;
+    box-shadow:var(--hard-lg);
+    margin:0 0 60px;
+  }
+  .pv-body{padding:26px 30px 30px}
+
+  /* Kort fortalt-boksen øverst: sidens ene vigtige budskab */
+  .pv-kort{
+    background:#E2D6F8;
+    border-bottom:2px solid var(--ink);
+    padding:20px 30px;
+  }
+  .pv-kort p{margin:0;font-size:1.05rem;line-height:1.6}
+  .pv-kort b{font-family:var(--display);font-weight:800}
+
+  .pv h2{
+    font-family:var(--display);font-weight:800;
+    font-variation-settings:var(--wide);
+    letter-spacing:-0.02em;font-size:1.32rem;
+    margin:34px 0 10px;
+  }
+  .pv-body>h2:first-child{margin-top:0}
+  .pv p{margin:0 0 12px;line-height:1.65}
+  .pv ul{margin:0 0 12px;padding-left:22px;line-height:1.65}
+  .pv li{margin-bottom:5px}
+  .pv a{color:var(--ink);text-decoration-thickness:2px;text-underline-offset:3px}
+  .pv a:hover{background:#E2D6F8}
+
+  /* Hver tjeneste, der får data at se, står i sin egen ramme */
+  .pv-tjeneste{
+    background:var(--paper-2);
+    border:2px solid var(--ink);border-radius:12px;
+    padding:15px 18px;margin:0 0 14px;
+  }
+  .pv-tjeneste h3{
+    font-family:var(--display);font-weight:800;font-size:1rem;
+    margin:0 0 6px;
+  }
+  .pv-tjeneste p{margin:0 0 8px;font-size:0.95rem}
+  .pv-tjeneste p:last-child{margin-bottom:0}
+
+  .pv-opdateret{
+    border-top:2px solid var(--ink);
+    background:var(--paper-2);
+    padding:14px 30px;
+    color:var(--slate);
+  }
+
+  @media (max-width:620px){
+    .pv{border-radius:14px;box-shadow:var(--hard)}
+    .pv-body{padding:20px 18px 24px}
+    .pv-kort,.pv-opdateret{padding:16px 18px}
+  }
+  @media print{
+    .pv{box-shadow:none}
+  }
+</style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "name": "Privatliv",
+  "url": "https://smbi.dk/privatliv.html",
+  "inLanguage": "da-DK",
+  "description": "Hvad smbi.dk registrerer, når du besøger siden — og hvad siden med vilje ikke gør.",
+  "isPartOf": {
+    "@id": "https://smbi.dk/#website"
+  }
+}
+</script>
+<!-- Besøgstælling (cookiefri) -->
+<script src="/analytics.js"></script>
+</head>
+<body>
+
+<header class="top" id="site-top">
+  <div class="rainbow"></div>
+  <div class="top-bar">
+    <div class="top-in">
+      <a href="/" class="brand"><span class="brand-mark"></span>smbi<em>.dk</em></a>
+      <nav class="top-nav">
+        <a href="/">Forside</a>
+        <a href="/biologi.html">Biologi</a>
+        <a href="/geografi.html">Geografi</a>
+        <a href="/contact.html">Kontakt</a>
+      </nav>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <div class="wrap head">
+    <div class="head-in">
+      <span class="eyebrow mono"><span class="blink"></span>smbi.dk</span>
+      <h1>Sådan passer siden på <span class="hi" style="--hc:#E2D6F8">dine data</span></h1>
+      <p class="lead">Hvad der bliver registreret, når du bruger smbi.dk — og hvad siden med vilje lader være med.</p>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <section class="pv" aria-labelledby="pv-titel">
+      <div class="rig-bar"></div>
+      <div class="rig-head">
+        <span class="rig-live"><span class="dot"></span><span class="mono" id="pv-titel">Privatlivspolitik</span></span>
+      </div>
+
+      <div class="pv-kort">
+        <p><b>smbi.dk sætter ingen cookies.</b> Derfor er der heller ingen samtykkedialog, du skal klikke væk. Du kan bruge alle simuleringer og opgaver, uden at der bliver gemt noget på din computer, og uden at du bliver genkendt fra gang til gang.</p>
+      </div>
+
+      <div class="pv-body">
+
+        <h2>Hvem står bag</h2>
+        <p>smbi.dk drives af Simon Messell som et undervisningssite til naturgeografi og biologi på gymnasieniveau. Jeg er dataansvarlig for siden. Har du spørgsmål til noget herunder, kan du skrive via <a href="/contact.html">kontaktformularen</a>.</p>
+
+        <h2>Besøgstælling</h2>
+        <p>Jeg tæller besøg for at kunne se, hvilke simuleringer der faktisk bliver brugt, og hvilke der ikke gør. Det bruges til at prioritere, hvad jeg laver om og bygger nyt. Tælleren hedder Cloudflare Web Analytics og er valgt, netop fordi den ikke bruger cookies.</p>
+        <div class="pv-tjeneste">
+          <h3>Cloudflare Web Analytics</h3>
+          <p><b>Registrerer:</b> hvilken side der blev vist, hvilken side du eventuelt kom fra, land, browsertype og styresystem — samt hvor hurtigt siden indlæste.</p>
+          <p><b>Registrerer ikke:</b> cookies, dit navn, din e-mail, eller noget der kan følge dig fra besøg til besøg eller fra side til side. Adresselinjens indhold efter et spørgsmålstegn bliver bevidst ikke gemt.</p>
+          <p><b>Grundlag:</b> min legitime interesse i at vide, om undervisningsmaterialet bliver brugt. Da der ikke gemmes noget på dit udstyr, kræver det ikke dit samtykke.</p>
+          <p><b>Opbevaring:</b> detaljerede tal i 7 dage, derefter kun samlede tal i et halvt år.</p>
+        </div>
+
+        <h2>Hvis du skriver til mig</h2>
+        <p>Kontaktformularen sender din besked videre gennem tjenesten Formspree, som håndterer afsendelsen og videresender den til min mail.</p>
+        <div class="pv-tjeneste">
+          <h3>Formspree</h3>
+          <p><b>Registrerer:</b> den e-mailadresse og den besked, du selv skriver i formularen.</p>
+          <p><b>Grundlag:</b> at du selv vælger at sende beskeden, fordi du gerne vil have svar.</p>
+          <p><b>Opbevaring:</b> jeg gemmer korrespondancen, så længe den er relevant for det, vi skriver om, og sletter den derefter.</p>
+        </div>
+
+        <h2>Videoer</h2>
+        <p>På geografisiden ligger et par videoer fra YouTube. De bliver <b>ikke</b> hentet, når du åbner siden — der står kun en knap. Først når du selv klikker for at afspille, kontaktes YouTube, og først dér kan YouTube sætte cookies. Videoerne hentes fra youtube-nocookie.com, som sætter færrest muligt.</p>
+
+        <h2>Skrifter og øvrige filer</h2>
+        <p>Sidens skrifttyper ligger på smbi.dk selv. De hentes altså ikke fra Google, som ellers er det normale, og Google får derfor ikke din IP-adresse, blot fordi du åbner en side her.</p>
+        <p>På enkelte 3D-simuleringer hentes et grafikbibliotek fra et offentligt kodearkiv (jsDelivr eller 3Dmol.org). Det sætter ingen cookies, men den server ser din IP-adresse — præcis som enhver server gør, når din browser henter en fil fra den.</p>
+
+        <h2>Lukkede værktøjer</h2>
+        <p>Sitet rummer nogle få arbejdsværktøjer bag login, som ikke er en del af undervisningssiden og ikke kan bruges uden adgang. De er ikke omfattet af det, der står her.</p>
+
+        <h2>Dine rettigheder</h2>
+        <p>Fordi besøgstællingen ikke kan knyttes til dig som person, kan jeg ikke finde “dine” besøgsdata frem — de findes ikke som noget, der er dit. Har du derimod skrevet til mig, gælder de almindelige rettigheder:</p>
+        <ul>
+          <li>at få at vide, hvad jeg har liggende om dig</li>
+          <li>at få det rettet eller slettet</li>
+          <li>at få en kopi</li>
+          <li>at klage til <a href="https://www.datatilsynet.dk" target="_blank" rel="noopener">Datatilsynet</a>, hvis du mener, jeg behandler noget forkert</li>
+        </ul>
+        <p>Skriv via <a href="/contact.html">kontaktformularen</a>, så svarer jeg.</p>
+
+        <h2>Ændringer</h2>
+        <p>Ændrer jeg noget, der har betydning for det ovenstående — for eksempel hvis siden begynder at bruge en anden tjeneste — bliver denne side rettet, og datoen nedenfor opdateret.</p>
+
+      </div>
+
+      <div class="pv-opdateret mono">Sidst opdateret 28. august 2026</div>
+    </section>
+  </div>
+
+</main>
+
+<footer class="foot">
+  <div class="foot-in">
+    <div>
+      <a href="/" class="brand"><span class="brand-mark"></span>smbi<em style="color:#8FA29E">.dk</em></a>
+      <p class="mono">Simon Messell · naturgeografi &amp; biologi · © <span id="year"></span></p>
+    </div>
+    <div class="foot-cols">
+      <div class="foot-col">
+        <h4>Sider</h4>
+        <div class="foot-links">
+          <a href="/">Forside</a>
+          <a href="/biologi.html">Biologi</a>
+          <a href="/geografi.html">Geografi</a>
+          <a href="/contact.html">Kontakt</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="/fag.js"></script>
+</body>
+</html>

@@ -89,8 +89,30 @@ Derfor:
   ved klik indsættes en iframe fra `youtube-nocookie.com`. Koden står i
   `fag.js`, stilen i `forside.css` under `.video-start`. Gør det samme, hvis
   der kommer video på flere sider.
+* **Skrifterne ligger lokalt** i `/fonts/`, ikke hos Google. Sider indsætter
+  `<link rel="stylesheet" href="/fonts/skrifter.css">`.
 * **three.js fra jsDelivr** på de ægte 3D-sider er den aftalte undtagelse.
 * Nye sider tilføjer ikke andre eksterne scripts.
+
+### Skriftpakken
+
+`fonts/skrifter.css` er bygget ud fra Google Fonts' egen css2-fil, men peger på
+woff2-filer i `/fonts/`. Alle skrifterne er under SIL Open Font License 1.1,
+som tillader det. Kun `latin` og `latin-ext` er med.
+
+Skal en skrift skiftes eller en vægt tilføjes:
+
+1. Hent `https://fonts.googleapis.com/css2?family=…` med en moderne browser-UA
+   (ellers får du gamle formater i stedet for woff2).
+2. Læg de woff2-filer, den peger på, i `/fonts/`.
+3. Kopiér `@font-face`-blokkene for `latin` og `latin-ext` ind i
+   `fonts/skrifter.css`, og ret `url(…)` til den lokale sti.
+
+### Privatlivspolitik
+
+`privatliv.html` beskriver, hvad sitet registrerer. **Den skal rettes**, hvis
+der kommer en ny tjeneste ind på siden — tæller, formular, indlejring — og
+datoen nederst opdateres. Alle sider med sidefod linker til den.
 
 ## Sider, der ikke skal i søgeresultaterne
 
