@@ -11,20 +11,19 @@
    manuel opsætning (JS-snippet). Token'en er ikke en hemmelighed — den står
    i klartekst hos alle besøgende — så den må gerne ligge i git. */
 (function () {
-  var token = 'INDSAET_TOKEN_HER';
-
-  // Ikke sat op endnu: gør ingenting frem for at sende ødelagte kald af sted.
-  if (token === 'INDSAET_TOKEN_HER') return;
+  var token = 'f49c99760bf64175af7710d1eb47b1ea';
 
   // Tæl ikke eget arbejde med: lokal server (python3 -m http.server) og file://
   var vaert = location.hostname;
   if (vaert === '' || vaert === 'localhost' || vaert === '127.0.0.1' ||
       vaert === '[::1]' || vaert.slice(-6) === '.local') return;
 
+  // Samme element som Cloudflares eget snippet: type=module (moduler er
+  // udskudte i sig selv) og token'en i data-cf-beacon, sat før indsættelsen,
+  // så beacon'en kan finde den, når den kører.
   var s = document.createElement('script');
-  s.defer = true;
+  s.type = 'module';
   s.src = 'https://static.cloudflareinsights.com/beacon.min.js';
-  // beacon.min.js læser sin egen data-cf-beacon, så den skal sættes før indsættelsen
   s.setAttribute('data-cf-beacon', JSON.stringify({ token: token }));
   document.head.appendChild(s);
 })();
