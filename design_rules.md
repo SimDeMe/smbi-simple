@@ -272,6 +272,9 @@ Spørg, hvis det er uklart om siden skal have forklarende tekst under panelet
 * **Ingen eksterne afhængigheder** ud over Google Fonts — og three.js fra CDN
   på de sider, der er ægte 3D (aftalt undtagelse, se `geografi/Tidevand.html`).
   Ingen build, ingen npm-pakker, ingen ikonbibliotek-CDN i nye sider.
+* **Besøgstælling:** `<script src="/analytics.js"></script>` som sidste linje i
+  `<head>` — se `seo.md`. Google Analytics er den eneste aftalte undtagelse ud
+  over de to ovenfor.
 
 ## 6. Når fysikken/modellen ændres
 

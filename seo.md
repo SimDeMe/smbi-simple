@@ -49,6 +49,25 @@ og ret `name`, `description`, `url`, `about` og `learningResourceType`
 6. Adressen ind i `sitemap.xml` med dagens dato i `<lastmod>`.
 7. Link til siden fra fagforsiden — en side, der ikke er linket til, bliver
    sjældent fundet.
+8. `<script src="/analytics.js"></script>` som sidste linje i `<head>` —
+   også på interne sider.
+
+## Besøgstælling
+
+Google Analytics (GA4) ligger i `analytics.js` i roden, og hver side henter den
+med én linje sidst i `<head>`:
+
+```html
+<!-- Google Analytics -->
+<script src="/analytics.js"></script>
+```
+
+Måle-ID'et (`G-0KL0LJNL6H`) står **kun** i `analytics.js`, så det kan skiftes ét
+sted. Filen springer over sig selv på `localhost`, `127.0.0.1` og `file://`, så
+egne besøg under `python3 -m http.server` ikke havner i statistikken.
+
+Med på alle sider, også de interne — kun `backup-gammelt-design/` og
+`smbi-design/` er udenfor, da de ikke er sider, nogen bruger.
 
 ## Sider, der ikke skal i søgeresultaterne
 
