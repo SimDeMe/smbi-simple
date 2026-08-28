@@ -624,6 +624,19 @@ html, body {
 }
 .warn-text { color: var(--warning); font-weight: 600; }
 
+/* OBS-linje i et ark — fx når en registrering ligger frem i tiden */
+.form-notice {
+  margin: -6px 0 16px;
+  padding: 10px 12px;
+  border-left: 3px solid var(--warning);
+  border-radius: var(--r-sm);
+  background: #fffbeb;
+  color: #92400e;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
 .btn-icon {
   display: flex; align-items: center; justify-content: center;
   width: 36px; height: 36px;
@@ -1260,6 +1273,8 @@ html, body {
 .skema-chip.selected .skema-chip-navn { color: var(--accent-dark); }
 .skema-chip.selected .skema-chip-tid  { color: var(--accent); }
 .skema-chip.nu { border-style: dashed; }
+/* Varighedsknapperne har kun én linje og skal stå midt i pillen */
+.skema-chip-enkel { justify-content: center; align-items: center; min-width: 72px; }
 
 /* ─── Modul sheet ────────────────────────────────────── */
 .modul-hold-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }

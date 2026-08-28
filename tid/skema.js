@@ -10,6 +10,10 @@ export const SKEMA = [
   { id: 'modul4',  navn: '4. modul', kort: '4. modul', nr: '4', start: '13:45', slut: '15:20' }
 ];
 
+// Faste varigheder til hurtigvalg i registreringsformularen (minutter).
+// Sætter kun sluttiden — starten bliver, hvor den er.
+export const VARIGHEDER = [10, 20, 40, 60];
+
 // Kun undervisningsmodulerne — frokosten er ikke et modul, man kan holde
 export const MODULER = SKEMA.filter(s => !s.erPause);
 

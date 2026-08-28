@@ -2,7 +2,7 @@
 
 import { db, showToast, getCurrentSchoolYear } from './app.js';
 import { getLoadedActivities } from './activities.js';
-import { SKEMA, skemaFraTider, skemaNu, skemaInterval } from './skema.js';
+import { SKEMA, VARIGHEDER, minutterFraTid, skemaFraTider, skemaNu, skemaInterval } from './skema.js';
 import { opretPost, erPause, PAUSE_NAVN } from './pauser.js';
 import {
   collection, doc, updateDoc, deleteDoc,
@@ -52,8 +52,12 @@ function setupEntriesListener() {
 // ─── Filtering ────────────────────────────────────────────
 function filterEntries() {
   const start = getPeriodStart(periodFilter);
+  const end   = getPeriodEnd(periodFilter);
   return entries.filter(e => {
     if (start && e.startTime?.toDate() < start) return false;
+    // Perioden har også en ende — ellers ville planlagt tid i næste uge
+    // dukke op under "I dag"
+    if (end && e.startTime?.toDate() >= end) return false;
     if (actFilter && e.activityId !== actFilter) return false;
     return true;
   });
@@ -70,6 +74,16 @@ function getPeriodStart(period) {
   }
   if (period === 'maaned') return new Date(now.getFullYear(), now.getMonth(), 1);
   return null;
+}
+
+function getPeriodEnd(period) {
+  const start = getPeriodStart(period);
+  if (!start) return null;
+  const end = new Date(start);
+  if (period === 'dag')    end.setDate(end.getDate() + 1);
+  if (period === 'uge')    end.setDate(end.getDate() + 7);
+  if (period === 'maaned') end.setMonth(end.getMonth() + 1);
+  return end;
 }
 
 // ─── Render list ──────────────────────────────────────────
@@ -188,7 +202,10 @@ export function openEntrySheet(entryId, prefill = null) {
   }
 
   renderSkemaChips();
+  renderVarighedChips();
   syncSkemaChips();
+  syncVarighedChips();
+  syncFremtidNotice();
   updateWtVisibility();
   document.getElementById('hist-delete-btn').classList.toggle('hidden', !e);
   openSheet('hist-sheet', 'hist-backdrop');
@@ -266,6 +283,8 @@ function vaelgSkema(id) {
   if (!document.getElementById('hist-date').value)
     document.getElementById('hist-date').value = toDateInput(new Date());
   syncSkemaChips();
+  syncVarighedChips();
+  syncFremtidNotice();
 }
 
 // Fremhæver det slot, tidsfelterne præcis svarer til — også når tiderne
@@ -288,6 +307,86 @@ function syncSkemaChips() {
   });
 }
 
+// ─── Varighed som hurtigvalg ──────────────────────────────
+// Knapperne sætter kun sluttiden ud fra starten, så et stykke arbejde på
+// 10, 20, 40 eller 60 minutter kan lægges ind uden at regne klokkeslæt ud.
+function renderVarighedChips() {
+  const row = document.getElementById('hist-varighed-row');
+  if (!row || row.dataset.built) return;
+  row.innerHTML = VARIGHEDER.map(m => `
+    <button type="button" class="skema-chip skema-chip-enkel" data-min="${m}"
+            aria-pressed="false" aria-label="Varighed ${m} minutter">
+      <span class="skema-chip-navn">${m} min</span>
+    </button>`).join('');
+  row.querySelectorAll('.skema-chip').forEach(btn =>
+    btn.addEventListener('click', () => vaelgVarighed(Number(btn.dataset.min)))
+  );
+  row.dataset.built = '1';
+}
+
+function vaelgVarighed(minutter) {
+  const dateEl  = document.getElementById('hist-date');
+  const startEl = document.getElementById('hist-start');
+  // Åbner man arket uden tider (fx fra knappen "Ny"), regnes varigheden fra nu
+  if (!dateEl.value)  dateEl.value  = toDateInput(new Date());
+  if (!startEl.value) startEl.value = fmtTime(new Date());
+
+  const start = parseDateTime(dateEl.value, startEl.value);
+  if (!start || isNaN(start)) { showToast('Angiv et gyldigt starttidspunkt'); return; }
+
+  document.getElementById('hist-end').value =
+    fmtTime(new Date(start.getTime() + minutter * 60000));
+
+  syncSkemaChips();
+  syncVarighedChips();
+  syncFremtidNotice();
+}
+
+// Fremhæver den varighed, tidsfelterne svarer til — også når tiderne kommer
+// fra et modul, fra kalenderen eller er skrevet i hånden
+function syncVarighedChips() {
+  const row = document.getElementById('hist-varighed-row');
+  if (!row) return;
+  const startVal = document.getElementById('hist-start').value;
+  const endVal   = document.getElementById('hist-end').value;
+
+  let minutter = null;
+  if (startVal && endVal) {
+    minutter = minutterFraTid(endVal) - minutterFraTid(startVal);
+    if (minutter < 0) minutter += 1440;     // arbejde hen over midnat
+  }
+
+  row.querySelectorAll('.skema-chip').forEach(btn => {
+    const valgt = minutter !== null && Number(btn.dataset.min) === minutter;
+    btn.classList.toggle('selected', valgt);
+    btn.setAttribute('aria-pressed', valgt ? 'true' : 'false');
+  });
+}
+
+// ─── OBS ved registrering i fremtiden ─────────────────────
+// Tid må gerne lægges ind, før den er brugt — fx et modul man ved man skal
+// holde — men det skal fremgå tydeligt, at posten ligger frem i tiden.
+// En post i fremtiden skal have en sluttid; uden en ville den blive oprettet
+// som en igangværende timer, der startede senere end nu.
+function starterIFremtiden() {
+  const dateVal  = document.getElementById('hist-date')?.value;
+  const startVal = document.getElementById('hist-start')?.value;
+  if (!dateVal || !startVal) return false;
+  const start = parseDateTime(dateVal, startVal);
+  return !!start && start > new Date();
+}
+
+function syncFremtidNotice() {
+  const el = document.getElementById('hist-fremtid');
+  if (!el) return;
+  const fremtid = starterIFremtiden();
+  const manglerSlut = fremtid && !document.getElementById('hist-end').value;
+  el.textContent = manglerSlut
+    ? 'OBS · Du registrerer i fremtiden — angiv en sluttid'
+    : 'OBS · Du registrerer i fremtiden';
+  el.classList.toggle('hidden', !fremtid);
+}
+
 function updateWtVisibility() {
   const actSel = document.getElementById('hist-act-sel');
   const acts   = getLoadedActivities();
@@ -308,7 +407,10 @@ async function saveEntry(ev) {
 
   const startDate = parseDateTime(dateVal, startVal);
   if (!startDate) { showToast('Ugyldigt tidspunkt'); return; }
-  if (startDate > new Date()) { showToast('Starttidspunkt kan ikke ligge i fremtiden'); return; }
+  const iFremtiden = startDate > new Date();
+  if (iFremtiden && !endVal) {
+    showToast('En registrering i fremtiden skal have en sluttid'); return;
+  }
 
   let endDate = null, durationMinutes = null;
   if (endVal) {
@@ -351,10 +453,10 @@ async function saveEntry(ev) {
       const gammel = entries.find(x => x.id === editingId);
       const felter = erPause(gammel) && actId ? { ...data, isBreak: false } : data;
       await updateDoc(doc(db, `users/${userId}/entries/${editingId}`), felter);
-      showToast('Registrering opdateret');
+      showToast(iFremtiden ? 'Registrering opdateret · i fremtiden' : 'Registrering opdateret');
     } else {
       await opretPost(userId, { ...data, isModule: false, autoStopped: false });
-      showToast('Registrering oprettet');
+      showToast(iFremtiden ? 'Registrering oprettet · i fremtiden' : 'Registrering oprettet');
     }
     closeSheet('hist-sheet', 'hist-backdrop');
   } catch (err) {
@@ -426,7 +528,11 @@ function bindListeners() {
     ?.addEventListener('change', updateWtVisibility);
 
   ['hist-start', 'hist-end', 'hist-date'].forEach(id =>
-    document.getElementById(id)?.addEventListener('input', syncSkemaChips)
+    document.getElementById(id)?.addEventListener('input', () => {
+      syncSkemaChips();
+      syncVarighedChips();
+      syncFremtidNotice();
+    })
   );
 }
 
@@ -462,10 +568,13 @@ const MONS = ['jan','feb','mar','apr','maj','jun','jul','aug','sep','okt','nov',
 function fmtDateHead(d) {
   const today     = new Date();
   const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
+  const tomorrow  = new Date(today); tomorrow.setDate(today.getDate() + 1);
   if (d.toDateString() === today.toDateString())     return 'I dag';
   if (d.toDateString() === yesterday.toDateString()) return 'I går';
+  if (d.toDateString() === tomorrow.toDateString())  return 'I morgen';
+  // Dage frem i tiden får samme korte form som de nære dage bagud
   const diffDays = Math.floor((today - d) / 86400000);
-  if (diffDays < 7)
+  if (Math.abs(diffDays) < 7)
     return `${capitalize(DAYS[d.getDay()])} ${d.getDate()}. ${MONS[d.getMonth()]}`;
   return `${d.getDate()}. ${MONS[d.getMonth()]} ${d.getFullYear()}`;
 }
