@@ -2,7 +2,7 @@
 
 import { db, showToast, getCurrentSchoolYear } from './app.js';
 import { getLoadedActivities } from './activities.js';
-import { SKEMA, skemaFraTider, skemaNu, skemaInterval } from './skema.js';
+import { SKEMA, VARIGHEDER, minutterFraTid, skemaFraTider, skemaNu, skemaInterval } from './skema.js';
 import { opretPost, erPause, PAUSE_NAVN } from './pauser.js';
 import {
   collection, doc, updateDoc, deleteDoc,
@@ -202,7 +202,9 @@ export function openEntrySheet(entryId, prefill = null) {
   }
 
   renderSkemaChips();
+  renderVarighedChips();
   syncSkemaChips();
+  syncVarighedChips();
   syncFremtidNotice();
   updateWtVisibility();
   document.getElementById('hist-delete-btn').classList.toggle('hidden', !e);
@@ -281,6 +283,7 @@ function vaelgSkema(id) {
   if (!document.getElementById('hist-date').value)
     document.getElementById('hist-date').value = toDateInput(new Date());
   syncSkemaChips();
+  syncVarighedChips();
   syncFremtidNotice();
 }
 
@@ -300,6 +303,62 @@ function syncSkemaChips() {
     const valgt = !!match && btn.dataset.skema === match.id;
     btn.classList.toggle('selected', valgt);
     btn.classList.toggle('nu', !valgt && !!nu && btn.dataset.skema === nu.id);
+    btn.setAttribute('aria-pressed', valgt ? 'true' : 'false');
+  });
+}
+
+// ─── Varighed som hurtigvalg ──────────────────────────────
+// Knapperne sætter kun sluttiden ud fra starten, så et stykke arbejde på
+// 10, 20, 40 eller 60 minutter kan lægges ind uden at regne klokkeslæt ud.
+function renderVarighedChips() {
+  const row = document.getElementById('hist-varighed-row');
+  if (!row || row.dataset.built) return;
+  row.innerHTML = VARIGHEDER.map(m => `
+    <button type="button" class="skema-chip skema-chip-enkel" data-min="${m}"
+            aria-pressed="false" aria-label="Varighed ${m} minutter">
+      <span class="skema-chip-navn">${m} min</span>
+    </button>`).join('');
+  row.querySelectorAll('.skema-chip').forEach(btn =>
+    btn.addEventListener('click', () => vaelgVarighed(Number(btn.dataset.min)))
+  );
+  row.dataset.built = '1';
+}
+
+function vaelgVarighed(minutter) {
+  const dateEl  = document.getElementById('hist-date');
+  const startEl = document.getElementById('hist-start');
+  // Åbner man arket uden tider (fx fra knappen "Ny"), regnes varigheden fra nu
+  if (!dateEl.value)  dateEl.value  = toDateInput(new Date());
+  if (!startEl.value) startEl.value = fmtTime(new Date());
+
+  const start = parseDateTime(dateEl.value, startEl.value);
+  if (!start || isNaN(start)) { showToast('Angiv et gyldigt starttidspunkt'); return; }
+
+  document.getElementById('hist-end').value =
+    fmtTime(new Date(start.getTime() + minutter * 60000));
+
+  syncSkemaChips();
+  syncVarighedChips();
+  syncFremtidNotice();
+}
+
+// Fremhæver den varighed, tidsfelterne svarer til — også når tiderne kommer
+// fra et modul, fra kalenderen eller er skrevet i hånden
+function syncVarighedChips() {
+  const row = document.getElementById('hist-varighed-row');
+  if (!row) return;
+  const startVal = document.getElementById('hist-start').value;
+  const endVal   = document.getElementById('hist-end').value;
+
+  let minutter = null;
+  if (startVal && endVal) {
+    minutter = minutterFraTid(endVal) - minutterFraTid(startVal);
+    if (minutter < 0) minutter += 1440;     // arbejde hen over midnat
+  }
+
+  row.querySelectorAll('.skema-chip').forEach(btn => {
+    const valgt = minutter !== null && Number(btn.dataset.min) === minutter;
+    btn.classList.toggle('selected', valgt);
     btn.setAttribute('aria-pressed', valgt ? 'true' : 'false');
   });
 }
@@ -471,6 +530,7 @@ function bindListeners() {
   ['hist-start', 'hist-end', 'hist-date'].forEach(id =>
     document.getElementById(id)?.addEventListener('input', () => {
       syncSkemaChips();
+      syncVarighedChips();
       syncFremtidNotice();
     })
   );

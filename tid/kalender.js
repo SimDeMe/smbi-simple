@@ -269,11 +269,32 @@ function render() {
     b.addEventListener('click', ev => { ev.stopPropagation(); openEntrySheet(b.dataset.id); }));
   laneEl.addEventListener('click', ev => {
     if (ev.target.closest('.kal-block')) return;
-    const rect = laneEl.getBoundingClientRect();
-    const min  = top0 + (ev.clientY - rect.top) / PX_MIN;
-    const snap = Math.floor(min / SNAP_MIN) * SNAP_MIN;
-    newEntryAt(snap, snap + 60);
+    const rect  = laneEl.getBoundingClientRect();
+    const min   = top0 + (ev.clientY - rect.top) / PX_MIN;
+    const start = startFraTryk(min, items);
+    newEntryAt(start, start + 60);
   });
+}
+
+// ─── Starttidspunkt for et tryk på tom plads ────────────────────
+// Trykker man lige under en registrering, skal den nye post begynde, hvor den
+// forrige slap — ellers ville afrundingen til 15 min lande inde i blokken
+// ovenover, fordi et modul slutter sjældent på et kvarter (fx 11:35).
+// Længere nede på aksen afrundes som før.
+function startFraTryk(min, items) {
+  const snap = Math.max(0, Math.floor(min / SNAP_MIN) * SNAP_MIN);
+
+  // Sidste registrering, der slutter over trykket — en igangværende post har
+  // ingen slutning at knytte an til
+  let forrigeSlut = -1;
+  items.forEach(it => {
+    if (it.isActive || it.endMin > min) return;
+    forrigeSlut = Math.max(forrigeSlut, it.endMin);
+  });
+  if (forrigeSlut < 0) return snap;
+
+  const ligeUnder = min - forrigeSlut <= SNAP_MIN;   // trykket lige under blokken
+  return ligeUnder || snap < forrigeSlut ? forrigeSlut : snap;
 }
 
 // ─── Sidehoved med dato og dagens tal ─────────────────────
