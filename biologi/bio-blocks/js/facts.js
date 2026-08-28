@@ -19,7 +19,7 @@ export function openFacts(model) {
     const f = m.facts[info.key] || {};
 
     document.getElementById('fact-top').style.background =
-        m.factColour(info, n) || '#34495e';
+        m.factColour(info, n) || '#17211F';
     document.getElementById('fact-name').textContent = info.name;
     document.getElementById('fact-formula').textContent =
         `${info.formula} · ${n} ${m.nouns.unit[n === 1 ? 0 : 1]}`;

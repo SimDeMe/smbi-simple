@@ -293,12 +293,29 @@ Lagt om fra 389 til 980 linjer.
 Slettet i stedet for lagt om — indgik ikke i undervisningen længere. Links
 fra `index.html` og `biologi.html` er fjernet samtidig.
 
-### 16 — `biologi/bio-blocks/index.html`
+### ✅ 16 — `biologi/bio-blocks/index.html` (færdig)
 
-Stadig uredesignet — 2 svg, egen `style.css`. Omdirigeringsfilen
-`biologi/bio-blocks.html` (12 linjer) er nu fjernet, og `index.html` linker
-direkte til `biologi/bio-blocks/`; om siden skal **fjernes** eller
-**redesignes** står stadig åbent.
+Redesignet. Omdirigeringsfilen `biologi/bio-blocks.html` (12 linjer) blev
+fjernet tidligere, og `index.html` linker direkte til `biologi/bio-blocks/`.
+
+Appens egen `style.css` (843 linjer) er slettet: markup og al CSS — også
+figurens, for molekylerne er SVG inde i bordet — står nu i `index.html`
+efter skabelonens afsnit 0. JavaScript-modulerne i `js/` er uændrede på
+motorsiden; kun farverne i `js/modules/` er lagt om til sitets palet, og
+`js/deling.js` er ny.
+
+Betjeningen sidder i ét `.rig`: `.rig-head` med værktøjsknapperne, en
+vælgerrække (modul, form, visning, niveau), byggestenene, bordet, en
+statuslinje med `aria-live`, vandinstrumentet og signaturforklaringen.
+Forklaringen på knop og ring er flyttet fra startkortet ned i `.facts`, hvor
+den bliver stående, mens man trækker. Modul, niveau og projektortilstand
+afspejles i `location.hash` og accepteres som query
+(`#modul=protein&niveau=B`, `?modul=fedt&projektor=1`).
+
+Tilbage står to ting, der er funktioner og ikke design, og som ligger på
+`biologi/bio-blocks/bio-blocks-todo.md`: bordet kan stadig kun betjenes med
+træk-og-slip (ikke med tastatur alene), og projektortilstanden forstørrer
+sidens krom, men ikke molekylerne — `#svg-space` har ingen `viewBox`.
 
 | # | Fil | Linjer | Indhold |
 | --- | --- | --- | --- |
@@ -382,8 +399,8 @@ side i stedet for som en separat runde.
 * **Rammen skal stå stille** på alle sider med trin eller tilstande: mål alle
   tilstande ved indlæsning, lås `min-height`, mål igen ved `resize`,
   projektorskift og `document.fonts.ready`.
-* **`style.css` kan slettes**, når disse sider er omlagt:
-  `contact.html`, `biologi/bio-blocks/index.html`, `studiekort/index.html`.
+* **`style.css` kan slettes**, når `studiekort/index.html` er omlagt — den er
+  den sidste side, der henter den.
   `backup-gammelt-design/` og `smbi-design/` skal ikke røres.
 * **`site.js`** (årstal + gammelt søgefelt) bruges kun af de sider, der
   stadig kører `style.css`. Den kan følge `style.css` i graven — `fag.js`
@@ -395,9 +412,7 @@ side i stedet for som en separat runde.
 
 **Etape 3:** `biologi/KvindensCyklus/FinalSim.html` (1322 linjer, 3 canvas,
 1 skyder) er nu det eneste tilbageværende punkt — links hertil er allerede
-fjernet fra fagforsiden. Derefter `biologi/bio-blocks/index.html`, hvor det
-først skal afklares, om siden skal redesignes eller fjernes (se punkt 16
-ovenfor).
+fjernet fra fagforsiden.
 
 **Sideløbende:** opgaver til `poroesitetPermeabilitet.html` — et selvstændigt
 ark ved siden af simuleringen, i flere niveauer (C, HF), der henviser til
