@@ -273,8 +273,10 @@ Spørg, hvis det er uklart om siden skal have forklarende tekst under panelet
   på de sider, der er ægte 3D (aftalt undtagelse, se `geografi/Tidevand.html`).
   Ingen build, ingen npm-pakker, ingen ikonbibliotek-CDN i nye sider.
 * **Besøgstælling:** `<script src="/analytics.js"></script>` som sidste linje i
-  `<head>` — se `seo.md`. Google Analytics er den eneste aftalte undtagelse ud
-  over de to ovenfor.
+  `<head>` — se `seo.md`. Cloudflare Web Analytics er cookiefri, så sitet har
+  ingen samtykkedialog. **Den frihed skal holdes:** indlejrer du noget udefra,
+  der sætter cookies — video, kort, indlejrede regneark — så skal det bag et
+  klik, som videoerne på `geografi.html`.
 
 ## 6. Når fysikken/modellen ændres
 

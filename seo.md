@@ -54,20 +54,43 @@ og ret `name`, `description`, `url`, `about` og `learningResourceType`
 
 ## Besøgstælling
 
-Google Analytics (GA4) ligger i `analytics.js` i roden, og hver side henter den
-med én linje sidst i `<head>`:
+Sitet bruger **Cloudflare Web Analytics** — cookiefri. Der gemmes intet på den
+besøgendes udstyr, og der er ingen genkendelse på tværs af besøg, så siden
+kræver **ingen samtykkedialog**.
+
+Tælleren ligger i `analytics.js` i roden, og hver side henter den med én linje
+sidst i `<head>`:
 
 ```html
 <!-- Google Analytics -->
 <script src="/analytics.js"></script>
 ```
 
-Måle-ID'et (`G-0KL0LJNL6H`) står **kun** i `analytics.js`, så det kan skiftes ét
-sted. Filen springer over sig selv på `localhost`, `127.0.0.1` og `file://`, så
-egne besøg under `python3 -m http.server` ikke havner i statistikken.
+Token'en står **kun** i `analytics.js`, så tælleren kan skiftes ét sted i
+stedet for i 52 filer. Filen springer over sig selv på `localhost`,
+`127.0.0.1` og `file://`, så egne besøg under `python3 -m http.server` ikke
+havner i statistikken.
 
 Med på alle sider, også de interne — kun `backup-gammelt-design/` og
 `smbi-design/` er udenfor, da de ikke er sider, nogen bruger.
+
+**Det Cloudflare ikke kan:** egne hændelser, UTM-parametre og query-strenge
+logges ikke. Man kan altså ikke se, hvor langt eleverne når i en trinvis figur
+(`?trin=3`), eller hvor tit projektortilstanden bruges. Data er uden stikprøve
+i 7 dage, derefter cirka 10 %; historikken går et halvt år tilbage.
+
+## Indlejret indhold udefra
+
+Alt, der hentes fra en anden server, sender den besøgendes IP-adresse derhen.
+Derfor:
+
+* **YouTube indlejres ikke direkte.** Videoerne på `geografi.html` er
+  klik-for-at-afspille: der vises en knap i sidens eget formsprog, og først
+  ved klik indsættes en iframe fra `youtube-nocookie.com`. Koden står i
+  `fag.js`, stilen i `forside.css` under `.video-start`. Gør det samme, hvis
+  der kommer video på flere sider.
+* **three.js fra jsDelivr** på de ægte 3D-sider er den aftalte undtagelse.
+* Nye sider tilføjer ikke andre eksterne scripts.
 
 ## Sider, der ikke skal i søgeresultaterne
 

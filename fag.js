@@ -89,4 +89,22 @@
     felt.value = fraUrl;
     soeg(fraUrl);
   }
+
+  /* ── Videoer: hent først YouTube ved klik ──────────────────────────
+     Indtil da har siden ingen kontakt med Google, og der sættes ingen
+     cookies. youtube-nocookie.com bruges, så der heller ikke sættes
+     annonce-cookies under afspilningen. */
+  document.querySelectorAll('.video-start').forEach(function (knap) {
+    knap.addEventListener('click', function () {
+      var vid = knap.dataset.yt;
+      var ramme = document.createElement('iframe');
+      ramme.src = 'https://www.youtube-nocookie.com/embed/' + vid +
+                  '?autoplay=1&rel=0';
+      ramme.title = knap.dataset.titel || 'Video';
+      ramme.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+      ramme.allowFullscreen = true;
+      knap.replaceWith(ramme);
+      ramme.focus();
+    });
+  });
 })();
