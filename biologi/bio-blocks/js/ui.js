@@ -21,6 +21,7 @@ import { openFromTable } from './viewer3d.js';
 import { renderTasks } from './tasks.js';
 import { syncWelcome } from './welcome.js';
 import { logEvent } from './log.js';
+import { skrivAdresse } from './deling.js';
 
 const el = id => document.getElementById(id);
 
@@ -100,7 +101,7 @@ function buildFormGroup() {
 
 function buildSpawnGroup() {
     const m = mod();
-    group('grp-spawn', null, Object.entries(m.mon).map(([name, cfg]) => {
+    group('grp-spawn', 'Byggesten', Object.entries(m.mon).map(([name, cfg]) => {
         const b = button('spawner', cfg.glyph ? `${cfg.glyph} ${cfg.da}` : cfg.da,
                          cfg.note, () => spawn(name));
         b.style.backgroundColor = cfg.colour[1];
@@ -207,6 +208,7 @@ export function setLevel(id) {
     rerenderAll();               // molekylernes egne knapper følger også niveauet
     renderTasks();               // og opgavelisten er kortere på C
     setStatus(levelInfo(id).msg, 'info');
+    skrivAdresse();              // niveauet skal kunne deles med et link
 }
 
 export function switchModule(id) {
@@ -222,4 +224,5 @@ export function switchModule(id) {
     renderTasks();
     syncWelcome();                 // det nye modul har sin egen vejledning
     setStatus(intro(), 'info');
+    skrivAdresse();
 }

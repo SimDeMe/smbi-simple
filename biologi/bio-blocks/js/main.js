@@ -17,18 +17,30 @@ import { closeFacts } from './facts.js';
 import { syncWelcome } from './welcome.js';
 import { closeTerm } from './glossary.js';
 import { closeLog } from './log.js';
+import { laesAdresse, skrivAdresse, bindProjektor } from './deling.js';
 
 /* ---------- Det modulafhængige ---------- */
+
+/* Adressen kan bede om et andet modul og et andet niveau, end appen
+   ellers åbner i — den skal derfor læses, før bjælken bygges */
+laesAdresse();
 
 state.repr    = mod().reprs[0].id;
 state.variant = mod().variant ? mod().variant.options[0].id : null;
 buildHeader();
 syncWelcome();
 setStatus(intro(), '');
+skrivAdresse();
 
 /* ---------- Det fælles ---------- */
 
 document.getElementById('btn-reset').addEventListener('click', resetGame);
+
+/* Projektortilstanden gør bordet højere — molekylerne skal med */
+bindProjektor(() => {
+    state.molecules.forEach(clampIntoView);
+    state.enzymes.forEach(clampIntoView);
+});
 
 document.getElementById('btn-numbers').addEventListener('click', e => {
     state.showNumbers = !state.showNumbers;

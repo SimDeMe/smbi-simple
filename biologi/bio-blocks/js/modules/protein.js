@@ -27,10 +27,10 @@ const SHAPES = {
 /* Farven er sidekædens type — det er den inddeling proteinets foldning
    afhænger af, ikke aminosyrens navn. */
 const CLASS = {
-    nonpolar: { da: 'upolær', colour: ['#aab7b8', '#5d6d7e'] },
-    polar:    { da: 'polær',  colour: ['#48c9b0', '#148f77'] },
-    acid:     { da: 'sur',    colour: ['#ec7063', '#a93226'] },
-    base:     { da: 'basisk', colour: ['#5dade2', '#21618c'] }
+    nonpolar: { da: 'upolær', colour: ['#B8C4C2', '#566B68'] },
+    polar:    { da: 'polær',  colour: ['#63D3C4', '#0B7D70'] },
+    acid:     { da: 'sur',    colour: ['#F2799F', '#B01549'] },
+    base:     { da: 'basisk', colour: ['#6FC0E6', '#0A6A9E'] }
 };
 
 const aa = (da, abbr, cls, side, atoms, extra) => Object.assign({
@@ -132,7 +132,7 @@ const AROMATIC = ['phenylalanine'];
 
 const enzymes = {
     pepsin: {
-        da: 'Pepsin', colour: '#c0392b', sub: 'ved store, upolære sidekæder',
+        da: 'Pepsin', colour: '#C4341A', sub: 'ved store, upolære sidekæder',
         where: 'mavesækken, pH 1–2',
         test(b, m) {
             if (m.nodes.length < 3) return cantCut('kæden er for kort',
@@ -145,7 +145,7 @@ const enzymes = {
         }
     },
     trypsin: {
-        da: 'Trypsin', colour: '#8e44ad', sub: 'efter lysin (og arginin)',
+        da: 'Trypsin', colour: '#7A4FD6', sub: 'efter lysin (og arginin)',
         where: 'bugspytkirtlen, tyndtarmen',
         test(b, m) {
             if (m.nodes.length < 3) return cantCut('kæden er for kort',
@@ -157,7 +157,7 @@ const enzymes = {
         }
     },
     peptidase: {
-        da: 'Peptidase', colour: '#16a085', sub: 'én aminosyre fra enden',
+        da: 'Peptidase', colour: '#0FA593', sub: 'én aminosyre fra enden',
         where: 'tyndtarmens børstesøm',
         test(b) {
             if (b.donor.atN) return cantCut('ikke inde i kæden',
@@ -492,7 +492,7 @@ export const protein = {
     terms,
     factColour: (info, n) => n === 1
         ? CLASS[mon[info.key].cls].colour[1]
-        : { di: '#2471a3', tri: '#2471a3', oligo: '#1f618d', poly: '#1a5276', protein: '#34495e' }[info.key],
+        : { di: '#0E86C8', tri: '#0E86C8', oligo: '#0A6A9E', poly: '#08557E', protein: '#17211F' }[info.key],
 
     tasks,
     summary: water =>

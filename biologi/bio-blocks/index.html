@@ -1,204 +1,939 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="da">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Bio-Blocks — byg kulhydrater, proteiner og fedt — smbi.dk</title>
-    <meta name="description" content="Byg makromolekyler af deres byggesten: sæt monosakkarider, aminosyrer og fedtsyrer sammen, se kondensation og hydrolyse — og drej molekylet i 3D.">
-    <!-- Deling, ikoner og kanonisk adresse -->
-    <link rel="canonical" href="https://smbi.dk/biologi/bio-blocks/">
-    <meta property="og:type" content="website">
-    <meta property="og:site_name" content="smbi.dk">
-    <meta property="og:locale" content="da_DK">
-    <meta property="og:url" content="https://smbi.dk/biologi/bio-blocks/">
-    <meta property="og:title" content="Bio-Blocks — byg kulhydrater, proteiner og fedt">
-    <meta property="og:description" content="Byg makromolekyler af deres byggesten: sæt monosakkarider, aminosyrer og fedtsyrer sammen, se kondensation og hydrolyse — og drej molekylet i 3D.">
-    <meta property="og:image" content="https://smbi.dk/img/og-biologi.png">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="630">
-    <meta property="og:image:alt" content="smbi.dk — biologi: simuleringer, forløb og spil">
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="theme-color" content="#FFF9EE">
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-    <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-    <link rel="stylesheet" href="style.css">
-    <script defer src="https://3Dmol.org/build/3Dmol-min.js"></script>
-    <script type="module" src="js/main.js"></script>
-    <script type="application/ld+json">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bio-Blocks — byg kulhydrater, proteiner og fedt — smbi.dk</title>
+<meta name="description" content="Byg makromolekyler af deres byggesten: sæt monosakkarider, aminosyrer og fedtsyrer sammen, se kondensation og hydrolyse — og drej molekylet i 3D.">
+<!-- Deling, ikoner og kanonisk adresse -->
+<link rel="canonical" href="https://smbi.dk/biologi/bio-blocks/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="smbi.dk">
+<meta property="og:locale" content="da_DK">
+<meta property="og:url" content="https://smbi.dk/biologi/bio-blocks/">
+<meta property="og:title" content="Bio-Blocks — byg kulhydrater, proteiner og fedt">
+<meta property="og:description" content="Byg makromolekyler af deres byggesten: sæt monosakkarider, aminosyrer og fedtsyrer sammen, se kondensation og hydrolyse — og drej molekylet i 3D.">
+<meta property="og:image" content="https://smbi.dk/img/og-biologi.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="smbi.dk — biologi: simuleringer, forløb og spil">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#FFF9EE">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,300..600&display=swap" rel="stylesheet">
+<style>
+/* ─────────────────────────────────────────────────────────
+   Bio-Blocks — byg makromolekyler af deres byggesten.
+   Følger smbi.dk's designskabelon (design_rules.md).
+   Siden er delt op i moduler, se design_rules.md afsnit 0
+   og js/ ved siden af.
+
+   Al CSS står her — også figurens, for molekylerne tegnes
+   som SVG inde i bordet, og deres streger er sidens streger.
+   ───────────────────────────────────────────────────────── */
+:root{
+  --paper:#FFF9EE;  --paper-2:#FFF3DC;  --panel:#FFFFFF;
+  --ink:#17211F;    --slate:#566B68;
+
+  --pink:#E8336D; --blue:#0E86C8; --lime:#5FB030; --amber:#FFB300;
+  --grape:#7A4FD6; --coral:#FF6A3D; --teal:#0FA593;
+
+  --bio:var(--pink);
+  --geo:var(--blue);
+  --accent:var(--bio);
+
+  --display:'Archivo',system-ui,sans-serif;
+  --body:'Source Serif 4',Georgia,serif;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+
+  --wide:'wdth' 118;
+  --max:1180px;
+
+  --hard:4px 4px 0 var(--ink);
+  --hard-lg:7px 7px 0 var(--ink);
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--paper);color:var(--ink);
+  font-family:var(--body);font-size:17px;line-height:1.6;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden;
+}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--grape);outline-offset:3px;border-radius:4px}
+
+.mono{font-family:var(--mono);font-size:0.68rem;font-weight:500;letter-spacing:0.14em;text-transform:uppercase}
+.enhed{text-transform:none}
+.sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.hidden{display:none!important}
+
+/* ── Topbjælke ─────────────────────────────────────────── */
+.rainbow{
+  height:7px;
+  background:linear-gradient(90deg,
+    var(--pink) 0 14.3%, var(--coral) 14.3% 28.6%, var(--amber) 28.6% 42.9%,
+    var(--lime) 42.9% 57.2%, var(--teal) 57.2% 71.5%, var(--blue) 71.5% 85.8%,
+    var(--grape) 85.8% 100%);
+}
+.top{position:sticky;top:0;z-index:60}
+.top-bar{background:rgba(255,249,238,0.93);backdrop-filter:blur(10px);border-bottom:2px solid var(--ink)}
+.top-in{max-width:var(--max);margin:0 auto;padding:0 24px;display:flex;align-items:center;gap:16px;height:60px}
+.brand{
+  font-family:var(--display);font-variation-settings:'wdth' 125;
+  font-weight:800;font-size:1.15rem;letter-spacing:-0.02em;
+  text-decoration:none;display:flex;align-items:center;gap:8px;
+}
+.brand-mark{
+  width:25px;height:25px;border-radius:9px;border:2px solid var(--ink);
+  background:conic-gradient(var(--pink),var(--amber),var(--lime),var(--blue),var(--grape),var(--pink));
+  flex-shrink:0;
+}
+.brand em{font-family:var(--mono);font-size:0.72rem;font-weight:500;font-style:normal;color:var(--slate)}
+.top-nav{display:flex;gap:6px;margin-left:auto}
+.top-nav a{
+  font-family:var(--display);font-size:0.84rem;font-weight:600;
+  text-decoration:none;color:var(--ink);white-space:nowrap;
+  padding:7px 14px;border-radius:20px;border:2px solid transparent;
+  transition:background .15s,border-color .15s;
+}
+.top-nav a:hover{background:#FBD3E1;border-color:var(--ink)}
+
+/* ── Sidehoved ─────────────────────────────────────────── */
+.wrap{max-width:var(--max);margin:0 auto;padding:0 24px}
+.head{padding:34px 0 22px;position:relative;overflow:hidden}
+.head::before{
+  content:'';position:absolute;width:380px;height:380px;border-radius:50%;
+  background:#F7B9D2;filter:blur(70px);opacity:.5;top:-200px;right:-120px;z-index:0;
+}
+.head-in{position:relative;z-index:1}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;background:var(--ink);color:#FFF6E0;padding:6px 14px;border-radius:20px}
+.eyebrow .blink{width:8px;height:8px;border-radius:50%;background:var(--accent);animation:pulse 1.8s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.8)}}
+h1{
+  font-family:var(--display);font-variation-settings:var(--wide);font-weight:800;
+  font-size:clamp(2rem,4.6vw,2.9rem);line-height:1.03;letter-spacing:-0.032em;margin:16px 0 14px;
+}
+.hi{position:relative;display:inline-block;z-index:0;white-space:nowrap}
+.hi::before{
+  content:'';position:absolute;z-index:-1;left:-8px;right:-8px;top:12%;bottom:8%;
+  background:var(--hc,var(--amber));border-radius:6px;transform:rotate(-1.3deg);
+}
+.lead{font-size:1.06rem;color:#3E4E4C;max-width:58ch}
+
+/* ── Signaturpanelet ───────────────────────────────────── */
+.rig{
+  position:relative;background:var(--panel);
+  border:2.5px solid var(--ink);border-radius:18px;overflow:hidden;
+  box-shadow:var(--hard-lg);margin-top:26px;
+}
+.rig-bar{height:9px;background:var(--accent)}
+.rig-head{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  padding:11px 15px;border-bottom:2px solid var(--ink);background:#FDEAF1;
+}
+.rig-live{display:flex;align-items:center;gap:7px}
+.rig-live .mono{color:var(--ink);font-weight:600}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--accent);border:1.5px solid var(--ink);animation:pulse 2s ease-in-out infinite}
+.rig-head .spacer{margin-left:auto}
+
+/* ── Knapper ───────────────────────────────────────────── */
+.btn-mini{
+  font-family:var(--display);font-size:0.72rem;font-weight:700;
+  background:#fff;border:2px solid var(--ink);color:var(--ink);
+  padding:4px 11px;border-radius:18px;cursor:pointer;box-shadow:2px 2px 0 var(--ink);
+  transition:transform .12s,box-shadow .12s,background .16s,color .16s;
+}
+.btn-mini:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--ink)}
+.btn-mini:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--ink)}
+.btn-mini.active,.btn-mini[aria-pressed="true"]{
+  background:var(--accent);color:#fff;transform:translate(2px,2px);box-shadow:0 0 0 var(--ink);
+}
+.btn-ryd{background:var(--ink);color:#FFF6E0}
+.btn-ryd:hover{background:var(--ink)}
+
+/* Byggestenene: store knapper med modulets egen farve i baggrunden,
+   sat fra js/ui.js — derfor ingen background her */
+.spawner{
+  font-family:var(--display);font-size:0.86rem;font-weight:700;color:#fff;
+  border:2.5px solid var(--ink);border-radius:12px;padding:8px 13px;
+  cursor:pointer;box-shadow:var(--hard);background:var(--slate);
+  transition:transform .12s,box-shadow .12s,opacity .16s;
+}
+.spawner:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--ink)}
+.spawner:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.btn-enz{font-size:0.78rem;padding:7px 11px}
+.btn-enz.missing{opacity:0.45;text-decoration:line-through}
+
+.chip{
+  font-family:var(--display);font-size:0.78rem;font-weight:700;
+  background:#fff;border:2px solid var(--ink);color:var(--ink);
+  padding:6px 12px;border-radius:20px;cursor:pointer;box-shadow:2px 2px 0 var(--ink);
+  transition:transform .12s,box-shadow .12s,background .16s,color .16s;
+}
+.chip:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--ink)}
+.chip:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--ink)}
+.chip.active{background:var(--accent);color:#fff;transform:translate(2px,2px);box-shadow:0 0 0 var(--ink)}
+.chip.warn.active{background:var(--coral);color:var(--ink)}
+
+/* Segmenteret valg: ét af flere, én knap aktiv ad gangen */
+.seg{display:flex;background:#fff;border:2.5px solid var(--ink);border-radius:12px;overflow:hidden;box-shadow:2px 2px 0 var(--ink)}
+.seg button{
+  font-family:var(--display);font-size:0.86rem;font-weight:700;
+  background:#fff;border:none;color:var(--ink);padding:7px 14px;cursor:pointer;
+  transition:background .16s,color .16s;
+}
+.seg button+button{border-left:2.5px solid var(--ink)}
+.seg button:hover{background:var(--paper-2)}
+.seg button.active{background:var(--accent);color:#fff}
+.seg.text button{font-size:0.78rem;padding:6px 11px}
+/* Niveauet er lærerens knap og ikke elevens — derfor sin egen farve */
+.seg.level button{font-size:0.82rem;padding:6px 12px}
+.seg.level button.active{background:var(--lime);color:var(--ink)}
+
+/* ── Vælgerrækkerne over og under bordet ───────────────── */
+.vaelg,.knobs{
+  display:flex;flex-wrap:wrap;align-items:center;gap:11px 20px;
+  padding:13px 15px;background:var(--paper-2);border-top:2px solid var(--ink);
+}
+.group{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.group-label{
+  font-family:var(--mono);font-size:0.57rem;font-weight:600;
+  letter-spacing:0.12em;text-transform:uppercase;color:#5A6C69;
+}
+
+/* ── Bordet ────────────────────────────────────────────── */
+.stage{
+  position:relative;padding:10px;user-select:none;
+  border-top:2px solid var(--ink);
+  background:radial-gradient(circle at 1px 1px,#E6EDEB 1px,transparent 0) 0 0/16px 16px;
+}
+.board{position:relative;height:clamp(400px,58vh,620px)}
+#svg-space{
+  display:block;width:100%;height:100%;touch-action:none;
+  border:2px solid var(--ink);border-radius:12px;background:transparent;
+}
+
+/* ── Statuslinjen ──────────────────────────────────────── *
+ * setStatus() sætter className helt om, så alt hænger på id'et.  */
+#status{
+  border-top:2px solid var(--ink);background:#FBFAF6;
+  padding:11px 15px 11px 19px;font-size:0.95rem;line-height:1.5;
+  border-left:7px solid var(--slate);min-height:46px;
+}
+#status.ok{border-left-color:var(--lime);background:#F3FAEC}
+#status.error{border-left-color:var(--coral);background:#FFF1EA}
+#status.info{border-left-color:var(--blue);background:#F0F8FC}
+
+/* ── Instrumentet ──────────────────────────────────────── */
+.gauges{display:grid;grid-template-columns:1fr;border-top:2px solid var(--ink)}
+.gauge{padding:12px 15px 13px;display:flex;flex-direction:column;gap:6px;background:#E7F4FB}
+.gauge dt{font-family:var(--mono);font-size:0.57rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#5A6C69}
+.gauge dd{
+  font-family:var(--display);font-variation-settings:'wdth' 108;font-weight:800;
+  font-size:1.06rem;line-height:1.2;font-variant-numeric:tabular-nums;
+}
+.gauge dd .enhed{font-family:var(--mono);font-size:0.62rem;font-weight:600;letter-spacing:0.04em;color:#5A6C69}
+
+/* ── Signaturforklaringen ──────────────────────────────── */
+.facts{border-top:2px solid var(--ink);background:#fff;padding:12px 15px;display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+.fact{
+  display:inline-flex;align-items:center;gap:8px;background:var(--paper);
+  border:2px solid var(--ink);border-radius:22px;padding:5px 13px;color:var(--ink);
+  font-family:var(--mono);font-size:0.6rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;
+}
+.fact::before{content:'';width:11px;height:11px;border-radius:3px;background:var(--fc,var(--slate));border:1.5px solid var(--ink);flex:none}
+/* Knop og ring er de to markører på molekylerne — de skal se ud som dér */
+.fact.knop::before{border-radius:50%;background:var(--amber)}
+.fact.ring::before{border-radius:50%;background:#fff;border:3px solid var(--blue)}
+.fact.ilt::before{border-radius:50%;background:#fff;border-width:2.5px}
+
+/* ── Startkortet på det tomme bord ─────────────────────── */
+#welcome{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:min(94%,470px);z-index:15;
+  background:var(--panel);border:2.5px solid var(--ink);border-radius:16px;
+  box-shadow:var(--hard-lg);padding:18px 20px 16px;
+}
+.wc-title{
+  font-family:var(--display);font-variation-settings:'wdth' 110;font-weight:800;
+  font-size:1.16rem;line-height:1.15;letter-spacing:-0.02em;margin-bottom:11px;
+}
+.wc-steps{margin:0 0 15px;padding-left:20px;font-size:0.95rem;line-height:1.5}
+.wc-steps li{margin-bottom:5px}
+.wc-steps b{background:#FBD3E1;padding:0 3px;border-radius:3px}
+.wc-actions{display:flex;gap:9px;flex-wrap:wrap}
+.wc-btn{
+  font-family:var(--display);font-size:0.84rem;font-weight:700;
+  background:var(--accent);color:#fff;border:2.5px solid var(--ink);border-radius:12px;
+  padding:8px 13px;cursor:pointer;box-shadow:var(--hard);
+  transition:transform .12s,box-shadow .12s;
+}
+.wc-btn:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--ink)}
+.wc-btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.wc-btn.grey{background:#fff;color:var(--ink)}
+
+/* ── Opgavepanelet ─────────────────────────────────────── */
+#task-panel{
+  position:absolute;top:12px;right:12px;bottom:12px;width:min(320px,62%);
+  background:var(--panel);border:2.5px solid var(--ink);border-radius:16px;
+  box-shadow:var(--hard);display:flex;flex-direction:column;overflow:hidden;
+  z-index:20;font-size:0.9rem;
+}
+.tp-head{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:9px 12px;border-bottom:2px solid var(--ink);background:#FDEAF1;
+  font-family:var(--display);font-weight:800;font-size:0.95rem;
+}
+.tp-head button{
+  font-family:var(--display);font-weight:700;font-size:0.8rem;
+  width:26px;height:26px;flex:none;cursor:pointer;
+  background:#fff;color:var(--ink);border:2px solid var(--ink);border-radius:8px;
+}
+.tp-head button:hover{background:var(--accent);color:#fff}
+#task-list{
+  list-style:none;margin:0;padding:8px;overflow-y:auto;max-height:42%;
+  border-bottom:2px solid var(--ink);background:var(--paper);
+}
+#task-list li{display:flex;gap:8px;align-items:baseline;padding:4px 7px;border-radius:7px;line-height:1.35}
+#task-list li.now{background:#FBD3E1;font-weight:600}
+#task-list li.done{color:#3F7A1E}
+#task-list li.skip{color:#9A6A00}
+#task-list li.lock{color:#9AA8A5}
+#task-list li .tp-mark{flex:0 0 15px;font-size:0.78rem}
+#task-detail{padding:12px;overflow-y:auto;flex-grow:1;line-height:1.5}
+.tp-title{
+  font-family:var(--display);font-variation-settings:'wdth' 110;font-weight:800;
+  font-size:1.02rem;line-height:1.2;margin-bottom:7px;
+}
+.tp-goal{margin-bottom:10px}
+.tp-why{background:#EDF8E4;border:2px solid var(--ink);border-radius:10px;padding:9px 11px;margin-bottom:10px}
+.tp-predict{
+  background:#F1ECFC;border:2px solid var(--ink);border-radius:10px;
+  padding:9px 11px;margin-bottom:10px;font-weight:600;
+}
+.tp-opts{display:flex;flex-direction:column;gap:7px}
+.tp-opt{
+  text-align:left;font-family:var(--body);font-size:0.9rem;line-height:1.4;
+  background:#fff;color:var(--ink);border:2px solid var(--ink);border-radius:10px;
+  padding:9px 11px;cursor:pointer;box-shadow:2px 2px 0 var(--ink);
+  transition:transform .12s,box-shadow .12s,background .16s;
+}
+.tp-opt:hover{background:#F1ECFC;transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--ink)}
+.tp-solved{font-family:var(--display);font-weight:800;color:#3F7A1E;margin-bottom:6px}
+.tp-guessed{color:var(--slate);font-size:0.82rem;margin-bottom:10px}
+.tp-verdict{margin-bottom:8px;font-weight:600}
+.tp-verdict.ok{color:#3F7A1E}
+.tp-verdict.miss{color:#9A6A00}
+.tp-tip{margin-top:10px;font-size:0.84rem;line-height:1.5;color:#5A6C69}
+.tp-more{
+  font-family:var(--display);font-size:0.8rem;font-weight:700;
+  background:none;border:none;color:#3F7A1E;padding:0 0 0 4px;
+  cursor:pointer;text-decoration:underline;
+}
+.tp-rest.hidden{display:none}
+.tp-sum{margin-bottom:8px;padding-left:18px}
+.tp-sum li{margin-bottom:4px}
+.tp-btn{
+  font-family:var(--display);font-size:0.84rem;font-weight:700;
+  background:var(--accent);color:#fff;border:2.5px solid var(--ink);border-radius:12px;
+  padding:8px 13px;cursor:pointer;box-shadow:var(--hard);
+  transition:transform .12s,box-shadow .12s;
+}
+.tp-btn:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--ink)}
+.tp-btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.tp-btn.grey{background:#fff;color:var(--ink)}
+.tp-btn.small{font-size:0.76rem;padding:6px 11px;margin-top:10px;box-shadow:2px 2px 0 var(--ink)}
+
+/* ── Ruderne: faktakort, log og 3D ─────────────────────── */
+.sky{position:fixed;inset:0;background:rgba(23,33,31,.55);display:flex;align-items:center;justify-content:center;padding:16px;z-index:210}
+.fact-box,.log-box,.viewer-box{
+  background:var(--panel);border:2.5px solid var(--ink);border-radius:18px;
+  box-shadow:var(--hard-lg);display:flex;flex-direction:column;overflow:hidden;
+}
+.fact-box{width:min(94vw,560px);max-height:90vh}
+.log-box{width:min(94vw,620px);max-height:90vh}
+.viewer-box{width:min(94vw,800px)}
+.fact-top,.log-top,.viewer-bar{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+  padding:13px 17px;border-bottom:2px solid var(--ink);
+}
+.fact-top,.log-top{color:#fff}
+.log-top{background:var(--ink)}
+.fact-top h2,.log-top h2{
+  font-family:var(--display);font-variation-settings:'wdth' 110;font-weight:800;
+  font-size:1.24rem;line-height:1.15;letter-spacing:-0.02em;
+}
+.f-sub{font-family:var(--mono);font-size:0.6rem;font-weight:500;letter-spacing:0.1em;opacity:.9}
+.rude-luk{
+  font-family:var(--display);font-weight:700;font-size:0.85rem;
+  width:28px;height:28px;flex:none;cursor:pointer;
+  background:#fff;color:var(--ink);border:2px solid var(--ink);border-radius:9px;
+  box-shadow:2px 2px 0 rgba(0,0,0,.35);
+}
+.rude-luk:hover{background:var(--coral)}
+.fact-rows{padding:4px 17px 17px;overflow-y:auto}
+.f-row{padding:11px 0;border-bottom:2px solid #EFEADF;display:flex;gap:12px}
+.f-row:last-child{border-bottom:none}
+.f-ico{font-size:1.05rem;flex:0 0 22px;text-align:center}
+.f-lab{font-family:var(--mono);font-size:0.56rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#5A6C69}
+.f-val{font-size:0.95rem;line-height:1.5}
+.f-bar{height:10px;border-radius:6px;background:var(--paper-2);border:2px solid var(--ink);margin:7px 0 3px;overflow:hidden;max-width:260px}
+.f-bar span{display:block;height:100%;background:var(--amber)}
+.f-tag{
+  display:inline-block;margin-bottom:4px;padding:2px 10px;border-radius:20px;
+  border:2px solid var(--ink);
+  font-family:var(--mono);font-size:0.56rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;
+}
+.f-tag.yes{background:#D6EFC4}
+.f-tag.no{background:#FFE9DC}
+
+/* ── Min log ───────────────────────────────────────────── */
+.log-body{padding:4px 17px 14px;overflow-y:auto;font-size:0.95rem;line-height:1.5;user-select:text}
+.log-tally{margin-top:12px;color:var(--slate);font-size:0.85rem}
+.log-h{
+  margin:16px 0 4px;padding-bottom:4px;border-bottom:2px solid var(--ink);
+  font-family:var(--display);font-variation-settings:'wdth' 110;font-weight:800;font-size:0.98rem;
+}
+.log-kind{
+  margin:10px 0 2px;
+  font-family:var(--mono);font-size:0.56rem;font-weight:600;
+  letter-spacing:0.12em;text-transform:uppercase;color:#5A6C69;
+}
+.log-list{margin:0;padding-left:20px}
+.log-list li{margin-bottom:3px}
+.log-empty{margin:18px 0;color:var(--slate)}
+.log-hint{margin:6px 0 10px;color:var(--slate);font-size:0.85rem}
+.log-q{display:block;margin-bottom:10px;font-weight:600}
+.log-note{
+  display:block;width:100%;margin-top:5px;resize:vertical;
+  font-family:var(--body);font-size:0.95rem;font-weight:400;line-height:1.5;
+  padding:9px 11px;border:2px solid var(--ink);border-radius:10px;background:var(--paper);
+}
+.log-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap;padding:12px 17px;border-top:2px solid var(--ink);background:var(--paper-2)}
+.log-warn{flex:1 1 180px;font-size:0.84rem;line-height:1.45;color:#8A5A00}
+#log-clear.armed{background:var(--coral);color:var(--ink)}
+
+/* ── 3D-ruden ──────────────────────────────────────────── */
+.viewer-bar{background:var(--paper-2)}
+#viewer-title{font-family:var(--display);font-variation-settings:'wdth' 110;font-weight:800;font-size:1.15rem}
+#viewer-sub{display:block;margin-top:2px;font-family:var(--mono);font-size:0.58rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:#5A6C69}
+.viewer-actions{display:flex;gap:8px;align-items:center}
+.viewer-container{
+  position:relative;margin:14px 17px 0;
+  width:calc(100% - 34px);height:min(56vh,450px);
+  border:2px solid var(--ink);border-radius:12px;overflow:hidden;
+  background:linear-gradient(180deg,#0B1220 0%,#182335 100%);
+}
+.viewer-container canvas{display:block}
+.viewer-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;font-size:0.95rem;line-height:1.5;color:#FFF6E0}
+.viewer-msg.err{color:#FFB4A0}
+.viewer-tip{
+  margin:10px 17px 14px;text-align:right;
+  font-family:var(--mono);font-size:0.56rem;font-weight:500;
+  letter-spacing:0.1em;text-transform:uppercase;line-height:1.6;color:#5A6C69;
+}
+
+/* ── Ordbogen ──────────────────────────────────────────── *
+ * Fagordet skal se ud som det ord det er, og alligevel love en
+ * forklaring: samme skrift og samme farve som teksten omkring,
+ * kun med en prikket streg under.                              */
+.term{
+  font:inherit;color:inherit;background:none;border:none;padding:0;margin:0;
+  cursor:help;border-bottom:1.5px dotted var(--accent);
+}
+.term:hover{background:#FBD3E1}
+#term-pop{
+  position:fixed;z-index:300;width:min(300px,86vw);
+  background:var(--panel);border:2.5px solid var(--ink);border-radius:12px;
+  box-shadow:var(--hard);padding:11px 13px;font-size:0.9rem;line-height:1.5;
+}
+#term-pop b{
+  display:block;margin-bottom:3px;
+  font-family:var(--display);font-variation-settings:'wdth' 110;font-weight:800;font-size:0.98rem;
+}
+
+/* ═════════════════════════════════════════════════════════
+   Figuren: molekylerne, bindingerne og enzymerne på bordet
+   ═════════════════════════════════════════════════════════ */
+.molecule{cursor:grab}
+.molecule.dragging{cursor:grabbing}
+.mol-inner{transition:transform .12s ease-out;transform-box:fill-box;transform-origin:center}
+.molecule.dragging .mol-inner{transform:scale(1.03)}
+
+.shape-body{stroke:var(--ink);stroke-width:2.5px}
+.label-abbr{font-family:var(--display);font-size:20px;font-weight:800;fill:#fff;text-anchor:middle;pointer-events:none;letter-spacing:0.5px}
+.label-name{font-family:var(--display);font-size:10.5px;font-weight:700;fill:rgba(255,255,255,0.94);text-anchor:middle;pointer-events:none}
+.c-num{font-family:var(--mono);font-size:9.5px;font-weight:600;fill:rgba(255,255,255,0.8);text-anchor:middle;pointer-events:none}
+.c-num.ring-o{fill:#fff}
+
+/* C6-stubben — grenpladsen */
+.arm-line{stroke:var(--slate);stroke-width:3;stroke-linecap:round}
+.arm-dot{fill:#fff;stroke:var(--slate);stroke-width:2.5}
+.arm-text{font-family:var(--mono);font-size:9.5px;font-weight:600;fill:var(--slate);text-anchor:middle;pointer-events:none}
+
+/* ── Frie bindingspladser ──────────────────────────────── *
+ * Knop = kan donere, ring = kan modtage. De står dæmpet, indtil
+ * man tager fat i et molekyle: så lyser alle pladser op, og det
+ * par der ville reagere, bliver grønt eller rødt.                */
+.site-mark{opacity:0.6;transition:opacity .15s}
+#svg-space.linking .site-mark{opacity:1}
+
+.site-donor .site-dot{fill:var(--amber);stroke:var(--ink);stroke-width:2}
+.site-donor .site-stub{stroke:var(--amber);stroke-width:4.5;stroke-linecap:round}
+.site-acc .site-dot{fill:#fff;stroke:var(--blue);stroke-width:3}
+circle.site-acc{stroke:var(--blue)}          /* grenknoppen er selv markøren */
+
+.site-mark.hot{opacity:1}
+.site-mark.hot .site-dot,
+circle.site-mark.hot{animation:site-pulse .7s ease-in-out infinite}
+.site-mark.hot.ok .site-dot,circle.site-mark.hot.ok{stroke:var(--lime)}
+.site-mark.hot.ok .site-stub{stroke:var(--lime)}
+.site-mark.hot.no .site-dot,circle.site-mark.hot.no{stroke:var(--coral)}
+.site-mark.hot.no .site-stub{stroke:var(--coral)}
+@keyframes site-pulse{0%,100%{stroke-width:3}50%{stroke-width:6}}
+
+.bond-line{stroke:var(--ink);stroke-width:6;stroke-linecap:round}
+.bond-atom{fill:#fff;stroke:var(--ink);stroke-width:3;cursor:pointer;transition:fill .15s}
+.bond-hit:hover .bond-atom{fill:#FFD9C9;stroke:var(--coral)}
+.bond-atom-text{font-family:var(--display);font-size:12px;font-weight:800;fill:var(--ink);text-anchor:middle;pointer-events:none}
+.bond-hit:hover .bond-atom-text{fill:var(--coral)}
+.bond-note{font-family:var(--mono);font-size:9.5px;font-weight:600;fill:var(--slate);text-anchor:middle;pointer-events:none}
+
+/* Fortryd-krydset på den binding man senest har dannet */
+.bond-undo circle{fill:#fff;stroke:var(--coral);stroke-width:2.5}
+.bond-undo-x{font-family:var(--display);font-size:11px;font-weight:800;fill:var(--coral);text-anchor:middle;pointer-events:none}
+.bond-hit:hover .bond-undo circle{fill:var(--coral)}
+.bond-hit:hover .bond-undo-x{fill:#fff}
+
+.product-bg{fill:var(--panel);stroke:var(--ink);stroke-width:2}
+.product-label{font-family:var(--display);font-size:15px;font-weight:800;fill:var(--ink);text-anchor:middle;pointer-events:none}
+.info-line{font-family:var(--mono);font-size:10px;font-weight:500;fill:var(--slate);text-anchor:middle;pointer-events:none}
+.info-note{font-family:var(--mono);font-size:10px;font-weight:600;fill:var(--blue);text-anchor:middle;pointer-events:none}
+.info-eq{font-family:var(--display);font-size:12.5px;font-weight:700;fill:var(--blue);text-anchor:middle;pointer-events:none}
+
+/* Små runde knapper tegnet inde i figuren */
+.badge{cursor:pointer}
+.badge circle{fill:#fff;stroke:var(--ink);stroke-width:2.5;transition:fill .15s}
+.badge text{font-family:var(--display);font-size:14px;font-weight:700;fill:var(--ink);text-anchor:middle;pointer-events:none}
+.badge:hover circle{fill:var(--paper-2)}
+.badge-3d circle{stroke:var(--blue)}
+.badge-3d text{fill:var(--blue)}
+.badge-cut circle{stroke:var(--coral)}
+.badge-cut text{fill:var(--coral)}
+.badge-flip circle{stroke:var(--grape)}
+.badge-flip text{fill:var(--grape);font-size:13px}
+.badge-info circle{stroke:var(--teal)}
+.badge-info text{fill:var(--teal)}
+.badge-del circle{stroke:var(--slate)}
+.badge-del text{fill:var(--slate);font-size:12px}
+
+/* ── Forhåndsvisning mens der trækkes ──────────────────── */
+.pv-line{stroke-width:4;stroke-dasharray:7 5;fill:none}
+.pv-dot{fill:#fff;stroke-width:3}
+.pv-text{font-family:var(--display);font-size:12px;font-weight:700;text-anchor:middle}
+.pv-ok .pv-line,.pv-ok .pv-dot{stroke:var(--lime)}
+.pv-ok .pv-text{fill:#3F7A1E}
+.pv-no .pv-line,.pv-no .pv-dot{stroke:var(--coral)}
+.pv-no .pv-text{fill:#B8351A}
+.pv-bg{fill:rgba(255,249,238,0.94);stroke:none}
+
+/* ── Effekter ──────────────────────────────────────────── */
+.fx-water text{font-family:var(--display);font-size:15px;font-weight:700;fill:var(--blue);text-anchor:middle;pointer-events:none}
+/* Afvisningen bliver hængende ved molekylet: læselig med det samme,
+   væk af sig selv efter et par sekunder */
+.fx-reject-text{font-family:var(--display);font-size:12.5px;font-weight:700;fill:var(--ink);text-anchor:middle}
+.fx-reject-bg{fill:#FFE9DC;stroke:var(--ink);stroke-width:2}
+.fx-reject .fx-anim{animation:rejectHold 2.8s ease-out forwards}
+@keyframes rejectHold{
+  0%{opacity:0;transform:translateY(6px)}
+  10%{opacity:1;transform:translateY(0)}
+  75%{opacity:1}
+  100%{opacity:0;transform:translateY(-8px)}
+}
+.fx-out .fx-anim{animation:floatUp 1.4s ease-out forwards}
+.fx-in .fx-anim{animation:floatIn 1.0s ease-in forwards}
+@keyframes floatUp{
+  0%{opacity:0;transform:translateY(0) scale(.6)}
+  25%{opacity:1;transform:translateY(-14px) scale(1.1)}
+  100%{opacity:0;transform:translateY(-70px) scale(1)}
+}
+@keyframes floatIn{
+  0%{opacity:0;transform:translateY(-60px) scale(1)}
+  35%{opacity:1;transform:translateY(-20px) scale(1.1)}
+  100%{opacity:0;transform:translateY(0) scale(.6)}
+}
+.molecule.shake .mol-inner,.enzyme.shake .mol-inner{animation:shake .4s}
+@keyframes shake{
+  0%,100%{transform:translateX(0)}
+  20%{transform:translateX(-9px)}
+  40%{transform:translateX(9px)}
+  60%{transform:translateX(-6px)}
+  80%{transform:translateX(6px)}
+}
+.molecule.appear .mol-inner,.enzyme.appear .mol-inner{animation:popIn .35s cubic-bezier(.34,1.56,.64,1)}
+@keyframes popIn{0%{transform:scale(.4);opacity:0}100%{transform:scale(1);opacity:1}}
+
+/* ── Enzymblokkene ─────────────────────────────────────── */
+.enzyme{cursor:grab}
+.enzyme.dragging{cursor:grabbing}
+.enzyme.dragging .mol-inner{transform:scale(1.03)}
+.enz-body{stroke:var(--ink);stroke-width:2.5px}
+.enz-body.off{fill-opacity:0.4;stroke-dasharray:7 5}
+.enz-name{font-family:var(--display);font-size:16px;font-weight:800;fill:#fff;text-anchor:middle;pointer-events:none;letter-spacing:0.4px}
+.enz-sub{font-family:var(--mono);font-size:9.5px;font-weight:600;fill:rgba(255,255,255,0.94);text-anchor:middle;pointer-events:none}
+.enz-tag{font-family:var(--mono);font-size:9.5px;font-weight:600;fill:#B8351A;text-anchor:middle;pointer-events:none}
+/* Dropzoner mens et enzym trækkes */
+.enz-cand{fill:none;stroke:var(--lime);stroke-width:2.5;stroke-dasharray:5 4}
+.enz-target{fill:none;stroke-width:3.5}
+.enz-target.ok{stroke:var(--lime)}
+.enz-target.no{stroke:var(--coral)}
+
+/* ── Haworth og strukturformel ─────────────────────────── */
+.hw-card{fill:var(--panel);stroke:var(--ink);stroke-width:2}
+.hw-bond{stroke:var(--ink);stroke-width:2;stroke-linecap:round;fill:none}
+.hw-bond.front{stroke-width:5}
+.hw-stick{stroke:var(--ink);stroke-width:1.8;stroke-linecap:round}
+.hw-o circle{fill:#fff;stroke:var(--ink);stroke-width:2}
+.hw-o text{font-family:var(--display);font-size:11px;font-weight:800;fill:#B8351A;text-anchor:middle;pointer-events:none}
+.hw-sub{font-family:var(--display);font-size:10.5px;font-weight:700;fill:var(--ink);text-anchor:middle;pointer-events:none}
+.hw-sub.end{text-anchor:end}
+/* Numrene står inde i ringen og skal derfor have en glorie, hvor de
+   krydser en bindingsstreg */
+.hw-num,.hw-abbr{paint-order:stroke;stroke:rgba(255,255,255,0.92);stroke-width:3px;stroke-linejoin:round}
+.hw-num{font-family:var(--mono);font-size:9px;font-weight:600;fill:var(--slate);text-anchor:middle;pointer-events:none}
+.hw-abbr{font-family:var(--display);font-size:13px;font-weight:800;fill:var(--ink);text-anchor:middle;pointer-events:none;letter-spacing:0.4px}
+
+.st-bond{stroke:var(--ink);stroke-width:2;stroke-linecap:round}
+.st-atom{font-family:var(--display);font-size:15px;font-weight:800;fill:var(--ink);text-anchor:middle;pointer-events:none}
+.st-term{font-family:var(--display);font-size:12px;font-weight:700;fill:var(--ink);text-anchor:middle;pointer-events:none}
+.st-term.n{fill:#0A6A9E}
+.st-term.c{fill:#B8351A}
+.st-sub{font-family:var(--mono);font-size:9.5px;font-weight:600;fill:var(--slate);text-anchor:middle;pointer-events:none}
+.st-pill{stroke:var(--ink);stroke-width:2}
+.st-r{font-family:var(--display);font-size:10.5px;font-weight:700;fill:#fff;text-anchor:middle;pointer-events:none}
+.st-r.dark{fill:var(--ink)}
+
+/* Fedtsyrens kulstofkæde: zigzaggen i blokken, og knækket der gør
+   forskellen på olie og smør */
+.fa-tail{fill:none;stroke:rgba(255,255,255,0.88);stroke-width:3;stroke-linejoin:round;stroke-linecap:round}
+.st-tail{fill:none;stroke:var(--ink);stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round}
+.fa-double{fill:var(--coral);stroke:#fff;stroke-width:2}
+.fa-tag{font-family:var(--mono);font-size:9px;font-weight:600;fill:rgba(255,255,255,0.95);text-anchor:middle;pointer-events:none}
+
+/* Sumformlen */
+.fm-box{stroke:var(--ink);stroke-width:2.5}
+.fm-formula{font-family:var(--display);font-size:17px;font-weight:800;fill:#fff;text-anchor:middle;pointer-events:none}
+.fm-name{font-family:var(--display);font-size:10.5px;font-weight:700;fill:rgba(255,255,255,0.94);text-anchor:middle;pointer-events:none}
+
+/* ── Bund ──────────────────────────────────────────────── */
+.foot{margin-top:34px;background:var(--ink);color:#FFF6E0;padding:26px 0 32px}
+.foot-in{max-width:var(--max);margin:0 auto;padding:0 24px;display:flex;justify-content:space-between;align-items:flex-end;gap:18px;flex-wrap:wrap}
+.foot .brand{color:#FFF6E0}
+.foot .mono{color:#8FA29E;margin-top:5px}
+.foot-links{display:flex;gap:8px;flex-wrap:wrap}
+.foot-links a{
+  font-family:var(--display);font-size:0.82rem;font-weight:700;text-decoration:none;
+  border:2px solid #FFF6E0;border-radius:20px;padding:5px 13px;
+  transition:background .16s,color .16s,border-color .16s;
+}
+.foot-links a:nth-child(1):hover{background:var(--pink);border-color:var(--pink)}
+.foot-links a:nth-child(2):hover{background:var(--amber);border-color:var(--amber);color:var(--ink)}
+.foot-links a:nth-child(3):hover{background:var(--lime);border-color:var(--lime);color:var(--ink)}
+
+/* ── Projektortilstand ─────────────────────────────────── */
+body[data-projektor="1"] .top,
+body[data-projektor="1"] .head,
+body[data-projektor="1"] .foot{display:none}
+body[data-projektor="1"] .wrap{max-width:none;padding:0 14px}
+body[data-projektor="1"] .rig{margin-top:14px;box-shadow:var(--hard)}
+body[data-projektor="1"] .board{height:clamp(440px,72vh,880px)}
+body[data-projektor="1"] .seg button{font-size:1.02rem;padding:9px 17px}
+body[data-projektor="1"] .spawner{font-size:1.02rem;padding:10px 16px}
+body[data-projektor="1"] .chip{font-size:0.94rem;padding:8px 15px}
+body[data-projektor="1"] .group-label{font-size:0.72rem}
+body[data-projektor="1"] .btn-mini{font-size:0.88rem;padding:6px 14px}
+body[data-projektor="1"] #status{font-size:1.14rem}
+body[data-projektor="1"] .gauge dt{font-size:0.74rem}
+body[data-projektor="1"] .gauge dd{font-size:1.4rem}
+body[data-projektor="1"] .fact{font-size:0.76rem}
+body[data-projektor="1"] #task-panel{width:min(400px,62%);font-size:1.02rem}
+
+/* ── Responsivt ────────────────────────────────────────── */
+@media (max-width:960px){
+  .board{height:clamp(380px,54vh,540px)}
+  #task-panel{width:min(320px,72%)}
+}
+@media (max-width:620px){
+  body{font-size:16px}
+  .wrap,.top-in,.foot-in{padding-left:16px;padding-right:16px}
+  .head{padding:24px 0 18px}
+  .rig{border-radius:14px;box-shadow:var(--hard)}
+  .rig-head,.vaelg,.knobs,.facts,.gauge,#status{padding-left:14px;padding-right:14px}
+  .vaelg,.knobs{gap:10px 14px}
+  .board{height:clamp(340px,50vh,460px)}
+  #task-panel{left:12px;width:auto}
+  #welcome{padding:15px 16px 14px}
+  .wc-title{font-size:1.05rem}
+  .wc-steps{font-size:0.9rem}
+  .viewer-container{margin:12px 14px 0;width:calc(100% - 28px)}
+  .viewer-tip{margin:9px 14px 12px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+@media print{
+  .top,.foot,.rig-head,.vaelg,.knobs,#task-panel,#welcome{display:none!important}
+  .rig{box-shadow:none;break-inside:avoid}
+  .board{height:520px}
+}
+</style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
     {
-      "@context": "https://schema.org",
-      "@graph": [
+      "@type": "LearningResource",
+      "name": "Bio-Blocks — byg kulhydrater, proteiner og fedt",
+      "url": "https://smbi.dk/biologi/bio-blocks/",
+      "inLanguage": "da-DK",
+      "description": "Byg makromolekyler af deres byggesten: sæt monosakkarider, aminosyrer og fedtsyrer sammen, se kondensation og hydrolyse — og drej molekylet i 3D.",
+      "learningResourceType": "interaktiv simulering",
+      "educationalLevel": "Gymnasialt niveau (stx, hf)",
+      "isAccessibleForFree": true,
+      "author": {
+        "@type": "Person",
+        "name": "Simon Messell"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "smbi.dk",
+        "url": "https://smbi.dk/"
+      },
+      "image": "https://smbi.dk/img/og-biologi.png",
+      "isPartOf": {
+        "@id": "https://smbi.dk/#website"
+      },
+      "about": {
+        "@type": "Thing",
+        "name": "Kulhydrater, proteiner og lipider"
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
         {
-          "@type": "LearningResource",
-          "name": "Bio-Blocks — byg kulhydrater, proteiner og fedt",
-          "url": "https://smbi.dk/biologi/bio-blocks/",
-          "inLanguage": "da-DK",
-          "description": "Byg makromolekyler af deres byggesten: sæt monosakkarider, aminosyrer og fedtsyrer sammen, se kondensation og hydrolyse — og drej molekylet i 3D.",
-          "learningResourceType": "interaktiv simulering",
-          "educationalLevel": "Gymnasialt niveau (stx, hf)",
-          "isAccessibleForFree": true,
-          "author": {
-            "@type": "Person",
-            "name": "Simon Messell"
-          },
-          "publisher": {
-            "@type": "Organization",
-            "name": "smbi.dk",
-            "url": "https://smbi.dk/"
-          },
-          "image": "https://smbi.dk/img/og-biologi.png",
-          "isPartOf": {
-            "@id": "https://smbi.dk/#website"
-          },
-          "about": {
-            "@type": "Thing",
-            "name": "Kulhydrater, proteiner og lipider"
-          }
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Forside",
+          "item": "https://smbi.dk/"
         },
         {
-          "@type": "BreadcrumbList",
-          "itemListElement": [
-            {
-              "@type": "ListItem",
-              "position": 1,
-              "name": "Forside",
-              "item": "https://smbi.dk/"
-            },
-            {
-              "@type": "ListItem",
-              "position": 2,
-              "name": "Biologi",
-              "item": "https://smbi.dk/biologi.html"
-            },
-            {
-              "@type": "ListItem",
-              "position": 3,
-              "name": "Bio-Blocks — byg kulhydrater, proteiner og fedt",
-              "item": "https://smbi.dk/biologi/bio-blocks/"
-            }
-          ]
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Biologi",
+          "item": "https://smbi.dk/biologi.html"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Bio-Blocks — byg kulhydrater, proteiner og fedt",
+          "item": "https://smbi.dk/biologi/bio-blocks/"
         }
       ]
     }
-    </script>
+  ]
+}
+</script>
 </head>
+
 <body>
-<!-- smbi hjem-knap -->
-<a href="/" class="smbi-home" aria-label="Til forsiden" title="Til forsiden">
-<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
-<span>Hjem</span>
-</a>
-<style>
-.smbi-home{position:fixed;top:14px;left:14px;z-index:2147483000;display:inline-flex;align-items:center;gap:6px;padding:8px 13px;font:600 14px/1 system-ui,-apple-system,"Segoe UI",sans-serif;color:#F5F0E8;background:#1C2E44;border:1px solid #2E4A6A;border-radius:999px;text-decoration:none;box-shadow:0 2px 10px rgba(0,0,0,.28);opacity:.9;transition:opacity .15s,transform .15s}
-.smbi-home:hover{opacity:1;transform:translateY(-1px)}
-.smbi-home svg{flex:none}
-@media print{.smbi-home{display:none!important}}
-</style>
-<script>(function(){try{if(window.top!==window.self){var e=document.querySelector(".smbi-home");if(e)e.style.display="none";}}catch(x){}})();</script>
 
-
-<!-- Grupperne fyldes af js/ui.js ud fra det valgte modul — kun den faste
-     gruppe er den samme for kulhydrater, proteiner og fedt. Hvor mange af
-     dem der overhovedet bliver fyldt, afgør niveauvalget: se js/levels.js. -->
-<header>
-    <div class="group" id="grp-module"></div>
-    <div class="group" id="grp-form"></div>
-    <div class="group" id="grp-spawn"></div>
-    <div class="group" id="grp-build"></div>
-    <div class="group" id="grp-enzymes"></div>
-    <div class="group" id="grp-repr"></div>
-
-    <div class="group">
-        <button class="chip" id="btn-tasks">🎯 Opgaver</button>
-        <button class="chip" id="btn-log" title="Det du har bygget og svaret — til rapporten">📋 Min log</button>
-        <button class="chip active" id="btn-numbers">C-numre</button>
-        <div class="counter">💧 Vand: <b id="water-count">0</b></div>
-        <button class="spawner btn-reset" id="btn-reset">Ryd bordet</button>
+<header class="top" id="site-top">
+  <div class="rainbow"></div>
+  <div class="top-bar">
+    <div class="top-in">
+      <a href="/" class="brand"><span class="brand-mark"></span>smbi<em>.dk</em></a>
+      <nav class="top-nav">
+        <a href="/biologi.html">Biologi</a>
+        <a href="/">Forside</a>
+      </nav>
     </div>
-
-    <!-- Niveauet står sidst: det er lærerens knap, ikke elevens -->
-    <div class="group" id="grp-level"></div>
+  </div>
 </header>
 
-<div id="game-area">
-    <svg id="svg-space" width="100%" height="100%">
-        <!-- Farverne hører til modulets katalog, så gradienterne bygges af
-             js/render.js når modulet skiftes -->
-        <defs id="svg-defs">
-            <filter id="soft-shadow" x="-30%" y="-30%" width="180%" height="180%">
-                <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#000" flood-opacity="0.28"/>
-            </filter>
-        </defs>
-        <g id="layer-molecules"></g>
-        <g id="layer-enzymes"></g>
-        <g id="layer-preview"></g>
-        <g id="layer-fx"></g>
-    </svg>
-    <div id="status"></div>
-
-    <!-- Startkortet på det tomme bord — fyldes af js/welcome.js, for hvad
-         der skal stå, afhænger af modulet -->
-    <div id="welcome" class="hidden"></div>
-
-    <div id="task-panel" class="hidden">
-        <div class="tp-head">
-            <span>🎯 Opgaver</span>
-            <button id="task-close" title="Luk opgavepanelet">✕</button>
-        </div>
-        <ol id="task-list"></ol>
-        <div id="task-detail"></div>
+<main>
+  <div class="wrap head">
+    <div class="head-in">
+      <span class="eyebrow mono"><span class="blink"></span>Biologi · makromolekyler</span>
+      <h1>Byg det store molekyle af <span class="hi" style="--hc:#FBD3E1">små byggesten</span></h1>
+      <p class="lead">Træk to byggesten sammen, så de mødes plads mod plads: der fraspaltes et vandmolekyle, og de to bliver til ét. Det gælder sukrene, aminosyrerne og fedtsyrerne — samme reaktion, tre stofgrupper. Klik på ilten i en binding, og den bliver spaltet igen.</p>
     </div>
-</div>
+  </div>
 
-<div id="fact-modal" class="hidden">
-    <div class="fact-box">
-        <div class="fact-top" id="fact-top">
-            <div>
-                <h2 id="fact-name">Molekyle</h2>
-                <span class="f-sub" id="fact-formula"></span>
+  <div class="wrap">
+    <section class="rig">
+      <div class="rig-bar"></div>
+
+      <div class="rig-head">
+        <span class="rig-live"><span class="dot"></span><span class="mono">Byggebord</span></span>
+        <span class="spacer"></span>
+        <button type="button" class="btn-mini" id="btn-tasks" title="Opgaver med gæt, byg og forklaring">🎯 Opgaver</button>
+        <button type="button" class="btn-mini" id="btn-log" title="Det du har bygget og svaret — til rapporten">📋 Min log</button>
+        <button type="button" class="btn-mini active" id="btn-numbers" title="Vis eller skjul numrene på kulstofatomerne">C-numre</button>
+        <button type="button" class="btn-mini btn-ryd" id="btn-reset" title="Fjern alt fra bordet og begynd forfra">Ryd bordet</button>
+        <button type="button" class="btn-mini" id="btn-projektor" aria-pressed="false" title="Skjul sidens krom og forstør teksten">Projektor</button>
+      </div>
+
+      <!-- Grupperne fyldes af js/ui.js ud fra det valgte modul — kun den
+           faste gruppe i rig-head er den samme for kulhydrater, proteiner
+           og fedt. Hvor mange af dem der overhovedet bliver fyldt, afgør
+           niveauvalget: se js/levels.js. -->
+      <div class="vaelg">
+        <div class="group" id="grp-module"></div>
+        <div class="group" id="grp-form"></div>
+        <div class="group" id="grp-repr"></div>
+        <div class="group" id="grp-level"></div>
+      </div>
+
+      <div class="knobs">
+        <div class="group" id="grp-spawn"></div>
+        <div class="group" id="grp-build"></div>
+        <div class="group" id="grp-enzymes"></div>
+      </div>
+
+      <div class="stage">
+        <div class="board">
+          <svg id="svg-space" width="100%" height="100%" role="img"
+               aria-label="Byggebordet. Byggestenene ligger som blokke med en knop på den ene side og en ring på den anden: knoppen er en fri donorplads, ringen en fri modtagerplads. Trækkes en knop hen til en ring, fraspaltes et vandmolekyle, og de to bliver til ét molekyle. Hvad der sker, står i statuslinjen under bordet.">
+            <!-- Farverne hører til modulets katalog, så gradienterne bygges
+                 af js/render.js når modulet skiftes -->
+            <defs id="svg-defs">
+              <filter id="soft-shadow" x="-30%" y="-30%" width="180%" height="180%">
+                <feDropShadow dx="2" dy="3" stdDeviation="2" flood-color="#17211F" flood-opacity="0.22"/>
+              </filter>
+            </defs>
+            <g id="layer-molecules"></g>
+            <g id="layer-enzymes"></g>
+            <g id="layer-preview"></g>
+            <g id="layer-fx"></g>
+          </svg>
+
+          <!-- Startkortet på det tomme bord — fyldes af js/welcome.js, for
+               hvad der skal stå, afhænger af modulet -->
+          <div id="welcome" class="hidden"></div>
+
+          <div id="task-panel" class="hidden">
+            <div class="tp-head">
+              <span>🎯 Opgaver</span>
+              <button type="button" id="task-close" title="Luk opgavepanelet">✕</button>
             </div>
-            <button id="fact-close" title="Luk">✕</button>
+            <ol id="task-list"></ol>
+            <div id="task-detail"></div>
+          </div>
         </div>
-        <div class="fact-rows" id="fact-rows"></div>
+      </div>
+
+      <p id="status" aria-live="polite"></p>
+
+      <dl class="gauges">
+        <div class="gauge">
+          <dt>Vand fraspaltet</dt>
+          <dd>💧 <span id="water-count">0</span> <span class="enhed">molekyler</span></dd>
+        </div>
+      </dl>
+
+      <div class="facts">
+        <span class="fact knop">Knop · fri donorplads</span>
+        <span class="fact ring">Ring · fri modtagerplads</span>
+        <span class="fact ilt">Ilt i en binding · klik og spalt den</span>
+      </div>
+    </section>
+  </div>
+</main>
+
+<div id="fact-modal" class="sky hidden">
+  <div class="fact-box">
+    <div class="fact-top" id="fact-top">
+      <div>
+        <h2 id="fact-name">Molekyle</h2>
+        <span class="f-sub" id="fact-formula"></span>
+      </div>
+      <button type="button" class="rude-luk" id="fact-close" title="Luk">✕</button>
     </div>
+    <div class="fact-rows" id="fact-rows"></div>
+  </div>
 </div>
 
 <!-- Min log: hvad eleven har bygget og svaret — fyldes af js/log.js -->
-<div id="log-modal" class="hidden">
-    <div class="log-box">
-        <div class="log-top">
-            <div>
-                <h2>📋 Min log</h2>
-                <span class="f-sub" id="log-sub"></span>
-            </div>
-            <button id="log-close" title="Luk">✕</button>
-        </div>
-        <div class="log-body" id="log-body"></div>
-        <div class="log-actions">
-            <button class="tp-btn" id="log-copy">📋 Kopier til rapport</button>
-            <button class="tp-btn grey" id="log-clear">Ryd loggen</button>
-            <span class="log-warn">Loggen forsvinder, når du lukker fanen — kopiér den inden.</span>
-        </div>
+<div id="log-modal" class="sky hidden">
+  <div class="log-box">
+    <div class="log-top">
+      <div>
+        <h2>📋 Min log</h2>
+        <span class="f-sub" id="log-sub"></span>
+      </div>
+      <button type="button" class="rude-luk" id="log-close" title="Luk">✕</button>
     </div>
+    <div class="log-body" id="log-body"></div>
+    <div class="log-actions">
+      <button type="button" class="tp-btn" id="log-copy">📋 Kopier til rapport</button>
+      <button type="button" class="tp-btn grey" id="log-clear">Ryd loggen</button>
+      <span class="log-warn">Loggen forsvinder, når du lukker fanen — kopiér den inden.</span>
+    </div>
+  </div>
 </div>
 
-<div id="viewer-modal" class="hidden">
-    <div class="viewer-box">
-        <div class="viewer-bar">
-            <div>
-                <span id="viewer-title">Molekyle</span>
-                <span id="viewer-sub"></span>
-            </div>
-            <div class="viewer-actions">
-                <button class="btn-small active" id="btn-spin">↻ Rotation</button>
-                <button class="btn-small btn-close" id="viewer-close">Luk</button>
-            </div>
-        </div>
-        <div id="viewer-container" class="viewer-container"></div>
-        <p class="viewer-tip">Træk for at dreje · scroll for at zoome · rigtige 3D-koordinater fra PubChem</p>
+<div id="viewer-modal" class="sky hidden">
+  <div class="viewer-box">
+    <div class="viewer-bar">
+      <div>
+        <span id="viewer-title">Molekyle</span>
+        <span id="viewer-sub"></span>
+      </div>
+      <div class="viewer-actions">
+        <button type="button" class="btn-mini active" id="btn-spin">↻ Rotation</button>
+        <button type="button" class="rude-luk" id="viewer-close" title="Luk">✕</button>
+      </div>
     </div>
+    <div id="viewer-container" class="viewer-container"></div>
+    <p class="viewer-tip">Træk for at dreje · rul for at zoome · rigtige 3D-koordinater fra PubChem</p>
+  </div>
 </div>
+
+<footer class="foot">
+  <div class="foot-in">
+    <div>
+      <a href="/" class="brand"><span class="brand-mark"></span>smbi<em>.dk</em></a>
+      <div class="mono">Biologi · makromolekyler</div>
+    </div>
+    <nav class="foot-links">
+      <a href="/biologi.html">Biologi</a>
+      <a href="/geografi.html">Geografi</a>
+      <a href="/contact.html">Kontakt</a>
+    </nav>
+  </div>
+</footer>
+
+<script defer src="https://3Dmol.org/build/3Dmol-min.js"></script>
+<script type="module" src="js/main.js"></script>
+
+<!-- Iframe-krom: lægges figuren i en iframe, er sidens hoved og bund
+     bare støj omkring den -->
+<script>
+(function(){
+  try{
+    if(window.top!==window.self){
+      document.getElementById('site-top').style.display='none';
+      document.querySelector('.foot').style.display='none';
+      document.querySelector('.head').style.display='none';
+    }
+  }catch(e){}
+})();
+</script>
 
 </body>
 </html>

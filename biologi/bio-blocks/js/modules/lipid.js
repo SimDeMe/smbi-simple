@@ -35,22 +35,22 @@ const fat = (da, abbr, atoms, extra) => Object.assign({
 
 const mon = {
     glycerol: {
-        da: 'Glycerol', abbr: 'GLY', shape: 'gly', colour: ['#bb8fce', '#7d3c98'],
+        da: 'Glycerol', abbr: 'GLY', shape: 'gly', colour: ['#B79AEE', '#5E32B8'],
         atoms: { C: 3, H: 8, O: 3 },
         donor: false, accepts: ['c1', 'c2', 'c3'],
         note: 'En trevædig alkohol: tre C-atomer med hver sin OH-gruppe. Rygraden i alt fedt.'
     },
     palmitic: fat('Palmitinsyre', '16:0', { C: 16, H: 32, O: 2 },
-        { colour: ['#f0b27a', '#af601a'], sat: true, kink: 0,
+        { colour: ['#FFC98A', '#A76A12'], sat: true, kink: 0,
           note: 'Mættet: ingen dobbeltbindinger, så kæden er lige. Fast ved stuetemperatur.' }),
     stearic: fat('Stearinsyre', '18:0', { C: 18, H: 36, O: 2 },
-        { colour: ['#e59866', '#935116'], sat: true, kink: 0,
+        { colour: ['#F3A96A', '#8A4A12'], sat: true, kink: 0,
           note: 'Mættet og lang — den hårdeste af de almindelige fedtsyrer.' }),
     oleic: fat('Oliesyre', '18:1', { C: 18, H: 34, O: 2 },
-        { colour: ['#7dcea0', '#1e8449'], sat: false, kink: 1,
+        { colour: ['#9FD98A', '#3F7A1E'], sat: false, kink: 1,
           note: 'Én cis-dobbeltbinding giver ét knæk. Enkeltumættet — olivenolie.' }),
     linolenic: fat('Linolensyre', '18:3', { C: 18, H: 30, O: 2 },
-        { colour: ['#76d7c4', '#117a65' ], sat: false, kink: 2,
+        { colour: ['#7FD9CB', '#0B7D70' ], sat: false, kink: 2,
           note: 'Tre dobbeltbindinger, flere knæk. Flerumættet omega-3 — og essentiel.' })
 };
 
@@ -150,7 +150,7 @@ const cantCut = (short, msg, extra) => Object.assign({ ok: false, short, msg }, 
 
 const enzymes = {
     lipase: {
-        da: 'Bugspytlipase', colour: '#e67e22', sub: 'ester på C1 og C3',
+        da: 'Bugspytlipase', colour: '#0E86C8', sub: 'ester på C1 og C3',
         where: 'bugspytkirtlen, tyndtarmen',
         test(b) {
             if (b.site === 2) return cantCut('kan ikke nå C2',
@@ -160,7 +160,7 @@ const enzymes = {
         }
     },
     hsl: {
-        da: 'Hormonfølsom lipase', colour: '#c0392b', sub: 'alle tre estere',
+        da: 'Hormonfølsom lipase', colour: '#C4341A', sub: 'alle tre estere',
         where: 'fedtvævet — tændes af adrenalin',
         test() {
             return canCut('esterbinding klippes',
@@ -478,7 +478,7 @@ export const lipid = {
     terms,
     factColour: (info, n) => n === 1
         ? mon[info.key].colour[1]
-        : { mono: '#7d3c98', mono2: '#6c3483', di: '#5b2c6f', trisat: '#af601a', triunsat: '#1e8449' }[info.key],
+        : { mono: '#5E32B8', mono2: '#52299F', di: '#45217F', trisat: '#A76A12', triunsat: '#3F7A1E' }[info.key],
 
     tasks,
     summary: water =>

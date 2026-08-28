@@ -38,19 +38,19 @@ const HEXOSE = { C: 6, H: 12, O: 6 };    // alle tre monosakkarider har samme su
 
 const mon = {
     glucose: {
-        da: 'Glukose', abbr: 'GLU', glyph: '⬢', shape: 'hex', colour: ['#2ecc71', '#1e8449'],
+        da: 'Glukose', abbr: 'GLU', glyph: '⬢', shape: 'hex', colour: ['#8ACB5C', '#3F7A1E'],
         atoms: HEXOSE, donor: true, accepts: ['c4', 'c6'],
         sdf: '../../Molecules/glucose.sdf',
         note: 'Druesukker — cellernes vigtigste brændstof.'
     },
     fructose: {
-        da: 'Fruktose', abbr: 'FRU', glyph: '⬟', shape: 'pent', colour: ['#ec7063', '#b03a2e'],
+        da: 'Fruktose', abbr: 'FRU', glyph: '⬟', shape: 'pent', colour: ['#FF9470', '#C4341A'],
         atoms: HEXOSE, donor: true, accepts: ['anomeric'], mirror: true,
         sdf: '../../Molecules/fructose.sdf',
         note: 'Frugtsukker — femring (furanose) og den sødeste af de tre.'
     },
     galactose: {
-        da: 'Galaktose', abbr: 'GAL', glyph: '⬢', shape: 'hex', colour: ['#f4d03f', '#b7950b'],
+        da: 'Galaktose', abbr: 'GAL', glyph: '⬢', shape: 'hex', colour: ['#FFCE4D', '#9A6A00'],
         atoms: HEXOSE, donor: true, accepts: ['c4', 'c6'],
         sdf: '../../Molecules/galactose.sdf',
         note: 'Adskiller sig fra glukose ved OH-gruppen på C4.'
@@ -281,7 +281,7 @@ const isGlcGlc = b => b.donor.name === 'glucose' && b.acceptor.name === 'glucose
 
 const enzymes = {
     amylase: {
-        da: 'Amylase', colour: '#8e44ad', sub: 'α-1,4 inde i kæden',
+        da: 'Amylase', colour: '#7A4FD6', sub: 'α-1,4 inde i kæden',
         where: 'spyt og bugspyt',
         test(b, m) {
             if (b.site === 2) return cantCut('ikke sakkarose',
@@ -301,7 +301,7 @@ const enzymes = {
         }
     },
     maltase: {
-        da: 'Maltase', colour: '#16a085', sub: 'α-1,4 fra enden',
+        da: 'Maltase', colour: '#0FA593', sub: 'α-1,4 fra enden',
         where: 'tyndtarmens børstesøm',
         test(b) {
             if (b.site === 2) return cantCut('ikke sakkarose',
@@ -319,7 +319,7 @@ const enzymes = {
         }
     },
     sucrase: {
-        da: 'Sakkarase', colour: '#d35400', sub: 'α-1,β-2 (sakkarose)',
+        da: 'Sakkarase', colour: '#D2481B', sub: 'α-1,β-2 (sakkarose)',
         where: 'tyndtarmens børstesøm',
         test(b) {
             if (b.site !== 2) return cantCut('kun sakkarose',
@@ -329,7 +329,7 @@ const enzymes = {
         }
     },
     lactase: {
-        da: 'Laktase', colour: '#2980b9', sub: 'β-1,4 (laktose)',
+        da: 'Laktase', colour: '#0E86C8', sub: 'β-1,4 (laktose)',
         where: 'tyndtarmens børstesøm',
         test(b) {
             if (b.site !== 4 || b.anomer !== 'b') return cantCut('kun β-1,4',
@@ -343,7 +343,7 @@ const enzymes = {
         }
     },
     cellulase: {
-        da: 'Cellulase', colour: '#7f8c8d', sub: 'β-1,4 (cellulose)',
+        da: 'Cellulase', colour: '#566B68', sub: 'β-1,4 (cellulose)',
         where: 'bakterier, svampe og termitter',
         tag: '✖ mennesker producerer den ikke',
         test(b) {
@@ -379,8 +379,8 @@ const toggle = {
 /* --- Faktakort ------------------------------------------------------- */
 
 const FACT_COLOUR = {
-    glucose: '#1e8449', fructose: '#b03a2e', galactose: '#b7950b',
-    disacc: '#2471a3', poly: '#34495e'
+    glucose: '#3F7A1E', fructose: '#C4341A', galactose: '#9A6A00',
+    disacc: '#0E86C8', poly: '#17211F'
 };
 
 const facts = {
