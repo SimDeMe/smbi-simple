@@ -6,7 +6,8 @@ import {
 import { compressImage, addPhoto, removePhoto } from "./photos.js";
 import { importFiles } from "./import.js";
 import { buildSession, getDistractors, pickStimulus, checkAnswer, processResult, saveSession } from "./quiz.js";
-import { el, showToast, renderProgressBar, spinner, renderStudentCard } from "./ui.js";
+import { el, showToast, renderProgressBar, spinner, renderStudentCard, viewHead, backLink } from "./ui.js";
+import { visningsnavne, visningsnavn } from "./navne.js";
 import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import { db } from "./firebase-config.js";
 
@@ -62,7 +63,8 @@ function renderLogin(app) {
   app.appendChild(
     el('div', { class: 'view-login' },
       el('div', { class: 'login-card' },
-        el('div', { class: 'login-icon' }, '👤'),
+        el('div', { class: 'rig-bar' }),
+        el('div', { class: 'login-icon' }, ikon('<circle cx="9" cy="8" r="3.2"/><path d="M3 19a6 6 0 0 1 12 0"/><circle cx="17.5" cy="9.5" r="2.4"/><path d="M15 19a5 5 0 0 1 6.5-4.3"/>')),
         el('h1', {}, 'Navne-app'),
         el('p', {}, 'Lær dine elevers navne med spaced repetition.'),
         el('button', { class: 'btn btn-primary', onclick: () => login().catch(e => showToast(e.message, 'error')) },
@@ -85,7 +87,7 @@ async function renderClasses(app) {
   app.appendChild(
     el('div', { class: 'view' },
       el('div', { class: 'view-header' },
-        el('h1', {}, 'Mine klasser'),
+        viewHead('Navne-app · Klasser', 'Mine klasser'),
         el('div', { class: 'header-actions' },
           el('button', { class: 'btn btn-ghost-sm', onclick: doLogout }, 'Log ud'),
           el('button', { class: 'btn btn-primary', onclick: () => navigate('#/classes/new') }, '+ Ny klasse')
@@ -128,8 +130,8 @@ function renderNewClass(app) {
 
   app.appendChild(
     el('div', { class: 'view view-narrow' },
-      el('a', { class: 'back-link', onclick: () => navigate('#/classes') }, '← Tilbage'),
-      el('h1', {}, 'Ny klasse'),
+      backLink('← Tilbage', () => navigate('#/classes')),
+      viewHead('Navne-app · Ny klasse', 'Ny klasse', 'Giv holdet et navn, du kan kende det på.'),
       input,
       el('button', {
         class: 'btn btn-primary',
@@ -163,13 +165,14 @@ async function renderClassDetail(app, classId) {
   const mastered = students.filter(s => (s.interval || 1) > 21).length;
   const due = students.filter(s => s.nextReview && s.nextReview.toDate && s.nextReview.toDate() <= now).length;
   const withPhotosCount = students.filter(s => s.photoUrls?.length > 0).length;
+  const navne = visningsnavne(students);
 
   app.innerHTML = '';
   app.appendChild(
     el('div', { class: 'view' },
-      el('a', { class: 'back-link', onclick: () => navigate('#/classes') }, '← Klasser'),
+      backLink('← Klasser', () => navigate('#/classes')),
       el('div', { class: 'view-header' },
-        el('h1', {}, cls.name),
+        viewHead('Navne-app · Klasse', cls.name),
         el('div', { class: 'header-actions' },
           el('button', { class: 'btn btn-sm', onclick: () => navigate(`#/import/${classId}`) }, '+ Importer elever'),
           withPhotosCount >= 2
@@ -188,7 +191,7 @@ async function renderClassDetail(app, classId) {
         statBox('Forfaldet', due, due > 0 ? 'stat-warn' : '')
       ),
       el('div', { class: 'student-grid' },
-        ...students.map(s => renderStudentCard(s, st => navigate(`#/students/${st.id}`)))
+        ...students.map(s => renderStudentCard(s, st => navigate(`#/students/${st.id}`), navne.get(s.id)))
       )
     )
   );
@@ -206,12 +209,12 @@ function statBox(label, value, cls = '') {
 function renderImport(app, classId) {
   app.innerHTML = '';
   let filesToImport = [];
-  const statusEl = el('p', { class: 'muted' }, 'Vælg eller træk billeder herind.');
+  const statusEl = el('p', { class: 'muted', 'aria-live': 'polite' }, 'Vælg eller træk billeder herind.');
   const fileInput = el('input', { type: 'file', accept: 'image/*', multiple: true, style: 'display:none' });
 
   fileInput.addEventListener('change', e => handleFiles(e.target.files));
 
-  const dropZone = el('div', { class: 'drop-zone',
+  const dropZone = el('button', { class: 'drop-zone', type: 'button',
     onclick: () => fileInput.click(),
     ondragover: e => { e.preventDefault(); dropZone.classList.add('drag-over'); },
     ondragleave: () => dropZone.classList.remove('drag-over'),
@@ -221,7 +224,7 @@ function renderImport(app, classId) {
       handleFiles(e.dataTransfer.files);
     }
   },
-    el('div', { class: 'drop-zone-icon' }, '🖼'),
+    el('div', { class: 'drop-zone-icon' }, ikon('<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.8"/><path d="m4 17 5-4.5 4 3.5 3-2.5 4 3.5"/>')),
     el('p', {}, 'Træk billeder hertil eller klik for at vælge'),
     el('p', { class: 'muted small' }, 'Filnavn bruges som elevnavn (fx "Rasmus Kjær.jpg")')
   );
@@ -244,8 +247,8 @@ function renderImport(app, classId) {
 
   app.appendChild(
     el('div', { class: 'view view-narrow' },
-      el('a', { class: 'back-link', onclick: () => navigate(`#/classes/${classId}`) }, '← Tilbage'),
-      el('h1', {}, 'Importer elever'),
+      backLink('← Tilbage', () => navigate(`#/classes/${classId}`)),
+      viewHead('Navne-app · Import', 'Importer elever', 'Filnavnet bliver elevens navn.'),
       dropZone,
       fileInput,
       fileList,
@@ -304,7 +307,7 @@ async function renderGenderTag(app, classId, ids) {
 
   app.appendChild(
     el('div', { class: 'view view-narrow view-center' },
-      el('p', { class: 'muted' }, `Mærk køn — ${remaining} tilbage`),
+      el('p', { class: 'mono', 'aria-live': 'polite' }, `Mærk køn — ${remaining} tilbage`),
       student.photoUrls?.length
         ? el('img', { src: student.photoUrls[0], class: 'tag-photo', alt: student.name })
         : el('div', { class: 'tag-no-photo' }, '?'),
@@ -335,6 +338,7 @@ async function renderQuiz(app, classId) {
     return;
   }
 
+  const navne = visningsnavne(allClassStudents);
   let idx = 0;
   const sessionResults = [];
 
@@ -370,7 +374,7 @@ async function renderQuiz(app, classId) {
       if (!hintRevealed) {
         hintRevealed = true;
         hintUsed = true;
-        hintBtn.textContent = student.name[0] + '...';
+        hintBtn.textContent = visningsnavn(student, navne)[0] + '...';
         hintBtn.classList.add('hint-revealed');
       }
     });
@@ -381,13 +385,13 @@ async function renderQuiz(app, classId) {
 
     const quit = () => navigate(`#/classes/${classId}`);
     if (student.level === 1) {
-      await showLevel1(app, student, stimulus, stimulusEl, allClassStudents, hintBtn, startTime, hintUsed, idx, total, result => {
+      await showLevel1(app, student, stimulus, stimulusEl, allClassStudents, navne, hintBtn, startTime, hintUsed, idx, total, result => {
         sessionResults.push(result);
         idx++;
         showCard();
       }, quit);
     } else {
-      await showLevel2(app, student, stimulus, stimulusEl, hintBtn, startTime, hintUsed, idx, total, result => {
+      await showLevel2(app, student, stimulus, stimulusEl, navne, hintBtn, startTime, hintUsed, idx, total, result => {
         sessionResults.push(result);
         idx++;
         showCard();
@@ -398,25 +402,31 @@ async function renderQuiz(app, classId) {
   showCard();
 }
 
-async function showLevel1(app, student, stimulus, stimulusEl, allClassStudents, hintBtn, startTime, hintUsed, idx, total, onDone, onQuit) {
+async function showLevel1(app, student, stimulus, stimulusEl, allClassStudents, navne, hintBtn, startTime, hintUsed, idx, total, onDone, onQuit) {
   const distractors = await getDistractors(state.uid, student, allClassStudents);
   const options = shuffle([student, ...distractors]);
 
+  // Distraktorer kan komme fra en anden klasse, når klassen er lille. Navnene
+  // skal skelnes blandt dem, der faktisk står på skærmen, så kortet bygges om
+  // over de viste svarmuligheder og klassen tilsammen.
+  const vist = visningsnavne(unikkeElever([...allClassStudents, ...options]));
+
   const answerBtns = options.map(opt =>
     el('button', { class: 'answer-btn',
-      onclick: () => handleLevel1Answer(opt.id === student.id)
-    }, opt.name)
+      onclick: () => handleLevel1Answer(opt.id === student.id, opt.id)
+    }, visningsnavn(opt, vist))
   );
 
   let answered = false;
-  function handleLevel1Answer(correct) {
+  function handleLevel1Answer(correct, valgtId) {
     if (answered) return;
     answered = true;
     const responseTime = Date.now() - startTime;
 
+    const rigtigtNavn = visningsnavn(student, vist);
     answerBtns.forEach(btn => {
       btn.disabled = true;
-      if (btn.textContent === student.name) btn.classList.add('correct');
+      if (btn.textContent === rigtigtNavn) btn.classList.add('correct');
     });
 
     const result = {
@@ -425,7 +435,7 @@ async function showLevel1(app, student, stimulus, stimulusEl, allClassStudents, 
       correct,
       usedHint: hintUsed,
       responseTime,
-      answeredWith: correct ? student.id : options.find(o => o.name === event?.target?.textContent)?.id || ''
+      answeredWith: valgtId
     };
 
     processResult(state.uid, student, result);
@@ -453,19 +463,20 @@ async function showLevel1(app, student, stimulus, stimulusEl, allClassStudents, 
   );
 }
 
-async function showLevel2(app, student, stimulus, stimulusEl, hintBtn, startTime, hintUsed, idx, total, onDone, onQuit) {
+async function showLevel2(app, student, stimulus, stimulusEl, navne, hintBtn, startTime, hintUsed, idx, total, onDone, onQuit) {
+  const rigtigtNavn = visningsnavn(student, navne);
   let answered = false;
   const input = el('input', { type: 'text', class: 'quiz-input', placeholder: 'Skriv elevens navn...',
     autocomplete: 'off', autocorrect: 'off', spellcheck: 'false'
   });
-  const feedback = el('div', { class: 'quiz-feedback' });
+  const feedback = el('div', { class: 'quiz-feedback', 'aria-live': 'polite' });
   const submitBtn = el('button', { class: 'btn btn-primary quiz-submit' }, 'Svar');
 
   function submit() {
     if (answered) return;
     answered = true;
     const responseTime = Date.now() - startTime;
-    const correct = checkAnswer(student, input.value);
+    const correct = checkAnswer(student, input.value, rigtigtNavn);
     const result = {
       studentId: student.id,
       stimulus,
@@ -485,7 +496,9 @@ async function showLevel2(app, student, stimulus, stimulusEl, hintBtn, startTime
       setTimeout(() => onDone(result), 700);
     } else {
       feedback.className = 'quiz-feedback wrong';
-      feedback.innerHTML = `Forkert. Du svarede <em>${input.value}</em> — det rigtige svar er <strong>${student.name}</strong>`;
+      feedback.textContent = '';
+      feedback.append('Forkert. Du svarede ', el('em', {}, input.value),
+                      ' — det rigtige svar er ', el('strong', {}, rigtigtNavn));
       setTimeout(() => onDone(result), 2000);
     }
   }
@@ -584,6 +597,7 @@ async function renderPracticeGroups(app, classId, allStudents) {
   app.appendChild(spinner());
 
   const { groups, phases } = await loadPracticeData(state.uid, classId, withPhotos);
+  const navne = visningsnavne(allStudents);
 
   const phaseLabel = p => ['Låst', 'Vælg navn', 'Skriv navn', 'Gennemført'][p] || 'Låst';
   const phaseClass = p => p === 0 ? 'phase-locked' : p === 3 ? 'phase-done' : 'phase-active';
@@ -596,10 +610,10 @@ async function renderPracticeGroups(app, classId, allStudents) {
           el('span', { class: 'group-number' }, `Gruppe ${i + 1}`),
           el('span', { class: `phase-badge ${phaseClass(phase)}` }, phaseLabel(phase))
         ),
-        el('div', { class: 'group-names' }, group.map(s => s.name.split(' ')[0]).join(', '))
+        el('div', { class: 'group-names' }, group.map(s => visningsnavn(s, navne)).join(', '))
       ),
       phase >= 1 && phase <= 2
-        ? el('button', { class: 'btn btn-sm', onclick: () => renderGroupPractice(app, classId, i, groups, phases, withPhotos) }, 'Øv')
+        ? el('button', { class: 'btn btn-sm', onclick: () => renderGroupPractice(app, classId, i, groups, phases, withPhotos, allStudents) }, 'Øv')
         : null
     );
   });
@@ -607,15 +621,15 @@ async function renderPracticeGroups(app, classId, allStudents) {
   app.innerHTML = '';
   app.appendChild(
     el('div', { class: 'view view-narrow' },
-      el('a', { class: 'back-link', onclick: () => navigate(`#/classes/${classId}`) }, '← Tilbage'),
-      el('h1', {}, 'Øv navne'),
-      el('p', { class: 'muted' }, 'Klarer du en gruppe, låses den næste op.'),
+      backLink('← Tilbage', () => navigate(`#/classes/${classId}`)),
+      viewHead('Navne-app · Øvning', 'Øv navne', 'Klarer du en gruppe, låses den næste op.'),
       el('div', { class: 'group-list' }, ...groupCards)
     )
   );
 }
 
-async function renderGroupPractice(app, classId, groupIdx, groups, phases, allStudents) {
+async function renderGroupPractice(app, classId, groupIdx, groups, phases, withPhotos, allStudents) {
+  const navne = visningsnavne(allStudents);
   const group = groups[groupIdx];
   const phase = phases[groupIdx];
   const students = shuffle([...group]);
@@ -637,7 +651,7 @@ async function renderGroupPractice(app, classId, groupIdx, groups, phases, allSt
       if (!hintRevealed) {
         hintRevealed = true;
         hintUsed = true;
-        hintBtn.textContent = student.name[0] + '...';
+        hintBtn.textContent = visningsnavn(student, navne)[0] + '...';
         hintBtn.classList.add('hint-revealed');
       }
     });
@@ -645,11 +659,11 @@ async function renderGroupPractice(app, classId, groupIdx, groups, phases, allSt
     const stimulusEl = el('img', { src: student.photoUrls[0], class: 'quiz-photo', alt: '' });
 
     if (phase === 1) {
-      await showLevel1(app, student, 'photo', stimulusEl, allStudents, hintBtn, startTime, hintUsed, idx, students.length, result => {
+      await showLevel1(app, student, 'photo', stimulusEl, withPhotos, navne, hintBtn, startTime, hintUsed, idx, students.length, result => {
         results.push(result); idx++; showNext();
       }, quit);
     } else {
-      await showLevel2(app, student, 'photo', stimulusEl, hintBtn, startTime, hintUsed, idx, students.length, result => {
+      await showLevel2(app, student, 'photo', stimulusEl, navne, hintBtn, startTime, hintUsed, idx, students.length, result => {
         results.push(result); idx++; showNext();
       }, quit);
     }
@@ -669,7 +683,7 @@ async function renderGroupPractice(app, classId, groupIdx, groups, phases, allSt
           el('div', { class: 'view view-narrow view-center' },
             el('h2', {}, `${correct} af ${students.length} — perfekt!`),
             el('p', {}, 'Nu skal du skrive navnene selv.'),
-            el('button', { class: 'btn btn-primary', onclick: () => renderGroupPractice(app, classId, groupIdx, groups, newPhases, allStudents) }, 'Fortsæt til skriv-fase'),
+            el('button', { class: 'btn btn-primary', onclick: () => renderGroupPractice(app, classId, groupIdx, groups, newPhases, withPhotos, allStudents) }, 'Fortsæt til skriv-fase'),
             el('button', { class: 'btn btn-ghost-sm', onclick: quit }, 'Afslut')
           )
         );
@@ -694,7 +708,7 @@ async function renderGroupPractice(app, classId, groupIdx, groups, phases, allSt
         el('div', { class: 'view view-narrow view-center' },
           el('h2', {}, `${correct} af ${students.length} korrekte`),
           el('p', { class: 'muted' }, 'Du skal have alle rigtige for at komme videre. Prøv igen!'),
-          el('button', { class: 'btn btn-primary', onclick: () => renderGroupPractice(app, classId, groupIdx, groups, phases, allStudents) }, 'Prøv igen'),
+          el('button', { class: 'btn btn-primary', onclick: () => renderGroupPractice(app, classId, groupIdx, groups, phases, withPhotos, allStudents) }, 'Prøv igen'),
           el('button', { class: 'btn btn-ghost-sm', onclick: quit }, 'Tilbage til grupper')
         )
       );
@@ -726,8 +740,9 @@ async function renderMatch(app, classId) {
     return;
   }
 
+  const navne = visningsnavne(students);
   const pool = shuffle([...withPhotos]).slice(0, 9);
-  const shuffledNames = shuffle(pool.map(s => s.name));
+  const shuffledNames = shuffle(pool.map(s => visningsnavn(s, navne)));
 
   let selected = null;
   const assignments = new Map();
@@ -741,7 +756,8 @@ async function renderMatch(app, classId) {
 
     const slots = pool.map(s => {
       const assigned = assignments.get(s.id);
-      return el('div', {
+      return el('button', {
+        type: 'button',
         class: 'match-slot' + (selected && !assigned ? ' match-slot--droppable' : ''),
         onclick: () => {
           if (selected) {
@@ -770,12 +786,12 @@ async function renderMatch(app, classId) {
 
     app.appendChild(
       el('div', { class: 'view view-match' },
-        el('a', { class: 'back-link', onclick: () => navigate(`#/classes/${classId}`) }, '← Tilbage'),
+        backLink('← Tilbage', () => navigate(`#/classes/${classId}`)),
         el('div', { class: 'match-header' },
           el('h1', {}, 'Mix & Match'),
           el('span', { class: 'match-count muted' }, `${placed} / ${total}`)
         ),
-        el('div', { class: 'match-banner' + (selected ? '' : ' match-banner--empty') },
+        el('div', { class: 'match-banner' + (selected ? '' : ' match-banner--empty'), 'aria-live': 'polite' },
           selected ? `Valgt: ${selected} — klik på et foto` : 'Vælg et navn herunder, klik derefter på et foto'
         ),
         el('div', { class: 'match-grid' }, ...slots),
@@ -796,12 +812,12 @@ async function renderMatch(app, classId) {
     let correct = 0;
     const resultSlots = pool.map(s => {
       const assigned = assignments.get(s.id);
-      const ok = assigned === s.name;
+      const ok = assigned === visningsnavn(s, navne);
       if (ok) correct++;
       return el('div', { class: 'match-slot match-slot--' + (ok ? 'correct' : 'wrong') },
         el('img', { src: s.photoUrls[0], class: 'match-photo', alt: '' }),
         el('div', { class: 'match-label' }, assigned || '?'),
-        ok ? null : el('div', { class: 'match-correct-label' }, s.name)
+        ok ? null : el('div', { class: 'match-correct-label' }, visningsnavn(s, navne))
       );
     });
 
@@ -899,18 +915,15 @@ async function renderStudentEdit(app, studentId) {
 
   app.appendChild(
     el('div', { class: 'view view-narrow' },
-      el('a', { class: 'back-link', onclick: () => history.back() }, '← Tilbage'),
-      el('h1', {}, 'Rediger elev'),
+      backLink('← Tilbage', () => history.back()),
+      viewHead('Navne-app · Elev', 'Rediger elev', 'Navnet her er det fulde navn — appen viser selv fornavnet.'),
       photoRow,
       el('button', { class: 'btn btn-sm', onclick: () => fileInput.click() }, '+ Tilføj foto'),
       fileInput,
       makeField('Navn', 'name'),
       el('label', { class: 'field-label' }, 'Køn', genderSelect),
       makeField('Hints om eleven', 'hints', true),
-      el('label', { class: 'field-label' },
-        'Navne-anker (mnemonic)',
-        el('textarea', { class: 'input', onchange: e => { fields.nameAnchor = e.target.value; } })
-      ),
+      makeField('Navne-anker (mnemonic)', 'nameAnchor', true),
       el('div', { class: 'meta-row' },
         el('span', { class: 'muted small' }, `Niveau ${student.level || 1} · Næste review: ${nextReviewDate}`)
       ),
@@ -944,6 +957,19 @@ async function renderStudentEdit(app, studentId) {
 
 function shuffle(arr) {
   return arr.sort(() => Math.random() - 0.5);
+}
+
+// Små stregikoner i samme streg som resten af sitet — ingen ikonbibliotek.
+function ikon(stier) {
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.innerHTML = stier;
+  return svg;
+}
+
+function unikkeElever(elever) {
+  return [...new Map(elever.map(e => [e.id, e])).values()];
 }
 
 async function doLogout() {

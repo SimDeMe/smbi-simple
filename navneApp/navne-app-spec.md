@@ -11,6 +11,7 @@ En Progressive Web App (PWA) til lærere, der hjælper med at lære elevnavne vi
 | Lag | Teknologi |
 |---|---|
 | Frontend | Vanilla JavaScript (ES modules), HTML5, CSS3 |
+| Design | smbi-skabelonen — `/forside.css` til krommet, `css/style.css` til appen |
 | Hosting | GitHub Pages (statisk) |
 | Database | Firebase Firestore |
 | Billedlager | Firebase Storage, med Firestore som reserve (se nedenfor) |
@@ -88,6 +89,39 @@ service firebase.storage {
 
 ---
 
+## Visningsnavne
+
+Læreren skal lære fornavne, så det er fornavnet, appen viser — i klasselisten,
+i quizzens svarmuligheder, i Mix & Match og i øvegrupperne. Efternavnet kommer
+kun med, når to elever i det viste sæt deler fornavn, og kun med så mange
+bogstaver, som der skal til:
+
+| Klassen indeholder | Vises som |
+| --- | --- |
+| Ida Holm (alene om Ida) | Ida |
+| Oliver Bang, Oliver Sørensen | Oliver B, Oliver S |
+| Oliver Bang, Oliver Bech, Oliver Sørensen | Oliver Ba, Oliver Be, Oliver Sø |
+| Anna Marie Holm | Anna (mellemnavne tæller ikke som efternavn) |
+
+Hele gruppen får lige mange bogstaver med, så navnene ser systematiske ud.
+Er to elever indtastet med præcis samme fulde navn, vises det fulde navn —
+der er ikke noget at skelne med.
+
+Logikken ligger i `js/navne.js`. Sættet er den gruppe elever, der vises
+sammen — som regel klassen — så navnet er stabilt fra liste til quiz. Kun når
+quizzen henter distraktorer fra en anden klasse (sker, hvis klassen er lille),
+regnes navnene om over de svarmuligheder, der faktisk står på skærmen, så to
+knapper aldrig får samme tekst.
+
+**Det fulde navn** står stadig i `name` og redigeres i elevvisningen; det er
+kun visningen, der forkortes.
+
+**Fri tekst (niveau 2)** måles mod det viste navn: hedder tre elever Oliver,
+er "Oliver" ikke længere et entydigt svar — der skal stå Oliver Ba. Det fulde
+navn tæller altid som rigtigt, og punktummer og store bogstaver er ligegyldige.
+
+---
+
 ## Datamodel (Firestore)
 
 ### Struktur
@@ -105,6 +139,8 @@ service firebase.storage {
     hints: string             // fri tekst, fx "rødhåret, stor, sidder altid forrest"
     nameAnchor: string        // mnemonisk anker for NAVNET, fx "Rasmus → raslebæger"
     photoUrls: array<string>  // Storage-download-URL eller data:image/jpeg;base64,…
+    // Bemærk: name er altid det FULDE navn. Det navn, appen viser, regnes ud
+    // ved visningen — se "Visningsnavne" nedenfor. Der gemmes intet kortnavn.
     level: number             // 1 = valgliste, 2 = fri tekst
     nextReview: timestamp     // hvornår skal kortet næste gang dukke op
     easeFactor: number        // spaced repetition ease factor, start 2.5
@@ -178,7 +214,7 @@ service firebase.storage {
 
 ### Service Worker (service-worker.js)
 
-Cacher app-skallen (HTML, CSS, JS) så appen indlæses hurtigt. Billeder fra Firebase Storage caches **ikke** — de hentes altid fra nettet.
+Cacher app-skallen (HTML, CSS, JS — inkl. `/forside.css`) så appen indlæses hurtigt. Billeder fra Firebase Storage caches **ikke** — de hentes altid fra nettet.
 
 ```javascript
 const CACHE_NAME = 'navne-app-v1';

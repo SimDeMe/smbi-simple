@@ -381,7 +381,7 @@ om de overhovedet skal med.
 | `tid/index.html` + `hjaelp.html` + `installer.html` | 604 + 230 + 273 | Egen `styles.css`; er en PWA |
 | `studiekort/index.html` | 523 | |
 | `Arbejdstidskalender_2026-27.html` | 359 | Eget pergament-design med egen `--paper`; printes på papir |
-| `navneApp/index.html` | 32 | Egen `css/style.css` |
+| ~~`navneApp/index.html`~~ | 32 | **Lagt om.** Bruger `/forside.css` til krommet og sin egen `css/style.css` til appen |
 
 ---
 
