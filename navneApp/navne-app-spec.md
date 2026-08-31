@@ -138,6 +138,24 @@ Resultatet skrives først til Firestore, når man går videre, så en rettelse
 tæller som det ene rigtige svar, den er — ikke som et forkert efterfulgt af
 et rigtigt.
 
+### Øvegrupper
+
+Grupperne er kønsopdelte, fordi quizzens distraktorer er af samme køn. Inden
+for hvert køn fordeles eleverne **jævnt** — ikke skåret i klumper af fem, for
+så bliver resten sin egen gruppe, og en gruppe med én elev i er ingen øvelse.
+23 elever giver 6, 5, 6, 6 frem for 5, 5, 1, 5, 5, 2. Grupperne bliver på
+3–6 elever; en enkelt elev, hvis køn ikke kan bære en gruppe selv, lægges i
+den mindste gruppe.
+
+**"Fordel grupperne igen"** på øvesiden lægger dem om fra bunden. Det nulstiller,
+hvor langt man er nået, og er også vejen til at få elever med, der er kommet
+til efter grupperne blev lagt — de står ellers uden for dem, og siden siger
+til, når det er tilfældet.
+
+**"Repetér alle"** kører hele klassen igennem i ét stræk i tilfældig
+rækkefølge, uden låse og uden krav om alle rigtige. Hver elev spørges på sit
+eget niveau. Til sidst står, hvem der drillede.
+
 ### Videre efter et sæt
 
 Hver slutskærm har en knap, der fører direkte videre, så man kan blive

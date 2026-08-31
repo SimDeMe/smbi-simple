@@ -21,6 +21,36 @@
 button{font:inherit;color:inherit;cursor:pointer}
 main{min-height:60vh}
 
+/* ── Telefon ───────────────────────────────────────────── */
+
+/* Ingen grå blitz, når man rammer et stort kort, og ingen markering af
+   knaptekst ved dobbelttryk. */
+*{-webkit-tap-highlight-color:transparent}
+.answer-btn,.match-slot,.match-chip,.btn,.hint-btn{user-select:none}
+
+/* Hakket og hjemmestregen på nyere telefoner */
+.top-bar{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
+.view,.quiz-view{
+  padding-left:max(32px,env(safe-area-inset-left));
+  padding-right:max(32px,env(safe-area-inset-right));
+}
+.foot{padding-bottom:calc(44px + env(safe-area-inset-bottom))}
+
+/* Installeret på hjemmeskærmen er bunden med links ud til websitet bare
+   spildplads — der er ingen browserlinje at navigere fra. */
+@media (display-mode:standalone){
+  .foot{display:none}
+  body{overscroll-behavior-y:contain}
+}
+
+/* Fingerstørrelse: de små knapper er stadig små at se på, men lette at ramme */
+@media (pointer:coarse){
+  .btn-sm,.btn-ghost-sm,.btn-danger-sm,.match-chip,.hint-btn{min-height:44px}
+  .btn-icon{width:40px;height:40px}
+  .photo-delete-btn{width:30px;height:30px;top:-10px;right:-10px;font-size:0.95rem}
+  .back-link{padding:8px 0}
+}
+
 /* ── Visninger ─────────────────────────────────────────── */
 
 .view{max-width:var(--max);margin:0 auto;padding:26px 32px 64px}
@@ -363,6 +393,7 @@ select.input{cursor:pointer}
 
 /* ── Øvegrupper ────────────────────────────────────────── */
 
+.oev-valg{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px}
 .group-list{display:flex;flex-direction:column;gap:14px;margin-top:22px}
 .group-card{
   display:flex;align-items:center;gap:16px;padding:16px 18px;
@@ -434,7 +465,17 @@ select.input{cursor:pointer}
   .match-grid{grid-template-columns:repeat(2,1fr);gap:12px}
 }
 @media (max-width:620px){
-  .view{padding:18px 18px 52px}
+  .view,.quiz-view{
+    padding-left:max(18px,env(safe-area-inset-left));
+    padding-right:max(18px,env(safe-area-inset-right));
+  }
+  .view{padding-top:18px;padding-bottom:52px}
+  .quiz-view{padding-top:18px;padding-bottom:52px}
+  /* Panelet om figuren æder plads på en telefon — billedet må fylde den */
+  .quiz-stimulus{padding:10px}
+  .quiz-photo{max-width:100%;max-height:44vh}
+  .view-header{gap:12px}
+  .oev-valg .btn{flex:1 1 auto;justify-content:center}
   /* To spalter, og det sidste tal fylder resten ud, så ingen celle står tom */
   .stats-row{grid-template-columns:1fr 1fr}
   .stat-box:nth-child(odd){border-left:none}
@@ -446,6 +487,17 @@ select.input{cursor:pointer}
   .quiz-stimulus,.file-list{box-shadow:var(--hard)}
   .student-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}
   .view-header{align-items:flex-start}
+  .svar-valg .btn{flex:1 1 auto;justify-content:center}
+  .gender-btns .btn-gender{flex:1 1 120px;justify-content:center}
+  .tag-photo,.tag-no-photo{width:min(200px,66vw);height:min(200px,66vw)}
+}
+
+/* Lav skærm på højkant: skær panelernes luft ned, så svarknapperne er
+   synlige uden at rulle */
+@media (max-height:720px) and (max-width:620px){
+  .quiz-view{gap:12px}
+  .quiz-photo{max-height:34vh}
+  .view-head h1{font-size:1.5rem;margin:10px 0 6px}
 }
 
 @media print{
