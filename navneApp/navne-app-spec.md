@@ -13,7 +13,7 @@ En Progressive Web App (PWA) til lærere, der hjælper med at lære elevnavne vi
 | Frontend | Vanilla JavaScript (ES modules), HTML5, CSS3 |
 | Hosting | GitHub Pages (statisk) |
 | Database | Firebase Firestore |
-| Billedlager | Firebase Storage |
+| Billedlager | Firebase Storage, med Firestore som reserve (se nedenfor) |
 | Auth | Firebase Authentication (Google Sign-In) |
 | PWA | Web App Manifest + Service Worker |
 
@@ -28,7 +28,12 @@ Ingen frameworks. Ingen build-step. Rent og simpelt, kan redigeres direkte i VS 
 Opret et **nyt, separat** Firebase-projekt (adskilt fra andre projekter). Aktivér:
 - Authentication → Google Sign-In provider
 - Firestore Database
-- Storage (kræver Blaze/pay-as-you-go plan, men gratis inden for kvoterne)
+- Storage — kræver Blaze-planen, og spanden skal oprettes i konsollen. På
+  Spark-planen afviser den alle kald med `storage/quota-exceeded`, og appen
+  falder tilbage på at lægge billedet ind i elevens Firestore-dokument som
+  data-URL (se `js/photos.js`). Reserven dækker kun den fejl — manglende
+  spand og forkerte regler fejler synligt, så de bliver rettet i stedet for
+  omgået.
 
 ### Firebase config
 
@@ -99,7 +104,7 @@ service firebase.storage {
     classId: string           // reference til klasse
     hints: string             // fri tekst, fx "rødhåret, stor, sidder altid forrest"
     nameAnchor: string        // mnemonisk anker for NAVNET, fx "Rasmus → raslebæger"
-    photoUrls: array<string>  // Firebase Storage download-URLs, én eller flere
+    photoUrls: array<string>  // Storage-download-URL eller data:image/jpeg;base64,…
     level: number             // 1 = valgliste, 2 = fri tekst
     nextReview: timestamp     // hvornår skal kortet næste gang dukke op
     easeFactor: number        // spaced repetition ease factor, start 2.5
@@ -230,7 +235,7 @@ export function login() {
 2. Bruger trækker et eller flere billeder ind i et drop-zone (eller bruger file picker)
 3. For hvert billede: filnavnet (uden extension) bruges som elevnavn
 4. Appen komprimerer billedet til max 400×400 pixels via Canvas API
-5. Det komprimerede billede uploades til Firebase Storage under stien:
+5. Det komprimerede billede gemmes — i Firebase Storage, hvis spanden svarer, ellers som data-URL i elevens Firestore-dokument. Storage-stien er:
    `teachers/{uid}/students/{studentId}/{timestamp}.jpg`
 6. Der oprettes et nyt elevdokument i Firestore med `level: 1`, default `easeFactor: 2.5`
 7. Brugeren gennemgår herefter de nyoprettede elever ét for ét og tagger køn

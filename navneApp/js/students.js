@@ -2,8 +2,7 @@ import {
   collection, doc, addDoc, getDoc, getDocs, updateDoc, deleteDoc,
   query, where, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
-import { ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-storage.js";
-import { db, storage } from "./firebase-config.js";
+import { db } from "./firebase-config.js";
 
 export async function getStudentsByClass(uid, classId) {
   const q = query(collection(db, `teachers/${uid}/students`), where("classId", "==", classId));
@@ -47,25 +46,4 @@ export async function updateStudent(uid, studentId, data) {
 
 export async function deleteStudent(uid, studentId) {
   await deleteDoc(doc(db, `teachers/${uid}/students/${studentId}`));
-}
-
-export async function uploadPhoto(uid, studentId, blob) {
-  const path = `teachers/${uid}/students/${studentId}/${Date.now()}.jpg`;
-  const storageRef = ref(storage, path);
-  await uploadBytes(storageRef, blob);
-  return await getDownloadURL(storageRef);
-}
-
-export async function deletePhoto(uid, studentId, url) {
-  // Extract path from URL and delete from storage
-  try {
-    const storageRef = ref(storage, url);
-    await deleteObject(storageRef);
-  } catch {}
-  const student = await getStudent(uid, studentId);
-  if (student) {
-    await updateStudent(uid, studentId, {
-      photoUrls: student.photoUrls.filter(u => u !== url)
-    });
-  }
 }
