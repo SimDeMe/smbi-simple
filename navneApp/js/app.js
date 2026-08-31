@@ -550,9 +550,13 @@ function renderQuizDone(app, classId, results) {
   app.innerHTML = '';
   app.appendChild(
     el('div', { class: 'view view-narrow view-center' },
-      el('h2', {}, 'Session færdig!'),
+      el('h2', {}, 'Sættet er kørt igennem'),
       el('p', {}, `${correct} af ${results.length} korrekte svar.`),
-      el('button', { class: 'btn btn-primary', onclick: () => navigate(`#/classes/${classId}`) }, 'Tilbage til klassen')
+      el('div', { class: 'svar-valg' },
+        // Videre med det samme: næste sæt henter de elever, der står for tur nu
+        el('button', { class: 'btn btn-primary', onclick: () => renderQuiz(app, classId) }, 'Fortsæt'),
+        el('button', { class: 'btn btn-sm', onclick: () => navigate(`#/classes/${classId}`) }, 'Tilbage til klassen')
+      )
     )
   );
 }
@@ -706,8 +710,10 @@ async function renderGroupPractice(app, classId, groupIdx, groups, phases, withP
           el('div', { class: 'view view-narrow view-center' },
             el('h2', {}, `${correct} af ${students.length} — perfekt!`),
             el('p', {}, 'Nu skal du skrive navnene selv.'),
-            el('button', { class: 'btn btn-primary', onclick: () => renderGroupPractice(app, classId, groupIdx, groups, newPhases, withPhotos, allStudents) }, 'Fortsæt til skriv-fase'),
-            el('button', { class: 'btn btn-ghost-sm', onclick: quit }, 'Afslut')
+            el('div', { class: 'svar-valg' },
+              el('button', { class: 'btn btn-primary', onclick: () => renderGroupPractice(app, classId, groupIdx, groups, newPhases, withPhotos, allStudents) }, 'Fortsæt til skriv-fase'),
+              el('button', { class: 'btn btn-sm', onclick: quit }, 'Afslut')
+            )
           )
         );
       } else {
@@ -716,13 +722,23 @@ async function renderGroupPractice(app, classId, groupIdx, groups, phases, withP
           newPhases[groupIdx + 1] = 1;
         }
         await savePracticeData(state.uid, classId, groups, newPhases);
+        // Den næste gruppe, der faktisk kan øves — så man kan køre videre
+        // med det samme i stedet for at gå tilbage til listen først.
+        const næste = newPhases.findIndex((p, i) => i > groupIdx && (p === 1 || p === 2));
         app.appendChild(
           el('div', { class: 'view view-narrow view-center' },
             el('h2', {}, `Gruppe ${groupIdx + 1} klaret!`),
-            groupIdx + 1 < groups.length
-              ? el('p', {}, 'Næste gruppe er nu låst op.')
+            næste !== -1
+              ? el('p', {}, `Gruppe ${næste + 1} er låst op.`)
               : el('p', {}, 'Du har øvet alle grupper — godt gået!'),
-            el('button', { class: 'btn btn-primary', onclick: quit }, 'Se grupper')
+            el('div', { class: 'svar-valg' },
+              næste !== -1
+                ? el('button', { class: 'btn btn-primary',
+                    onclick: () => renderGroupPractice(app, classId, næste, groups, newPhases, withPhotos, allStudents)
+                  }, `Øv gruppe ${næste + 1}`)
+                : null,
+              el('button', { class: næste !== -1 ? 'btn btn-sm' : 'btn btn-primary', onclick: quit }, 'Se grupper')
+            )
           )
         );
       }
@@ -731,8 +747,10 @@ async function renderGroupPractice(app, classId, groupIdx, groups, phases, withP
         el('div', { class: 'view view-narrow view-center' },
           el('h2', {}, `${correct} af ${students.length} korrekte`),
           el('p', { class: 'muted' }, 'Du skal have alle rigtige for at komme videre. Prøv igen!'),
-          el('button', { class: 'btn btn-primary', onclick: () => renderGroupPractice(app, classId, groupIdx, groups, phases, withPhotos, allStudents) }, 'Prøv igen'),
-          el('button', { class: 'btn btn-ghost-sm', onclick: quit }, 'Tilbage til grupper')
+          el('div', { class: 'svar-valg' },
+            el('button', { class: 'btn btn-primary', onclick: () => renderGroupPractice(app, classId, groupIdx, groups, phases, withPhotos, allStudents) }, 'Prøv igen'),
+            el('button', { class: 'btn btn-sm', onclick: quit }, 'Tilbage til grupper')
+          )
         )
       );
     }

@@ -138,6 +138,20 @@ Resultatet skrives først til Firestore, når man går videre, så en rettelse
 tæller som det ene rigtige svar, den er — ikke som et forkert efterfulgt af
 et rigtigt.
 
+### Videre efter et sæt
+
+Hver slutskærm har en knap, der fører direkte videre, så man kan blive
+siddende og køre flere sæt i træk:
+
+* **Efter en quiz-session** — "Fortsæt" bygger et nyt sæt af dem, der står for
+  tur nu. Et sæt tager højst fem nye elever ad gangen, så en klasse på tyve
+  kan køres igennem i fire sæt uden at gå tilbage til klassevisningen
+  imellem. Er der ikke flere, lander man på øvegrupperne.
+* **Efter fase 1 i en gruppe** — "Fortsæt til skriv-fase".
+* **Efter en klaret gruppe** — "Øv gruppe N" peger på den næste gruppe, der
+  faktisk kan øves.
+* **Efter en runde, der ikke gik** — "Prøv igen".
+
 ---
 
 ## Datamodel (Firestore)
