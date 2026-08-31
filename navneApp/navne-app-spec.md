@@ -28,10 +28,12 @@ Ingen frameworks. Ingen build-step. Rent og simpelt, kan redigeres direkte i VS 
 Opret et **nyt, separat** Firebase-projekt (adskilt fra andre projekter). Aktivér:
 - Authentication → Google Sign-In provider
 - Firestore Database
-- Storage — **valgfrit**: Cloud Storage kræver Blaze-planen. På Spark-planen
-  afviser spanden alle kald med `storage/quota-exceeded`, og appen lægger i
-  stedet billedet ind i elevens Firestore-dokument som data-URL (se
-  `js/photos.js`). Appen virker altså på begge planer.
+- Storage — kræver Blaze-planen, og spanden skal oprettes i konsollen. På
+  Spark-planen afviser den alle kald med `storage/quota-exceeded`, og appen
+  falder tilbage på at lægge billedet ind i elevens Firestore-dokument som
+  data-URL (se `js/photos.js`). Reserven dækker kun den fejl — manglende
+  spand og forkerte regler fejler synligt, så de bliver rettet i stedet for
+  omgået.
 
 ### Firebase config
 

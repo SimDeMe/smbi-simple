@@ -1,17 +1,19 @@
 // Elevbilleder: komprimering og lagring.
 //
-// Billederne lå oprindeligt i Firebase Storage. Cloud Storage kræver Blaze-
-// planen — på Spark-planen afviser spanden alle kald (402/403), og SDK'et
-// melder det som "storage/quota-exceeded", som er den fejl, importen løb ind i.
-//
-// Derfor: appen forsøger Storage først, og går det ikke, lægges det
-// komprimerede billede ind i elevens Firestore-dokument som data-URL.
+// Billederne ligger i Firebase Storage. Cloud Storage kræver Blaze-planen — på
+// Spark-planen afviser spanden alle kald (402/403), og SDK'et melder det som
+// "storage/quota-exceeded". Sker netop det, falder appen tilbage på at lægge
+// det komprimerede billede ind i elevens Firestore-dokument som data-URL.
 // Begge dele er strenge, der kan sættes direkte som <img src>, så resten af
-// appen mærker ingen forskel — og Firestore er med på Spark-planen.
+// appen mærker ingen forskel — og Firestore er med på begge planer.
+//
+// Reserven dækker kun kvotefejlen, altså planen. Enhver anden Storage-fejl er
+// en opsætningsfejl og skal fejle synligt, ikke skjules bag en omvej.
 
 import { ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-storage.js";
 import { storage } from "./firebase-config.js";
 import { getStudent, updateStudent } from "./students.js";
+import { showToast } from "./ui.js";
 
 // Et Firestore-dokument må højst fylde 1 MiB. Resten af elevens felter
 // (navn, hints, srs-tal) fylder småt, så billederne får 700 kB at løbe på.
@@ -19,12 +21,8 @@ const PLADS_TIL_BILLEDER = 700_000;
 // Base64 fylder 4/3 af selve filen, så ~66 kB JPEG bliver til ~88 kB tekst.
 const MAX_BLOB = 66_000;
 
-// Slås fra første gang spanden afviser en upload, så vi kun spilder ét kald.
+// Slås fra første gang spanden melder kvotefejl, så vi kun spilder ét kald.
 let brugStorage = true;
-
-export function storageAktiv() {
-  return brugStorage;
-}
 
 // ── Komprimering ─────────────────────────────────────────────────────────────
 
@@ -77,16 +75,23 @@ function blobTilDataUrl(blob) {
 
 // ── Lagring ──────────────────────────────────────────────────────────────────
 
-// Fejl, hvor spanden er lukket for os — ikke fejl i selve billedet.
-function spandLukket(e) {
-  return [
-    'storage/quota-exceeded',
-    'storage/unauthorized',
-    'storage/project-not-found',
-    'storage/bucket-not-found',
-    'storage/unknown',
-    'storage/retry-limit-exceeded'
-  ].includes(e?.code);
+// Alt andet end kvotefejlen betyder, at Storage er sat forkert op — og så skal
+// det larme. Ville reserven også dække de fejl, ville appen se ud til at virke,
+// mens Storage aldrig blev brugt, og det er ikke til at gennemskue bagefter.
+function forklarStorageFejl(e) {
+  switch (e?.code) {
+    case 'storage/unauthorized':
+      return 'Storage afviste billedet: reglerne giver ikke adgang. Tjek Firebase Console → Storage → Rules.';
+    case 'storage/bucket-not-found':
+    case 'storage/project-not-found':
+      return 'Storage-spanden findes ikke endnu. Opret den i Firebase Console → Storage.';
+    case 'storage/unauthenticated':
+      return 'Du er ikke logget ind længere. Log ind igen, og prøv forfra.';
+    case 'storage/retry-limit-exceeded':
+      return 'Uploaden gav op undervejs. Tjek forbindelsen, og prøv igen.';
+    default:
+      return `Billedet kunne ikke uploades (${e?.code || 'ukendt fejl'}): ${e?.message || ''}`.trim();
+  }
 }
 
 async function gemBillede(uid, studentId, blob) {
@@ -96,9 +101,12 @@ async function gemBillede(uid, studentId, blob) {
       await uploadBytes(storageRef, blob);
       return await getDownloadURL(storageRef);
     } catch (e) {
-      if (!spandLukket(e)) throw e;
+      // Kun kvotefejlen — dvs. projektet er på Spark-planen, hvor spanden er
+      // lukket uanset hvad — udløser reserven.
+      if (e?.code !== 'storage/quota-exceeded') throw new Error(forklarStorageFejl(e));
       brugStorage = false;
-      console.info('Firebase Storage svarer ikke (%s) — billederne gemmes i Firestore i stedet.', e.code);
+      console.info('Firebase Storage er lukket (%s) — billederne gemmes i Firestore i stedet.', e.code);
+      showToast('Firebase Storage er lukket for projektet. Billederne gemmes i databasen i stedet.');
     }
   }
   return await blobTilDataUrl(blob);
