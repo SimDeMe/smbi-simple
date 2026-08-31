@@ -417,36 +417,40 @@ async function showLevel1(app, student, stimulus, stimulusEl, allClassStudents, 
     }, visningsnavn(opt, vist))
   );
 
+  const videreRow = el('div', { class: 'svar-valg' });
+
   let answered = false;
   function handleLevel1Answer(correct, valgtId) {
     if (answered) return;
     answered = true;
     const responseTime = Date.now() - startTime;
 
-    const rigtigtNavn = visningsnavn(student, vist);
-    answerBtns.forEach(btn => {
+    answerBtns.forEach((btn, i) => {
       btn.disabled = true;
-      if (btn.textContent === rigtigtNavn) btn.classList.add('correct');
+      if (options[i].id === student.id) btn.classList.add('correct');
+      else if (options[i].id === valgtId) btn.classList.add('wrong');
     });
 
-    const result = {
-      studentId: student.id,
-      stimulus,
-      correct,
-      usedHint: hintUsed,
-      responseTime,
-      answeredWith: valgtId
+    const afslut = () => {
+      const result = {
+        studentId: student.id,
+        stimulus,
+        correct,
+        usedHint: hintUsed,
+        responseTime,
+        answeredWith: valgtId
+      };
+      processResult(state.uid, student, result);
+      onDone(result);
     };
 
-    processResult(state.uid, student, result);
+    if (correct) { setTimeout(afslut, 600); return; }
 
-    if (!correct) {
-      const wrongBtn = document.querySelector('.answer-btn:disabled:not(.correct)');
-      wrongBtn && wrongBtn.classList.add('wrong');
-      setTimeout(() => onDone(result), 2000);
-    } else {
-      setTimeout(() => onDone(result), 600);
-    }
+    // Ramte man forkert, bliver det rigtige navn stående, til man selv går
+    // videre — det er navnet, man skal nå at læse.
+    const videreBtn = el('button', { class: 'btn btn-primary', onclick: afslut }, 'Videre');
+    videreRow.appendChild(videreBtn);
+    videreBtn.focus();
   }
 
   const quitBtn = onQuit ? el('button', { class: 'btn btn-ghost-sm quiz-quit', onclick: onQuit }, 'Afslut') : null;
@@ -457,6 +461,7 @@ async function showLevel1(app, student, stimulus, stimulusEl, allClassStudents, 
       renderProgressBar(idx, total),
       el('div', { class: 'quiz-stimulus' }, stimulusEl),
       el('div', { class: 'quiz-answers' }, ...answerBtns),
+      videreRow,
       hintBtn,
       quitBtn
     )
@@ -472,35 +477,53 @@ async function showLevel2(app, student, stimulus, stimulusEl, navne, hintBtn, st
   const feedback = el('div', { class: 'quiz-feedback', 'aria-live': 'polite' });
   const submitBtn = el('button', { class: 'btn btn-primary quiz-submit' }, 'Svar');
 
-  function submit() {
-    if (answered) return;
-    answered = true;
-    const responseTime = Date.now() - startTime;
-    const correct = checkAnswer(student, input.value, rigtigtNavn);
+  // Resultatet skrives først, når man går videre — så tæller en rettelse
+  // ("jeg havde det rigtigt") som det ene rigtige svar, den er.
+  function afslut(correct, skrevet) {
     const result = {
       studentId: student.id,
       stimulus,
       correct,
       usedHint: hintUsed,
-      responseTime,
-      answeredWith: input.value.trim()
+      responseTime: svartid,
+      answeredWith: skrevet
     };
-
     processResult(state.uid, student, result);
+    onDone(result);
+  }
+
+  let svartid = 0;
+
+  function submit() {
+    if (answered) return;
+    answered = true;
+    svartid = Date.now() - startTime;
+    const skrevet = input.value.trim();
     input.disabled = true;
     submitBtn.disabled = true;
 
-    if (correct) {
+    if (checkAnswer(student, skrevet, rigtigtNavn)) {
       feedback.className = 'quiz-feedback correct';
-      feedback.textContent = 'Korrekt!';
-      setTimeout(() => onDone(result), 700);
-    } else {
-      feedback.className = 'quiz-feedback wrong';
-      feedback.textContent = '';
-      feedback.append('Forkert. Du svarede ', el('em', {}, input.value),
-                      ' — det rigtige svar er ', el('strong', {}, rigtigtNavn));
-      setTimeout(() => onDone(result), 2000);
+      feedback.textContent = 'Rigtigt!';
+      setTimeout(() => afslut(true, skrevet), 700);
+      return;
     }
+
+    // Det gælder om at kunne sige navnet, ikke om at stave det. Derfor bliver
+    // facit stående, til man selv går videre, og en stavefejl kan rettes til
+    // et rigtigt svar.
+    feedback.className = 'quiz-feedback wrong';
+    feedback.textContent = '';
+    const videreBtn = el('button', { class: 'btn btn-primary', onclick: () => afslut(false, skrevet) }, 'Videre');
+    feedback.append(
+      el('div', { class: 'svar-skrevet' }, '✗ Du skrev ', el('em', {}, skrevet || '—')),
+      el('div', { class: 'svar-facit' }, rigtigtNavn),
+      el('div', { class: 'svar-valg' },
+        videreBtn,
+        el('button', { class: 'btn btn-sm', onclick: () => afslut(true, skrevet) }, 'Jeg havde det rigtigt')
+      )
+    );
+    videreBtn.focus();
   }
 
   input.addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
@@ -527,9 +550,13 @@ function renderQuizDone(app, classId, results) {
   app.innerHTML = '';
   app.appendChild(
     el('div', { class: 'view view-narrow view-center' },
-      el('h2', {}, 'Session færdig!'),
+      el('h2', {}, 'Sættet er kørt igennem'),
       el('p', {}, `${correct} af ${results.length} korrekte svar.`),
-      el('button', { class: 'btn btn-primary', onclick: () => navigate(`#/classes/${classId}`) }, 'Tilbage til klassen')
+      el('div', { class: 'svar-valg' },
+        // Videre med det samme: næste sæt henter de elever, der står for tur nu
+        el('button', { class: 'btn btn-primary', onclick: () => renderQuiz(app, classId) }, 'Fortsæt'),
+        el('button', { class: 'btn btn-sm', onclick: () => navigate(`#/classes/${classId}`) }, 'Tilbage til klassen')
+      )
     )
   );
 }
@@ -683,8 +710,10 @@ async function renderGroupPractice(app, classId, groupIdx, groups, phases, withP
           el('div', { class: 'view view-narrow view-center' },
             el('h2', {}, `${correct} af ${students.length} — perfekt!`),
             el('p', {}, 'Nu skal du skrive navnene selv.'),
-            el('button', { class: 'btn btn-primary', onclick: () => renderGroupPractice(app, classId, groupIdx, groups, newPhases, withPhotos, allStudents) }, 'Fortsæt til skriv-fase'),
-            el('button', { class: 'btn btn-ghost-sm', onclick: quit }, 'Afslut')
+            el('div', { class: 'svar-valg' },
+              el('button', { class: 'btn btn-primary', onclick: () => renderGroupPractice(app, classId, groupIdx, groups, newPhases, withPhotos, allStudents) }, 'Fortsæt til skriv-fase'),
+              el('button', { class: 'btn btn-sm', onclick: quit }, 'Afslut')
+            )
           )
         );
       } else {
@@ -693,13 +722,23 @@ async function renderGroupPractice(app, classId, groupIdx, groups, phases, withP
           newPhases[groupIdx + 1] = 1;
         }
         await savePracticeData(state.uid, classId, groups, newPhases);
+        // Den næste gruppe, der faktisk kan øves — så man kan køre videre
+        // med det samme i stedet for at gå tilbage til listen først.
+        const næste = newPhases.findIndex((p, i) => i > groupIdx && (p === 1 || p === 2));
         app.appendChild(
           el('div', { class: 'view view-narrow view-center' },
             el('h2', {}, `Gruppe ${groupIdx + 1} klaret!`),
-            groupIdx + 1 < groups.length
-              ? el('p', {}, 'Næste gruppe er nu låst op.')
+            næste !== -1
+              ? el('p', {}, `Gruppe ${næste + 1} er låst op.`)
               : el('p', {}, 'Du har øvet alle grupper — godt gået!'),
-            el('button', { class: 'btn btn-primary', onclick: quit }, 'Se grupper')
+            el('div', { class: 'svar-valg' },
+              næste !== -1
+                ? el('button', { class: 'btn btn-primary',
+                    onclick: () => renderGroupPractice(app, classId, næste, groups, newPhases, withPhotos, allStudents)
+                  }, `Øv gruppe ${næste + 1}`)
+                : null,
+              el('button', { class: næste !== -1 ? 'btn btn-sm' : 'btn btn-primary', onclick: quit }, 'Se grupper')
+            )
           )
         );
       }
@@ -708,8 +747,10 @@ async function renderGroupPractice(app, classId, groupIdx, groups, phases, withP
         el('div', { class: 'view view-narrow view-center' },
           el('h2', {}, `${correct} af ${students.length} korrekte`),
           el('p', { class: 'muted' }, 'Du skal have alle rigtige for at komme videre. Prøv igen!'),
-          el('button', { class: 'btn btn-primary', onclick: () => renderGroupPractice(app, classId, groupIdx, groups, phases, withPhotos, allStudents) }, 'Prøv igen'),
-          el('button', { class: 'btn btn-ghost-sm', onclick: quit }, 'Tilbage til grupper')
+          el('div', { class: 'svar-valg' },
+            el('button', { class: 'btn btn-primary', onclick: () => renderGroupPractice(app, classId, groupIdx, groups, phases, withPhotos, allStudents) }, 'Prøv igen'),
+            el('button', { class: 'btn btn-sm', onclick: quit }, 'Tilbage til grupper')
+          )
         )
       );
     }

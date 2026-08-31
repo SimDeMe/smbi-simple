@@ -120,6 +120,38 @@ kun visningen, der forkortes.
 er "Oliver" ikke længere et entydigt svar — der skal stå Oliver Ba. Det fulde
 navn tæller altid som rigtigt, og punktummer og store bogstaver er ligegyldige.
 
+### Når svaret er forkert
+
+Det gælder om at kunne sige navnet, når man ser eleven — ikke om at stave det.
+Derfor:
+
+* **Facit bliver stående, til man selv klikker.** Der er ingen nedtælling på et
+  forkert svar, hverken i fri tekst eller i valglisten. Navnet står stort, så
+  det kan nås at læse. Rigtige svar går fortsat videre af sig selv efter et
+  øjeblik — der er ikke noget at læse.
+* **"Jeg havde det rigtigt"** står ved siden af "Videre" i fri tekst. En
+  stavefejl på et navn, man godt kunne sige, rettes til et rigtigt svar og
+  tæller som sådan i spaced repetition. Knappen findes ikke i valglisten —
+  der har man peget på den forkerte elev, og det er ikke en stavefejl.
+
+Resultatet skrives først til Firestore, når man går videre, så en rettelse
+tæller som det ene rigtige svar, den er — ikke som et forkert efterfulgt af
+et rigtigt.
+
+### Videre efter et sæt
+
+Hver slutskærm har en knap, der fører direkte videre, så man kan blive
+siddende og køre flere sæt i træk:
+
+* **Efter en quiz-session** — "Fortsæt" bygger et nyt sæt af dem, der står for
+  tur nu. Et sæt tager højst fem nye elever ad gangen, så en klasse på tyve
+  kan køres igennem i fire sæt uden at gå tilbage til klassevisningen
+  imellem. Er der ikke flere, lander man på øvegrupperne.
+* **Efter fase 1 i en gruppe** — "Fortsæt til skriv-fase".
+* **Efter en klaret gruppe** — "Øv gruppe N" peger på den næste gruppe, der
+  faktisk kan øves.
+* **Efter en runde, der ikke gik** — "Prøv igen".
+
 ---
 
 ## Datamodel (Firestore)

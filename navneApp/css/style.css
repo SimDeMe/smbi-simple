@@ -298,7 +298,21 @@ select.input{cursor:pointer}
 .quiz-feedback.correct{background:var(--tint-rigtig);border:2.5px solid var(--ink)}
 .quiz-feedback.correct::before{content:'✓ ';font-weight:800}
 .quiz-feedback.wrong{background:var(--tint-forkert);border:2.5px solid var(--ink)}
-.quiz-feedback.wrong::before{content:'✗ ';font-weight:800}
+
+/* Facit efter et forkert svar: navnet er det, man skal nå at læse, så det
+   fylder mest — og man går selv videre. */
+.svar-skrevet{
+  font-family:var(--mono);font-size:0.62rem;font-weight:600;
+  letter-spacing:0.12em;text-transform:uppercase;color:#6B7C79;
+}
+.svar-skrevet em{font-style:normal;text-transform:none;font-size:0.78rem;color:var(--ink)}
+.svar-facit{
+  font-family:var(--display);font-variation-settings:var(--wide);font-weight:800;
+  font-size:clamp(1.8rem,5vw,2.6rem);line-height:1.1;letter-spacing:-0.03em;
+  margin:6px 0 16px;
+}
+.svar-valg{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.svar-valg:empty{display:none}
 
 .hint-btn{
   background:var(--amber);border:2px solid var(--ink);border-radius:24px;
