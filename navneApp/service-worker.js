@@ -1,4 +1,4 @@
-const CACHE_NAME = 'navne-app-v5';
+const CACHE_NAME = 'navne-app-v6';
 const ASSETS = [
   '/navneApp/',
   '/navneApp/index.html',
@@ -13,6 +13,9 @@ const ASSETS = [
   '/navneApp/js/students.js',
   '/navneApp/js/photos.js',
   '/navneApp/js/navne.js',
+  '/navneApp/manifest.json',
+  '/navneApp/icons/icon-192.png',
+  '/navneApp/icons/apple-touch-icon.png',
   '/navneApp/js/classes.js',
   '/navneApp/js/ui.js',
 ];

@@ -366,18 +366,7 @@ async function renderQuiz(app, classId) {
     const startTime = Date.now();
     const total = sessionStudents.length;
 
-    const hintBtn = el('button', { class: 'hint-btn' }, 'Hjælp');
-    let hintUsed = false;
-    let hintRevealed = false;
-
-    hintBtn.addEventListener('click', () => {
-      if (!hintRevealed) {
-        hintRevealed = true;
-        hintUsed = true;
-        hintBtn.textContent = visningsnavn(student, navne)[0] + '...';
-        hintBtn.classList.add('hint-revealed');
-      }
-    });
+    const { knap: hintBtn, erBrugt } = lavHjaelpeknap(student, navne);
 
     const stimulusEl = stimulus === 'photo'
       ? el('img', { src: student.photoUrls[Math.floor(Math.random() * student.photoUrls.length)], class: 'quiz-photo', alt: '' })
@@ -385,13 +374,13 @@ async function renderQuiz(app, classId) {
 
     const quit = () => navigate(`#/classes/${classId}`);
     if (student.level === 1) {
-      await showLevel1(app, student, stimulus, stimulusEl, allClassStudents, navne, hintBtn, startTime, hintUsed, idx, total, result => {
+      await showLevel1(app, student, stimulus, stimulusEl, allClassStudents, navne, hintBtn, startTime, erBrugt, idx, total, result => {
         sessionResults.push(result);
         idx++;
         showCard();
       }, quit);
     } else {
-      await showLevel2(app, student, stimulus, stimulusEl, navne, hintBtn, startTime, hintUsed, idx, total, result => {
+      await showLevel2(app, student, stimulus, stimulusEl, navne, hintBtn, startTime, erBrugt, idx, total, result => {
         sessionResults.push(result);
         idx++;
         showCard();
@@ -402,7 +391,7 @@ async function renderQuiz(app, classId) {
   showCard();
 }
 
-async function showLevel1(app, student, stimulus, stimulusEl, allClassStudents, navne, hintBtn, startTime, hintUsed, idx, total, onDone, onQuit) {
+async function showLevel1(app, student, stimulus, stimulusEl, allClassStudents, navne, hintBtn, startTime, erBrugt, idx, total, onDone, onQuit) {
   const distractors = await getDistractors(state.uid, student, allClassStudents);
   const options = shuffle([student, ...distractors]);
 
@@ -436,7 +425,7 @@ async function showLevel1(app, student, stimulus, stimulusEl, allClassStudents, 
         studentId: student.id,
         stimulus,
         correct,
-        usedHint: hintUsed,
+        usedHint: erBrugt(),
         responseTime,
         answeredWith: valgtId
       };
@@ -468,7 +457,7 @@ async function showLevel1(app, student, stimulus, stimulusEl, allClassStudents, 
   );
 }
 
-async function showLevel2(app, student, stimulus, stimulusEl, navne, hintBtn, startTime, hintUsed, idx, total, onDone, onQuit) {
+async function showLevel2(app, student, stimulus, stimulusEl, navne, hintBtn, startTime, erBrugt, idx, total, onDone, onQuit) {
   const rigtigtNavn = visningsnavn(student, navne);
   let answered = false;
   const input = el('input', { type: 'text', class: 'quiz-input', placeholder: 'Skriv elevens navn...',
@@ -484,7 +473,7 @@ async function showLevel2(app, student, stimulus, stimulusEl, navne, hintBtn, st
       studentId: student.id,
       stimulus,
       correct,
-      usedHint: hintUsed,
+      usedHint: erBrugt(),
       responseTime: svartid,
       answeredWith: skrevet
     };
@@ -563,19 +552,40 @@ function renderQuizDone(app, classId, results) {
 
 // ── Group practice ────────────────────────────────────────────────────────────
 
-function makeGroups(students) {
-  const male = [], female = [], other = [];
-  for (const s of students) {
-    if (s.gender === 'male') male.push(s);
-    else if (s.gender === 'female') female.push(s);
-    else other.push(s);
+// Grupperne er kønsopdelte, fordi quizzens distraktorer er af samme køn.
+// Inden for hvert køn fordeles eleverne jævnt frem for at blive skåret i
+// klumper af fem — ellers bliver resten sin egen gruppe, og en gruppe med
+// én elev i er ikke en øvelse.
+const STOERSTE_GRUPPE = 6;
+const MINDSTE_GRUPPE = 3;
+
+export function fordelJaevnt(elever) {
+  if (!elever.length) return [];
+  const antal = Math.ceil(elever.length / STOERSTE_GRUPPE);
+  const grupper = Array.from({ length: antal }, () => []);
+  elever.forEach((e, i) => grupper[i % antal].push(e));
+  return grupper;
+}
+
+export function makeGroups(students) {
+  const spande = { male: [], female: [], other: [] };
+  for (const s of students) (spande[s.gender] || spande.other).push(s);
+
+  const grupper = [];
+  const tiloevers = [];
+  for (const spand of [spande.male, spande.female, spande.other]) {
+    if (!spand.length) continue;
+    // En håndfuld, der ikke kan bære en gruppe selv, venter til sidst
+    if (spand.length < MINDSTE_GRUPPE) { tiloevers.push(...spand); continue; }
+    grupper.push(...fordelJaevnt(shuffle([...spand])));
   }
-  const result = [];
-  for (const bucket of [male, female, other]) {
-    const shuffled = shuffle([...bucket]);
-    for (let i = 0; i < shuffled.length; i += 5) result.push(shuffled.slice(i, i + 5));
+
+  for (const elev of tiloevers) {
+    if (!grupper.length) { grupper.push([elev]); continue; }
+    grupper.reduce((mindst, g) => g.length < mindst.length ? g : mindst).push(elev);
   }
-  return result;
+
+  return grupper;
 }
 
 async function loadPracticeData(uid, classId, withPhotos) {
@@ -629,6 +639,11 @@ async function renderPracticeGroups(app, classId, allStudents) {
   const phaseLabel = p => ['Låst', 'Vælg navn', 'Skriv navn', 'Gennemført'][p] || 'Låst';
   const phaseClass = p => p === 0 ? 'phase-locked' : p === 3 ? 'phase-done' : 'phase-active';
 
+  // Elever, der er kommet til efter grupperne blev lagt, står uden for dem
+  const iGrupper = new Set(groups.flat().map(s => s.id));
+  const udenfor = withPhotos.filter(s => !iGrupper.has(s.id));
+  const alleKlaret = groups.length > 0 && phases.every(p => p === 3);
+
   const groupCards = groups.map((group, i) => {
     const phase = phases[i];
     return el('div', { class: `group-card${phase === 0 ? ' group-card--locked' : ''}${phase === 3 ? ' group-card--done' : ''}` },
@@ -645,14 +660,85 @@ async function renderPracticeGroups(app, classId, allStudents) {
     );
   });
 
+  const fordelIgen = async () => {
+    if (!confirm('Fordel grupperne igen? Det nulstiller, hvor langt du er nået i grupperne.')) return;
+    const nye = makeGroups(withPhotos);
+    await savePracticeData(state.uid, classId, nye, nye.map((_, i) => i === 0 ? 1 : 0));
+    renderPracticeGroups(app, classId, allStudents);
+  };
+
   app.innerHTML = '';
   app.appendChild(
     el('div', { class: 'view view-narrow' },
       backLink('← Tilbage', () => navigate(`#/classes/${classId}`)),
       viewHead('Navne-app · Øvning', 'Øv navne', 'Klarer du en gruppe, låses den næste op.'),
+      el('div', { class: 'oev-valg' },
+        el('button', {
+          class: alleKlaret ? 'btn btn-primary' : 'btn btn-sm',
+          onclick: () => renderRepetition(app, classId, allStudents)
+        }, `Repetér alle ${withPhotos.length}`),
+        el('button', { class: 'btn btn-sm', onclick: fordelIgen }, 'Fordel grupperne igen')
+      ),
+      udenfor.length
+        ? el('p', { class: 'muted small' },
+            `${udenfor.length} ${udenfor.length === 1 ? 'elev er' : 'elever er'} kommet til, siden grupperne blev lagt: ` +
+            `${udenfor.map(s => visningsnavn(s, navne)).join(', ')}. Fordel grupperne igen for at tage dem med.`)
+        : null,
       el('div', { class: 'group-list' }, ...groupCards)
     )
   );
+}
+
+// ── Repetition ────────────────────────────────────────────────────────────────
+
+// Hele klassen i ét stræk, i tilfældig rækkefølge. Ingen låse og ingen krav om
+// alle rigtige — det er en gennemgang, ikke en prøve.
+async function renderRepetition(app, classId, allStudents) {
+  const medFoto = allStudents.filter(s => s.photoUrls?.length > 0);
+  if (medFoto.length < 2) { renderPracticeGroups(app, classId, allStudents); return; }
+
+  const navne = visningsnavne(allStudents);
+  const elever = shuffle([...medFoto]);
+  const results = [];
+  let idx = 0;
+  const quit = () => renderPracticeGroups(app, classId, allStudents);
+
+  async function visNæste() {
+    if (idx >= elever.length) { visResultat(); return; }
+    const student = elever[idx];
+    app.innerHTML = '';
+    const startTime = Date.now();
+    const { knap: hintBtn, erBrugt } = lavHjaelpeknap(student, navne);
+    const stimulusEl = el('img', { src: student.photoUrls[0], class: 'quiz-photo', alt: '' });
+    const videre = result => { results.push(result); idx++; visNæste(); };
+
+    if ((student.level || 1) === 1) {
+      await showLevel1(app, student, 'photo', stimulusEl, medFoto, navne, hintBtn, startTime, erBrugt, idx, elever.length, videre, quit);
+    } else {
+      await showLevel2(app, student, 'photo', stimulusEl, navne, hintBtn, startTime, erBrugt, idx, elever.length, videre, quit);
+    }
+  }
+
+  function visResultat() {
+    const correct = results.filter(r => r.correct).length;
+    const svære = results.filter(r => !r.correct)
+      .map(r => visningsnavn(elever.find(e => e.id === r.studentId), navne));
+    app.innerHTML = '';
+    app.appendChild(
+      el('div', { class: 'view view-narrow view-center' },
+        el('h2', {}, `${correct} af ${results.length} korrekte`),
+        svære.length
+          ? el('p', { class: 'muted' }, `Dem her drillede: ${svære.join(', ')}.`)
+          : el('p', { class: 'muted' }, 'Hele klassen sad lige i skabet.'),
+        el('div', { class: 'svar-valg' },
+          el('button', { class: 'btn btn-primary', onclick: () => renderRepetition(app, classId, allStudents) }, 'Repetér igen'),
+          el('button', { class: 'btn btn-sm', onclick: quit }, 'Se grupper')
+        )
+      )
+    );
+  }
+
+  visNæste();
 }
 
 async function renderGroupPractice(app, classId, groupIdx, groups, phases, withPhotos, allStudents) {
@@ -671,26 +757,15 @@ async function renderGroupPractice(app, classId, groupIdx, groups, phases, withP
     app.innerHTML = '';
     const startTime = Date.now();
 
-    const hintBtn = el('button', { class: 'hint-btn' }, 'Hjælp');
-    let hintUsed = false;
-    let hintRevealed = false;
-    hintBtn.addEventListener('click', () => {
-      if (!hintRevealed) {
-        hintRevealed = true;
-        hintUsed = true;
-        hintBtn.textContent = visningsnavn(student, navne)[0] + '...';
-        hintBtn.classList.add('hint-revealed');
-      }
-    });
-
+    const { knap: hintBtn, erBrugt } = lavHjaelpeknap(student, navne);
     const stimulusEl = el('img', { src: student.photoUrls[0], class: 'quiz-photo', alt: '' });
 
     if (phase === 1) {
-      await showLevel1(app, student, 'photo', stimulusEl, withPhotos, navne, hintBtn, startTime, hintUsed, idx, students.length, result => {
+      await showLevel1(app, student, 'photo', stimulusEl, withPhotos, navne, hintBtn, startTime, erBrugt, idx, students.length, result => {
         results.push(result); idx++; showNext();
       }, quit);
     } else {
-      await showLevel2(app, student, 'photo', stimulusEl, navne, hintBtn, startTime, hintUsed, idx, students.length, result => {
+      await showLevel2(app, student, 'photo', stimulusEl, navne, hintBtn, startTime, erBrugt, idx, students.length, result => {
         results.push(result); idx++; showNext();
       }, quit);
     }
@@ -1007,6 +1082,20 @@ function ikon(stier) {
   svg.setAttribute('aria-hidden', 'true');
   svg.innerHTML = stier;
   return svg;
+}
+
+// Hjælpeknappen afslører navnets første bogstav. Svaret skal spørge, om den
+// er brugt, på det tidspunkt der svares — ikke da kortet blev bygget.
+function lavHjaelpeknap(student, navne) {
+  const knap = el('button', { class: 'hint-btn' }, 'Hjælp');
+  let brugt = false;
+  knap.addEventListener('click', () => {
+    if (brugt) return;
+    brugt = true;
+    knap.textContent = visningsnavn(student, navne)[0] + '...';
+    knap.classList.add('hint-revealed');
+  });
+  return { knap, erBrugt: () => brugt };
 }
 
 function unikkeElever(elever) {
