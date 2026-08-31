@@ -1,8 +1,9 @@
 import { initAuth, login, logout } from "./auth.js";
 import { getClasses, createClass, deleteClass } from "./classes.js";
 import {
-  getStudentsByClass, getAllStudents, getStudent, updateStudent, deleteStudent, uploadPhoto, deletePhoto
+  getStudentsByClass, getAllStudents, getStudent, updateStudent, deleteStudent
 } from "./students.js";
+import { compressImage, addPhoto, removePhoto } from "./photos.js";
 import { importFiles } from "./import.js";
 import { buildSession, getDistractors, pickStimulus, checkAnswer, processResult, saveSession } from "./quiz.js";
 import { el, showToast, renderProgressBar, spinner, renderStudentCard } from "./ui.js";
@@ -846,9 +847,12 @@ async function renderStudentEdit(app, studentId) {
         el('div', { class: 'photo-thumb' },
           el('img', { src: url, alt: '' }),
           el('button', { class: 'photo-delete-btn', onclick: async () => {
-            await deletePhoto(state.uid, studentId, url);
-            student.photoUrls = student.photoUrls.filter(u => u !== url);
-            renderPhotos();
+            try {
+              student.photoUrls = await removePhoto(state.uid, studentId, url);
+              renderPhotos();
+            } catch (e) {
+              showToast(e.message, 'error');
+            }
           }}, '×')
         )
       );
@@ -860,14 +864,17 @@ async function renderStudentEdit(app, studentId) {
   fileInput.addEventListener('change', async e => {
     const file = e.target.files[0];
     if (!file) return;
-    showToast('Uploader billede...', 'info');
-    const { compressImage } = await import('./import.js');
-    const blob = await compressImage(file);
-    const url = await uploadPhoto(state.uid, studentId, blob);
-    student.photoUrls = [...(student.photoUrls || []), url];
-    await updateStudent(state.uid, studentId, { photoUrls: student.photoUrls });
-    renderPhotos();
-    showToast('Billede tilføjet', 'info');
+    showToast('Gemmer billede...', 'info');
+    try {
+      const blob = await compressImage(file);
+      student.photoUrls = await addPhoto(state.uid, student, blob);
+      renderPhotos();
+      showToast('Billede tilføjet', 'info');
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      fileInput.value = '';
+    }
   });
 
   const nextReviewDate = student.nextReview?.toDate
