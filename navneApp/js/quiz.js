@@ -1,6 +1,7 @@
 import { getStudentsByClass, getAllStudents, updateStudent } from "./students.js";
 import { updateSRS, qualityFromResult, daysFromNow } from "./srs.js";
 import { analyzeConfusion } from "./confusion.js";
+import { fornavn } from "./navne.js";
 import {
   collection, addDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
@@ -75,11 +76,14 @@ export function pickStimulus(student) {
   return null;
 }
 
-export function checkAnswer(student, input) {
-  const first = student.name.split(' ')[0].toLowerCase();
-  const full = student.name.toLowerCase();
-  const answer = input.trim().toLowerCase();
-  return answer === first || answer === full;
+// Svaret måles mod det navn, appen selv viser. Hedder to elever Oliver, er
+// "Oliver" ikke længere et entydigt svar — så skal der stå Oliver B. Det fulde
+// navn tæller altid.
+export function checkAnswer(student, input, vistNavn) {
+  const ensret = t => (t || '').toLowerCase().replace(/\./g, '').replace(/\s+/g, ' ').trim();
+  const svar = ensret(input);
+  if (!svar) return false;
+  return svar === ensret(vistNavn || fornavn(student.name)) || svar === ensret(student.name);
 }
 
 export async function processResult(uid, student, result) {

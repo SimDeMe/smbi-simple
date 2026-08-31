@@ -13,13 +13,27 @@ export function el(tag, attrs = {}, ...children) {
 }
 
 export function showToast(msg, type = 'info') {
-  const t = el('div', { class: `toast toast-${type}` }, msg);
+  const t = el('div', { class: `toast toast-${type}`, role: 'status' }, msg);
   document.body.appendChild(t);
   setTimeout(() => t.classList.add('toast-visible'), 10);
   setTimeout(() => {
     t.classList.remove('toast-visible');
     setTimeout(() => t.remove(), 300);
   }, 2500);
+}
+
+// Sidehovedet i skabelonens form: øjenbryn, overskrift og én linje om,
+// hvad man gør her.
+export function viewHead(eyebrow, title, lead) {
+  return el('div', { class: 'view-head' },
+    el('span', { class: 'eyebrow mono' }, el('span', { class: 'blink' }), eyebrow),
+    el('h1', {}, title),
+    lead ? el('p', { class: 'lead' }, lead) : null
+  );
+}
+
+export function backLink(label, onclick) {
+  return el('button', { class: 'back-link', type: 'button', onclick }, label);
 }
 
 export function renderProgressBar(current, total) {
@@ -34,16 +48,16 @@ export function spinner() {
   return el('div', { class: 'spinner' });
 }
 
-export function renderStudentCard(student, onEdit) {
+export function renderStudentCard(student, onEdit, vistNavn) {
   const hasWarning = !student.photoUrls?.length && !student.hints;
   const card = el('div', { class: 'student-card' + (hasWarning ? ' student-card--warn' : '') },
     el('div', { class: 'student-card-photo' },
       student.photoUrls?.length
-        ? el('img', { src: student.photoUrls[0], alt: student.name, loading: 'lazy' })
+        ? el('img', { src: student.photoUrls[0], alt: vistNavn || student.name, loading: 'lazy' })
         : el('div', { class: 'student-card-no-photo' }, '?')
     ),
     el('div', { class: 'student-card-info' },
-      el('div', { class: 'student-card-name' }, student.name),
+      el('div', { class: 'student-card-name' }, vistNavn || student.name),
       el('div', { class: 'student-card-meta' },
         `Niveau ${student.level || 1}`,
         hasWarning ? el('span', { class: 'warn-badge' }, 'Mangler foto/hint') : null
