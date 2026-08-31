@@ -6,8 +6,8 @@
   "orientation": "portrait",
   "start_url": "/tid/",
   "scope": "/tid/",
-  "background_color": "#f8fafc",
-  "theme_color": "#3b82f6",
+  "background_color": "#FFF9EE",
+  "theme_color": "#FFF9EE",
   "icons": [
     {
       "src": "icons/icon.svg",

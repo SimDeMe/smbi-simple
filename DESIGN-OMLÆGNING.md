@@ -4,7 +4,7 @@ Status pr. 9. august 2026. Skabelonen er beskrevet i `CLAUDE.md`.
 Forlæg: `index.html` + `forside.css`, `geografi/Stigningsregn.html`,
 `geografi/drivhuseffektenSimpel.html`.
 
-**Lagt om: 21 sider. Tilbage: 24.** (`bio-tree.html`, `geografi/straalingsbalance.html`
+**Lagt om: 24 sider. Tilbage: 21.** (`bio-tree.html`, `geografi/straalingsbalance.html`
 og omdirigeringen `biologi/bio-blocks.html` er fjernet i stedet for lagt om.)
 
 Rækkefølgen nedenfor er valgt efter, hvad eleverne og du selv møder oftest,
@@ -378,7 +378,7 @@ om de overhovedet skal med.
 | --- | --- | --- |
 | `censorUr.html` | 674 | |
 | `ForBørn/Mathsteroids/Mathsteroids.html` | 667 | Spil — måske undtaget |
-| `tid/index.html` + `hjaelp.html` + `installer.html` | 604 + 230 + 273 | Egen `styles.css`; er en PWA |
+| ~~`tid/index.html` + `hjaelp.html` + `installer.html`~~ | 660 + 190 + 175 | **Lagt om.** Egen `styles.css` med egne tokens (den skal virke offline), accent `--teal`. Appen har regnbuestribe og brandmærke i sin egen topbjælke i stedet for sidens; vejledningerne har det almindelige krom |
 | `studiekort/index.html` | 523 | |
 | `Arbejdstidskalender_2026-27.html` | 359 | Eget pergament-design med egen `--paper`; printes på papir |
 | ~~`navneApp/index.html`~~ | 32 | **Lagt om.** Bruger `/forside.css` til krommet og sin egen `css/style.css` til appen |

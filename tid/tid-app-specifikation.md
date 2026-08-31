@@ -193,9 +193,15 @@ Egen side:
 5. Indstillinger
 
 **Visuelt:**
+- Sidens design (`design_rules.md`): papirfarvet baggrund, sorte blækrammer,
+  hårde skygger, regnbuestribe og de tre skrifter. Appens accentfarve er
+  `--teal`. Tokens ligger i `styles.css` selv, så appen virker offline.
+- Appen har sin egen smalle topbjælke — regnbuestribe, brandmærke og aktivt
+  skoleår — i stedet for sidens store topbjælke. Vejledningssiderne
+  (`hjaelp.html`, `installer.html`) har til gengæld det almindelige krom.
 - Mobile-first, store touch-targets (min 44x44 pt)
-- Behageligt lyst tema, CSS-variabler så dark mode kan tilføjes senere
-- Dansk overalt
+- Dansk overalt, og enheder skrevet som de staves (`t`, `min`) — også inde i
+  versale mono-mærkater
 - Tydelig markør når timer kører (pulsende prik / farvet header)
 - Hver aktivitet har en farve; brug den konsekvent i lister, knapper, diagrammer
 

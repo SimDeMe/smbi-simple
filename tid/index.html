@@ -3,19 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="theme-color" content="#3b82f6">
+  <meta name="theme-color" content="#FFF9EE">
 
   <!-- PWA / iOS -->
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Tid">
   <meta name="mobile-web-app-capable" content="yes">
   <link rel="apple-touch-icon" href="icons/icon-180.png">
   <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png">
 
   <link rel="manifest" href="manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,300..600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
-  <title>Tid</title>
+  <title>Tid — smbi.dk</title>
+  <meta name="description" content="Registrér din arbejdstid på hold og opgaver, og se forbruget mod budgettet for skoleåret.">
   <meta name="robots" content="noindex, follow">
 </head>
 <body>
@@ -28,7 +32,8 @@
   <!-- ── Login ───────────────────────────────────────────── -->
   <div id="login-screen" class="fullscreen-overlay hidden">
     <div class="login-card">
-      <img src="icons/icon.svg" alt="Tid" class="login-logo">
+      <div class="rainbow"></div>
+      <img src="icons/icon.svg" alt="" class="login-logo">
       <h1 class="login-title">Tidsregistrering</h1>
       <p class="login-subtitle">Log ind for at komme i gang</p>
       <button id="btn-google-login" class="btn btn-google btn-full btn-large">
@@ -47,6 +52,7 @@
   <div id="onboarding" class="fullscreen-overlay hidden">
     <div class="onboarding-card">
 
+      <div class="rainbow"></div>
       <h1 class="onboarding-title">Kom godt i gang</h1>
       <p class="onboarding-intro">Du har endnu ingen aktiviteter. Opret din opgavefordeling for at begynde at registrere tid — her er hvad en typisk gymnasielærer har:</p>
 
@@ -87,6 +93,16 @@
 
   <!-- ── App ─────────────────────────────────────────────── -->
   <div id="app" class="hidden">
+
+    <!-- Appens topbjælke: regnbuestribe, brandmærke og aktivt skoleår -->
+    <header class="app-top">
+      <div class="rainbow"></div>
+      <div class="app-bar">
+        <span class="brand-mark"></span>
+        <span class="app-name">Tid<em>smbi.dk</em></span>
+        <span id="top-year" class="app-year" aria-label="Aktivt skoleår"></span>
+      </div>
+    </header>
 
     <!-- Active timer banner (synlig fra alle faner) -->
     <div id="active-timer-banner" class="hidden">
@@ -378,7 +394,7 @@
     </nav>
   </div>
 
-  <div id="toast" class="toast"></div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <!-- ── Aktivitet opret/redigér sheet ───────────────────── -->
   <div id="act-backdrop" class="sheet-backdrop hidden"></div>

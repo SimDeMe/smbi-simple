@@ -3,145 +3,38 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="theme-color" content="#3b82f6">
+  <meta name="theme-color" content="#FFF9EE">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,300..600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
-  <title>Sådan bruger du Tid-appen</title>
+  <title>Sådan bruger du Tid-appen — smbi.dk</title>
+  <meta name="description" content="Vejledning til Tid-appen: start og stop timere, ret i historikken, læs rapporterne og styr dine aktiviteter.">
   <meta name="robots" content="noindex, follow">
-  <style>
-    .guide {
-      max-width: 640px;
-      margin: 0 auto;
-      padding: max(24px, var(--safe-t)) 20px 64px;
-    }
-    .guide-header {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      margin-bottom: 28px;
-    }
-    .guide-header img {
-      width: 48px; height: 48px;
-      border-radius: var(--r-md);
-      box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
-    }
-    .guide-header h1 {
-      font-size: 22px;
-      font-weight: 700;
-    }
-    .guide-intro {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--r-lg);
-      padding: 18px 20px;
-      margin-bottom: 28px;
-      color: var(--text-2);
-      font-size: 15px;
-      line-height: 1.6;
-    }
-    .guide-intro strong { color: var(--text); }
-    .guide-section {
-      margin-bottom: 30px;
-    }
-    .guide-section h2 {
-      font-size: 17px;
-      font-weight: 700;
-      margin-bottom: 10px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .guide-section h2 .num {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 26px; height: 26px;
-      border-radius: 50%;
-      background: var(--accent-light);
-      color: var(--accent-dark);
-      font-size: 13px;
-      font-weight: 700;
-      flex-shrink: 0;
-    }
-    .guide-section p {
-      color: var(--text-2);
-      font-size: 15px;
-      line-height: 1.65;
-      margin-bottom: 8px;
-    }
-    .guide-section ul, .guide-section ol {
-      color: var(--text-2);
-      font-size: 15px;
-      line-height: 1.65;
-      padding-left: 22px;
-      margin-bottom: 8px;
-    }
-    .guide-section li { margin-bottom: 6px; }
-    .guide-section li strong { color: var(--text); }
-    .guide-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--r-lg);
-      padding: 16px 18px;
-      margin-top: 10px;
-    }
-    .badge-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin: 10px 0;
-    }
-    .badge {
-      display: inline-block;
-      font-size: 13px;
-      font-weight: 600;
-      padding: 5px 12px;
-      border-radius: 999px;
-      background: var(--surface-2);
-      color: var(--text-2);
-      border: 1px solid var(--border);
-    }
-    .guide-footer {
-      margin-top: 36px;
-      padding-top: 24px;
-      border-top: 1px solid var(--border);
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-    .guide-footer a.btn {
-      text-decoration: none;
-      flex: 1;
-      min-width: 200px;
-      text-align: center;
-    }
-    .privacy-note {
-      display: flex;
-      gap: 12px;
-      align-items: flex-start;
-      background: var(--accent-light);
-      border-radius: var(--r-lg);
-      padding: 16px 18px;
-      margin-top: 6px;
-    }
-    .privacy-note svg { flex-shrink: 0; color: var(--accent-dark); margin-top: 2px; }
-    .privacy-note p { color: var(--accent-dark); margin: 0; font-size: 14px; line-height: 1.6; }
-  </style>
 </head>
 <body>
 
-  <div class="guide">
-
-    <div class="guide-header">
-      <img src="icons/icon.svg" alt="Tid">
-      <h1>Sådan bruger du Tid-appen</h1>
+  <header class="top">
+    <div class="rainbow"></div>
+    <div class="top-bar">
+      <div class="top-in">
+        <a href="index.html" class="brand"><span class="brand-mark"></span>Tid<em>smbi.dk</em></a>
+        <nav class="top-nav" aria-label="Sidens navigation">
+          <a href="installer.html">På telefonen</a>
+          <a href="index.html">Åbn appen</a>
+        </nav>
+      </div>
     </div>
+  </header>
 
-    <div class="guide-intro">
-      <strong>Tid</strong> er en lille app til at registrere, hvor du bruger din arbejdstid — på dine hold, dine opgaver og resten af din opgavefordeling — og se hvordan det står i forhold til dit timebudget for skoleåret.
-    </div>
+  <main class="guide">
+
+    <span class="eyebrow mono"><span class="blink"></span>Tid · vejledning</span>
+    <h1>Sådan bruger du <span class="hi" style="--hc:#D5EEE9">Tid-appen</span></h1>
+    <p class="lead"><strong>Tid</strong> er en lille app til at registrere, hvor du bruger din arbejdstid — på dine hold, dine opgaver og resten af din opgavefordeling — og se, hvordan det står i forhold til dit timebudget for skoleåret.</p>
 
     <div class="privacy-note">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
       <p>Du logger ind med din egen Google-konto, og dine registreringer er kun dine egne — ingen andre kan se eller redigere dem.</p>
     </div>
 
@@ -165,11 +58,11 @@
         <li><strong>"1 modul"</strong> — kun for hold. Vælg hold, og vælg så <strong>1., 2., 3. eller 4. modul</strong>: tiden hentes fra skemaet. Er modulet slut, gemmes det som en færdig post; kører det stadig, starter timeren ved modulets starttid og stopper af sig selv, når modulet er forbi. Du kan stadig vælge "Nu", "For 90 min siden" eller et selvvalgt tidspunkt.</li>
       </ul>
       <div class="badge-row">
-        <span class="badge">1. modul 08:10–09:45</span>
-        <span class="badge">2. modul 10:00–11:35</span>
-        <span class="badge">Frokost 11:35–12:00</span>
-        <span class="badge">3. modul 12:00–13:35</span>
-        <span class="badge">4. modul 13:45–15:20</span>
+        <span class="badge">1. modul <b>08:10–09:45</b></span>
+        <span class="badge">2. modul <b>10:00–11:35</b></span>
+        <span class="badge">Frokost <b>11:35–12:00</b></span>
+        <span class="badge">3. modul <b>12:00–13:35</b></span>
+        <span class="badge">4. modul <b>13:45–15:20</b></span>
       </div>
       <div class="badge-row">
         <span class="badge">■ Stop stopper den aktive timer</span>
@@ -207,7 +100,7 @@
       <strong>Indstillinger → Pauser</strong>.</p>
       <div class="badge-row">
         <span class="badge">Dæmpet, stiplet blok = kort pause</span>
-        <span class="badge">Rød streg = lige nu</span>
+        <span class="badge">Farvet streg = lige nu</span>
       </div>
     </div>
 
@@ -239,10 +132,25 @@
     </div>
 
     <div class="guide-footer">
-      <a class="btn btn-secondary" href="installer.html">📲 Sådan får du appen på telefonen</a>
+      <a class="btn btn-secondary" href="installer.html">Sådan får du appen på telefonen</a>
       <a class="btn btn-primary" href="index.html">Åbn Tid-appen</a>
     </div>
 
-  </div>
+  </main>
+
+  <footer class="foot">
+    <div class="foot-in">
+      <div>
+        <a href="/" class="brand"><span class="brand-mark"></span>smbi<em style="color:#8FA29E">.dk</em></a>
+        <p class="mono">Simon Messell · naturgeografi &amp; biologi</p>
+      </div>
+      <div class="foot-links">
+        <a href="index.html">Tid-appen</a>
+        <a href="installer.html">På telefonen</a>
+        <a href="/">Forside</a>
+      </div>
+    </div>
+  </footer>
+
 </body>
 </html>
