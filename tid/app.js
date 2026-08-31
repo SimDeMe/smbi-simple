@@ -24,9 +24,11 @@ export const db   = initializeFirestore(firebaseApp, {
 const provider = new GoogleAuthProvider();
 
 // ─── Farvepalette til aktiviteter ─────────────────────────
+// Sidens egen palet (pink, blå, lime, gul, lilla, koral, turkis) plus tre
+// mørkere toner, så ti aktiviteter stadig kan skelnes fra hinanden.
 export const COLOR_PALETTE = [
-  '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
-  '#06b6d4', '#f97316', '#84cc16', '#ec4899', '#6366f1'
+  '#E8336D', '#0E86C8', '#5FB030', '#FFB300', '#7A4FD6',
+  '#FF6A3D', '#0FA593', '#1D4E89', '#B3218B', '#7A8B1E'
 ];
 
 // ─── Eksport ─────────────────────────────────────────────
@@ -114,6 +116,7 @@ onAuthStateChanged(auth, async user => {
       // Indstillinger skal være indlæst før de andre views, da de bruger
       // getCurrentSchoolYear(), som læser fra indstillingerne
       await initIndstillingerView(user.uid);
+      updateTopYear();
       initActivitiesView(user.uid);
       initTimerView(user.uid);
       initHistorikView(user.uid);
@@ -184,6 +187,12 @@ export function getCurrentSchoolYear() {
   return m >= startMonth
     ? `${y}/${String(y + 1).slice(2)}`
     : `${y - 1}/${String(y).slice(2)}`;
+}
+
+// Skoleåret står i topbjælken, så man altid kan se, hvad man registrerer i
+export function updateTopYear() {
+  const el = $('top-year');
+  if (el) el.textContent = getCurrentSchoolYear();
 }
 
 // ─── Navigation ──────────────────────────────────────────

@@ -1,6 +1,6 @@
 // indstillinger.js — Trin 9: Indstillinger
 
-import { db, showToast, getCurrentSchoolYear } from './app.js';
+import { db, showToast, getCurrentSchoolYear, updateTopYear } from './app.js';
 import { doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js';
 
 // ─── Defaults ─────────────────────────────────────────────
@@ -80,6 +80,7 @@ async function saveSettings() {
   try {
     await setDoc(doc(db, `users/${userId}/settings/config`), updated);
     settings = updated;
+    updateTopYear();
     showToast('Indstillinger gemt');
   } catch (err) {
     console.error('Gem indstillinger fejl:', err);
