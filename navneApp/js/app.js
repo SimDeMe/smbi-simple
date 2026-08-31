@@ -417,36 +417,40 @@ async function showLevel1(app, student, stimulus, stimulusEl, allClassStudents, 
     }, visningsnavn(opt, vist))
   );
 
+  const videreRow = el('div', { class: 'svar-valg' });
+
   let answered = false;
   function handleLevel1Answer(correct, valgtId) {
     if (answered) return;
     answered = true;
     const responseTime = Date.now() - startTime;
 
-    const rigtigtNavn = visningsnavn(student, vist);
-    answerBtns.forEach(btn => {
+    answerBtns.forEach((btn, i) => {
       btn.disabled = true;
-      if (btn.textContent === rigtigtNavn) btn.classList.add('correct');
+      if (options[i].id === student.id) btn.classList.add('correct');
+      else if (options[i].id === valgtId) btn.classList.add('wrong');
     });
 
-    const result = {
-      studentId: student.id,
-      stimulus,
-      correct,
-      usedHint: hintUsed,
-      responseTime,
-      answeredWith: valgtId
+    const afslut = () => {
+      const result = {
+        studentId: student.id,
+        stimulus,
+        correct,
+        usedHint: hintUsed,
+        responseTime,
+        answeredWith: valgtId
+      };
+      processResult(state.uid, student, result);
+      onDone(result);
     };
 
-    processResult(state.uid, student, result);
+    if (correct) { setTimeout(afslut, 600); return; }
 
-    if (!correct) {
-      const wrongBtn = document.querySelector('.answer-btn:disabled:not(.correct)');
-      wrongBtn && wrongBtn.classList.add('wrong');
-      setTimeout(() => onDone(result), 2000);
-    } else {
-      setTimeout(() => onDone(result), 600);
-    }
+    // Ramte man forkert, bliver det rigtige navn stående, til man selv går
+    // videre — det er navnet, man skal nå at læse.
+    const videreBtn = el('button', { class: 'btn btn-primary', onclick: afslut }, 'Videre');
+    videreRow.appendChild(videreBtn);
+    videreBtn.focus();
   }
 
   const quitBtn = onQuit ? el('button', { class: 'btn btn-ghost-sm quiz-quit', onclick: onQuit }, 'Afslut') : null;
@@ -457,6 +461,7 @@ async function showLevel1(app, student, stimulus, stimulusEl, allClassStudents, 
       renderProgressBar(idx, total),
       el('div', { class: 'quiz-stimulus' }, stimulusEl),
       el('div', { class: 'quiz-answers' }, ...answerBtns),
+      videreRow,
       hintBtn,
       quitBtn
     )
@@ -472,35 +477,53 @@ async function showLevel2(app, student, stimulus, stimulusEl, navne, hintBtn, st
   const feedback = el('div', { class: 'quiz-feedback', 'aria-live': 'polite' });
   const submitBtn = el('button', { class: 'btn btn-primary quiz-submit' }, 'Svar');
 
-  function submit() {
-    if (answered) return;
-    answered = true;
-    const responseTime = Date.now() - startTime;
-    const correct = checkAnswer(student, input.value, rigtigtNavn);
+  // Resultatet skrives først, når man går videre — så tæller en rettelse
+  // ("jeg havde det rigtigt") som det ene rigtige svar, den er.
+  function afslut(correct, skrevet) {
     const result = {
       studentId: student.id,
       stimulus,
       correct,
       usedHint: hintUsed,
-      responseTime,
-      answeredWith: input.value.trim()
+      responseTime: svartid,
+      answeredWith: skrevet
     };
-
     processResult(state.uid, student, result);
+    onDone(result);
+  }
+
+  let svartid = 0;
+
+  function submit() {
+    if (answered) return;
+    answered = true;
+    svartid = Date.now() - startTime;
+    const skrevet = input.value.trim();
     input.disabled = true;
     submitBtn.disabled = true;
 
-    if (correct) {
+    if (checkAnswer(student, skrevet, rigtigtNavn)) {
       feedback.className = 'quiz-feedback correct';
-      feedback.textContent = 'Korrekt!';
-      setTimeout(() => onDone(result), 700);
-    } else {
-      feedback.className = 'quiz-feedback wrong';
-      feedback.textContent = '';
-      feedback.append('Forkert. Du svarede ', el('em', {}, input.value),
-                      ' — det rigtige svar er ', el('strong', {}, rigtigtNavn));
-      setTimeout(() => onDone(result), 2000);
+      feedback.textContent = 'Rigtigt!';
+      setTimeout(() => afslut(true, skrevet), 700);
+      return;
     }
+
+    // Det gælder om at kunne sige navnet, ikke om at stave det. Derfor bliver
+    // facit stående, til man selv går videre, og en stavefejl kan rettes til
+    // et rigtigt svar.
+    feedback.className = 'quiz-feedback wrong';
+    feedback.textContent = '';
+    const videreBtn = el('button', { class: 'btn btn-primary', onclick: () => afslut(false, skrevet) }, 'Videre');
+    feedback.append(
+      el('div', { class: 'svar-skrevet' }, '✗ Du skrev ', el('em', {}, skrevet || '—')),
+      el('div', { class: 'svar-facit' }, rigtigtNavn),
+      el('div', { class: 'svar-valg' },
+        videreBtn,
+        el('button', { class: 'btn btn-sm', onclick: () => afslut(true, skrevet) }, 'Jeg havde det rigtigt')
+      )
+    );
+    videreBtn.focus();
   }
 
   input.addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
