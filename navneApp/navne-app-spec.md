@@ -89,6 +89,18 @@ service firebase.storage {
 
 ---
 
+## Felter på telefon
+
+Skriftstørrelsen i `<input>`, `<textarea>` og `<select>` må aldrig komme under
+**16 px**. Er den mindre, zoomer iOS ind, når man trykker i feltet, og zoomer
+ikke ud igen — så ryger knapperne uden for skærmen. Browserens standard for et
+`<input>` er 13,3 px, og den arves ikke fra siden, så størrelsen sættes
+udtrykkeligt, både på `.input` og på selve elementerne.
+
+Under 620 px står svarknappen i quizzen under skrivefeltet i fuld bredde. Ved
+siden af feltet er der ikke plads, når tastaturet er oppe. Feltet har
+`enterkeyhint="go"`, så man kan svare med tastaturets egen tast.
+
 ## Visningsnavne
 
 Læreren skal lære fornavne, så det er fornavnet, appen viser — i klasselisten,

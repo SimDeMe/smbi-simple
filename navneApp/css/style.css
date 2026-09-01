@@ -229,9 +229,14 @@ h2{
 
 /* ── Formularer ────────────────────────────────────────── */
 
+/* Skriftstørrelsen i felter må aldrig under 16 px: så zoomer iOS ind, når man
+   trykker i feltet, og bliver zoomet ind bagefter. Browserens standard for
+   <input> er 13,3 px, og den arves ikke fra siden — derfor sættes den her,
+   både på klassen og på selve elementerne. */
+input,textarea,select{font-size:max(16px,1rem)}
 .input{
   display:block;width:100%;margin-top:6px;padding:11px 14px;
-  font-family:var(--body);font-size:1rem;color:var(--ink);
+  font-family:var(--body);font-size:max(16px,1rem);color:var(--ink);
   background:var(--panel);border:2.5px solid var(--ink);border-radius:12px;
   box-shadow:2px 2px 0 var(--ink);
 }
@@ -476,6 +481,10 @@ select.input{cursor:pointer}
   .quiz-photo{max-width:100%;max-height:44vh}
   .view-header{gap:12px}
   .oev-valg .btn{flex:1 1 auto;justify-content:center}
+  /* Svarknappen under feltet: med tastaturet oppe er der ikke plads ved siden
+     af, og så røg den ud over skærmkanten */
+  .quiz-input-wrap{flex-direction:column;gap:10px}
+  .quiz-submit{width:100%;justify-content:center}
   /* To spalter, og det sidste tal fylder resten ud, så ingen celle står tom */
   .stats-row{grid-template-columns:1fr 1fr}
   .stat-box:nth-child(odd){border-left:none}

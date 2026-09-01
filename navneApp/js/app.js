@@ -460,8 +460,10 @@ async function showLevel1(app, student, stimulus, stimulusEl, allClassStudents, 
 async function showLevel2(app, student, stimulus, stimulusEl, navne, hintBtn, startTime, erBrugt, idx, total, onDone, onQuit) {
   const rigtigtNavn = visningsnavn(student, navne);
   let answered = false;
-  const input = el('input', { type: 'text', class: 'quiz-input', placeholder: 'Skriv elevens navn...',
-    autocomplete: 'off', autocorrect: 'off', spellcheck: 'false'
+  const input = el('input', { type: 'text', class: 'input quiz-input', placeholder: 'Skriv elevens navn...',
+    autocomplete: 'off', autocorrect: 'off', spellcheck: 'false',
+    // Telefonens tastatur får en Go-tast, så man kan svare uden at ramme knappen
+    enterkeyhint: 'go'
   });
   const feedback = el('div', { class: 'quiz-feedback', 'aria-live': 'polite' });
   const submitBtn = el('button', { class: 'btn btn-primary quiz-submit' }, 'Svar');
