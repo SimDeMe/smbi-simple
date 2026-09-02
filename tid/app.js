@@ -3,12 +3,10 @@ import {
   getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut
 } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js';
 import {
-  initializeFirestore, persistentLocalCache,
-  doc, getDoc, setDoc,
-  collection, getDocs, query, limit
+  initializeFirestore, persistentLocalCache, collection, getDocs
 } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js';
 import { firebaseConfig } from './firebase-config.js';
-import { initActivitiesView } from './activities.js';
+import { initActivitiesView, refreshAktiviteter, aktiviteterHentet } from './activities.js';
 import { initTimerView, refreshQuickStart } from './timer.js';
 import { initHistorikView, refreshHistorik } from './historik.js';
 import { initKalenderView, refreshKalender } from './kalender.js';
@@ -106,15 +104,18 @@ btnLogout.addEventListener('click', async () => {
 });
 
 // ─── Auth state ──────────────────────────────────────────
+// Opstarten venter kun på ét opslag: indstillingerne. De skal være der,
+// før de øvrige views tegnes, fordi de bruger getCurrentSchoolYear(). Alt
+// andet — aktiviteter, timer, historik — kommer ind gennem lyttere, der
+// fylder skærmen ud, efterhånden som svarene lander. Ventede vi på dem alle,
+// stod brugeren og så på "loader", mens appen hentede ting, ingen kigger på
+// endnu.
 onAuthStateChanged(auth, async user => {
   if (user) {
     currentUserId = user.uid;
     loginScreen.classList.add('hidden');
     appEl.classList.remove('hidden');
     try {
-      await initSettings(user.uid);
-      // Indstillinger skal være indlæst før de andre views, da de bruger
-      // getCurrentSchoolYear(), som læser fra indstillingerne
       await initIndstillingerView(user.uid);
       updateTopYear();
       initActivitiesView(user.uid);
@@ -122,12 +123,12 @@ onAuthStateChanged(auth, async user => {
       initHistorikView(user.uid);
       initKalenderView(user.uid);
       initRapporterView(user.uid);
-      await checkFirstRun(user.uid);
     } catch (err) {
       console.error('Init fejl:', err);
-      navigateTo('hjem');
     }
+    navigateTo('hjem');
     loadingScreen.classList.add('hidden');
+    visOnboardingHvisTom();
   } else {
     currentUserId = null;
     loadingScreen.classList.add('hidden');
@@ -139,36 +140,20 @@ onAuthStateChanged(auth, async user => {
 
 $('btn-export-json')?.addEventListener('click', exportAllData);
 
-// ─── Settings: opret med standardværdier hvis de mangler ──
-async function initSettings(userId) {
-  const ref  = doc(db, `users/${userId}/settings/config`);
-  const snap = await getDoc(ref);
-  if (!snap.exists()) {
-    await setDoc(ref, {
-      currentSchoolYear:    getCurrentSchoolYear(),
-      schoolYearStartMonth: 6,
-      schoolYearStartDay:   1,
-      normHours:            1650,
-      moduleLengthMinutes:  90,
-      autoStopAfterMinutes: 600
-    });
-  }
-}
-
 // ─── First-run: vis onboarding hvis ingen aktiviteter ─────
-async function checkFirstRun(userId) {
-  const ref  = collection(db, `users/${userId}/activities`);
-  const snap = await getDocs(query(ref, limit(1)));
-  if (snap.empty) {
-    onboardingScreen.classList.remove('hidden');
-  } else {
-    navigateTo('hjem');
-  }
+// Svaret kommer fra aktivitetslytteren, der alligevel kører — appen skal ikke
+// vente på et ekstra opslag, der stiller det samme spørgsmål. Onboarding er
+// en fuldskærms-overlay, så den lægger sig oven på Hjem, når den kommer.
+function visOnboardingHvisTom() {
+  aktiviteterHentet().then(harAktiviteter => {
+    if (!harAktiviteter) onboardingScreen.classList.remove('hidden');
+  });
 }
 
 btnOnbActs.addEventListener('click', () => {
   onboardingScreen.classList.add('hidden');
   navigateTo('aktiviteter');
+  refreshAktiviteter();
 });
 
 btnOnbSkip.addEventListener('click', () => {
@@ -214,6 +199,7 @@ navBtns.forEach(btn => {
     navigateTo(btn.dataset.view);
     if (btn.dataset.view === 'hjem')     refreshQuickStart();
     if (btn.dataset.view === 'historik') { refreshHistorik(); refreshKalender(); }
+    if (btn.dataset.view === 'aktiviteter')    refreshAktiviteter();
     if (btn.dataset.view === 'rapporter')      refreshRapporter();
     if (btn.dataset.view === 'indstillinger')  refreshIndstillinger();
   });

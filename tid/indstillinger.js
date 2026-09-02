@@ -35,10 +35,19 @@ export function refreshIndstillinger() {
 }
 
 // ─── Load from Firestore ──────────────────────────────────
+// Ét opslag ved opstart. Findes dokumentet ikke, skrives standardværdierne —
+// men appen venter ikke på skrivningen: den kan lige så godt lande, mens
+// brugeren allerede er i gang.
 async function loadSettings() {
+  const ref = doc(db, `users/${userId}/settings/config`);
   try {
-    const snap = await getDoc(doc(db, `users/${userId}/settings/config`));
-    if (snap.exists()) settings = { ...DEFAULTS, ...snap.data() };
+    const snap = await getDoc(ref);
+    if (snap.exists()) {
+      settings = { ...DEFAULTS, ...snap.data() };
+    } else {
+      settings = { ...DEFAULTS, currentSchoolYear: getCurrentSchoolYear() };
+      setDoc(ref, settings).catch(err => console.error('Opret indstillinger fejl:', err));
+    }
     populateForm();
   } catch (err) {
     console.error('Indlæs indstillinger fejl:', err);

@@ -1,7 +1,7 @@
 // timer.js — Trin 4+5+11: Hjem-skærm med timer, modul, start arbejde og auto-stop
 
 import { db, showToast, getCurrentSchoolYear } from './app.js';
-import { getLoadedActivities, isActivitiesLoaded } from './activities.js';
+import { getLoadedActivities, isActivitiesLoaded, aktiviteterHentet } from './activities.js';
 import { getSettings } from './indstillinger.js';
 import { MODULER, skemaDatoer, skemaLaengde, skemaInterval, skemaNu } from './skema.js';
 import { opretPost } from './pauser.js';
@@ -35,8 +35,10 @@ export function initTimerView(uid) {
 
 export function refreshQuickStart() {
   if (!userId) return;
-  if (!isActivitiesLoaded()) { setTimeout(refreshQuickStart, 350); return; }
-  loadQuickStart();
+  if (isActivitiesLoaded()) { loadQuickStart(); return; }
+  // Vent på aktivitetslytteren frem for at spørge igen hvert 350. ms —
+  // hurtigstarten kommer så på skærmen i samme øjeblik, aktiviteterne er der
+  aktiviteterHentet().then(() => { if (userId) loadQuickStart(); });
 }
 
 // ─── Active entry listener ────────────────────────────────
