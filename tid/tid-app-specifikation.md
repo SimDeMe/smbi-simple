@@ -219,7 +219,7 @@ Egen side:
 
 ## PWA
 - `manifest.json` med navn "Tid", short_name "Tid", display: standalone
-- Service worker cacher app-shell for offline brug
+- Service worker cacher app-shell for offline brug. Sider, stilark og moduler hentes **fra netværket først** med cachen som reserve — cache-først ville give ny markup med gammel kode efter en udrulning; ikoner og manifest hentes fra cachen først. Tager en ny udgave over styringen, henter appen sig selv igen én gang, så markup, stilark og moduler er fra samme udgave
 - Apple touch icons
 - `apple-mobile-web-app-capable` meta-tags
 
