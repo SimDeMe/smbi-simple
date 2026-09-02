@@ -1,4 +1,4 @@
-const CACHE = 'tid-v9';
+const CACHE = 'tid-v10';
 const SHELL = [
   '/tid/',
   '/tid/index.html',
@@ -10,6 +10,9 @@ const SHELL = [
   '/tid/timer.js',
   '/tid/historik.js',
   '/tid/kalender.js',
+  '/tid/kalender-akse.js',
+  '/tid/kalender-oversigt.js',
+  '/tid/periode.js',
   '/tid/rapporter.js',
   '/tid/indstillinger.js',
   '/tid/skema.js',

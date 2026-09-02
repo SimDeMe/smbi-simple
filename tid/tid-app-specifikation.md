@@ -133,7 +133,17 @@ Egen side med to visninger, der skiftes med en fane øverst:
 
 **Liste** — alle registreringer, nyeste først. Filter på dato-interval og aktivitet. Hver post kan redigeres (start, slut, aktivitet, arbejdstype, note) eller slettes. Manuel oprettelse af post bagud eller frem i tiden. Formularen har to rækker hurtigvalg: skemaets moduler og frokostpausen, der sætter både start og slut, og faste varigheder (10, 20, 40 og 60 min), der lader starten stå og kun regner sluttiden ud. Begge fremhæver det valg, tidsfelterne svarer til — også når tiderne kommer fra kalenderen eller er skrevet i hånden.
 
-**Kalender** — én dag ad gangen på en lodret tidsakse (1 time = 48 px). Overlappende registreringer fordeles på kolonner ved siden af hinanden, så alle er synlige. Uregistreret tid er tom plads på aksen; tryk et vilkårligt sted opretter en post fra det tidspunkt (afrundet til 15 min). Trykker man lige under en registrering — inden for et kvarter fra dens slutning, eller hvor afrundingen ville lande inde i blokken ovenover — begynder den nye post præcis dér, hvor den forrige slap, så et modul der slutter 11:35 ikke efterlader et hul. Igangværende registrering løber til "nu" og vises skraveret, og en rød streg markerer det aktuelle tidspunkt. Registreringer hen over midnat klippes ved døgnskiftet og markeres med prikket kant. Korte pauser vises som dæmpede, stiplede blokke og holdes uden for dagens total, der i stedet får et lille "· 25m pause" ved siden af.
+**Kalender** — fire visninger (Dag, Uge, Måned, År), der alle bladrer frem og tilbage med de samme pile, så man kan se i går og forgårs, ugen før eller sidste september og ikke kun den periode, man står i. Skifter man visning, følger datoen med: står man i uge 34 og trykker "Måned", lander man i den måned, uge 34 ligger i — med mindre perioden rummer i dag, og så er det i dag, der følger med. Datofeltet springer til en dato i den visning, man står i, og chippen fører tilbage til nu.
+
+**Dag** — én dag ad gangen på en lodret tidsakse (1 time = 48 px). Overlappende registreringer fordeles på kolonner ved siden af hinanden, så alle er synlige. Uregistreret tid er tom plads på aksen; tryk et vilkårligt sted opretter en post fra det tidspunkt (afrundet til 15 min). Trykker man lige under en registrering — inden for et kvarter fra dens slutning, eller hvor afrundingen ville lande inde i blokken ovenover — begynder den nye post præcis dér, hvor den forrige slap, så et modul der slutter 11:35 ikke efterlader et hul. Igangværende registrering løber til "nu" og vises skraveret, og en rød streg markerer det aktuelle tidspunkt. Registreringer hen over midnat klippes ved døgnskiftet og markeres med prikket kant. Korte pauser vises som dæmpede, stiplede blokke og holdes uden for dagens total, der i stedet får et lille "· 25m pause" ved siden af.
+
+**Uge** — den samme tidsakse med syv kolonner, én pr. dag, der deler ét fælles tidsvindue, så dagene kan sammenlignes. Aksen er smallere (34 px) og timen lavere (40 px), så alle syv dage er på en telefonskærm; er skærmen for smal, ruller ugen vandret for sig selv. Hver dags hoved viser ugedag, dato og dagens total og fører til dagsvisningen. Tryk på tom plads opretter en post på den dag.
+
+**Måned** — et månedsgitter med en række pr. uge. Hver dag er et felt, hvis farve bliver kraftigere med tiden i det (skaleret efter månedens travleste dag), med dagens tal og en tynd stribe i aktiviteternes farver. Ugenummeret i venstre kolonne viser ugens total og fører til ugevisningen; en dag fører til dagsvisningen.
+
+**År** — hele skoleåret med én række pr. måned og ét felt pr. dag, farvet efter dagens tid, så travle perioder, ferier og eksamenstid træder frem som mønstre. Til højre står månedens total med en streg, der måler den mod årets travleste måned. En måned fører til månedsvisningen.
+
+Under måneds- og årsvisningen står periodens fordeling på aktiviteter som én opdelt stribe med signaturforklaring og tal.
 
 ### 5a. Registrering frem i tiden
 Tid må gerne lægges ind, før den er brugt — fx et modul, man ved man skal holde. Både formularen, kalenderen og "1 modul" tager imod tidspunkter frem i tiden, og arket viser en OBS-linje: *Du registrerer i fremtiden*. En post i fremtiden skal have en sluttid; uden en ville den blive oprettet som en igangværende timer, der først startede senere. Periodefiltrene i Historik og Rapporter har derfor både en start og en ende, så planlagt tid i næste uge ikke tælles med under "I dag".
@@ -142,17 +152,19 @@ Tid må gerne lægges ind, før den er brugt — fx et modul, man ved man skal h
 Et mellemrum på under 30 minutter mellem to registreringer er sjældent glemt tid — det er pausen mellem to moduler eller frokosten. Når en ny post oprettes, lukkes et sådant mellemrum automatisk med en pause-post (`isBreak: true`, ingen aktivitet). Længere mellemrum lades i fred. Pauser er almindelige poster, der kan redigeres og slettes, men de tæller ikke med i rapporter, norm eller CSV-eksport. Kan slås fra med `autoShortBreaks` under Indstillinger → Pauser.
 
 ### 6. Rapporter
-Egen side. Vælg interval:
+Egen side. Vælg intervallets længde:
 - Dag
 - Uge
 - Måned
 - Skoleår
 
+Intervallet bladres frem og tilbage med pile, så rapporten lige så gerne viser i går, uge 34 eller sidste skoleår som den periode, man står i. Chippen under pilene fører tilbage til nu, og skifter man længde, følger datoen med efter samme regel som i kalenderen. Kun den valgte periodes registreringer hentes, så der er ingen grænse for, hvor langt tilbage man kan se; aktiviteterne, der vises, er dem fra det skoleår, perioden ligger i.
+
 Vis for valgte interval:
 - **Samlet:** Total tid forbrugt, og hvis skoleår er valgt: forbrugt / norm (1650t for fuldtid — konfigurerbart i indstillinger). Procent og resterende.
 - **Pr. aktivitet:** Liste sorteret efter forbrug. For hver aktivitet: navn, forbrugt tid, budget, procent (fx "142t / 288t — 49%"), visuel progress bar i aktivitetens farve. Under-aktiviteter vises indrykket under deres parent. Parent viser eget forbrug + summen af children.
 - **For hold-aktiviteter:** Vis fordeling på undervisning / forberedelse / retning som en lille bar eller tal-række.
-- **Forventet vs faktisk:** Hvis vi er X% gennem skoleåret, vis om man er foran/bagud på samlet niveau (lille indikator).
+- **Forventet vs faktisk:** Hvis vi er X% gennem skoleåret, vis om man er foran/bagud på samlet niveau (lille indikator). Et afsluttet skoleår sammenlignes med hele normen — der står "over/under norm" i stedet for "foran/bagud skema".
 - Simpel cirkel- eller søjlediagram af aktivitets-fordeling (lav i SVG, intet bibliotek).
 
 ### 7. Administration af aktiviteter
@@ -170,7 +182,7 @@ Knap "Eksportér" i rapporter:
 - Eksportér aktuelt interval
 - Format: `dato;starttid;sluttid;varighed_minutter;aktivitet;arbejdstype;note`
 - Semikolon (dansk Excel)
-- Filnavn: `tidsregistrering-{interval}.csv`
+- Filnavn: `tidsregistrering-{periode}.csv` — fx `tidsregistrering-uge-34-2026.csv` eller `tidsregistrering-2026-09-01.csv`
 
 Knap "Eksportér alle data" i indstillinger — komplet JSON backup.
 

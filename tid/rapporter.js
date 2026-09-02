@@ -1,9 +1,17 @@
 // rapporter.js — Trin 7: Rapporter med budget-sammenligning og hierarki-aggregering
+//
+// Rapporten viser én periode ad gangen: en dag, en uge, en måned eller et
+// skoleår. Man bladrer frem og tilbage med pilene, så man kan se, hvordan i
+// går, ugen før eller sidste skoleår så ud — ikke kun den periode man står i.
 
-import { db, getCurrentSchoolYear } from './app.js';
+import { db } from './app.js';
 import { getLoadedActivities } from './activities.js';
 import { getSettings } from './indstillinger.js';
 import { erPause } from './pauser.js';
+import {
+  periodeStart, periodeSlut, periodeTitel, periodeUnder, periodeNoegle,
+  forskydningFor, skoleaarForPeriode
+} from './periode.js';
 import {
   collection, query, orderBy, where, limit, onSnapshot, Timestamp
 } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js';
@@ -11,11 +19,16 @@ import {
 // ─── State ────────────────────────────────────────────────
 let userId       = null;
 let periodFilter = 'skolear';
+let periodOffset = 0;          // 0 = perioden vi står i, -1 = den forrige
 let listenersOk  = false;
 let entries      = [];
 let unsubEntries = null;
 
 const normHours = () => getSettings().normHours ?? 1650;
+
+// Periodens grænser — ét sted, så lytter, filter og mærkater følges ad
+const start = () => periodeStart(periodFilter, periodOffset);
+const slut  = () => periodeSlut(periodFilter, periodOffset);
 
 // ─── Init ─────────────────────────────────────────────────
 export function initRapporterView(uid) {
@@ -26,25 +39,68 @@ export function initRapporterView(uid) {
 
 export function refreshRapporter() {
   if (!userId) return;
-  // Genstart lytteren hvis skoleårets start har ændret sig (nye indstillinger)
-  const yStart = schoolYearStart(getCurrentSchoolYear());
-  if (!unsubEntries || yStart.getTime() !== listenerYearStartMs) setupEntriesListener();
-  else renderReport();
+  // Lytteren genstartes, hvis periodens grænser har flyttet sig — enten fordi
+  // man har bladret, eller fordi skoleårets start er ændret i indstillingerne
+  setupEntriesListener();
+}
+
+// ─── Periodeskift ─────────────────────────────────────────
+// Skifter man længde, følger datoen med: står man i uge 34 og trykker
+// "Måned", lander man i den måned, uge 34 ligger i. Ser man på en periode,
+// der rummer i dag, er det i dag der følger med — ellers ville et skift fra
+// skoleåret til "Måned" lande i august, hvor skoleåret begyndte.
+function anker() {
+  const n = new Date();
+  return n >= start() && n < slut() ? n : start();
+}
+
+function setPeriod(type) {
+  if (type === periodFilter) return;
+  periodOffset = forskydningFor(type, anker());
+  periodFilter = type;
+  markerFaner();
+  setupEntriesListener();
+}
+
+function bladr(n) {
+  periodOffset += n;
+  setupEntriesListener();
+}
+
+function tilNu() {
+  if (periodOffset === 0) return;
+  periodOffset = 0;
+  setupEntriesListener();
+}
+
+function markerFaner() {
+  document.querySelectorAll('.rapport-tab').forEach(b =>
+    b.classList.toggle('rapport-tab-active', b.dataset.period === periodFilter));
 }
 
 // ─── Firestore listener ───────────────────────────────────
-let listenerYearStartMs = null;
+// Kun periodens egne registreringer hentes. Bladrer man tilbage, hentes den
+// periode i stedet — derfor er der ingen øvre grænse for, hvor langt tilbage
+// man kan se.
+let listenerKey = null;
 
 function setupEntriesListener() {
+  const fra = start(), til = slut();
+  const key = `${fra.getTime()}-${til.getTime()}`;
+  if (key === listenerKey && unsubEntries) { renderReport(); return; }
+
   if (unsubEntries) unsubEntries();
-  const yStart = schoolYearStart(getCurrentSchoolYear());
-  listenerYearStartMs = yStart.getTime();
+  listenerKey = key;
+  entries     = [];
+  renderReport();               // vis den nye periodes ramme med det samme
+
   unsubEntries = onSnapshot(
     query(
       collection(db, `users/${userId}/entries`),
-      where('startTime', '>=', Timestamp.fromDate(yStart)),
+      where('startTime', '>=', Timestamp.fromDate(fra)),
+      where('startTime', '<',  Timestamp.fromDate(til)),
       orderBy('startTime', 'asc'),
-      limit(2000)
+      limit(5000)
     ),
     snap => {
       entries = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -54,59 +110,25 @@ function setupEntriesListener() {
   );
 }
 
-function schoolYearStart(year) {
-  const s = getSettings();
-  return new Date(parseInt(year), (s.schoolYearStartMonth ?? 6) - 1, s.schoolYearStartDay ?? 1);
-}
-
-function schoolYearEnd(year) {
-  const s = schoolYearStart(year);
-  return new Date(s.getFullYear() + 1, s.getMonth(), s.getDate());
-}
-
 // ─── Period filtering ─────────────────────────────────────
 // Korte pauser er registreret tid, men ikke arbejdstid — de holdes ude af
 // både rapporterne og CSV-eksporten, så tallene svarer til det, der tælles med
 // i normen.
+//
+// Perioden har både en start og en ende: tid registreret frem i tiden hører
+// til den dag, uge eller måned, den ligger i — ikke til den, man står i nu.
 function getPeriodEntries() {
-  const start = getPeriodStart(periodFilter);
-  const end   = getPeriodEnd(periodFilter);
+  const fra = start(), til = slut();
   return entries.filter(e =>
-    e.durationMinutes != null && !erPause(e) &&
-    (!start || (e.startTime && e.startTime.toDate() >= start)) &&
-    // Perioden har også en ende: tid registreret frem i tiden hører til den
-    // dag, uge eller måned den ligger i — ikke til den, man står i nu
-    (!end   || (e.startTime && e.startTime.toDate() <  end))
+    e.durationMinutes != null && !erPause(e) && e.startTime &&
+    e.startTime.toDate() >= fra && e.startTime.toDate() < til
   );
-}
-
-function getPeriodStart(p) {
-  const n = new Date();
-  if (p === 'dag')    return new Date(n.getFullYear(), n.getMonth(), n.getDate());
-  if (p === 'uge') {
-    const d = new Date(n.getFullYear(), n.getMonth(), n.getDate());
-    const dow = d.getDay() === 0 ? 7 : d.getDay();
-    d.setDate(d.getDate() - (dow - 1));
-    return d;
-  }
-  if (p === 'maaned') return new Date(n.getFullYear(), n.getMonth(), 1);
-  return null; // skoleår = alt
-}
-
-function getPeriodEnd(p) {
-  const start = getPeriodStart(p);
-  if (!start) return null;
-  const end = new Date(start);
-  if (p === 'dag')    end.setDate(end.getDate() + 1);
-  if (p === 'uge')    end.setDate(end.getDate() + 7);
-  if (p === 'maaned') end.setMonth(end.getMonth() + 1);
-  return end;
 }
 
 // ─── Aggregation ──────────────────────────────────────────
 function aggregate(acts) {
   const filtered = getPeriodEntries();
-  const year     = getCurrentSchoolYear();
+  const year     = skoleaarForPeriode(periodFilter, periodOffset);
   const direct   = {};
   const wtMap    = {};
   let uboundMins = 0;
@@ -173,6 +195,7 @@ function aggregate(acts) {
 
 // ─── Main render ──────────────────────────────────────────
 function renderReport() {
+  renderPeriodeBar();
   const el = document.getElementById('rapport-content');
   if (!el) return;
   const acts = getLoadedActivities();
@@ -184,14 +207,30 @@ function renderReport() {
     renderArchivedList(archivedRows);
 }
 
+// ─── Periodenavigation ────────────────────────────────────
+const NU_TEKST = { dag:'I dag', uge:'Denne uge', maaned:'Denne måned', skolear:'I år' };
+
+function renderPeriodeBar() {
+  const t = document.getElementById('rapport-periode');
+  const u = document.getElementById('rapport-periode-sub');
+  if (t) t.textContent = periodeTitel(periodFilter, periodOffset);
+  if (u) u.textContent = periodeUnder(periodFilter, periodOffset);
+
+  const nu = document.getElementById('rapport-nu');
+  if (nu) {
+    nu.textContent = NU_TEKST[periodFilter];
+    nu.disabled    = periodOffset === 0;
+  }
+}
+
 // ─── Summary card ─────────────────────────────────────────
 function renderSummary(totalMins) {
-  const year = getCurrentSchoolYear();
+  const year = skoleaarForPeriode(periodFilter, periodOffset);
   let extra  = '';
 
   if (periodFilter === 'skolear') {
-    const yStart  = schoolYearStart(year);
-    const yEnd    = schoolYearEnd(year);
+    const yStart  = start();
+    const yEnd    = slut();
     const total   = Math.max(1, (yEnd - yStart) / 86400000);
     const elapsed = Math.min(1, Math.max(0, (Date.now() - yStart.getTime()) / 86400000 / total));
     const NORM    = normHours();
@@ -201,9 +240,13 @@ function renderSummary(totalMins) {
     const diffH   = Math.abs(Math.round(diff / 60));
     const pct     = normM > 0 ? Math.min(100, Math.round(totalMins / normM * 100)) : 0;
     const expPct  = Math.min(99, Math.round(elapsed * 100));
-    const chip    = diff >= 0
-      ? `<span class="forecast-chip forecast-ahead">▲ ${diffH}t foran skema</span>`
-      : `<span class="forecast-chip forecast-behind">▼ ${diffH}t bagud skema</span>`;
+    // Et afsluttet skoleår sammenlignes med hele normen, ikke med "skema"
+    const afsluttet = Date.now() >= yEnd.getTime();
+    const chip = elapsed === 0
+      ? ''
+      : diff >= 0
+        ? `<span class="forecast-chip forecast-ahead">▲ ${diffH}t ${afsluttet ? 'over norm' : 'foran skema'}</span>`
+        : `<span class="forecast-chip forecast-behind">▼ ${diffH}t ${afsluttet ? 'under norm' : 'bagud skema'}</span>`;
 
     extra = `
       <div class="norm-progress-outer">
@@ -227,8 +270,6 @@ function renderSummary(totalMins) {
 }
 
 // ─── Donut chart ──────────────────────────────────────────
-const PERIOD_LABELS = { dag: 'I dag', uge: 'Uge', maaned: 'Måned', skolear: 'Skoleår' };
-
 function renderDonut(rows, uboundMins, totalMins, archivedMins = 0) {
   if (totalMins === 0) return '';
   const R    = 72;
@@ -264,7 +305,7 @@ function renderDonut(rows, uboundMins, totalMins, archivedMins = 0) {
     </div>`;
   }).join('');
 
-  const label = PERIOD_LABELS[periodFilter];
+  const label = periodeTitel(periodFilter, periodOffset);
 
   return `<div class="rapport-chart-section">
     <div class="rapport-donut-wrap">
@@ -426,7 +467,7 @@ export function exportCSV() {
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const url  = URL.createObjectURL(blob);
   const a    = Object.assign(document.createElement('a'), {
-    href: url, download: `tidsregistrering-${periodFilter}.csv`
+    href: url, download: `tidsregistrering-${periodeNoegle(periodFilter, periodOffset)}.csv`
   });
   a.click();
   URL.revokeObjectURL(url);
@@ -436,15 +477,17 @@ export function exportCSV() {
 function bindListeners() {
   if (listenersOk) return;
   listenersOk = true;
+
   document.getElementById('rapport-tabs')
     ?.addEventListener('click', e => {
       const btn = e.target.closest('.rapport-tab');
-      if (!btn) return;
-      periodFilter = btn.dataset.period;
-      document.querySelectorAll('.rapport-tab')
-        .forEach(b => b.classList.toggle('rapport-tab-active', b === btn));
-      renderReport();
+      if (btn) setPeriod(btn.dataset.period);
     });
+
+  document.getElementById('rapport-prev')?.addEventListener('click', () => bladr(-1));
+  document.getElementById('rapport-next')?.addEventListener('click', () => bladr(1));
+  document.getElementById('rapport-nu')  ?.addEventListener('click', tilNu);
+
   document.getElementById('btn-export-csv')
     ?.addEventListener('click', exportCSV);
 }

@@ -178,39 +178,61 @@
         </div>
 
         <div id="hist-mode-kalender" class="hidden">
+          <div class="kal-vis-tabs" id="kal-vis-tabs" role="tablist" aria-label="Kalendervisning">
+            <button class="kal-vis-tab kal-vis-tab-active" data-vis="dag">Dag</button>
+            <button class="kal-vis-tab" data-vis="uge">Uge</button>
+            <button class="kal-vis-tab" data-vis="maaned">Måned</button>
+            <button class="kal-vis-tab" data-vis="aar">År</button>
+          </div>
+
           <div class="kal-bar">
-            <button id="kal-prev" class="btn-icon" aria-label="Forrige dag">
+            <button id="kal-prev" class="btn-icon" aria-label="Forrige periode">
               <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
             </button>
-            <div class="kal-bar-mid">
+            <div class="kal-bar-mid" aria-live="polite">
               <div id="kal-title" class="kal-title">I dag</div>
               <div id="kal-sub" class="kal-sub"></div>
             </div>
-            <button id="kal-next" class="btn-icon" aria-label="Næste dag">
+            <button id="kal-next" class="btn-icon" aria-label="Næste periode">
               <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
             </button>
           </div>
 
           <div class="kal-tools">
-            <button id="kal-today" class="kal-chip">I dag</button>
+            <button id="kal-today" class="kal-chip" disabled>I dag</button>
             <input type="date" id="kal-date" class="kal-date" aria-label="Vælg dato">
-            <span class="kal-stats">
+            <span class="kal-stats" aria-live="polite">
               <b id="kal-total">0m</b> registreret
               <span id="kal-pausestat" class="kal-pausestat hidden"></span>
             </span>
           </div>
 
-          <div id="kal-grid" class="kal-grid" aria-label="Dagens registreringer på tidsakse"></div>
-          <p class="kal-hint">Tryk på tidsaksen for at oprette en registrering.</p>
+          <div id="kal-view" class="kal-view" aria-label="Registreringer i perioden"></div>
+          <p class="kal-hint" id="kal-hint">Tryk på tidsaksen for at oprette en registrering.</p>
         </div>
       </div>
 
       <div id="view-rapporter" class="view hidden">
         <div class="rapport-period-tabs" id="rapport-tabs">
-          <button class="rapport-tab" data-period="dag">I dag</button>
+          <button class="rapport-tab" data-period="dag">Dag</button>
           <button class="rapport-tab" data-period="uge">Uge</button>
           <button class="rapport-tab" data-period="maaned">Måned</button>
           <button class="rapport-tab rapport-tab-active" data-period="skolear">Skoleår</button>
+        </div>
+        <div class="periode-nav">
+          <button id="rapport-prev" class="btn-icon" aria-label="Forrige periode">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <div class="periode-nav-mid" aria-live="polite">
+            <div id="rapport-periode" class="periode-nav-title">Skoleår</div>
+            <div id="rapport-periode-sub" class="periode-nav-sub"></div>
+          </div>
+          <button id="rapport-next" class="btn-icon" aria-label="Næste periode">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+        <div class="periode-nu">
+          <button id="rapport-nu" class="kal-chip" disabled>I år</button>
         </div>
         <div id="rapport-content" class="rapport-content"></div>
         <div class="view-footer" style="padding-top:8px">
