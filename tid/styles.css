@@ -716,7 +716,24 @@ select.form-input{
   font-variant-numeric:tabular-nums;
 }
 
-/* ─── Kalender (dagsvisning) ────────────────────────────── */
+/* ─── Kalender (dag, uge, måned og år) ──────────────────── */
+/* Undervisninger af den samme figur: fanerne vælger periodens længde,
+   pilene bladrer i den. */
+.kal-vis-tabs{
+  display:flex;margin:0 0 12px;
+  background:var(--panel);
+  border:2px solid var(--ink);border-radius:12px;box-shadow:2px 2px 0 var(--ink);
+  overflow:hidden;
+}
+.kal-vis-tab{
+  flex:1;min-height:36px;padding:6px 4px;cursor:pointer;
+  background:none;border:0;border-left:2px solid var(--ink);
+  font-family:var(--display);font-size:0.82rem;font-weight:700;color:var(--slate);
+  transition:background .15s,color .15s;
+}
+.kal-vis-tab:first-child{border-left:0}
+.kal-vis-tab-active{background:var(--tint);color:var(--ink)}
+
 .kal-bar{display:flex;align-items:center;gap:8px;margin-bottom:12px}
 .kal-bar-mid{flex:1;text-align:center;min-width:0}
 .kal-title{font-family:var(--display);font-weight:800;font-size:1.08rem;letter-spacing:-0.02em}
@@ -829,8 +846,182 @@ select.form-input{
   font-size:0.86rem;color:var(--slate);
   text-align:center;padding-bottom:8px;
 }
+.kal-chip:disabled{opacity:.45;box-shadow:1px 1px 0 var(--ink);cursor:default}
+.kal-chip:disabled:active{transform:none}
+
+/* ─── Ugevisning ────────────────────────────────────────── */
+/* Syv kolonner deler én tidsakse. Er skærmen for smal til, at en dag kan
+   læses, ruller ugen vandret — resten af siden ruller stadig kun lodret. */
+.kal-uge-rul{overflow-x:auto;overflow-y:hidden;margin-bottom:10px}
+.kal-uge-inder{min-width:340px}
+/* Aksen er smallere end i dagsvisningen — ellers er der ikke plads til søndag */
+.kal-grid-uge{padding-left:34px}
+.kal-grid-uge .kal-hour,.kal-grid-uge .kal-halfhour{left:34px}
+.kal-grid-uge .kal-hour-lab{left:-34px;width:27px}
+
+.kal-uge-hoved{display:flex;margin-bottom:6px}
+.kal-uge-hjoerne{width:34px;flex:none}
+.kal-dag-hoved{
+  flex:1 1 0;min-width:0;padding:5px 2px;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;gap:1px;
+  background:var(--paper-2);color:var(--ink);
+  border:2px solid var(--ink);border-radius:9px;margin-left:3px;
+}
+.kal-dag-hoved:first-of-type{margin-left:0}
+.kal-dag-hoved.er-i-dag{background:var(--tint);box-shadow:2px 2px 0 var(--ink)}
+.kal-dag-hoved:active{transform:translate(1px,1px)}
+.kal-dag-navn{
+  font-family:var(--mono);font-size:0.52rem;font-weight:600;
+  letter-spacing:0.1em;text-transform:uppercase;color:var(--slate);
+}
+.kal-dag-nr{font-family:var(--display);font-weight:800;font-size:0.92rem;line-height:1}
+.kal-dag-total{
+  font-family:var(--mono);font-size:0.5rem;font-weight:600;
+  letter-spacing:0.04em;color:var(--text-2);
+  white-space:nowrap;overflow:hidden;max-width:100%;
+}
+
+.kal-baner{position:absolute;inset:0 0 0 34px;display:flex}
+.kal-bane{
+  position:relative;flex:1 1 0;min-width:0;cursor:pointer;
+  border-left:1.5px solid var(--rule);
+}
+.kal-bane:first-child{border-left:0}
+/* I en smal kolonne er der kun plads til navnet */
+.kal-block-smal{padding:2px 4px;margin-right:1px;border-left-width:4px;border-radius:6px}
+.kal-block-smal .kal-block-title{font-size:0.62rem;line-height:1.15}
+.kal-block-smal .kal-block-wt{display:none}
+
+/* ─── Månedsvisning ─────────────────────────────────────── */
+/* Hver dag er et felt, hvis farve bliver kraftigere med tiden i det, og en
+   stribe nederst viser hvilke aktiviteter dagen gik med. */
+.kal-md{
+  padding:10px;margin-bottom:16px;
+  background:var(--panel);
+  border:2.5px solid var(--ink);border-radius:16px;box-shadow:var(--hard);
+}
+.kal-md-hoved,.kal-md-raekke{display:grid;grid-template-columns:32px repeat(7,1fr);gap:4px}
+.kal-md-hoved{margin-bottom:6px}
+.kal-md-raekke{margin-bottom:4px}
+.kal-md-ugekol,.kal-md-dagnavn{
+  text-align:center;color:var(--slate);font-size:0.52rem;letter-spacing:0.1em;
+}
+.kal-md-uge{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  padding:2px;cursor:pointer;
+  background:var(--paper-2);color:var(--ink);
+  border:2px solid var(--ink);border-radius:8px;
+}
+.kal-md-uge:active{transform:translate(1px,1px)}
+.kal-md-ugenr{font-family:var(--display);font-weight:800;font-size:0.74rem;line-height:1}
+.kal-md-ugetid{
+  font-family:var(--mono);font-size:0.46rem;font-weight:600;color:var(--slate);
+}
+.kal-md-dag{
+  display:flex;flex-direction:column;align-items:stretch;gap:1px;
+  min-height:50px;padding:3px 3px 2px;cursor:pointer;text-align:left;
+  color:var(--ink);
+  background:var(--panel);   /* fallback hvis color-mix ikke kendes */
+  background:color-mix(in srgb, var(--accent) var(--fyld,0%), var(--panel));
+  border:2px solid var(--ink);border-radius:9px;
+}
+.kal-md-dag:active{transform:translate(1px,1px)}
+.kal-md-dag.er-tom{background:var(--paper-2)}
+.kal-md-dag.er-i-dag{box-shadow:2px 2px 0 var(--ink)}
+.kal-md-dag-uden{border:2px dashed var(--rule);background:none;min-height:50px;border-radius:9px}
+.kal-md-nr{font-family:var(--display);font-weight:800;font-size:0.74rem;line-height:1.1}
+.kal-md-tid{
+  flex:1;
+  font-family:var(--mono);font-size:0.48rem;font-weight:600;letter-spacing:0.02em;
+  color:var(--text-2);
+  white-space:nowrap;overflow:hidden;
+}
+.kal-md-stribe{display:flex;gap:1px;height:4px;border-radius:2px;overflow:hidden}
+.kal-md-stribe i{display:block;height:100%}
+
+/* ─── Årsvisning ────────────────────────────────────────── */
+/* Ét felt pr. dag, én række pr. måned — travle uger, ferier og eksamenstid
+   træder frem som mønstre. Søjlen til højre er månedens samlede tid. */
+.kal-aar{
+  padding:12px 10px;margin-bottom:16px;
+  background:var(--panel);
+  border:2.5px solid var(--ink);border-radius:16px;box-shadow:var(--hard);
+}
+.kal-aar-md{
+  display:flex;align-items:center;gap:7px;width:100%;
+  padding:3px 4px;margin-bottom:2px;cursor:pointer;text-align:left;
+  background:none;color:var(--ink);border:0;border-radius:8px;
+}
+.kal-aar-md:hover{background:var(--paper-2)}
+.kal-aar-md:active{transform:translate(1px,1px)}
+.kal-aar-navn{width:42px;flex:none;color:var(--slate);font-size:0.52rem}
+.kal-aar-heat{display:flex;gap:1.5px;flex:1;min-width:0}
+.kal-aar-dag{
+  flex:1 1 0;height:11px;border-radius:2px;
+  background:var(--paper-2);   /* fallback hvis color-mix ikke kendes */
+  background:color-mix(in srgb, var(--accent) var(--fyld,0%), var(--paper-2));
+  border:1px solid var(--rule);
+}
+.kal-aar-dag.er-i-dag{border-color:var(--ink);border-width:1.5px}
+.kal-aar-dag-uden{background:none;border-color:transparent}
+.kal-aar-total{
+  position:relative;width:48px;flex:none;
+  display:flex;align-items:flex-end;justify-content:flex-end;
+  padding-bottom:6px;
+}
+/* Stregen under tallet er månedens sum målt mod årets travleste måned */
+.kal-aar-total-bar{
+  position:absolute;right:0;bottom:0;height:4px;min-width:2px;
+  background:var(--accent);border:1.5px solid var(--ink);border-radius:3px;
+}
+.kal-aar-total b{
+  font-family:var(--display);font-weight:800;font-size:0.72rem;line-height:1;
+  font-variant-numeric:tabular-nums;
+}
+.kal-aar-skala{
+  display:flex;align-items:center;gap:4px;flex-wrap:wrap;
+  padding-top:10px;margin-top:8px;border-top:2px solid var(--rule);
+  color:var(--slate);font-size:0.5rem;
+}
+.kal-aar-skala i{
+  width:14px;height:14px;border-radius:2px;
+  background:color-mix(in srgb, var(--accent) var(--fyld,0%), var(--paper-2));
+  border:1px solid var(--rule);
+}
+.kal-aar-skala-max{margin-left:auto;text-transform:none;letter-spacing:0.02em}
+
+/* ─── Fordeling under måned og år ───────────────────────── */
+.kal-fordeling{
+  padding:14px;margin-bottom:14px;
+  background:var(--panel);
+  border:2.5px solid var(--ink);border-radius:16px;box-shadow:var(--hard);
+}
+.kal-fordeling-head{color:var(--slate);padding-bottom:9px}
+.kal-fordeling-bar{
+  display:flex;gap:1.5px;height:16px;margin-bottom:12px;overflow:hidden;
+  border:2px solid var(--ink);border-radius:20px;background:var(--paper-2);
+}
+.kal-fordeling-bar i{display:block;min-width:2px}
+.kal-fordeling .rapport-legend{gap:7px}
+.kal-tom{
+  padding:26px 14px;margin-bottom:14px;text-align:center;color:var(--slate);
+  background:var(--paper-2);border:2px dashed var(--ink);border-radius:14px;
+}
 
 /* ─── Rapporter ─────────────────────────────────────────── */
+/* Periodenavigation — samme greb som i kalenderen: fanerne vælger periodens
+   længde, pilene bladrer i den, og chippen fører tilbage til nu. */
+.periode-nav{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.periode-nav-mid{flex:1;text-align:center;min-width:0}
+.periode-nav-title{
+  font-family:var(--display);font-weight:800;font-size:1.08rem;letter-spacing:-0.02em;
+}
+.periode-nav-sub{
+  font-family:var(--mono);font-size:0.58rem;font-weight:600;
+  letter-spacing:0.12em;text-transform:uppercase;color:var(--slate);margin-top:2px;
+}
+.periode-nu{display:flex;margin-bottom:16px}
+
 .rapport-content{display:flex;flex-direction:column}
 
 .rapport-summary{
@@ -1203,6 +1394,12 @@ select.form-input{
 /* Smalle telefoner: hurtigstart i én spalte, så navnene kan læses */
 @media (max-width:360px){
   .quickstart-grid{grid-template-columns:1fr}
+  .kal-md{padding:7px}
+  .kal-md-hoved,.kal-md-raekke{grid-template-columns:26px repeat(7,1fr);gap:3px}
+  .kal-md-dag,.kal-md-dag-uden{min-height:44px}
+  .kal-md-tid{font-size:0.44rem}
+  .kal-aar-navn{width:34px}
+  .kal-aar-total{width:52px}
 }
 
 @media (prefers-reduced-motion:reduce){
@@ -1214,7 +1411,8 @@ select.form-input{
   .guide-footer,.toast,.sheet,.sheet-backdrop{display:none!important}
   body{background:#fff}
   .timer-card,.rapport-summary,.rapport-act-row,.act-row,.entry-row,
-  .settings-section,.step-list li,.guide-card,.why-card,.rapport-chart-section{
+  .settings-section,.step-list li,.guide-card,.why-card,.rapport-chart-section,
+  .kal-md,.kal-aar,.kal-fordeling{
     box-shadow:none;break-inside:avoid;page-break-inside:avoid;
   }
   #main-content{overflow:visible;padding-bottom:0}
