@@ -1,4 +1,4 @@
-const CACHE = 'tid-v10';
+const CACHE = 'tid-v11';
 const SHELL = [
   '/tid/',
   '/tid/index.html',
@@ -47,36 +47,52 @@ self.addEventListener('fetch', e => {
   // Don't intercept Firebase / Google CDN requests
   if (url.origin !== self.location.origin) return;
 
-  // Navigation: netværk først (så hjaelp.html m.fl. rammer den rigtige side),
-  // ved offline falder vi tilbage til cachen og til sidst index.html
-  if (e.request.mode === 'navigate') {
-    e.respondWith(
-      fetch(e.request)
-        .then(res => {
-          if (res.ok) {
-            const clone = res.clone();
-            caches.open(CACHE).then(c => c.put(e.request, clone));
-          }
-          return res;
-        })
-        .catch(() =>
-          caches.match(e.request).then(r => r || caches.match('/tid/index.html'))
-        )
-    );
+  // Sider, stilark og JavaScript: netværket først, cachen som reserve.
+  //
+  // Cache-først var forkert her: en ny udgave af index.html blev hentet fra
+  // netværket, mens styles.css og modulerne kom fra den gamle cache — så
+  // sad appen med ny markup og gammel kode, hvor knapper ingen lyttere
+  // havde og nye elementer stod ustylede. Koden skal følges ad.
+  const erSide = e.request.mode === 'navigate';
+  if (erSide || /\.(?:html|css|js)$/.test(url.pathname)) {
+    e.respondWith(netvaerkFoerst(e, erSide));
     return;
   }
 
-  // App shell: cache-first, update in background
-  e.respondWith(
-    caches.match(e.request).then(cached => {
-      const network = fetch(e.request).then(res => {
-        if (res.ok) {
-          const clone = res.clone();
-          caches.open(CACHE).then(c => c.put(e.request, clone));
-        }
-        return res;
-      });
-      return cached || network;
-    })
-  );
+  // Ikoner, billeder og manifest ændrer sig sjældent: cachen først, og
+  // hentes i baggrunden, så næste besøg har den nye udgave
+  e.respondWith(cacheFoerst(e));
 });
+
+function gem(e, res) {
+  if (res.ok) {
+    const kopi = res.clone();
+    e.waitUntil(caches.open(CACHE).then(c => c.put(e.request, kopi)));
+  }
+  return res;
+}
+
+async function netvaerkFoerst(e, erSide) {
+  try {
+    return gem(e, await fetch(e.request));
+  } catch (err) {
+    const cachet = await caches.match(e.request);
+    if (cachet) return cachet;
+    if (erSide) {
+      const start = await caches.match('/tid/index.html');
+      if (start) return start;
+    }
+    throw err;
+  }
+}
+
+async function cacheFoerst(e) {
+  const cachet = await caches.match(e.request);
+  if (!cachet) return gem(e, await fetch(e.request));
+  e.waitUntil(
+    fetch(e.request)
+      .then(res => { if (res.ok) return caches.open(CACHE).then(c => c.put(e.request, res)); })
+      .catch(() => {})
+  );
+  return cachet;
+}

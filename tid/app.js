@@ -230,6 +230,18 @@ export function showToast(message, duration = 2800) {
 
 // ─── Service Worker ──────────────────────────────────────
 if ('serviceWorker' in navigator) {
+  // Havde siden allerede en service worker, da den blev åbnet? Så er et
+  // skift af styring en ny udgave af appen — og siden hentes igen én gang,
+  // så markup, stilark og moduler kommer fra samme udgave. Uden det ville
+  // en netop udrullet ændring først slå igennem ved næste besøg.
+  const havdeStyring = !!navigator.serviceWorker.controller;
+  let genindlaeser = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!havdeStyring || genindlaeser) return;
+    genindlaeser = true;
+    window.location.reload();
+  });
+
   window.addEventListener('load', () => {
     navigator.serviceWorker
       .register('./service-worker.js')
