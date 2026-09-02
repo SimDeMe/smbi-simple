@@ -22,6 +22,13 @@ let activitiesLoaded = false;
 export const getLoadedActivities  = () => activities;
 export const isActivitiesLoaded   = () => activitiesLoaded;
 
+// Lytteren nedenfor svarer alligevel på "har brugeren aktiviteter?" — så
+// hverken onboarding eller hurtigstart skal stille spørgsmålet en ekstra gang.
+// Løftet indfries med true, hvis der er mindst én aktivitet.
+let loesFoersteHentning;
+const foersteHentning = new Promise(r => { loesFoersteHentning = r; });
+export const aktiviteterHentet = () => foersteHentning;
+
 // ─── Init (kaldes fra app.js efter login) ─────────────────
 export function initActivitiesView(uid) {
   if (userId === uid && unsub) return;
@@ -39,14 +46,26 @@ function startListener() {
     snap => {
       activities = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       activitiesLoaded = true;
+      loesFoersteHentning(activities.length > 0);
       renderYearSelect();
       renderList();
     },
-    err => { console.error('Activities listener:', err); showToast('Fejl ved indlæsning'); }
+    err => {
+      console.error('Activities listener:', err);
+      showToast('Fejl ved indlæsning');
+      // Kan vi ikke se aktiviteterne, ved vi heller ikke, om de mangler —
+      // og så er det forkert at møde brugeren med onboarding
+      loesFoersteHentning(true);
+    }
   );
+}
 
-  // Tidsregistreringer — bruges til at vise forbrug/tid tilbage pr. opgave
-  if (unsubEntries) unsubEntries();
+// ─── Tidsregistreringer — kun til forbrugstallene på denne side ───────────
+// De hentes først, når siden åbnes. Ved opstart ville de være hele brugerens
+// historik hentet ned for at udfylde nogle tal, ingen kigger på endnu — og
+// regningen ville vokse for hver måned, appen blev brugt.
+export function refreshAktiviteter() {
+  if (!userId || unsubEntries) return;
   unsubEntries = onSnapshot(
     query(collection(db, `users/${userId}/entries`), limit(5000)),
     snap => {

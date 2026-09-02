@@ -128,6 +128,9 @@ Tryk på en anden aktivitet mens en timer kører:
 - Timer der kører over 240 min (konfigurerbar): stop automatisk, marker `autoStopped: true`
 - Vis advarsel næste gang appen åbnes
 
+### 4a. Opstart
+Appen venter kun på ét opslag, før skærmen er fri: indstillingerne, som de øvrige views har brug for til `getCurrentSchoolYear()`. Alt andet kommer ind gennem lyttere, der fylder skærmen ud, efterhånden som svarene lander. Onboarding hænger på aktivitetslytteren, der alligevel kører, i stedet for et ekstra opslag, og aktivitetssidens forbrugstal — hele brugerens historik — hentes først, når den side åbnes. `<head>` fortæller browseren med `preconnect` og `modulepreload`, hvad den skal bruge, så Firebase og appens moduler ikke først opdages, når `app.js` er hentet og læst.
+
 ### 5. Historik
 Egen side med to visninger, der skiftes med en fane øverst:
 
@@ -219,7 +222,7 @@ Egen side:
 
 ## PWA
 - `manifest.json` med navn "Tid", short_name "Tid", display: standalone
-- Service worker cacher app-shell for offline brug. Sider, stilark og moduler hentes **fra netværket først** med cachen som reserve — cache-først ville give ny markup med gammel kode efter en udrulning; ikoner og manifest hentes fra cachen først. Tager en ny udgave over styringen, henter appen sig selv igen én gang, så markup, stilark og moduler er fra samme udgave
+- Service worker cacher hele app-shellen i **én cache med ét versionsnavn**, og alt — også selve siden — serveres derfra. Så stammer det, brugeren får, altid fra samme udgave, og en opstart med varm cache koster ingen netværkstur. (Blandingen af netværk til siden og cache til resten var netop dét, der gav ny markup med gammel kode; ren netværks-først løste det, men kostede en netværkstur pr. fil ved hver opstart.) Nye udgaver kommer ind ved, at browseren henter `service-worker.js` igen: den nye version fylder sin egen cache under `install` med `cache:'reload'`, så browserens HTTP-cache ikke kan smugle gamle filer med, overtager styringen, og appen henter sig selv igen én gang
 - Apple touch icons
 - `apple-mobile-web-app-capable` meta-tags
 

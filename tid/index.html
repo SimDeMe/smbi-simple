@@ -18,6 +18,29 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,300..600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+
+  <!-- Firebase og appens egne moduler opdages ellers først, når app.js er
+       hentet og læst — en hel netværkstur brugt på at vente. Her siger vi til
+       browseren med det samme, hvad den skal bruge. -->
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+  <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js" crossorigin>
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js" crossorigin>
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js" crossorigin>
+  <link rel="modulepreload" href="app.js">
+  <link rel="modulepreload" href="firebase-config.js">
+  <link rel="modulepreload" href="indstillinger.js">
+  <link rel="modulepreload" href="activities.js">
+  <link rel="modulepreload" href="timer.js">
+  <link rel="modulepreload" href="skema.js">
+  <link rel="modulepreload" href="pauser.js">
+  <link rel="modulepreload" href="periode.js">
+  <link rel="modulepreload" href="historik.js">
+  <link rel="modulepreload" href="kalender.js">
+  <link rel="modulepreload" href="kalender-akse.js">
+  <link rel="modulepreload" href="kalender-oversigt.js">
+  <link rel="modulepreload" href="rapporter.js">
   <title>Tid — smbi.dk</title>
   <meta name="description" content="Registrér din arbejdstid på hold og opgaver, og se forbruget mod budgettet for skoleåret.">
   <meta name="robots" content="noindex, follow">
