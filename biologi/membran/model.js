@@ -180,7 +180,11 @@ export function byggScene({
     /* På smalle skærme er der ikke plads i bredden, så figuren får
        lov at blive relativt højere — ellers bliver membranen for lille. */
     const forhold = b < 560 ? 0.88 : 0.58;
-    const h = Math.round(Math.min(Math.max(b * forhold, 260), 620));
+    /* Højdebudget: --fig er den plads, siden har tilbage på skærmen,
+       når instrumenter og skydere har fået deres. Kameraet retter sig
+       efter forholdet, så en lavere figur er bare et bredere billede. */
+    const budget = parseFloat(getComputedStyle(boks).getPropertyValue('--fig')) || 620;
+    const h = Math.round(Math.min(Math.max(b * forhold, 260), 620, budget));
     renderer.setSize(b, h, true);
     kamera.aspect = b / h;
     kamera.updateProjectionMatrix();

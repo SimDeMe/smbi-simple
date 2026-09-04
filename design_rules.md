@@ -256,6 +256,37 @@ Spørg, hvis det er uklart om siden skal have forklarende tekst under panelet
   SVG'er får deres egen vandrette rulning med `min-width`, resten af siden
   ruller kun lodret) og 620 px (mindre skrift, `--hard` i stedet for
   `--hard-lg`, padding 16 px).
+* **Højdebudget — figuren skal kunne ses sammen med sine knapper.**
+  Panelets højde må ikke afhænge af spaltens bredde alene. Gør den det,
+  vokser figuren ud over skærmen, og man kan ikke se visualisering,
+  instrumenter og skydere på én gang. Hver simuleringsside har derfor
+  tokenet `--fig` i `:root`, en `max-width` på den kasse, figuren bor i
+  (bredden følger af formatforholdet), og scriptet `Højdebudget` nederst
+  på siden:
+
+  ```css
+  :root{--fig:456px}                                    /* udgangspunkt */
+  .stage{max-width:calc(var(--fig)*800/400 + 20px);margin-inline:auto}
+  ```
+
+  Scriptet måler, hvad panelet bruger til alt andet end figuren, og
+  lægger resten af skærmhøjden i `--fig`. Tre ting hører med:
+
+  * Budgettet **kan kun gøre figuren mindre** — aldrig bredere end
+    spalten i forvejen tillod. På en høj skærm sker der ingenting.
+  * Kan panelet alligevel ikke komme til at passe (for mange rækker
+    under figuren, eller en sidespalte der er højere end den), **giver
+    budgettet op** og lader figuren beholde sin fulde størrelse.
+    En figur, der er skrumpet uden gevinst, er det værste af begge dele.
+  * Sætter siden selv lærredets størrelse i JavaScript (three.js,
+    et lærred uden fast formatforhold), så skal `--fig` læses dér i
+    stedet — `Math.min(…, budget)` — og siden udstiller
+    `window.tilpasFigur`, som scriptet kalder, når budgettet skifter.
+
+  Kopiér fra `geografi/Stigningsregn.html` (lærred med fast forhold),
+  `geografi/TermiskTryk3.html` (lærred uden fast forhold) eller
+  `biologi/membran/model.js` (three.js).
+
 * **`@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}`**
 * **`@media print`** — skjul `.top`, `.foot` og navigationsknapper, så det
   aktuelle billede kan komme på ét A4.

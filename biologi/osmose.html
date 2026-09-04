@@ -53,6 +53,8 @@
 
   --wide:'wdth' 118;
   --max:980px;
+  --fig:576px;         /* figurens højdebudget — sættes af
+                        scriptet "Højdebudget" nederst */
 
   --hard:4px 4px 0 var(--ink);
   --hard-lg:7px 7px 0 var(--ink);
@@ -189,6 +191,8 @@ h1{
 
 /* ── Scenen ────────────────────────────────────────────── */
 .stage{
+  /* Højdebudget: figuren må ikke blive højere end --fig. */
+  max-width:calc(var(--fig)*820/520 + 20px);margin-inline:auto;
   position:relative;padding:10px;
   background:radial-gradient(circle at 1px 1px,#E6EDEB 1px,transparent 0) 0 0/16px 16px;
 }
@@ -1049,6 +1053,68 @@ function billede(nu){
   requestAnimationFrame(billede);
 }
 requestAnimationFrame(billede);
+</script>
+
+<!-- ── Højdebudget ──────────────────────────────────────
+     Figuren blev før målt efter spaltens bredde alene, og så voksede
+     panelet ud over skærmen: figur, instrumenter og skydere kunne ikke
+     ses på én gang. Her måles i stedet, hvad panelet bruger til alt
+     andet end figuren, og resten af skærmhøjden lægges i --fig.
+     Budgettet kan kun gøre figuren mindre — aldrig større end spalten
+     i forvejen tillod — og det rører den slet ikke, hvis panelet
+     alligevel ikke kan komme til at passe.                          -->
+<script>
+(function(){
+  const rig = document.querySelector('.rig');
+  const fig = document.querySelector('#laerred');
+  if(!rig || !fig) return;
+  const bjaelke = document.querySelector('.top');
+  const MIN = 260, MAKS = 620, LUFT = 16;
+  let sidst = 0, panel = 0, ventende = false;
+
+  function saet(h){
+    if(h === sidst) return;
+    sidst = h;
+    rig.style.setProperty('--fig', h + 'px');
+    /* Sider, der selv sætter lærredets størrelse, skal måle om. */
+    if(window.tilpasFigur) window.tilpasFigur();
+  }
+
+  function maal(){
+    /* Først slippes figuren fri: så er "alt andet end figuren" det
+       samme tal, uanset hvad budgettet gav sidste gang. Uden det ville
+       en sidespalte, der er højere end figuren, presse budgettet i bund. */
+    saet(MAKS);
+    const krom = bjaelke && getComputedStyle(bjaelke).display !== 'none'
+               ? bjaelke.getBoundingClientRect().height : 0;   /* den klæbende topbjælke */
+    const rum  = innerHeight - krom - LUFT;                    /* det, panelet må fylde */
+    const fast = rig.getBoundingClientRect().height - fig.getBoundingClientRect().height;
+    const h    = Math.round(rum - fast);
+    if(h < MAKS){
+      saet(Math.max(MIN, h));
+      /* Hjalp det ikke — fx fordi en sidespalte er højere end figuren —
+         så får figuren pladsen igen. */
+      if(rig.getBoundingClientRect().height > rum + 24) saet(MAKS);
+    }
+    panel = rig.getBoundingClientRect().height;
+  }
+
+  function planlaeg(){
+    if(ventende) return;
+    ventende = true;
+    requestAnimationFrame(function(){ ventende = false; maal(); });
+  }
+
+  maal();
+  addEventListener('resize', planlaeg);
+  addEventListener('load', planlaeg);            /* moduler indlæses efter dette script */
+  if(document.fonts) document.fonts.ready.then(planlaeg);
+  /* Panelets faste dele kan skifte højde undervejs (trin, tekst, projektor).
+     Vores egne ændringer springes over — dem kender vi højden på. */
+  new ResizeObserver(function(){
+    if(Math.abs(rig.getBoundingClientRect().height - panel) > 1) planlaeg();
+  }).observe(rig);
+})();
 </script>
 </body>
 </html>

@@ -263,6 +263,9 @@ function gemTilstand(){
 visInstrumenter();
 model.start();
 
+/* Kaldes af scriptet "Højdebudget" i membran.html, når --fig har ændret sig. */
+window.tilpasFigur = model.tilpasStoerrelse;
+
 /* Iframe-krom: figuren skal kunne lægges ind på en anden side. */
 if(window.top !== window.self){
   const top = el('site-top');
