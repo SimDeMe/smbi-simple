@@ -283,6 +283,11 @@ const cantCut = (short, msg, extra) => Object.assign({ ok: false, short, msg }, 
 
 const isGlcGlc = b => b.donor.name === 'glucose' && b.acceptor.name === 'glucose';
 
+/* Enzymerne mærkes op ét ad gangen på samme måde som visningerne: uden
+   `level` er enzymet med hele vejen. De fire der spalter stivelsen og de
+   tre disakkarider, hører til C — det er dem fordøjelsen handler om, og
+   opgaverne på C bruger dem. Cellulase er derimod pointen om det enzym
+   vi *ikke* har, og den hører sammen med β-kæden på B. */
 const enzymes = {
     amylase: {
         da: 'Amylase', colour: '#7A4FD6', sub: 'α-1,4 inde i kæden',
@@ -348,6 +353,7 @@ const enzymes = {
     },
     cellulase: {
         da: 'Cellulase', colour: '#566B68', sub: 'β-1,4 (cellulose)',
+        level: 'B',                       // hører sammen med β-kæden, der først kan bygges på B
         where: 'bakterier, svampe og termitter',
         tag: '✖ mennesker producerer den ikke',
         test(b) {
@@ -367,6 +373,7 @@ const isLactoseBond = b => b.site === 4 && b.anomer === 'b' &&
 /* Kontakten: den krop vi simulerer, holder op med at lave laktase */
 const toggle = {
     da: '🥛 Laktoseintolerans',
+    level: 'B',                           // laktase er med på C, men den slås først fra på B
     title: 'Slå laktaseproduktionen fra og se hvad der sker med mælkesukkeret',
     on:  'Laktoseintolerans slået til: kroppen producerer ikke længere laktase. Byg en laktose (galaktose + glukose, β-1,4) og prøv at fordøje den.',
     off: 'Laktaseproduktionen er tilbage: laktosen kan igen spaltes til galaktose + glukose og optages i tyndtarmen.',
@@ -603,8 +610,6 @@ const tasks = [
     },
     {
         title: 'Byg laktose',
-        level: 'B',                       // β-1,4-sproget i opgaven hører til B — selve laktosen
-                                          // kan bygges på C, hvor galaktosen også ligger klar som β
         predict: {
             q: 'Gæt først: hvad nu hvis du bytter om, så glukosens C1 binder til galaktosens C4?',
             options: ['Det giver den samme laktose',
@@ -612,11 +617,27 @@ const tasks = [
                       'De kan slet ikke binde'],
             correct: 1
         },
-        goal: 'Laktose = galaktose + glukose med en β-1,4-binding. Galaktosen ligger klar i β-form. ' +
-              'Læg en galaktose og en glukose ud, og træk galaktosens C1 hen til glukosens C4.',
+        goal: 'Laktose = galaktose + glukose. Læg en galaktose og en glukose ud, og træk galaktosens C1 ' +
+              '(højre hjørne) hen til glukosens C4 (venstre hjørne).',
         why: 'Rækkefølgen betyder noget: det er galaktosen der binder med sit C1, og glukosen der modtager på sit C4. ' +
              'Bytter man om, får man et andet molekyle. Netop derfor er enzymet laktase en β-galaktosidase.',
         check: b => b.mols.some(m => m.info.key === 'lactose')
+    },
+    {
+        title: 'Byg sakkarose',
+        predict: {
+            q: 'Gæt først: sakkarose er det hvide sukker i sukkerskålen. Hvad består det af?',
+            options: ['To glukoser',
+                      'Glukose + fruktose',
+                      'Glukose + galaktose'],
+            correct: 1
+        },
+        goal: 'Læg en glukose og en fruktose ud. Fruktose er femringen — træk glukosens C1 hen til ' +
+              'fruktosens C2 (femringens højre hjørne).',
+        why: 'Sakkarose er rør- og roesukker. Her binder glukosens C1 til fruktosens C2, altså begge de ' +
+             'C-atomer der ellers kunne åbne ringen. Derfor smager sakkarose ikke af sine to halvdele, ' +
+             'og derfor kræver den sit eget enzym — sakkarase — for at kunne optages.',
+        check: b => b.mols.some(m => m.info.key === 'sucrose')
     },
     {
         title: 'Lav 4 vandmolekyler ved kondensation',
@@ -630,6 +651,23 @@ const tasks = [
         why: 'En kæde på n monomerer holdes sammen af n − 1 bindinger og har afgivet n − 1 vandmolekyler. ' +
              'Omvendt kræver det lige så mange vandmolekyler at hydrolysere kæden igen — derfor er fordøjelse hydrolyse.',
         check: b => b.water >= 4
+    },
+    {
+        title: 'Byg amylose — et polysakkarid',
+        predict: {
+            q: 'Gæt først: hvad er stivelsen i kartofler og brød lavet af?',
+            options: ['Mange forskellige sukkerarter blandet',
+                      'Kun glukose, bundet sammen i en lang kæde',
+                      'Glukose og fruktose skiftevis'],
+            correct: 1
+        },
+        goal: 'Byg en kæde på mindst 4 glukoser: træk den enes C1 hen til den næstes C4, og bliv ved. ' +
+              'Læg mærke til navnet over kæden undervejs — det skifter, når kæden bliver lang nok.',
+        why: 'Det er amylose, den ugrenede af stivelsens to former: én lang kæde af glukose bundet C1 til C4. ' +
+             'Planter gemmer deres energi sådan, og vi henter den ud igen ved at hydrolysere hver binding — ' +
+             'derfor mætter kartofler, ris og brød. To glukoser er maltose, tre er maltotriose, og fra fire ' +
+             'og op begynder det at være en kæde.',
+        check: b => b.mols.some(m => m.info.key === 'amylose')
     },
     {
         title: 'To disakkarider med samme sumformel',
@@ -653,7 +691,7 @@ const tasks = [
     },
     {
         title: 'Byg en kæde vi ikke kan fordøje',
-        level: 'B',                       // β-kæden og amylasen hører til B
+        level: 'B',                       // β-kæden kan først bygges på B; amylasen er med på C
         predict: {
             q: 'Gæt først: du bygger en kæde af β-1,4-bundne glukoser og trækker amylase hen på den. Hvad sker der?',
             options: ['Amylase klipper den',
@@ -672,6 +710,7 @@ const tasks = [
     },
     {
         title: 'Byg et forgrenet polysakkarid',
+        level: 'B',                       // amylose er C-niveauets polysakkarid; grenene er næste skridt
         predict: {
             q: 'Gæt først: hvad giver grenene leveren, når glykogenet skal bruges?',
             options: ['Flere frie ender, så mange enzymer kan arbejde samtidig',
@@ -679,8 +718,8 @@ const tasks = [
                       'Mere energi pr. glukose'],
             correct: 0
         },
-        goal: 'Byg en kæde på mindst 6 α-glukoser, og sæt en sidekæde på en af ringenes C6 (den lille 6-knop over ringen). ' +
-              'På B- og A-niveau kan Hurtigbyg → Glykogen gøre det for dig.',
+        goal: 'Byg en kæde på mindst 6 glukoser, og sæt en sidekæde på en af ringenes C6 (den lille 6-knop over ringen). ' +
+              'Hurtigbyg → Glykogen kan gøre det for dig.',
         why: 'Glykogen og amylopektin: α-1,4 i kæden, α-1,6 i grenpunkterne. ' +
              'Grenene giver mange frie ender, så mange enzymmolekyler kan arbejde samtidig — derfor kan leveren frigive ' +
              'glukose til blodet i løbet af minutter. En ugrenet kæde ville kun kunne klippes fra én ende.',
@@ -689,16 +728,33 @@ const tasks = [
                                      m.bonds.some(x => x.site === 4))
     },
     {
+        title: 'Find det rigtige enzym til hvert disakkarid',
+        predict: {
+            q: 'Gæt først: kan ét enzym klare alle tre disakkarider?',
+            options: ['Ja — de ligner hinanden nok',
+                      'Nej — hver binding har sit eget enzym'],
+            correct: 1
+        },
+        goal: 'Byg maltose, laktose og sakkarose, og spalt hver af dem med sit eget enzym: maltase, ' +
+              'laktase og sakkarase. Træk enzymblokkens hak hen på bindingen. Ét ad gangen er fint, ' +
+              'men lad det hele blive liggende — "Ryd bordet" nulstiller også de klip du har lavet. ' +
+              'Prøv gerne det forkerte enzym med vilje: blokken siger selv hvorfor den ikke kan.',
+        why: 'Enzymer er specifikke: de genkender ikke "et sukker", men netop den binding de passer til. ' +
+             'Maltase tager bindingen mellem to glukoser, laktase kræver en galaktose på donorsiden, og ' +
+             'sakkarase kun bindingen til fruktosen. Derfor kan ét manglende enzym gøre præcis ét sukker ' +
+             'ufordøjeligt, mens resten af kosten går fint ned.',
+        check: b => ['maltase', 'lactase', 'sucrase'].every(k => b.ev.has('cut:' + k))
+    },
+    {
         title: 'Fordøj stivelsen hele vejen',
-        level: 'B',                       // amylase og maltase
         predict: {
             q: 'Gæt først: amylase har klippet stivelsen i maltose. Kan sukkeret optages i blodet nu?',
             options: ['Ja, maltose kan optages',
                       'Nej, den skal først klippes til fri glukose'],
             correct: 1
         },
-        goal: 'Byg (eller hurtigbyg) en amylosekæde. Træk amylase hen på en binding inde i kæden, og træk derefter ' +
-              'maltase hen på en maltose.',
+        goal: 'Byg en amylosekæde som før — eller brug Hurtigbyg → Amylose, hvis du er på B eller A. ' +
+              'Træk amylase hen på en binding inde i kæden, og træk derefter maltase hen på en maltose.',
         why: 'To enzymer, to opgaver: amylase i spyt og bugspyt klipper inde i den lange kæde, mens maltase i ' +
              'tyndtarmens børstesøm tager det sidste trin fra maltose til glukose. Først som fri glukose kan sukkeret ' +
              'optages i blodet.',
@@ -732,10 +788,11 @@ export const carbs = {
            'egen form — glukose som α, galaktose som β — og bogstavet ved siden af navnet vender den. ' +
            'Klik på et O i en binding for at hydrolysere netop den, eller træk en enzymblok hen på bindingen.',
 
-    // På C-niveau er hverken formkontakterne eller enzymerne fremme, og så
-    // må teksten ikke pege på knapper der ikke er der
-    introC: 'Kulhydrater: læg sukkerarter på bordet og træk dem sammen. ' +
-            'Klik på et O i en binding for at spalte netop den igen.',
+    // På C-niveau er formkontakterne ikke fremme, og så må teksten ikke pege
+    // på knapper der ikke er der. Enzymerne til stivelsen og de tre
+    // disakkarider er derimod med hele vejen
+    introC: 'Kulhydrater: læg sukkerarter på bordet og træk dem sammen. Klik på et O i en binding for ' +
+            'at spalte netop den igen — eller træk en enzymblok hen på bindingen og lad enzymet gøre det.',
 
     start: {
         title: 'Byg dit første kulhydrat',

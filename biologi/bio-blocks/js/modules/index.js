@@ -56,6 +56,13 @@
    nouns                { unit: [ental, flertal], bond: [ental, flertal] }
    verdict(d, a, site)  må de to pladser reagere? { ok, msg, short }
 
+   enzymes {}           key → { da, colour, sub, where, tag, level,
+                        test(bond, model) }. `level` ('B'/'A') gemmer
+                        enzymet under det niveau; uden feltet er det med
+                        hele vejen — som visningerne og opgaverne.
+   toggle               valgfri kontakt (laktoseintolerans, galde …), med
+                        det samme `level`-felt
+
    reprs []             { id, da, title, msg, level } — den første er
                         default og skal kunne vises på C-niveau. `level`
                         ('B' eller 'A') skjuler visningen under det

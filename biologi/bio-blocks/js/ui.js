@@ -16,7 +16,7 @@ import { mod, MODULES, intro } from './modules/index.js';
 import { LEVELS, atLeast, levelInfo } from './levels.js';
 import { spawn, quickBuild, clearTable, setStatus, rerenderAll } from './board.js';
 import { resetVariants } from './model.js';
-import { spawnEnzyme, syncEnzymeButtons, rerenderEnzymes, clearEnzymes } from './enzymes.js';
+import { spawnEnzyme, syncEnzymeButtons, rerenderEnzymes, dropEnzymesAboveLevel } from './enzymes.js';
 import { syncGradients } from './render.js';
 import { openFromTable } from './viewer3d.js';
 import { renderTasks } from './tasks.js';
@@ -145,19 +145,23 @@ function buildBuildGroup() {
         button('chip', b.da, 'Byg den færdig med det samme', () => quickBuild(b.id))));
 }
 
+/* Enzymerne mærkes op ét ad gangen ligesom visningerne og opgaverne: de
+   fire der spalter stivelsen og de tre disakkarider, er med på C, mens
+   cellulase og kontakten venter til B. Fordøjelse ér C-stof, og et enzym
+   man kan tage fat i, siger mere om specificitet end en forklaring. */
 function buildEnzymeGroup() {
-    if (!atLeast('B')) return group('grp-enzymes', null, []);
-
     const m = mod();
-    const items = Object.entries(m.enzymes).map(([key, cfg]) => {
-        const b = button('spawner btn-enz', cfg.da,
-                         `${cfg.da} — ${cfg.sub}, findes i ${cfg.where}`, () => spawnEnzyme(key));
-        b.id = 'enz-btn-' + key;
-        b.style.backgroundColor = cfg.colour;
-        return b;
-    });
+    const items = Object.entries(m.enzymes)
+        .filter(([, cfg]) => atLeast(cfg.level))
+        .map(([key, cfg]) => {
+            const b = button('spawner btn-enz', cfg.da,
+                             `${cfg.da} — ${cfg.sub}, findes i ${cfg.where}`, () => spawnEnzyme(key));
+            b.id = 'enz-btn-' + key;
+            b.style.backgroundColor = cfg.colour;
+            return b;
+        });
 
-    if (m.toggle) {
+    if (m.toggle && atLeast(m.toggle.level)) {
         const t = button('chip warn' + (state.toggleOn ? ' active' : ''),
                          m.toggle.da, m.toggle.title, b => {
             state.toggleOn = !state.toggleOn;
@@ -225,9 +229,9 @@ export function setLevel(id) {
     if (!visibleReprs().some(r => r.id === state.repr)) state.repr = visibleReprs()[0].id;
     if (!atLeast('B')) {
         resetVariants();             // formkontakterne forsvinder, og så skal formen tilbage til kataloget
-        state.toggleOn = false;      // kontakten hører til enzymerne
-        clearEnzymes();              // og enzymer man ikke kan lægge ud, kan man heller ikke fjerne
+        state.toggleOn = false;      // kontakten hører til B
     }
+    dropEnzymesAboveLevel();         // enzymer man ikke kan lægge ud igen, kan man heller ikke fjerne
 
     buildHeader();
     rerenderAll();               // molekylernes egne knapper følger også niveauet
