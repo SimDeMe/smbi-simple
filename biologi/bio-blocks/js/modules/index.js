@@ -30,6 +30,8 @@
        donor            kan enheden donere (har den en fri "hale")
        accepts []       hvilke link-typer den kan modtage
        mirror           tegnes spejlvendt (fruktose)
+       variant          hvilken af modulets former enheden lægges ud i;
+                        uden feltet er det den første option
        sdf, sdfNote     3D-struktur, hvis der findes en fil
        side, sat, …     modulets egne felter — motoren rører dem ikke
 
@@ -39,8 +41,11 @@
        site             tallet/navnet der identificerer bindingen udadtil
        dRow             0 = samme række (kæden), ±1 = gren op/ned
 
-   variant              valgfri: modulets formvalg (α/β) — { field, da,
-                        options[{id,label,title,msg}], flipTip }
+   variant              valgfri: modulets formvalg (α/β) — { field,
+                        options[{id,label,title,flip}], flipTip }. Formen
+                        vælges pr. byggesten, ikke for modulet: hver
+                        monomer har sin egen kontakt fra B-niveau, og sit
+                        eget udgangspunkt i `mon[].variant`.
    flips(donor, field)  skal enheden efter denne binding vendes 180°?
 
    names []             navneregler, første match vinder. Felter:

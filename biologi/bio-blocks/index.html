@@ -168,6 +168,25 @@ h1{
 .btn-enz{font-size:0.78rem;padding:7px 11px}
 .btn-enz.missing{opacity:0.45;text-decoration:line-through}
 
+/* Byggesten + formkontakt er ét apparat: de deler kant og skygge, og de
+   flytter sig sammen. Kontakten står i hvidt, så det er tydeligt at det
+   er den, og ikke sukkerarten, man skifter. Fra B — se js/ui.js */
+.spawn-item{
+  display:flex;border-radius:12px;box-shadow:var(--hard);
+  transition:transform .12s,box-shadow .12s;
+}
+.spawn-item:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--ink)}
+.spawn-item:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.spawn-item .spawner{border-radius:12px 0 0 12px;border-right-width:0;box-shadow:none}
+.spawn-item .spawner:hover,.spawn-item .spawner:active{transform:none;box-shadow:none}
+.form-flip{
+  font-family:var(--display);font-size:0.95rem;font-weight:800;
+  background:#fff;border:2.5px solid var(--ink);border-radius:0 12px 12px 0;
+  color:var(--ink);padding:8px 12px;min-width:42px;cursor:pointer;
+  transition:background .16s;
+}
+.form-flip:hover{background:var(--paper-2)}
+
 .chip{
   font-family:var(--display);font-size:0.78rem;font-weight:700;
   background:#fff;border:2px solid var(--ink);color:var(--ink);
@@ -653,6 +672,7 @@ body[data-projektor="1"] .rig{margin-top:14px;box-shadow:var(--hard)}
 body[data-projektor="1"] .board{height:clamp(440px,72vh,880px)}
 body[data-projektor="1"] .seg button{font-size:1.02rem;padding:9px 17px}
 body[data-projektor="1"] .spawner{font-size:1.02rem;padding:10px 16px}
+body[data-projektor="1"] .form-flip{font-size:1.14rem;padding:10px 15px}
 body[data-projektor="1"] .chip{font-size:0.94rem;padding:8px 15px}
 body[data-projektor="1"] .group-label{font-size:0.72rem}
 body[data-projektor="1"] .btn-mini{font-size:0.88rem;padding:6px 14px}
@@ -794,7 +814,6 @@ body[data-projektor="1"] #task-panel{width:min(400px,62%);font-size:1.02rem}
            niveauvalget: se js/levels.js. -->
       <div class="vaelg">
         <div class="group" id="grp-module"></div>
-        <div class="group" id="grp-form"></div>
         <div class="group" id="grp-repr"></div>
         <div class="group" id="grp-level"></div>
       </div>

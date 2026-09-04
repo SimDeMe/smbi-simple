@@ -10,6 +10,7 @@
 import { state } from './state.js';
 import { mod, intro } from './modules/index.js';
 import { resetGame, rerenderAll, clampIntoView, setStatus } from './board.js';
+import { resetVariants } from './model.js';
 import { buildHeader } from './ui.js';
 import { undoLast } from './reactions.js';
 import { closeViewer } from './viewer3d.js';
@@ -25,8 +26,8 @@ import { laesAdresse, skrivAdresse, bindProjektor } from './deling.js';
    ellers åbner i — den skal derfor læses, før bjælken bygges */
 laesAdresse();
 
-state.repr    = mod().reprs[0].id;
-state.variant = mod().variant ? mod().variant.options[0].id : null;
+state.repr = mod().reprs[0].id;
+resetVariants();
 buildHeader();
 syncWelcome();
 setStatus(intro(), '');
