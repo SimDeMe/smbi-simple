@@ -12,7 +12,7 @@ export const state = {
     molecules: [],            // <g class="molecule"> på bordet
     enzymes: [],              // <g class="enzyme"> på bordet
     waterCount: 0,
-    variant: null,            // modulets formvalg, fx α/β på et sukker
+    variants: {},             // formen hver byggesten lægges ud i, fx α/β på et sukker
     showNumbers: true,
     toggleOn: false,          // modulets kontakt: laktoseintolerans, galde …
     catalystHintShown: false,

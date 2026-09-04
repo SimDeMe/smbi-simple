@@ -10,6 +10,7 @@
 
 import { state } from './state.js';
 import { mod } from './modules/index.js';
+import { atLeast } from './levels.js';
 import { svgSpace, enzLayer, pvLayer } from './dom.js';
 import { SVG_NS, text, rect, badge } from './svg.js';
 import { getPos, setPos, clampIntoView, setStatus, waterFx } from './board.js';
@@ -104,12 +105,16 @@ export function removeEnzyme(enz) {
     enz.remove();
 }
 
-/* Enzymerne hører til fra B-niveau. Falder niveauet til C, forsvinder
-   knapperne — og så skal blokkene på bordet også væk, ellers ligger der
-   noget man hverken kan bruge eller lægge ud igen. Molekylerne bliver. */
-export function clearEnzymes() {
-    state.enzymes.forEach(e => e.remove());
-    state.enzymes = [];
+/* Hvert enzym har sit eget niveau. Falder niveauet, forsvinder knappen
+   til dem der ligger over — og så skal blokkene på bordet også væk, ellers
+   ligger der noget man hverken kan bruge eller lægge ud igen. De enzymer
+   niveauet stadig har, bliver liggende, og molekylerne rører vi ikke. */
+export function dropEnzymesAboveLevel() {
+    state.enzymes = state.enzymes.filter(e => {
+        if (atLeast(mod().enzymes[e._enzyme].level)) return true;
+        e.remove();
+        return false;
+    });
     pvLayer.textContent = '';
 }
 

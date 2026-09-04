@@ -8,9 +8,11 @@
 
    Niveauet fjerner knapper — det tilføjer ikke indhold:
 
-     C   modul, byggesten, blokvisning, opgaver. Nok til kondensation og
-         hydrolyse, som er det C-niveau skal kunne.
-     B   + form (α/β), hurtigbyg, enzymer og strukturformlen (Haworth).
+     C   modul, byggesten, blokvisning, opgaver, og de fire enzymer der
+         spalter stivelsen og de tre disakkarider. Nok til kondensation,
+         hydrolyse og fordøjelse, som er det C-niveau skal kunne.
+     B   + formkontakten (α/β) på hver byggesten, hurtigbyg, cellulase,
+         laktoseintolerans-kontakten og strukturformlen (Haworth).
      A   + molekylformlen med vandregnskabet og 3D-visningen.
 
    Motoren er den samme hele vejen: samme molekyler, samme regler, samme
@@ -27,11 +29,11 @@ import { state } from './state.js';
 
 export const LEVELS = [
     { id: 'C', label: 'C',
-      title: 'C-niveau: byggesten, blokke og opgaver',
-      msg: 'C-niveau: byggesten, blokvisning og opgaver. Det er nok til kondensation og hydrolyse — resten kan hentes frem med B og A.' },
+      title: 'C-niveau: byggesten, blokke, opgaver og fordøjelsesenzymerne',
+      msg: 'C-niveau: byggesten, blokvisning, opgaver og de enzymer der spalter stivelsen og de tre disakkarider. Resten kan hentes frem med B og A.' },
     { id: 'B', label: 'B',
-      title: 'B-niveau: også form (α/β), enzymer og strukturformel',
-      msg: 'B-niveau: nu kan du også vælge form (α/β), bygge færdigt med det samme, bruge enzymerne og se strukturformlen.' },
+      title: 'B-niveau: også α/β på byggestenene, cellulase og strukturformel',
+      msg: 'B-niveau: nu kan du også vende byggestenene mellem α og β, bygge færdigt med det samme, prøve cellulase og laktoseintolerans, og se strukturformlen.' },
     { id: 'A', label: 'A',
       title: 'A-niveau: alt med — også molekylformel og 3D',
       msg: 'A-niveau: alt er med. Molekylformlen viser regnestykket med det fraspaltede vand, og 3D viser rigtige koordinater fra PubChem.' }

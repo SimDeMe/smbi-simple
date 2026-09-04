@@ -15,7 +15,8 @@ import { state } from './state.js';
 import { mod, MODULES, intro } from './modules/index.js';
 import { LEVELS, atLeast, levelInfo } from './levels.js';
 import { spawn, quickBuild, clearTable, setStatus, rerenderAll } from './board.js';
-import { spawnEnzyme, syncEnzymeButtons, rerenderEnzymes, clearEnzymes } from './enzymes.js';
+import { resetVariants } from './model.js';
+import { spawnEnzyme, syncEnzymeButtons, rerenderEnzymes, dropEnzymesAboveLevel } from './enzymes.js';
 import { syncGradients } from './render.js';
 import { openFromTable } from './viewer3d.js';
 import { renderTasks } from './tasks.js';
@@ -86,27 +87,53 @@ function buildModuleGroup() {
     ]);
 }
 
-function buildFormGroup() {
-    const v = mod().variant;
-    if (!v || !atLeast('B')) return group('grp-form', null, []);
-
-    group('grp-form', v.da, [
-        segment('variant-seg',
-            v.options.map(o => ({ id: o.id, label: o.label, title: o.title, msg: o.msg })),
-            state.variant,
-            o => { state.variant = o.id; setStatus(o.msg, 'info'); },
-            'seg')
-    ]);
-}
-
+/* Formen sad før i én fælles vælger over bordet, og så gjaldt det samme
+   α eller β for alle sukkerarter på én gang. Men glukose og galaktose
+   findes ikke i den samme form i de disakkarider eleverne skal bygge:
+   maltose er α-glukose, laktose er β-galaktose. Kontakten sidder derfor
+   på byggestenen selv, og hver sten ligger klar i sin egen form — så
+   både maltose og laktose kan bygges uden først at ramme det rigtige
+   fælles valg. Fra B kan formen vendes; på C er der ingen kontakt, og så
+   er det kataloget der gælder. */
 function buildSpawnGroup() {
-    const m = mod();
+    const m    = mod();
+    const flip = m.variant && atLeast('B');
+
     group('grp-spawn', 'Byggesten', Object.entries(m.mon).map(([name, cfg]) => {
         const b = button('spawner', cfg.glyph ? `${cfg.glyph} ${cfg.da}` : cfg.da,
                          cfg.note, () => spawn(name));
         b.style.backgroundColor = cfg.colour[1];
-        return b;
+        if (!flip) return b;
+
+        // Knap og kontakt er ét apparat: de deler kant og skygge
+        const item = document.createElement('div');
+        item.className = 'spawn-item';
+        item.append(b, formFlip(name, cfg));
+        return item;
     }));
+}
+
+/* Kontakten viser den form den næste sten lægges ud i, og skifter til den
+   næste ved klik. Den rører ikke det der allerede ligger på bordet — dem
+   vender man med α⇄β-knappen på molekylet selv. */
+function formFlip(name, cfg) {
+    const v   = mod().variant;
+    const now = () => v.options.find(o => o.id === state.variants[name]) || v.options[0];
+
+    const b = button('form-flip', now().label, null, () => {
+        const next = v.options[(v.options.indexOf(now()) + 1) % v.options.length];
+        state.variants[name] = next.id;
+        b.textContent = next.label;
+        describe(next);
+        setStatus(`${cfg.da} lægges nu ud i ${next.label}-form. ${next.flip}`, 'info');
+    });
+    describe(now());
+    return b;
+
+    function describe(o) {
+        b.title = `${cfg.da} lægges ud i ${o.label}-form — klik for at skifte. ${o.title}`;
+        b.setAttribute('aria-label', `Form for ${cfg.da}: ${o.title}. Klik for at skifte.`);
+    }
 }
 
 /* Hurtigbyg springer selve bygningen over, og det er først en genvej når
@@ -118,19 +145,23 @@ function buildBuildGroup() {
         button('chip', b.da, 'Byg den færdig med det samme', () => quickBuild(b.id))));
 }
 
+/* Enzymerne mærkes op ét ad gangen ligesom visningerne og opgaverne: de
+   fire der spalter stivelsen og de tre disakkarider, er med på C, mens
+   cellulase og kontakten venter til B. Fordøjelse ér C-stof, og et enzym
+   man kan tage fat i, siger mere om specificitet end en forklaring. */
 function buildEnzymeGroup() {
-    if (!atLeast('B')) return group('grp-enzymes', null, []);
-
     const m = mod();
-    const items = Object.entries(m.enzymes).map(([key, cfg]) => {
-        const b = button('spawner btn-enz', cfg.da,
-                         `${cfg.da} — ${cfg.sub}, findes i ${cfg.where}`, () => spawnEnzyme(key));
-        b.id = 'enz-btn-' + key;
-        b.style.backgroundColor = cfg.colour;
-        return b;
-    });
+    const items = Object.entries(m.enzymes)
+        .filter(([, cfg]) => atLeast(cfg.level))
+        .map(([key, cfg]) => {
+            const b = button('spawner btn-enz', cfg.da,
+                             `${cfg.da} — ${cfg.sub}, findes i ${cfg.where}`, () => spawnEnzyme(key));
+            b.id = 'enz-btn-' + key;
+            b.style.backgroundColor = cfg.colour;
+            return b;
+        });
 
-    if (m.toggle) {
+    if (m.toggle && atLeast(m.toggle.level)) {
         const t = button('chip warn' + (state.toggleOn ? ' active' : ''),
                          m.toggle.da, m.toggle.title, b => {
             state.toggleOn = !state.toggleOn;
@@ -178,7 +209,6 @@ function visibleReprs() {
 export function buildHeader() {
     buildLevelGroup();
     buildModuleGroup();
-    buildFormGroup();
     buildSpawnGroup();
     buildBuildGroup();
     buildEnzymeGroup();
@@ -196,13 +226,12 @@ export function setLevel(id) {
     if (id === state.level) return;
     state.level = id;
 
-    const m = mod();
     if (!visibleReprs().some(r => r.id === state.repr)) state.repr = visibleReprs()[0].id;
     if (!atLeast('B')) {
-        if (m.variant) state.variant = m.variant.options[0].id;
-        state.toggleOn = false;      // kontakten hører til enzymerne
-        clearEnzymes();              // og enzymer man ikke kan lægge ud, kan man heller ikke fjerne
+        resetVariants();             // formkontakterne forsvinder, og så skal formen tilbage til kataloget
+        state.toggleOn = false;      // kontakten hører til B
     }
+    dropEnzymesAboveLevel();         // enzymer man ikke kan lægge ud igen, kan man heller ikke fjerne
 
     buildHeader();
     rerenderAll();               // molekylernes egne knapper følger også niveauet
@@ -217,8 +246,8 @@ export function switchModule(id) {
 
     state.modId   = id;
     state.repr    = mod().reprs[0].id;
-    state.variant = mod().variant ? mod().variant.options[0].id : null;
     state.toggleOn = false;
+    resetVariants();
 
     buildHeader();
     renderTasks();

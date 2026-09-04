@@ -24,10 +24,32 @@ import { SUB, STEP, ROW_H, UNIT_W, UNIT_H } from './units.js';
 export function residue(name, variant) {
     const m = mod();
     const n = { name };
-    if (m.variant)
-        n[m.variant.field] = variant || state.variant || m.variant.options[0].id;
+    if (m.variant) n[m.variant.field] = variant || variantOf(name);
     Object.values(m.links).forEach(link => { n[link.field] = null; });
     return n;
+}
+
+/* Formen (α/β) hører til den enkelte byggesten og ikke til modulet: en
+   glukose lægges ud som α og en galaktose som β, fordi det er de former
+   de har i maltose og laktose. Kataloget holder udgangspunktet, og
+   `state.variants` holder det eleven har vendt om på. */
+export function defaultVariant(name) {
+    const m = mod();
+    if (!m.variant) return null;
+    return m.mon[name].variant || m.variant.options[0].id;
+}
+
+export function variantOf(name) {
+    return state.variants[name] || defaultVariant(name);
+}
+
+/* Tilbage til udgangspunktet — ved modulskift, og når niveauet falder til
+   C, hvor kontakterne ikke er fremme til at vende dem tilbage med. */
+export function resetVariants() {
+    const m = mod();
+    state.variants = {};
+    if (!m.variant) return;
+    Object.keys(m.mon).forEach(name => { state.variants[name] = defaultVariant(name); });
 }
 
 export function shapeOf(node) {
