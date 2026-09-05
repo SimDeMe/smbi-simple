@@ -212,7 +212,7 @@ canvas{
 
 /* ── Instrumenter ──────────────────────────────────────── */
 .gauges{
-  display:grid;grid-template-columns:repeat(3,1fr);
+  display:grid;grid-template-columns:repeat(2,1fr);
   border-top:2px solid var(--ink);
 }
 .gauge{
@@ -222,7 +222,6 @@ canvas{
 .gauge:first-child{border-left:none}
 .g-tonic{background:#E7F4FB}
 .g-stoer{background:#FFF1EC}
-.g-kren{background:#F1ECFC}
 .gauge dt{
   font-family:var(--mono);font-size:0.57rem;font-weight:600;letter-spacing:0.12em;
   text-transform:uppercase;color:#5A6C69;
@@ -346,10 +345,6 @@ body[data-projektor="1"] .knob-val{font-size:1.05rem}
 body[data-projektor="1"] .fact{font-size:0.74rem}
 
 /* ── Responsivt ────────────────────────────────────────── */
-@media (max-width:860px){
-  .gauges{grid-template-columns:1fr 1fr}
-  .gauge:nth-child(3){grid-column:1 / -1;border-left:none;border-top:2px solid var(--ink)}
-}
 @media (max-width:700px){
   /* Figuren får sin egen vandrette rulning frem for at skrumpe mærkaterne
      ned under læsbar størrelse — resten af siden ruller kun lodret. */
@@ -364,7 +359,6 @@ body[data-projektor="1"] .fact{font-size:0.74rem}
   .gauges{grid-template-columns:1fr}
   .gauge{border-left:none;border-top:2px solid var(--ink)}
   .gauge:first-child{border-top:none}
-  .gauge:nth-child(3){grid-column:auto}
   .gauge dd{font-size:1.1rem}
   .knobs{grid-template-columns:1fr}
   .hint{display:none}
@@ -501,17 +495,6 @@ body[data-projektor="1"] .fact{font-size:0.74rem}
           </div>
           <dd id="val-stoer">100<small>% af normal</small></dd>
         </div>
-
-        <div class="gauge g-kren">
-          <dt>Krenering — foldet membran</dt>
-          <div class="g-viz">
-            <div class="col">
-              <i id="viz-kren" style="--cc:linear-gradient(90deg,#E2D6F8,#7A4FD6)"></i>
-              <b>glat → fuldt foldet</b>
-            </div>
-          </div>
-          <dd id="val-kren">0<small>%</small></dd>
-        </div>
       </dl>
 
       <div class="knobs">
@@ -625,8 +608,8 @@ const inpUde  = el('inp-ude');
 const inpInde = el('inp-inde');
 const lblUde  = el('lbl-ude'),  lblInde = el('lbl-inde');
 const elWho   = el('who-tal'),  elHint  = el('hint');
-const elTonic = el('val-tonic'), elStoer = el('val-stoer'), elKren = el('val-kren');
-const vizDelta = el('viz-delta'), vizStoer = el('viz-stoer'), vizKren = el('viz-kren');
+const elTonic = el('val-tonic'), elStoer = el('val-stoer');
+const vizDelta = el('viz-delta'), vizStoer = el('viz-stoer');
 const lblDelta = el('lbl-delta'), elSr = el('sr-status');
 
 let radius = BASIS_RADIUS;      // cellens nuværende radius
@@ -941,22 +924,13 @@ function opdaterModel(){
   gemTilstand();
 }
 
-let sidsteStoer = '', sidsteKren = '';
+let sidsteStoer = '';
 function opdaterInstrumenter(){
-  const stoer = Math.round(radius / BASIS_RADIUS * 100);
-  const kren  = Math.round(kroelGradAf(radius) * 100);
-
-  const s = String(stoer);
+  const s = String(Math.round(radius / BASIS_RADIUS * 100));
   if (s !== sidsteStoer){
     sidsteStoer = s;
     elStoer.innerHTML = s + '<small>% af normal</small>';
     vizStoer.style.width = (radius / MAKS_RADIUS * 100) + '%';
-  }
-  const k = String(kren);
-  if (k !== sidsteKren){
-    sidsteKren = k;
-    elKren.innerHTML = k + '<small>%</small>';
-    vizKren.style.width = kren + '%';
   }
 }
 
